@@ -27,7 +27,7 @@ pub(crate) struct SelectorRefusal {
     after_enabling: bool,
     hint: bool,
     /// Whether `known kinds:` follows where no selector is offered: not after a
-    /// whose clause refused under a configured kind (§FS-errors.3.10).
+    /// whose clause refused under a configured kind (§FS-rule-refusals.sentences.whose).
     kinds: bool,
 }
 
@@ -122,7 +122,8 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
 /// Render a refused subject as a selector refusal (§FS-rule-refusals.selectors).
 fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefusal {
     // §FS-rule-refusals.selectors: a subject with a whose clause is offered no selector;
-    // `known kinds:` follows only a kind that is not configured (§FS-errors.3.10).
+    // `known kinds:` follows only a kind that is not configured
+    // (§FS-rule-refusals.sentences.whose).
     if refusal.clause {
         return SelectorRefusal {
             reason: refusal.reason(vocabulary),

@@ -96,7 +96,7 @@ pub(crate) fn written_coordinate(context: &WorkspaceContext, query: &BatchShowQu
 }
 
 /// Convert only coordinate-level refusals into envelopes. An unexpected body
-/// read or other operational error remains a run-level abort (§FS-show.2.6.3).
+/// read or other operational error remains a run-level abort (§FS-show.2.6).
 pub(crate) fn batch_query_failure(error: &anyhow::Error) -> Option<BatchShowFailure> {
     // §FS-distribution.3.3.2: new source carriers need no message classification.
     if let Some(carrier) = error.downcast_ref::<crate::model::OperationDiagnostic>()

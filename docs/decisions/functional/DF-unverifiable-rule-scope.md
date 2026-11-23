@@ -75,7 +75,7 @@ the alias cannot be judged, and never the case where the scope could judge it
 and the answer was no.
 
 The finding keeps its `invalid-rule` code and its nonzero exit; only the reason
-text changes, and it changes through the wording migration [§FS-errors.3.7](../../functional-spec/FS-errors.md#37-the-rule-site-unknown-alias-wording-migration) fixes.
+text changes, and it changes through the wording migration [§FS-errors.3.7](../../functional-spec/FS-errors.md#37-the-rule-site-unknown-alias-reasons) fixes.
 The exit code was deliberately left alone: it is the write that stops being
 withheld, not the failure that is forgiven, so nothing that gates on `grund
 init` succeeding starts passing.

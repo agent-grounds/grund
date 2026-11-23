@@ -69,7 +69,7 @@ and no `parse-moves` warning on them. A declaration found today is not touched: 
 The configured `/*` is matched as `/\*[*!]?`, the way `//` is matched as `//[/!]?`. The
 same prefix alternation feeds the section-heading regex, so `/** ## 1. Sub` on an opener
 line becomes a section heading, exactly as `/* ## 1. Sub` is one today
-([§FS-show.2.3.3](../../functional-spec/FS-show.md#233-section-selection-inside-a-doc-comment)). That is the same answer the declaration gate gives on what an opener is.
+([§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)). That is the same answer the declaration gate gives on what an opener is.
 Where such a line sits inside a declaration's block, it is now that declaration's section,
 and a citation of it resolves; where it sits outside any declaration, it is now the
 `numbered section outside any declaration` error the `/*` form already draws.

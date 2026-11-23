@@ -10,7 +10,7 @@
 clause for the part that failed. Before that, every such subject had been refused as an unknown
 kind, so `0.21.0` printed the legacy `unknown kind "<whole text>"` reason as a prefix, then
 ` — `, the new reason and `; this wording changes in grund 0.22.0`, and kept the `known kinds:`
-line on `list --selector` ([§FS-errors.3.10](../../functional-spec/FS-errors.md#310-the-whose-clause-wording-migration)). That is the warning release of
+line on `list --selector` ([§FS-rule-refusals.sentences.whose](../../functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)). That is the warning release of
 [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), under D10 of [§DF-one-answer-rulings-grammar](DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary). The suffix named
 `0.22.0` as the release the bytes change in, and the release guard refuses a version that
 reaches a promise it does not keep ([§FS-distribution.4.2](../../functional-spec/FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)).
@@ -39,7 +39,7 @@ In `0.22.0` (agent-grounds/grund#1063):
 
 ## release-note: Release note
 
-- [§DF-whose-clause-window-closes-in-0-22](DF-whose-clause-window-closes-in-0-22.md#df-whose-clause-window-closes-in-0-22-the-whose-clause-wording-window-closes-in-0220), [§FS-errors.3.10](../../functional-spec/FS-errors.md#310-the-whose-clause-wording-migration), [§FS-rule-refusals.sentences.whose](../../functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed):
+- [§DF-whose-clause-window-closes-in-0-22](DF-whose-clause-window-closes-in-0-22.md#df-whose-clause-window-closes-in-0-22-the-whose-clause-wording-window-closes-in-0220), [§FS-rule-refusals.sentences.whose](../../functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed):
   **a refused whose clause is answered with its reason alone.** What grund 0.21.0 announced
   lands. `check --rule 'Each SWR whose verfication is Test must be cited by at least one TC.'`
   printed `error: unknown kind "SWR whose verfication is Test" — "verfication" is not a field of

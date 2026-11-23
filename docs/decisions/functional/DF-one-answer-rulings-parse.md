@@ -36,7 +36,7 @@ verdict, and then the record names that requirement.
   `## 1. Steps ##`, names no heading the file carries. Its fix is a candidate for
   <§>REQ-backwards-compatibility.5 under [§REQ-no-wrong-citation.3](../../requirements/REQ-no-wrong-citation.md#3-no-wrong-write), read through
   [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), and `show`'s JSON `anchor` moves with it in the same release, as
-  [§FS-show.3.1.3.1](../../functional-spec/FS-show.md#3131-the-heading-anchor) binds it to `fmt`'s.
+  [§FS-show.3.1.3](../../functional-spec/FS-show.md#313-json) binds it to `fmt`'s.
 - **D17e**, the title (V-A18). The TOC `title` bytes, `Steps ##` becoming `Steps`, are a
   separate output and take the warning release, [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
 - **D17f** (V-A19). On a declaration's heading, only a citation of the ID it declares is

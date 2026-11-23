@@ -99,7 +99,7 @@ pub(crate) fn citation_resolves(
 /// The target a citation's whole coordinate resolves in, or `None` when it does
 /// not: the ID declared there and, when the citation writes a section, that
 /// section found by the one missing-section lookup, so a stub's sections are its
-/// target's (§FS-check.2.3.1.3, §FS-check.3.2.1). The target comes back because
+/// target's (§FS-check.2.3.1, §FS-check.3.2.1). The target comes back because
 /// the coordinate is named with its section separator (§FS-workspace.1.2).
 /// [`citation_resolves`] stays the ID-only question grounding asks.
 pub(crate) fn resolved_coordinate_target<'a>(

@@ -140,7 +140,7 @@ pub(super) fn refs_impl_with_annotations(
     };
     let render_config = &target_project.config;
     let scan_errors = refs_scan_errors(&context);
-    // §FS-show.3.5.1: the format hint is for an argument that does not match
+    // §FS-show.3.5: the format hint is for an argument that does not match
     // it; an ambiguous shorthand did match and lists its candidates instead.
     let (id, inline_section) = match resolve_id_arg(
         raw_id,

@@ -927,7 +927,7 @@ A block is unsupported only when this grund cannot handle it; one `grund init` c
 
 ###### 2.3.7.3.1 Above the maximum: unsupported
 
-A block is **unsupported** exactly when its version is above the maximum this binary supports, the same number `grund init` names when it refuses such a block ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)). `check`'s message names that maximum, never the version the config selects ([§FS-errors.3.6.1](FS-errors.md#361-the-final-templates)): the remedy it implies is a newer grund, and the two commands name one limit for one block, as [§FS-init.requirements.clean](FS-init.md#requirementsclean-what-init-writes-check-accepts--realized) asks of them.
+A block is **unsupported** exactly when its version is above the maximum this binary supports, the same number `grund init` names when it refuses such a block ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)). `check`'s message names that maximum, never the version the config selects ([§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages)): the remedy it implies is a newer grund, and the two commands name one limit for one block, as [§FS-init.requirements.clean](FS-init.md#requirementsclean-what-init-writes-check-accepts--realized) asks of them.
 
 ###### 2.3.7.3.2 At or below the maximum, above the selection: stale
 
@@ -939,7 +939,7 @@ A block whose version is at or below the maximum and above the version the confi
 
 ###### 2.3.7.3.3 What does not move
 
-A block below the selected version stays `outdated` ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). Each case is still an `agents-init` error with the exit code it had; only which template reports it, and the number that template names, are settled here ([§FS-errors.3.6.1](FS-errors.md#361-the-final-templates)).
+A block below the selected version stays `outdated` ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). Each case is still an `agents-init` error with the exit code it had; only which template reports it, and the number that template names, are settled here ([§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages)).
 
 #### 2.3.8 Substituted content
 

@@ -89,7 +89,7 @@ pub(crate) fn parse_id_arg_with_shorthand(raw: &str, grammar: &Grammar) -> Resul
 /// clicked `<§>FS-042` open in a terminal (§FS-integrations.3.1.7).
 ///
 /// A shorthand matching several declarations is the same class of query failure
-/// as an ambiguous full ID (§FS-show.2.2.1.1); one matching none keeps its
+/// as an ambiguous full ID (§FS-show.2.2.1); one matching none keeps its
 /// shorthand `Id`, so the caller's own "not found" path reports it as written
 /// instead of a second message saying the same thing.
 /// Why an `<ID>` argument could not be turned into one declaration

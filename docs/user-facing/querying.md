@@ -54,7 +54,7 @@ same recovery with `api/FS-session` and `web/FS-session`.
 
 `show` reads one coordinate; a second operand is a path. If that path is missing,
 the command exits 2 with empty stdout, including at a workspace root
-([§FS-show.1.4.1](../functional-spec/FS-show.md#141-a-second-coordinate-in-the-path-slot)):
+([§FS-show.3.5](../functional-spec/FS-show.md#35-the-hint-for-each-failure)):
 
 ```console
 $ grund show FS-show FS-cli
@@ -381,7 +381,7 @@ are separated by `.`, with `/` only ending a qualifier.
 Every `--format json` read of a declaration or section carries `anchor`: the
 fragment, without its `#`, that `grund fmt --cross-refs` would write for the
 same coordinate under the project's `anchor_format`
-([§FS-show.3.1.3.1](../functional-spec/FS-show.md#3131-the-heading-anchor)). So a web link is `path` plus `anchor`, and
+([§FS-show.3.1.3](../functional-spec/FS-show.md#313-json)). So a web link is `path` plus `anchor`, and
 nothing has to slug a heading by hand:
 
 ```console

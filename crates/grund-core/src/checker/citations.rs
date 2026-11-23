@@ -194,7 +194,7 @@ pub(super) fn check_citation_obligations(
             &by_file,
             &e2e_by_case,
         );
-        // §FS-check.2.2.1.1: a walked folder with real non-entry content must not
+        // §FS-check.2.2.1: a walked folder with real non-entry content must not
         // silently pass when this obligation has no unit to evaluate.
         if units.is_empty()
             && let Some(warning) = empty_citation_obligation_warning(
@@ -278,15 +278,15 @@ pub(super) fn check_citation_obligations(
 }
 
 /// Who holds a kind to an obligation (§FS-check.2.2.1): its `[citations]` table,
-/// or a `must` / `should` rule by its origin (§FS-check.2.2.1.4).
+/// or a `must` / `should` rule by its origin (§FS-check.2.2.1).
 pub(super) enum Obligor<'a> {
     Table(&'a KindCitationRules),
     Rule(&'a str),
 }
 
-/// §FS-check.2.2.1.1 condition 2: the row an obligation on `citing_kind` can find
+/// §FS-check.2.2.1 condition 2: the row an obligation on `citing_kind` can find
 /// with no unit, a scanned kind with a `folder` home, citable where a rule holds it
-/// (§FS-check.2.2.1.2). The warning below and the switch that arms it both ask it
+/// (§FS-check.2.2.1). The warning below and the switch that arms it both ask it
 /// (§FS-check.1.4.1), so the two cannot disagree.
 pub(super) fn can_apply_to_nothing<'a>(
     schema: &'a Schema,
@@ -302,14 +302,14 @@ pub(super) fn can_apply_to_nothing<'a>(
     (row.folders().next().is_some() && scanned && citable).then_some(row)
 }
 
-/// §FS-check.2.2.1.1: identify the one run-level warning for a walked folder whose
+/// §FS-check.2.2.1: identify the one run-level warning for a walked folder whose
 /// explicit obligation has real scanned content but no ordinary obligation unit.
 /// The warning is derived from the same normalized home classifier the scanner
 /// uses for citation-source attribution, so explicit paths and symlink spellings
 /// stay inside the same home boundary. The table and a rule ask it alike, so the
-/// two never disagree about whether a folder is empty (§FS-check.2.2.1.4).
+/// two never disagree about whether a folder is empty (§FS-check.2.2.1).
 /// Neither the folder's entry file nor a generated scoped entrypoint, one of
-/// `non_units`, is content of it (§FS-check.2.2.1.1, §FS-init.2.3.5.15).
+/// `non_units`, is content of it (§FS-check.2.2.1, §FS-init.2.3.5.15).
 pub(super) fn empty_citation_obligation_warning(
     rules: &Rules,
     schema: &Schema,
@@ -333,7 +333,7 @@ pub(super) fn empty_citation_obligation_warning(
     let place = folders.join(", ");
     let kind_rules = match obligor {
         Obligor::Table(kind_rules) => kind_rules,
-        // §FS-check.2.2.1.2: a rule's subject is citable, so only the declaration
+        // §FS-check.2.2.1: a rule's subject is citable, so only the declaration
         // form reaches it, named by the rule and ending at the fact.
         Obligor::Rule(origin) => {
             return Some(Diagnostic {
@@ -345,7 +345,7 @@ pub(super) fn empty_citation_obligation_warning(
                     "{origin} applies to nothing — {place} declares no {citing_kind} ID"
                 ),
                 sites: Vec::new(),
-                // §FS-check.2.2.1.4: the rule's own line, kept by `--only-rule` for `--rule`.
+                // §FS-check.2.2.1: the rule's own line, kept by `--only-rule` for `--rule`.
                 authority: one_rules_authority(origin),
             });
         }
@@ -365,7 +365,7 @@ pub(super) fn empty_citation_obligation_warning(
             remedies::empty_citation_obligation_citable(frame.version)
         )
     } else {
-        // §FS-check.2.2.1.2: the row-key half is advice, so it is given only where it is
+        // §FS-check.2.2.1: the row-key half is advice, so it is given only where it is
         // still advice — a row already grounding (§FS-config.3.4.8) has made that
         // setting, and this run is already reporting what it caught (§FS-check.3.6).
         let tail = if row_grounding(rules, frame.run, &row.name).0 {
@@ -394,7 +394,7 @@ pub(super) fn empty_citation_obligation_warning(
 
 /// Whether `file` is the entry file excluded from a folder's content count:
 /// the effective citable index, or literal `README.md` for a non-citable home
-/// (§FS-check.2.2.1.1). `index = false` naturally has no entry path.
+/// (§FS-check.2.2.1). `index = false` naturally has no entry path.
 fn kind_entry_file(file: &Path, schema: &Schema, frame: Frame<'_>, row: &Row) -> bool {
     // §FS-config-v2.schema.places.ownership: each folder has its own entry file.
     let entries: Vec<PathBuf> = if row.kind.is_some() {

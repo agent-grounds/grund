@@ -294,7 +294,7 @@ remains its own declaration: guidance neither pairs it nor makes an ambiguous qu
 
 Text and JSON carry the same message. Duplicate and query `sites` remain exactly their
 original ordered declaration-site lists, without annotations or extra entries
-([§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal)). The duplicate finding
+([§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output)). The duplicate finding
 stays at its original first site, even when a real home sorts before the broken stub
 ([§FS-errors.4.1](FS-errors.md#41-ordering)). The missing-target finding stays located at
 the faulty stub and retains `sites:null` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
@@ -334,9 +334,9 @@ what of it stays unjudged, is [§FS-declarations.stubs.target.5](FS-declarations
 
 #### stubs.target.1: The target is read as a save would write it
 
-Whether the file at `<path>` contains a source declaration of the ID is judged on the target's text as [§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write) defines it, the text a save would write. That is the text the scan reads any file from and the text `show` slices the stub's body out of ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id), [§REQ-one-answer.text.targets](../requirements/REQ-one-answer.md#texttargets-a-stubs-target-answers-as-its-saved-text-would)). The path the stub wrote reads a buffer the editor opened under any spelling of the same file ([§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)), and a target open only in a buffer, with no file saved behind it, is not missing: it is judged on the buffer, so it is healthy where the buffer declares the ID and `stub link target lacks <ID>: <path>` where it does not, as the saved file would be ([§FS-scan.text.buffer-only](FS-scan.md#textbuffer-only-a-buffer-with-no-file-behind-it-is-a-file)).
+Whether the file at `<path>` contains a source declaration of the ID is judged on the target's text as [§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write) defines it, the text a save would write. That is the text the scan reads any file from and the text `show` slices the stub's body out of ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments), [§REQ-one-answer.text.targets](../requirements/REQ-one-answer.md#texttargets-a-stubs-target-answers-as-its-saved-text-would)). The path the stub wrote reads a buffer the editor opened under any spelling of the same file ([§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)), and a target open only in a buffer, with no file saved behind it, is not missing: it is judged on the buffer, so it is healthy where the buffer declares the ID and `stub link target lacks <ID>: <path>` where it does not, as the saved file would be ([§FS-scan.text.buffer-only](FS-scan.md#textbuffer-only-a-buffer-with-no-file-behind-it-is-a-file)).
 
-So an unsaved edit that removes the target's declaration breaks the stub at once. `check` reports `broken-stub` at the stub line, and the editor shows it as the user edits ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub), never `ID not found`. An unsaved edit that puts the declaration back repairs the stub just as soon: `show` reads the body from the edited text, and the error goes. Scan scope plays no part, as it plays none in finding the body ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)).
+So an unsaved edit that removes the target's declaration breaks the stub at once. `check` reports `broken-stub` at the stub line, and the editor shows it as the user edits ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub), never `ID not found`. An unsaved edit that puts the declaration back repairs the stub just as soon: `show` reads the body from the edited text, and the error goes. Scan scope plays no part, as it plays none in finding the body ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)).
 
 #### stubs.target.2: A heading inside a fence of the target declares nothing
 
@@ -346,7 +346,7 @@ The target's text, the one [§FS-declarations.stubs.target.1](FS-declarations.md
 
 The target is read for the ID the way the scan reads that file ([§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)), and some files the scan never reads, wherever they sit: one whose own name begins with `.`, skipped by that name before `extensions` is consulted ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), and one whose extension `[scan] extensions` does not list ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)), or, in a version-2 file, one no listed language reads or one a listed `data` language reads, which only a value kind's value pass reads ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)). Such a target declares nothing, whatever it holds. A `# <ID>: …` heading in `notes/.a.md`, or in `notes/a.zz` where `zz` is not listed, is text the scan does not read, so the stub is broken exactly as if the target never named the ID.
 
-Name and extension refusals apply whether or not the target lies inside `[scan] include`. The name judged is the one the stub wrote, not the one a symlink resolves to: `notes/.a.md -> a.md` declares nothing even where the `notes/a.md` it resolves to is scanned and declares the ID, so the stub pairs with neither and is a declaration of its own beside that one, the duplicate a regular hidden copy of `notes/a.md` makes. The same holds for `notes/a.zz -> a.md` where `zz` is not listed. That a target outside `include` reads as if it were scanned ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)) reaches only a file the scan would read were it in scope.
+Name and extension refusals apply whether or not the target lies inside `[scan] include`. The name judged is the one the stub wrote, not the one a symlink resolves to: `notes/.a.md -> a.md` declares nothing even where the `notes/a.md` it resolves to is scanned and declares the ID, so the stub pairs with neither and is a declaration of its own beside that one, the duplicate a regular hidden copy of `notes/a.md` makes. The same holds for `notes/a.zz -> a.md` where `zz` is not listed. That a target outside `include` reads as if it were scanned ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)) reaches only a file the scan would read were it in scope.
 
 When the target is refused because the configuration reads no file by its name's extension,
 `check` reports `stub link target <path> is not scanned: <reason>`, whose `<reason>` is the
@@ -398,17 +398,17 @@ as before, in the same words, remedy included ([§FS-errors.3.11](FS-errors.md#3
 the same `missing-section` code. A broken stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) pairs
 with nothing and gains no section: it keeps its broken-stub finding, and a citation of one of
 its sections is `missing section` as before. A target that declares the ID more than once
-pairs as `show` refuses it, ambiguously ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), and lends no section, and so does
+pairs as `show` refuses it, ambiguously ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)), and lends no section, and so does
 every target of an ID with more than one declaration ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)).
 
 Every reader that enumerates a declaration's sections reads those sections from the paired
 declaration, as the same tree's readers do with the target scanned: `show --batch --all`
-generates a query for each ([§FS-show.2.6.2](FS-show.md#262-exhaustive-generation)), shell completion offers each
+generates a query for each ([§FS-show.2.6](FS-show.md#26-batch-resolution)), shell completion offers each
 ([§FS-completions.2.1](FS-completions.md#21-arguments-and-candidate-modes)), the editor's snapshot holds each for completion and navigation
 ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion), [§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)), and `list --selector` selects a chapter among them
 ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A section path the target declares twice is one generated query, which
 `show --batch --all` answers with the failed record of an ambiguous section
-([§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures)), so the batch exits `1` on the tree `check` already fails. Before grund
+([§FS-show.2.6](FS-show.md#26-batch-resolution)), so the batch exits `1` on the tree `check` already fails. Before grund
 0.19.0 those four readers saw none of an outside target's sections
 ([§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190)).
 
@@ -479,7 +479,7 @@ Where a duplicate error or an ambiguity refusal ([§FS-show.2.2.1](FS-show.md#22
 
 A surface that says where a paired declaration is names the target's declaration, its
 `<path>:<line>` and its title, as the same tree with the target scanned names it: `show`
-([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), plain `list` ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)), `list --size` ([§FS-list.3.4.6](FS-list.md#346-a-home-outside-the-scan)), the duplicate
+([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)), plain `list` ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)), `list --size` ([§FS-list.3.4.6](FS-list.md#346-a-home-outside-the-scan)), the duplicate
 error and the ambiguity refusal ([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)), and every finding about the
 declaration itself — the `unused` warning ([§FS-check.4.1](FS-check.md#41-unused-declaration)), and a count or chapter count it
 fails ([§FS-rules.7.2](FS-rules.md#72-chapter-cardinality), [§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality), [§FS-rules.7.4](FS-rules.md#74-inbound-citation-cardinality)), whatever of the target's citations and
@@ -538,7 +538,7 @@ field, that block is also the declaration's front-matter sections, which lie out
 
 ### body.conflict: A body still in the middle of a merge
 
-A declaration whose body holds a conflict block is not one text but two, and nothing in the tree says which of them is the declaration's: every citation of it, and every fingerprint the section lock takes of it ([§FS-section-lock.holds.fingerprint](FS-section-lock.md#holdsfingerprint-the-fingerprint)), would read one address as both ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). This is the one definition of such a block: which lines are markers ([§FS-declarations.body.conflict.markers](FS-declarations.md#bodyconflictmarkers-a-marker-line)), how they make blocks ([§FS-declarations.body.conflict.block](FS-declarations.md#bodyconflictblock-a-conflict-block)), where blocks are looked for ([§FS-declarations.body.conflict.where](FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for)), and which declarations a block names ([§FS-declarations.body.conflict.owners](FS-declarations.md#bodyconflictowners-which-declarations-a-block-names)). `check` reports each block ([§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)), and `fmt` writes nothing while one exists ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model)). A block changes no recognition: every other command reads the file as it did, and `show` still prints the bytes it reads ([§FS-show.requirements.authored-bytes](FS-show.md#requirementsauthored-bytes-a-slice-is-the-authors-bytes-selected-and-never-rewritten--realized)). Decided in [§DF-conflicted-declaration](../decisions/functional/DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing).
+A declaration whose body holds a conflict block is not one text but two, and nothing in the tree says which of them is the declaration's: every citation of it, and every fingerprint the section lock takes of it ([§FS-section-lock.holds.fingerprint](FS-section-lock.md#holdsfingerprint-the-fingerprint)), would read one address as both ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). This is the one definition of such a block: which lines are markers ([§FS-declarations.body.conflict.markers](FS-declarations.md#bodyconflictmarkers-a-marker-line)), how they make blocks ([§FS-declarations.body.conflict.block](FS-declarations.md#bodyconflictblock-a-conflict-block)), where blocks are looked for ([§FS-declarations.body.conflict.where](FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for)), and which declarations a block names ([§FS-declarations.body.conflict.owners](FS-declarations.md#bodyconflictowners-which-declarations-a-block-names)). `check` reports each block ([§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)), and `fmt` writes nothing while one exists ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model)). A block changes no recognition: every other command reads the file as it did, and `show` still prints the bytes it reads ([§FS-show.requirements.authored-bytes](FS-show.md#requirementsauthored-bytes-a-slice-is-the-authors-bytes-selected-and-never-rewritten)). Decided in [§DF-conflicted-declaration](../decisions/functional/DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing).
 
 #### body.conflict.markers: A marker line
 
@@ -733,7 +733,7 @@ is not specified here.
 
 A case declaration is located at its directory, line 1. It is never a stub and has no
 sections, so a citation of it with a section suffix names a section that does not exist
-([§FS-show.2.4.1](FS-show.md#241-the-slices-over-a-manifest)). It has no title either: no
+([§FS-show.2.4](FS-show.md#24-e2e-cases)). It has no title either: no
 heading declares it, so there is no title tail to read, and grund makes none up from the
 directory's name. Where a surface reports a declaration's title, a case's is absent: an
 empty title column in `grund list`, and `null` in its JSON ([§FS-list.3.1.1](FS-list.md#311-row-notes), [§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)). Its body is the manifest `grund E2E-<name>` prints ([§FS-show.2.4](FS-show.md#24-e2e-cases)), and
@@ -838,7 +838,7 @@ The token stops at a backtick, so an inline-code mention is not a near miss. The
 
 #### checks.declaration-near-miss.4: Facts, not a guessed rename
 
-The message names the token as written and the effective template, states that lookup remains compatible, and offers the two real migration choices: rename the declaration and its citations, or change the effective format. The template's key location follows the loaded-version and kind-override vocabulary of [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects). It does **not** propose a corrected ID; assembling one from component patterns would guess what the author meant.
+The message names the token as written and the effective template, states that lookup remains compatible, and offers the two real migration choices: rename the declaration and its citations, or change the effective format. The template's key location follows the loaded-version and kind-override vocabulary of [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure). It does **not** propose a corrected ID; assembling one from component patterns would guess what the author meant.
 
 #### checks.declaration-near-miss.5: A warning before 0.16.0, an error in it
 
@@ -1201,7 +1201,7 @@ announced: a heading of the open section's depth or shallower, plain or numbered
 that repeats an open path, ends a doc-comment section for ownership too
 ([§FS-declarations.section](FS-declarations.md#section-what-a-section-is)); a `/** … */` line without ` * ` that reads as a heading
 is that section ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)); `/// # 1. Sub` cuts no lead
-([§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)); and a relative heading, or a complete heading whose path puts a
+([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)); and a relative heading, or a complete heading whose path puts a
 name under a number, in a doc-comment declaration body declares its section
 ([§FS-declarations.section.relative.where](FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)).
 

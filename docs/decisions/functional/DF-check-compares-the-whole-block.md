@@ -26,7 +26,7 @@ That is a blind spot, declared and bounded ([§REQ-no-missed-citation.2](../../r
 
 ### 2.3 The finding says where to run `grund init`
 
-A root run reports other projects' blocks, and `grund init` at the root does not refresh them ([§FS-init.2.3.4.15.7](../../functional-spec/FS-init.md#234157-what-init-does-not-do)). The new workspace variant names the directory inside its text, and the existing variants that name a command append `; run it in <dir>` after their last byte ([§FS-errors.3.6.1](../../functional-spec/FS-errors.md#361-the-final-templates)), so a consumer matching their prefix still matches.
+A root run reports other projects' blocks, and `grund init` at the root does not refresh them ([§FS-init.2.3.4.15.7](../../functional-spec/FS-init.md#234157-what-init-does-not-do)). The new workspace variant names the directory inside its text, and the existing variants that name a command append `; run it in <dir>` after their last byte ([§FS-errors.3.6](../../functional-spec/FS-errors.md#36-the-agents-init-messages)), so a consumer matching their prefix still matches.
 
 ### 2.4 `migrate` refuses what it refused before
 

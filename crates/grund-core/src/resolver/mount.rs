@@ -291,7 +291,7 @@ fn identity(edge: &MountEdge, declaring: &ProjectRecords, found: Option<&str>) -
 
 /// §FS-imports.failures: a refusal inside the target's own tree, followed by one
 /// `note:` line naming the import that reached it, as a recovery breadcrumb
-/// (§FS-errors.1.2); a cycle, or a refusal a deeper import already noted, is
+/// (§FS-errors.1); a cycle, or a refusal a deeper import already noted, is
 /// passed on as it is. Each import it passes through marks itself as the site,
 /// so the outermost one, in the consumer's own config, is the last to.
 fn imported(

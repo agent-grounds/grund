@@ -10,7 +10,7 @@ A citation of a section of a stub's ID answered from the recorded declarations o
 Where the stub's target lay outside `[scan] include`, the only record was the stub's own, and a
 stub records no section ([§FS-declarations.checks.duplicate-section.2](../../functional-spec/FS-declarations.md#checksduplicate-section2-scoped-to-that-declarations-body)). So `check` reported
 `missing section <ID>.<path>` for a heading the target does declare, while it accepted the stub,
-`show` printed that very section ([§FS-show.2.3.7](../../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)), and the same tree with the target scanned
+`show` printed that very section ([§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)), and the same tree with the target scanned
 passed. Reported as [issue #529](https://github.com/agent-grounds/grund/issues/529).
 
 The same reading reached past the finding. A rule counted no `cites` fact for the citation,
@@ -25,7 +25,7 @@ resolves, so a binding that matches and one that does not were each `section not
 Every reader in `check` asks the target for the stub's sections, scanned or not
 ([§FS-check.3.2.1](../../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)): the `missing section` finding, the rule facts, the value comparison, the
 index-entry gate and the declaration-local rewrite answer from one section set, the one `show` slices
-([§FS-show.2.2.2.2](../../functional-spec/FS-show.md#2222-the-headings-check-counts)). It extends [§DF-stub-pairs-with-unscanned-target](DF-stub-pairs-with-unscanned-target.md#df-stub-pairs-with-unscanned-target-a-stub-pairs-with-its-target-whether-or-not-the-scan-reaches-it) from the count of homes to
+([§FS-show.2.2.2](../../functional-spec/FS-show.md#222-ambiguous-section)). It extends [§DF-stub-pairs-with-unscanned-target](DF-stub-pairs-with-unscanned-target.md#df-stub-pairs-with-unscanned-target-a-stub-pairs-with-its-target-whether-or-not-the-scan-reaches-it) from the count of homes to
 what a home holds: the scan scope decides neither. A section the target does not declare, and
 any section of a broken stub, is reported as before.
 
@@ -97,7 +97,7 @@ Five things do not move. A configured citation direction ([§FS-config.3.9](../.
 section or not. A section the target does not declare, and every section of a broken stub, is
 reported as it was. A target that declares the ID more than once, and every target of an ID
 with more than one home, lends no section, because `show` refuses that ID as ambiguous rather
-than read it ([§FS-show.2.3.7](../../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)); its citations read as they did. The declaration-local rewrite ([§FS-fmt.2.4.6](../../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)) cannot meet this case: a
+than read it ([§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)); its citations read as they did. The declaration-local rewrite ([§FS-fmt.2.4.6](../../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)) cannot meet this case: a
 stub has no body, so a numeric local citation after one has no owner scanned or not, and the sites
 inside an unscanned target are never read. Last, the target is read only to answer a citation into
 it, so what `check` judges of the home itself stays as it was outside the scan
@@ -111,7 +111,7 @@ about it is judged.
 [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids) licenses the pass-to-fail move, and each of its five conditions holds.
 
 1. *Prior prohibition.* The old verdict violated [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), which already applied when that verdict shipped: it is present in both released tags, v0.16.0 and v0.16.1.
-   That section says "a section coordinate resolves to the declaration's recorded heading or fails". In both tags a stub's headings are its inline home's: "the headings that count are the inline home's" ([§FS-declarations.checks.duplicate-section.2](../../functional-spec/FS-declarations.md#checksduplicate-section2-scoped-to-that-declarations-body)), and for a stub "that set is the inline home's" ([§FS-show.2.2.2.2](../../functional-spec/FS-show.md#2222-the-headings-check-counts)). Neither exempts a home outside the scan.
+   That section says "a section coordinate resolves to the declaration's recorded heading or fails". In both tags a stub's headings are its inline home's: "the headings that count are the inline home's" ([§FS-declarations.checks.duplicate-section.2](../../functional-spec/FS-declarations.md#checksduplicate-section2-scoped-to-that-declarations-body)), and for a stub "that set is the inline home's" ([§FS-show.2.2.2](../../functional-spec/FS-show.md#222-ambiguous-section)). Neither exempts a home outside the scan.
    The old run resolved the coordinate against the stub's own record, which holds no heading, and so failed a coordinate whose declaration records it. The plain run's `missing section` is the false alarm [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms) forbids, and each pass in section 5 is the same misreading with its alarm out of view: the rule fact, the value comparison, the value authority a malformed binding is refused by and the index entry were withheld because the section read as absent.
    This reaches only the misreading. A section the target does not declare, and any section of a broken stub, keeps every verdict on both builds.
    Nor does [§DF-section-citation-counts-in-rules.2.4](DF-section-citation-counts-in-rules.md#24-why-not-the-correction-route)'s refusal reach this: there a citation resolved to its section and only how rules counted it changed, while here the citation did not resolve to the section its declaration records, which is resolution, not counting.

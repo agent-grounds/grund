@@ -63,7 +63,7 @@ A clause the grammar does not accept is refused for the clause, field or value t
 failed, never as an unknown kind, in the order
 [§FS-rule-refusals.sentences.whose](../../functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) fixes. Those reasons replace bytes users
 already see, so D10 of [§DF-one-answer-rulings-grammar](DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary) sends them through the warning
-release of [§FS-errors.3.10](../../functional-spec/FS-errors.md#310-the-whose-clause-wording-migration): `0.21.0` keeps the old reason as a prefix, and
+release of [§FS-rule-refusals.sentences.whose](../../functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed): `0.21.0` keeps the old reason as a prefix, and
 `0.22.0` drops it. The same holds for any later refusal of a sentence whose clause is
 accepted, such as its quantifier or an object kind, because that sentence too was an unknown
 kind before. The exact-ID and object refusals only append, so they need no window.
@@ -99,12 +99,12 @@ kind before. The exact-ID and object refusals only append, so they need no windo
 - The rule facts gain no relation and no producer changes: the filter is written over
   `contains` and `chapter` ([§FS-rules.5.2](../../functional-spec/FS-rules.md#52-family-clauses)), and the field's value is read by the one
   function `invalid-field-value` reads it with.
-- "Applies to nothing" stays keyed on the kind ([§FS-check.2.2.1.4](../../functional-spec/FS-check.md#2214-a-rules-obligation)): a clause that
+- "Applies to nothing" stays keyed on the kind ([§FS-check.2.2.1](../../functional-spec/FS-check.md#221-citation-direction-obligation-applies-to-nothing)): a clause that
   selects nothing yet describes the project's state, not a broken rule.
 
 ## release-note: Release note
 
-- [§DF-field-value-subjects](DF-field-value-subjects.md#df-field-value-subjects-a-rule-subject-may-select-on-a-scalar-fields-value-with-one-whose-clause), [§FS-rules.2.2](../../functional-spec/FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value), [§FS-errors.3.10](../../functional-spec/FS-errors.md#310-the-whose-clause-wording-migration): **A rule subject can select on a
+- [§DF-field-value-subjects](DF-field-value-subjects.md#df-field-value-subjects-a-rule-subject-may-select-on-a-scalar-fields-value-with-one-whose-clause), [§FS-rules.2.2](../../functional-spec/FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value), [§FS-rule-refusals.sentences.whose](../../functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed): **A rule subject can select on a
   scalar field's value.** `Each SWR whose verification is Test must be cited by at least one
   TC.` holds only the requirements verified by test, and `list --selector` lists the same
   declarations. A declaration whose field holds another value is outside the rule. A whose

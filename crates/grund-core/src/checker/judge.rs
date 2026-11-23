@@ -128,7 +128,7 @@ pub(crate) fn judge(
 
     // §FS-check.2.3.1 / §AR-checker.2.11: a `<§>`-escaped illustration whose coordinate
     // resolves is likely a live citation bracketed by mistake; its live form keeps the
-    // section, in the separator of the project that reads it (§FS-check.2.3.1.3).
+    // section, in the separator of the project that reads it (§FS-check.2.3.1).
     for esc in &findings.escaped_citations {
         // §FS-config.3.2.8: the suggested live form names the selected declaration.
         let Some(target) = resolved_coordinate_target(esc, findings, schema, frame, targets) else {
@@ -289,7 +289,7 @@ fn check_unused(
                         "declared but never cited: {}",
                         render_catalog_id(frame.grammar(), &findings.declarations, id)
                     );
-                    // §FS-check.4.1.2 / §FS-errors.3.1: bounded, deterministic sites,
+                    // §FS-check.4.1.2 / §FS-errors.3: bounded, deterministic sites,
                     // spelled against the same report base as the finding's anchor.
                     if let Some(sites) = excluded.get_mut(id) {
                         sites.sort_by_key(|cite| {

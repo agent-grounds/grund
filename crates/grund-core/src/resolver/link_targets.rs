@@ -292,7 +292,7 @@ pub(crate) fn markdown_link_target_with_root(
 /// §FS-config-v2.schema.sources.extensions), and not under the `none` profile
 /// (§FS-fmt.6.2, §FS-fmt.6.7.1). `show --format=json` asks the same question for
 /// its `anchor` field, so a `null` there is exactly a bare file link here
-/// (§FS-show.3.1.3.1).
+/// (§FS-show.3.1.3).
 pub(crate) fn takes_heading_anchor(markdown: bool, presentation: &Presentation) -> bool {
     markdown && presentation.fmt.anchor_format != "none"
 }
@@ -301,7 +301,7 @@ pub(crate) fn takes_heading_anchor(markdown: bool, presentation: &Presentation) 
 /// cited section's heading for a `.<section>` coordinate, the declaration's own
 /// heading for a bare ID (§FS-fmt.6.2, §DF-md-link-anchor-strategy,
 /// §DF-declaration-anchor). The one derivation `fmt --cross-refs` writes and
-/// `show --format=json` reports, so the two cannot drift (§FS-show.3.1.3.1).
+/// `show --format=json` reports, so the two cannot drift (§FS-show.3.1.3).
 /// It reads the heading out of the current scan's record on every call, so each
 /// pass re-derives the anchor from the heading as it now stands (§FS-fmt.6.3).
 ///
@@ -381,7 +381,7 @@ fn anchor_as_left(
 }
 
 /// The anchor of one recorded section heading site, from the heading text the
-/// scanner stored for it (§FS-show.3.1.3.1): each `--toc` entry reads its own
+/// scanner stored for it (§FS-show.3.1.3): each `--toc` entry reads its own
 /// site, so a duplicated path still carries the anchor of the heading listed,
 /// numbered among its home's headings (§DF-repeated-heading-anchor.decision.count).
 pub(crate) fn section_site_anchor(

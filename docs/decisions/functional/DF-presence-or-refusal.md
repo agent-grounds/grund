@@ -40,7 +40,7 @@ is offered ([§FS-rule-refusals.sentences.presence-or](../../functional-spec/FS-
 
 The new reason replaces the old one in place, in one release, with no window,
 under the pre-1.0 licence of [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise), as a named
-exception of [§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change).
+exception of [§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes).
 
 - The old reason named a fault the sentence does not have. A window would keep
   sending the author, on purpose, to retitle a chapter that does not exist.

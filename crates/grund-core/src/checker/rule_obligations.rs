@@ -1,4 +1,4 @@
-//! A rule's share of the citation-direction obligation (§FS-check.2.2.1.4):
+//! A rule's share of the citation-direction obligation (§FS-check.2.2.1):
 //! what each parsed rule arms beside the rule checks (§FS-check.1.4.1), and the
 //! `applies to nothing` line a `must` or `should` rule earns when its subject
 //! kind gives it nothing to judge. The table's pass asks the same question in
@@ -63,7 +63,7 @@ pub(super) fn arm_rule_directions(
     }
 }
 
-/// §FS-check.2.2.1.4: one `empty-citation-obligation` line per `must` or `should`
+/// §FS-check.2.2.1: one `empty-citation-obligation` line per `must` or `should`
 /// rule whose subject kind gives it nothing to judge. A prohibition has no unit
 /// and never warns, as a prohibition-only table does not.
 pub(super) fn empty_rule_obligations(
@@ -111,7 +111,7 @@ fn obligation_subject(rule: &ParsedRule) -> Option<&str> {
     }
 }
 
-/// §FS-check.2.2.1.4: a `must` or `should` rule about `citing_kind` earns the
+/// §FS-check.2.2.1: a `must` or `should` rule about `citing_kind` earns the
 /// table's warning when the ordinary unit derivation finds no unit — condition 4,
 /// asked of the same derivation the table's pass runs — and conditions 2 and 3
 /// hold, which the one function below decides for both.

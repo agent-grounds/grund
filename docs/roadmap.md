@@ -46,7 +46,7 @@ GitHub: [#368](https://github.com/agent-grounds/grund/issues/368).
 ## RM-one-grammar-flip: end the one-grammar window in 0.19.0
 
 This milestone shipped in grund 0.19.0: the two refusals of
-[§FS-errors.3.8](functional-spec/FS-errors.md#38-the-one-grammar-wording-migration) print [§FS-errors.3.8.1](functional-spec/FS-errors.md#381-the-final-templates)'s reasons alone, and a pinned or `*/`
+[§FS-errors.2.5.1](functional-spec/FS-errors.md#251-a-kind-that-declares-no-ids) and [§FS-rule-refusals.sentences.order](functional-spec/FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) print their reasons alone, and a pinned or `*/`
 `[citations]` target the run cannot accept fails the load
 ([§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)). Its record is the compatibility notice that landed it,
 [§DF-one-grammar-lands-in-0-19.release-note](decisions/functional/DF-one-grammar-lands-in-0-19.md#release-note-release-note). The item's own plan is removed, as
@@ -58,7 +58,7 @@ GitHub: [#881](https://github.com/agent-grounds/grund/issues/881), which landed 
 ### 1. What
 
 The legacy prefix and the `; this wording changes in grund 0.19.0` suffix went,
-so the two reasons are [§FS-errors.3.8.1](functional-spec/FS-errors.md#381-the-final-templates)'s final templates, and each `[citations]`
+so the two reasons are the final templates of [§FS-errors.2.5.1](functional-spec/FS-errors.md#251-a-kind-that-declares-no-ids) and [§FS-rule-refusals.sentences.order](functional-spec/FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails), and each `[citations]`
 warning of [§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds) became an `error:` that fails the load with exit
 `2`, its text ending in `; this became an error in grund 0.19.0`. The release
 constant went with them, and the canonical config of

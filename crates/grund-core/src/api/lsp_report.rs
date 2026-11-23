@@ -113,7 +113,7 @@ fn check_workspace_context(
     .unread(&unread);
     let mut report = CheckReport::default();
     // §FS-check.1.3.6.1: a workspace anchor below its root asks the scope caution once,
-    // after the loop, and holds the unread files back for after it (§FS-check.2.2.3.1).
+    // after the loop, and holds the unread files back for after it (§FS-check.2.2.3).
     let narrowed_workspace = context.workspace_loaded && report_scope.is_some();
     let mut unread_outside_report_scope = Vec::new();
     let rules_complete = context
@@ -248,7 +248,7 @@ fn check_workspace_context(
             context.render_config().display(),
         ));
         // §FS-check.1.3.6.3, §AR-lsp.5.1.1: after the silence flag, as in `grund check`
-        // (§FS-check.2.2.3.1).
+        // (§FS-check.2.2.3).
         report.warnings.extend(unread_resolution_source_cautions(
             unread_outside,
             context.render_config().display(),

@@ -112,7 +112,7 @@ fn root_components<'a>(
 
 /// §FS-values.3.1.2: a value whose component contains the separator cannot be
 /// bound at its root, so the refusal names the first such component and carries
-/// its declaration site as its one `sites` entry (§FS-errors.5.4).
+/// its declaration site as its one `sites` entry (§FS-errors.5.1).
 fn space_refusal(
     binding: &ValueBinding,
     root: &str,

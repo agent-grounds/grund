@@ -31,7 +31,7 @@ use super::settings::LexicalSettings;
 use super::shorthand::parse_id_arg_with_shorthand;
 
 /// Whether `label` is a citation-shaped wrapper label the `--cross-refs` pass
-/// can emit (§FS-show.3.2.1): the configured grammar's own spelling, its
+/// can emit (§FS-show.3.2): the configured grammar's own spelling, its
 /// number-only shorthand, or a persisted off-grammar one, qualified or not
 /// (§FS-config.3.2.5). An ordinary link whose label merely starts with the marker
 /// is not one.
@@ -141,7 +141,7 @@ pub(crate) fn citation_link(
 /// §FS-fmt.6.4), and `--format md` output (kept verbatim by the caller) are all
 /// left untouched. In a Markdown body, fence delimiters and their contents also
 /// remain authored until the shared delimiter grammar closes the fence
-/// (§FS-show.2.5, §FS-show.3.2.1, §FS-show.3.2.2). Purely textual: the citation
+/// (§FS-show.2.5, §FS-show.3.2). Purely textual: the citation
 /// is never resolved, so a dangling one is flattened just the same and `grund
 /// check` still reports it.
 pub(crate) fn flatten_cross_ref_links(
@@ -195,7 +195,7 @@ fn flatten_cross_ref_links_line(
         };
         let cite_end = label_start + label_close_rel;
         let token = &line[label_start..cite_end];
-        // §FS-show.3.2.1: require a citation-shaped label the formatter can emit,
+        // §FS-show.3.2: require a citation-shaped label the formatter can emit,
         // including persisted and qualified legacy spellings but excluding an
         // ordinary link whose label merely starts with the marker.
         if token.is_empty()
@@ -211,7 +211,7 @@ fn flatten_cross_ref_links_line(
         if is_inside_inline_code(line, bracket_pos) {
             continue;
         }
-        // §FS-show.3.2.1: the reading `fmt` asks, and only a wrap collapses, whole
+        // §FS-show.3.2: the reading `fmt` asks, and only a wrap collapses, whole
         // to the balancing `)`; a wrap that never closes, and an image, are
         // printed as written.
         let CitationLink::Wrap(CrossRefWrap { close, .. }) =

@@ -45,7 +45,7 @@ pub struct Declaration {
     /// commands that have to say the coordinate is ambiguous — §FS-declarations.checks.duplicate-section
     /// names each colliding line, and §FS-show.2.2.2 refuses a query for a path
     /// it holds. `--toc` reads neither: it re-scans the source, which is what
-    /// §FS-show.2.2.2.3 exempts it for.
+    /// §FS-show.2.2.2 exempts it for.
     pub duplicate_sections: Vec<(String, SectionInfo)>,
     pub is_stub: bool,
     pub defined_in: Option<PathBuf>,

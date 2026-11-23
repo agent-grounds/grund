@@ -1,4 +1,4 @@
-//! The exhaustive form of `show --batch` (§FS-show.2.6.2): every coordinate the loaded
+//! The exhaustive form of `show --batch` (§FS-show.2.6): every coordinate the loaded
 //! context declares, generated once and in one order, which `--all` reads whole and
 //! `--glob` filters (§FS-show.1.9).
 
@@ -12,7 +12,7 @@ use crate::grammar::render_catalog_id;
 use crate::model::{Id, paired_declarations};
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
 
-/// `id` as the exhaustive form spells it (§FS-show.2.6.2): the catalog's spelling
+/// `id` as the exhaustive form spells it (§FS-show.2.6): the catalog's spelling
 /// in `project`, unqualified when `project` is the current one and prefixed with its
 /// alias and `/` otherwise, whatever alias a query reached it by.
 pub(crate) fn generated_id(
@@ -45,11 +45,11 @@ pub(crate) fn answered_coordinate(
 }
 
 /// Generate stable coordinates from the declarations and sections already in
-/// the loaded context (§FS-show.2.6.2). BTree sets collapse duplicate claimants;
+/// the loaded context (§FS-show.2.6). BTree sets collapse duplicate claimants;
 /// the final bytewise sort is over the public qualified spelling. A path narrower
 /// than its config root bounds which declarations generate coordinates, as it
 /// bounds the entries `list` prints, and every query still resolves against the
-/// whole project (§FS-show.2.6.2, §AR-resolver.3.3). Globs keep the coordinates
+/// whole project (§FS-show.2.6, §AR-resolver.3.3). Globs keep the coordinates
 /// they select, matched against the project-local ID (§FS-show.1.9).
 pub(crate) fn exhaustive_batch_queries(
     context: &WorkspaceContext,

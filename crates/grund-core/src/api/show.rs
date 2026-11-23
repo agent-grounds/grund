@@ -42,7 +42,7 @@ pub fn show(id_arg: &str, opts: ShowOpts) -> Result<ShowOutput> {
 /// What a refused single read prints below its refusal: the `hint:` lines built
 /// from the context the read loaded (§FS-show.3.5, §AR-resolver.3.1.1), and
 /// whether the bare form's filesystem-path breadcrumb takes the refusal's place
-/// (§FS-show.3.5.2), in which case `lines` is the breadcrumb's format hint.
+/// (§FS-show.3.5), in which case `lines` is the breadcrumb's format hint.
 #[doc(hidden)]
 #[derive(Debug, Default)]
 pub struct ShowHints {
@@ -60,7 +60,7 @@ pub struct ShowHints {
 /// batch builds them (§FS-show.3.5, §AR-resolver.3.1.1). `bare` says the read is
 /// the bare `grund <arg>` form, the one form whose refusal may be the
 /// filesystem-path breadcrumb, which the returned hints then say it is
-/// (§FS-show.3.5.2).
+/// (§FS-show.3.5).
 #[doc(hidden)]
 pub fn show_with_scope(
     id_arg: &str,
@@ -130,7 +130,7 @@ fn show_run(
 }
 
 /// Load once and validate the supplied path before any single or batch answer
-/// (§FS-show.1.4.1, §FS-show.2.6.3), including at workspace roots. Preserve warnings
+/// (§FS-show.3.5, §FS-show.2.6), including at workspace roots. Preserve warnings
 /// even when validation refuses the run (§FS-workspace.6.1.7).
 ///
 /// Only generated batches use the returned scope to select coordinates; explicit
@@ -150,9 +150,9 @@ pub(super) fn load_show_context(
 /// the context the read loaded and never a second one (§AR-resolver.3.1.1).
 ///
 /// The filesystem-path breadcrumb is decided here and nowhere else
-/// (§FS-show.3.5.2): the bare form, a refusal that begins `unknown project alias`,
+/// (§FS-show.3.5): the bare form, a refusal that begins `unknown project alias`,
 /// and an operand that exists relative to the working directory. Its format hint
-/// is the invalid-ID hint of §FS-show.3.5.1, so the chooser is asked as that
+/// is the invalid-ID hint of §FS-show.3.5, so the chooser is asked as that
 /// refusal, the `invalid ID` line the breadcrumb prints. Every other refusal is
 /// asked as itself, so an unknown alias the breadcrumb does not replace still
 /// earns no hint, and nothing walks the tree for one.
@@ -288,7 +288,7 @@ impl<'c, 'a> ShowSource<'c, 'a> {
         let (mut output, home) =
             self.read(context, mode.render_mode(), format == ShowFormat::Markdown)?;
         if format != ShowFormat::Markdown {
-            // §FS-show.3.2.1, §FS-show.3.2.2: flatten ordinary prose while preserving
+            // §FS-show.3.2: flatten ordinary prose while preserving
             // authored wrappers in Markdown fences, Markdown by the file's language.
             let reading = config.reading(&output.path);
             output.body = flatten_cross_ref_links(&output.body, reading.lexical, reading.markdown);
@@ -319,7 +319,7 @@ impl<'c, 'a> ShowSource<'c, 'a> {
     }
 
     /// The body in `mode` and the record it is read out of, a stub's paired
-    /// declaration rather than the stub (§FS-show.2.3.7), or the refusal the
+    /// declaration rather than the stub (§FS-show.2.3), or the refusal the
     /// coordinate earns: not found, ambiguous, a broken stub, or a section the
     /// record lacks or holds twice.
     pub(super) fn read(

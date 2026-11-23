@@ -10,7 +10,7 @@
 many parts as its root has components name the cited root and the literal as written, and staged
 the change through the warning release of [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): grund 0.21.0 kept the
 message earlier releases printed whole in front, followed by ` — whole binding: `, the new
-message and `; this wording changes in grund 0.22.0` ([§FS-errors.3.9](../../functional-spec/FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)). That record's notice
+message and `; this wording changes in grund 0.22.0` ([§FS-values.5.2.2](../../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). That record's notice
 shipped with 0.21.0, and a notice already released is not published again
 ([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)), so the release that drops the prefix needs a notice of its own, and
 this record carries it. The suffix named 0.22.0 as the release the bytes change in, and the
@@ -21,7 +21,7 @@ release guard refuses a version that reaches a promise it does not keep ([§FS-d
 In `0.22.0` (agent-grounds/grund#1118):
 
 - the legacy message, the ` — whole binding: ` and the suffix go, so a root-aimed mismatch whose
-  part count equals the component count prints the template of [§FS-errors.3.9.1](../../functional-spec/FS-errors.md#391-the-final-templates) alone, on the
+  part count equals the component count prints the template of [§FS-values.5.2.2](../../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component) alone, on the
   text line, in the `--format json` `message` and in the editor's diagnostic alike;
 - where that one pair differs in kind, the root form of the clause of [§FS-values.5.2.1](../../functional-spec/FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) stays,
   and the component-aimed form the legacy message carried goes with it;
@@ -40,7 +40,7 @@ In `0.22.0` (agent-grounds/grund#1118):
 
 ## release-note: Release note
 
-- [§DF-root-value-mismatch-wording-lands-in-0-22](DF-root-value-mismatch-wording-lands-in-0-22.md#df-root-value-mismatch-wording-lands-in-0-22-the-root-aimed-value-mismatch-wording-window-closes-in-0220), [§FS-errors.3.9.1](../../functional-spec/FS-errors.md#391-the-final-templates), [§FS-values.5.2.2](../../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component):
+- [§DF-root-value-mismatch-wording-lands-in-0-22](DF-root-value-mismatch-wording-lands-in-0-22.md#df-root-value-mismatch-wording-lands-in-0-22-the-root-aimed-value-mismatch-wording-window-closes-in-0220), [§FS-values.5.2.2](../../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component):
   **a value mismatch at a binding aimed at a whole value names the root and the literal alone.**
   What grund 0.21.0 announced lands. For `` `30 minutes` `` bound to the root `FS-session.1`,
   `grund check` printed ``value mismatch for FS-session.1.1: bound `30`, declared `45` at

@@ -29,7 +29,7 @@ compatibility reading goes ([#639](https://github.com/agent-grounds/grund/issues
 |---|---|---|
 | P01 | a Markdown body ends at the next same-or-higher heading, declaring or plain ([§FS-declarations.body](../../functional-spec/FS-declarations.md#body-where-a-declarations-body-ends)) | `show --full`, `list --size` |
 | P02 | a `/** … */` line without ` * ` that reads `## 1. Sub` is section `.1`, printed as written | the scanner, a direct query, `refs`, `show` |
-| P03 | `/// # 1. Sub` is not a section of a `///` declaration, so `--toc` stops listing it ([§FS-show.2.3.3](../../functional-spec/FS-show.md#233-section-selection-inside-a-doc-comment)) | `--toc`, every lead it cut |
+| P03 | `/// # 1. Sub` is not a section of a `///` declaration, so `--toc` stops listing it ([§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)) | `--toc`, every lead it cut |
 | P07 | a section ends at the next heading of its level or above, numbered or plain (D17b) | `show` |
 | P10 | a `//` note next to a `///` block is a block of its own, outside the body (D17c) | `show`, `list --size` |
 | P12 | a doc-comment section ends at a duplicate, plain or shallower heading for ownership too (D17b) | `refs`, `cover --lines`, the chapter rules, the editor |
@@ -52,7 +52,7 @@ D17 rules neither row, so this record does.
   Today's verdict is a false `missing section`, so the correction route was open to it; it
   was not taken, because correcting it now would also move ownership and the chapter rules
   in the same release, which a warning release lets an author see first.
-- **P03 takes the query's side.** [§FS-show.2.3.3](../../functional-spec/FS-show.md#233-section-selection-inside-a-doc-comment) makes `## 1.` the depth-1 section in a
+- **P03 takes the query's side.** [§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments) makes `## 1.` the depth-1 section in a
   doc-comment, so `/// # 1. Sub` is a same-level heading, not a section. Recording it as one
   would give doc-comments a section depth Markdown does not have.
 

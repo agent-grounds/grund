@@ -376,10 +376,10 @@ kind, the kind clause names the component it is about, as
 ([§FS-values.5.2.1](../functional-spec/FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind)).
 
 That line is the whole message
-([§FS-errors.3.9.1](../functional-spec/FS-errors.md#391-the-final-templates)). grund 0.21.0 printed the message earlier releases
+([§FS-values.5.2.2](../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). grund 0.21.0 printed the message earlier releases
 printed, which names the first unequal component by its own coordinate and
 quotes only its part, whole in front of it, followed by ` — whole binding: `,
-and grund 0.22.0 dropped it ([§FS-errors.3.9](../functional-spec/FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)). A script that matches a root-aimed
+and grund 0.22.0 dropped it ([§FS-values.5.2.2](../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). A script that matches a root-aimed
 line should match `code == "value-mismatch"`, which does not move. A binding
 aimed at one component keeps the shorter message.
 

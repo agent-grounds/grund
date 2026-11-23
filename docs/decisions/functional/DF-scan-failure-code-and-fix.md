@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-09
 
-Gives a file that was read and does not parse the code `unparsable-file`, and `io`'s *Fix* one case per place, as [§FS-check.2.4.3](../../functional-spec/FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix) lays out, and names a second exception in [§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change). Serves [§GOAL-friendliness-first.1](../../goals.md#1-hard-requirements): a failure line is what a user follows next, so what it tells them has to work where it is printed. Reported as [grund#1272](https://github.com/agent-grounds/grund/issues/1272), with [#1251](https://github.com/agent-grounds/grund/issues/1251) and [#1263](https://github.com/agent-grounds/grund/issues/1263) fused into it.
+Gives a file that was read and does not parse the code `unparsable-file`, and `io`'s *Fix* one case per place, as [§FS-check.2.4.3](../../functional-spec/FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix) lays out, and names a second exception in [§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes). Serves [§GOAL-friendliness-first.1](../../goals.md#1-hard-requirements): a failure line is what a user follows next, so what it tells them has to work where it is printed. Reported as [grund#1272](https://github.com/agent-grounds/grund/issues/1272), with [#1251](https://github.com/agent-grounds/grund/issues/1251) and [#1263](https://github.com/agent-grounds/grund/issues/1263) fused into it.
 
 ## status: Accepted
 
@@ -24,7 +24,7 @@ Two families of line cannot keep their prefix, and they move in place in 0.23.0,
 - The `readable` lines, losing `, or keep it out of the scan`. A section lock or the config root has no row to remove it from and no walk that reaches it, so those words do not work there.
 - 0.23.0 is the last release before 1.0 where this can happen at all: from 1.0 a wording change must keep its prefix through a window.
 
-Consumers are not stranded: `code` is the contract, no consumer acts on `message` ([§FS-errors.requirements.fields](../../functional-spec/FS-errors.md#requirementsfields-what-a-program-needs-from-a-finding-is-a-field--realized-directional-for-the-next-finding)), and a script filtering on the new code can tell the two apart for the first time. The five-condition route of section 5 of `REQ-backwards-compatibility` does not apply, because every one of these runs exits `2` before and after, so no verdict moves.
+Consumers are not stranded: `code` is the contract, no consumer acts on `message` ([§FS-errors.requirements.fields](../../functional-spec/FS-errors.md#requirementsfields-what-a-program-needs-from-a-finding-is-a-field)), and a script filtering on the new code can tell the two apart for the first time. The five-condition route of section 5 of `REQ-backwards-compatibility` does not apply, because every one of these runs exits `2` before and after, so no verdict moves.
 
 ## 3. Consequences
 

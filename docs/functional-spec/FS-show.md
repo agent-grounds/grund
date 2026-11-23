@@ -570,8 +570,8 @@ Each hint is one line below the failure's message:
   ```
 
   When no config was loaded but a project config lies below the root
-  ([§FS-check.2.2.2.5.1](FS-check.md#22251-which-configs-it-names), [§FS-check.2.2.2.5.2](FS-check.md#22252-the-search-is-bounded-and-follows-the-scan)), the template is not the cause: the one hint line
-  names those configs and the routes `check`'s message offers ([§FS-check.2.2.2.5](FS-check.md#2225-a-project-config-below-a-run-that-loaded-none)), without
+  ([§FS-check.2.2.2](FS-check.md#222-the-message-names-the-likely-cause)), the template is not the cause: the one hint line
+  names those configs and the routes `check`'s message offers ([§FS-check.2.2.2](FS-check.md#222-the-message-names-the-likely-cause)), without
   `grund check`, in place of the template and the `grund list` route:
 
   ```text
@@ -591,7 +591,7 @@ Each hint is one line below the failure's message:
   is checked, and nothing is resolved. Only such a path gets the hint, and never in a batch.
   It is built from the read's own coordinates, `--section` included, and asks the batch for
   the read's format; stdout stays empty, the exit stays `2`, and stderr stays raw text under
-  `--format=json` ([§FS-errors.2.2.4](FS-errors.md#224-under---formatjson), [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)). So `grund FS-alpha FS-beta` prints:
+  `--format=json` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message), [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)). So `grund FS-alpha FS-beta` prints:
 
   ```text
   error: path does not exist: FS-beta

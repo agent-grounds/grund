@@ -52,7 +52,7 @@ fn with_counted_list(
 
 /// The clause and the `sites` of `entries`, each a settled site beside the citation written there:
 /// entries by path, then line, then column, with no cap, and each distinct line once
-/// (§FS-rules.7.3.1). `display` names a path as the report names every path (§FS-errors.3.1), and
+/// (§FS-rules.7.3.1). `display` names a path as the report names every path (§FS-errors.3), and
 /// the citation is the one written there, without its `§`.
 fn counted_clause(
     mut entries: Vec<(Site, SiteMeta)>,

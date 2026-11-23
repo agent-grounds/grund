@@ -9,7 +9,7 @@
 //!
 //! The refusal a configured but non-citable kind earns is rendered here too,
 //! once, in the quoting each surface already uses (§FS-errors.2.5.1), alone
-//! since the one-grammar window closed (§FS-errors.3.8.1).
+//! since the one-grammar window closed (§FS-errors.2.5.1).
 
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
@@ -62,7 +62,7 @@ pub(crate) struct KindField {
 impl KindEntry {
     /// §FS-errors.2.5.1: why this configured kind is refused where a citable
     /// one is wanted, in `quote`'s spelling: the whole refusal on every surface
-    /// since the one-grammar window closed (§FS-errors.3.8.1,
+    /// since the one-grammar window closed (§FS-errors.2.5.1,
     /// §DF-one-grammar-lands-in-0-19).
     pub(crate) fn non_citable_reason(&self, quote: Quote) -> String {
         let kind = quote.wrap(&self.name);
@@ -320,7 +320,7 @@ impl KindTable {
     /// (§FS-config.3.9.2), has no row; config has always read it as configured
     /// and not citable, a kind that cites and is never cited, and keeps that
     /// answer. Every other surface called it unknown, and since `0.19.0` gives
-    /// this verdict's reason alone (§FS-errors.3.8.1,
+    /// this verdict's reason alone (§FS-errors.2.5.1,
     /// [`Self::unknown_or_complement`]).
     pub(crate) fn config_verdict<'s>(
         &'s self,
@@ -341,7 +341,7 @@ impl KindTable {
         }
     }
 
-    /// §FS-errors.3.8.1: `legacy`, the refusal a surface gives a name `scope`
+    /// §FS-errors.2.5.1: `legacy`, the refusal a surface gives a name `scope`
     /// does not configure, or, where `scope` configures the name without IDs —
     /// the complement `code` with no row included — §FS-errors.2.5.1's reason in
     /// `quote`'s spelling in its place (§FS-list.1.1,
@@ -488,7 +488,7 @@ pub(crate) fn known_kinds_line<'a>(citable: impl IntoIterator<Item = &'a str>) -
     format!("known kinds: {}", known.join(", "))
 }
 
-/// §FS-errors.3.7.1: why a target or object naming other projects cannot be
+/// §FS-errors.3.7: why a target or object naming other projects cannot be
 /// judged in a run that holds no workspace — the reason names what the scope
 /// cannot reach, never a candidate it cannot have (§FS-check.3.8.3).
 pub(crate) fn unverifiable_reason(alias: Option<&str>, kind: &str) -> String {

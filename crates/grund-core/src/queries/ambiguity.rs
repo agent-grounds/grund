@@ -105,7 +105,7 @@ pub(super) fn ambiguous_id_refusal(
     }
     // §FS-declarations.stubs.pairing.3: a declaration a stub stands for is at its
     // target, at each line there that declares the ID (§AR-scanner.4.6).
-    // §FS-errors.3.1, §FS-cli.3.4, §FS-errors.5.2.1: spelled from the report root, `.` at it.
+    // §FS-errors.3, §FS-cli.3.4, §FS-errors.5.2: spelled from the report root, `.` at it.
     let sites: Vec<FindingSite> = paired
         .iter()
         .map(|declaration| FindingSite {
@@ -129,7 +129,7 @@ pub(super) fn ambiguous_id_refusal(
         &MissingStubRepair::new(paired)
             .located_suffix(&rendered_id, |path| display_path(path_config, path)),
     );
-    // §FS-errors.5.2.1: JSON carries the same sites, without parsing prose.
+    // §FS-errors.5.2: JSON carries the same sites, without parsing prose.
     Some(ShowQueryError {
         code: "ambiguous",
         sites,
@@ -141,7 +141,7 @@ pub(super) fn ambiguous_id_refusal(
 /// (§FS-show.2.2.2, §FS-refs.4), before reading a body or filtering citations.
 /// `body_decl` is the record of the ID's one declaration, so a stub's sections are
 /// its inline home's; its own prose declares none
-/// (§FS-declarations.checks.duplicate-section.2, §FS-show.2.3.7). `path_config`
+/// (§FS-declarations.checks.duplicate-section.2, §FS-show.2.3). `path_config`
 /// owns report paths.
 pub(super) fn ambiguous_section_refusal(
     config: &Config,
@@ -174,7 +174,7 @@ pub(super) fn ambiguous_section_refusal(
         config.section_separator,
         section
     );
-    // §FS-errors.5.2.1: the message and JSON carry every claimant in file order.
+    // §FS-errors.5.2: the message and JSON carry every claimant in file order.
     let sites = lines
         .iter()
         .map(|line| FindingSite {

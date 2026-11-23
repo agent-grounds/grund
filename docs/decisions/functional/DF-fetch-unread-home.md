@@ -83,7 +83,7 @@ reads what it wrote.
 `— give the file a name the scan reads as Markdown`, or, at an `<ID>.md` an ignore file or an
 `exclude` rule keeps out of the walk, to `— the scan does not read <path>: <reason>; <repair>`
 ([[§FS-check.3.1.3.1](../../functional-spec/FS-check.md#3131-a-home-fetch-refuses)]), in the same release, under the third
-exception of [[§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change)], the one for `check`'s fetch tail, and for
+exception of [[§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes)], the one for `check`'s fetch tail, and for
 its reason: a window would keep recommending on purpose a command that can only refuse. The base
 of the message, the code, the severity and the exit stay what they are.
 

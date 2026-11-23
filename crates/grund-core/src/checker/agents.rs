@@ -11,7 +11,7 @@ use crate::model::{
 use crate::sources::Sources;
 use std::path::Path;
 
-/// One of §FS-errors.3.6.1's final templates around its `detail`: the
+/// One of §FS-errors.3.6's final templates around its `detail`: the
 /// `repo maintenance: ` classification ahead, and the reminder that the finding
 /// leaves citation validity alone behind. A message classification only, not a
 /// finding category or selector value (§FS-check.1).
@@ -19,7 +19,7 @@ fn agents_init_message(detail: String) -> String {
     format!("repo maintenance: {detail} (does not affect citation validity)")
 }
 
-/// §FS-errors.3.6.1: a held-stable template that names `grund init`, grown at
+/// §FS-errors.3.6: a held-stable template that names `grund init`, grown at
 /// its end with the directory of another project's block.
 fn command_message(detail: String, owner: Option<&str>) -> String {
     let message = agents_init_message(detail);
@@ -31,7 +31,7 @@ fn command_message(detail: String, owner: Option<&str>) -> String {
 
 /// The text of both stale templates ahead of the section noun, and the text
 /// after it, which [`stale_block`] writes and [`stale_section_noun`] reads back
-/// (§FS-errors.3.6.1).
+/// (§FS-errors.3.6).
 const STALE_BEFORE_NOUN: &str = "stale grund init block: the ";
 const STALE_AFTER_NOUN: &str = " section differs from ";
 
@@ -319,7 +319,7 @@ fn missing_block(path: &Path, expected_version: u32, owner: Option<&str>) -> Dia
 /// §FS-check.3.5.3: a block whose `noun` differs from the render. A workspace
 /// section differs from the workspace and names its directory inside the
 /// template; every other section differs from `grund.toml`, and the held-stable
-/// template grows at its end (§FS-errors.3.6.1).
+/// template grows at its end (§FS-errors.3.6).
 /// Workspace sections explain their first unequal body entry (§FS-check.3.5.3.1).
 pub(super) fn stale_block(
     path: &Path,

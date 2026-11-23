@@ -95,7 +95,7 @@ change, mostly as `unknown kind "distinct X"`, a kind that does not exist. Those
 refusals now name the real failure. The new reasons replace the old ones in
 place, in 0.23.0, with no window, under the pre-1.0 licence of
 [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise), as a named exception of
-[§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change). [§DF-one-answer-rulings-grammar](DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary) D10 gives a
+[§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes). [§DF-one-answer-rulings-grammar](DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary) D10 gives a
 refusal's wording a warning release; this change departs from it by the same
 licence [§DF-presence-or-refusal](DF-presence-or-refusal.md#df-presence-or-refusal-a-presence-name-holding-or-between-two-words-is-refused-for-the-or-corrected-in-place) used, for the same reason.
 

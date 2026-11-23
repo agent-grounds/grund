@@ -650,8 +650,8 @@ either, and is read with this same fallback shape ([§FS-workspace.1.2.1](FS-wor
 
 A run at the workspace root asks [§FS-check.2.2](FS-check.md#22-empty-scan)'s question of each
 project it loads, and a project whose own scan read nothing is named by its root,
-in [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)'s message or its exclude-pattern form, or beside the
-outward link that [§FS-check.2.2.2.6.1](FS-check.md#22261-a-directory-link-out-of-the-project-below-the-path) names in its place. That root is
+in [§FS-check.2.2.2](FS-check.md#222-the-message-names-the-likely-cause)'s message or its exclude-pattern form, or beside the
+outward link that [§FS-check.2.2.2](FS-check.md#222-the-message-names-the-likely-cause) names in its place. That root is
 a `<path>` in the report like any other, so it is spelled from the report base the
 run's other paths use and is never absolute ([§FS-config.3.6](FS-config.md#36-output--report-format)): the workspace
 root reads ``no files under `.` matched``, and a member reads its root from that
@@ -1052,7 +1052,7 @@ projects — and picking one would be a guess
 ##### 8.1.1.4 Each project is asked in its own grammar
 
 Re-parse and render the written ID in each candidate project's grammar, as a qualified citation does ([§FS-workspace.1.2](FS-workspace.md#12-whose-grammar-reads-the-id), [§FS-workspace.4](FS-workspace.md#4-resolution)): in a mixed-format workspace the same text can denote different IDs, so carrying the current project's parse would miss the candidate.
-Current-grammar rejection must not pre-empt the search: a kind may exist only in a loaded member. An actual member declaration earns the same `ID not found: <written ID>` refusal with qualified candidates and `not-found` classification ([§FS-workspace.8.1.1.8](FS-workspace.md#8118---format-json-keeps-its-shape)), for bare/explicit show, the programmatic show API and explicit batch queries. Without an actual declaration, preserve the original failure, including `invalid ID` and its format hint when the current grammar rejects the text ([§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)).
+Current-grammar rejection must not pre-empt the search: a kind may exist only in a loaded member. An actual member declaration earns the same `ID not found: <written ID>` refusal with qualified candidates and `not-found` classification ([§FS-workspace.8.1.1.8](FS-workspace.md#8118---format-json-keeps-its-shape)), for bare/explicit show, the programmatic show API and explicit batch queries. Without an actual declaration, preserve the original failure, including `invalid ID` and its format hint when the current grammar rejects the text ([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure)).
 
 ##### 8.1.1.5 A one-project run offers none
 

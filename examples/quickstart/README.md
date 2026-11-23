@@ -2,7 +2,7 @@
 
 A small login example of declarations, section retrieval and broken
 citations ([§FS-examples.2](../../docs/functional-spec/FS-examples.md#2-canonical-use-cases),
-[§FS-show.2.1.5](../../docs/functional-spec/FS-show.md#215-a-sections-lead),
+[§FS-show.2.2](../../docs/functional-spec/FS-show.md#22-section),
 [§FS-check.3.2](../../docs/functional-spec/FS-check.md#32-missing-section)).
 The fixture's own `grund.toml` is a version-2 file with one row, the `FS` kind in
 `docs/functional-spec/`; everything else is a default, so IDs are slug-only, named

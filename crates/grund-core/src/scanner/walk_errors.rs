@@ -577,7 +577,7 @@ pub(super) fn walk_error_path(err: &ignore::Error) -> Option<&Path> {
 }
 
 /// A walker error's reason, without the path `ignore` writes into its own text:
-/// the diagnostic already carries the path (§FS-errors.2.2.1), and the one `ignore`
+/// the diagnostic already carries the path (§FS-errors.2.2), and the one `ignore`
 /// writes is absolute, which a report may not contain (§FS-errors.4).
 /// Its typed I/O reason is the same as a file read's (§FS-check.2.4.1).
 fn walk_error_reason(err: &ignore::Error) -> String {

@@ -17,7 +17,7 @@ use crate::config::{Frame, Schema, canonical_config_root, config_file_in, root_s
 use crate::model::sort_path_key;
 use crate::sources::{canonical_path, is_directory, is_regular_file, path_exists, path_is_file};
 
-/// §FS-check.2.2.2.5.2: how many levels below the root the config search asks.
+/// §FS-check.2.2.2: how many levels below the root the config search asks.
 const CONFIG_SEARCH_DEPTH: usize = 3;
 
 /// Whether the effective configured scope contains a file the scanner would read
@@ -148,7 +148,7 @@ fn walked_root(frame: Frame<'_>, scan_root: &Path) -> Option<(PathBuf, PathBuf)>
     (!gated).then_some((canonical_scan_root, physical_root))
 }
 
-/// §FS-check.2.2.2.2: the `[schema.sources] exclude` pattern that kept the run's walk from
+/// §FS-check.2.2.2: the `[schema.sources] exclude` pattern that kept the run's walk from
 /// reading the first file it would read were the list empty, met on the way down from the roots
 /// [`caution_roots`] says it walked: the handed `path` alone, or the project's roots for a run
 /// given no path, wherever it started. `None` where no pattern did, under v1, and where the scope
@@ -173,7 +173,7 @@ pub(crate) fn pruning_pattern(
 }
 
 /// The roots the run's walk walked under an empty-scan caution's scope, and whether that scope is
-/// the project's whole root (§FS-check.2.2.2.2, §FS-check.2.2.2.6.1): the project's roots for a
+/// the project's whole root (§FS-check.2.2.2): the project's roots for a
 /// run given no path, whatever directory it started in, or for a path that resolves to the
 /// project root, and the path's own root for any other. `scan_roots` answers it
 /// from `path_provided`, as it answers the reporting walk, so a run given no path is never read
@@ -194,7 +194,7 @@ fn caution_roots(
     Some((roots, whole))
 }
 
-/// §FS-check.2.2.2.6: whether the walk refused the handed `path` itself at the outward
+/// §FS-check.2.2.2: whether the walk refused the handed `path` itself at the outward
 /// directory-link gate, whether its target opened or refused the lookup. The walk records no
 /// reason when it skips a root, so this asks its question again with its own parts and derives
 /// nothing of its own: `scan_roots` resolves the path to the same first root the walk starts
@@ -211,7 +211,7 @@ pub(crate) fn handed_outward_link(schema: &Schema, frame: Frame<'_>, path: &Path
     })
 }
 
-/// §FS-check.2.2.2.6.1: the directory link out of the project root that the walk refused below the
+/// §FS-check.2.2.2: the directory link out of the project root that the walk refused below the
 /// run's scope, spelled from that scope down (`subx`, `a/subx`): from the handed `path`, or from
 /// the project root where the scope is the root. The first in path order where it refused several
 /// (§FS-errors.4.1): the walk meets a directory's entries in the order the disk lists them, which
@@ -247,7 +247,7 @@ pub(crate) fn outward_link_below(
 
 /// The directory links a walk of `scan_root` refused as out of the project root, as the walk
 /// spelled them: the walk is run to its end with the filter recording them
-/// (§FS-check.2.2.2.6.1).
+/// (§FS-check.2.2.2).
 fn outward_links_refused(schema: &Schema, frame: Frame<'_>, scan_root: &Path) -> Vec<PathBuf> {
     let Some((canonical_scan_root, physical_root)) = walked_root(frame, scan_root) else {
         return Vec::new();
@@ -275,7 +275,7 @@ fn outward_links_refused(schema: &Schema, frame: Frame<'_>, scan_root: &Path) ->
     )
 }
 
-/// §FS-check.2.2.2.5.2: the project configs below `frame`'s root, each as the
+/// §FS-check.2.2.2: the project configs below `frame`'s root, each as the
 /// directory it governs and the file discovery would load there
 /// ([`config_file_in`], §FS-config.1), in path order. The directories asked are
 /// the ones the scan's own walker enters — never a hidden one, one `[scan]
@@ -284,7 +284,7 @@ fn outward_links_refused(schema: &Schema, frame: Frame<'_>, scan_root: &Path) ->
 /// config, since what lies there is that project's own.
 ///
 /// It answers for the empty-scan warning and the invalid-ID hint of a run that
-/// loaded no config (§FS-check.2.2.2.5, §FS-show.3.5.1); they ask only on those
+/// loaded no config (§FS-check.2.2.2, §FS-show.3.5); they ask only on those
 /// failure paths, so no other run pays for the walk (§GOAL-fast-feedback). The
 /// walk still lists a found directory's first levels; it only never asks them.
 pub(crate) fn project_configs_below(schema: &Schema, frame: Frame<'_>) -> Vec<(PathBuf, PathBuf)> {

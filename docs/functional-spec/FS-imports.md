@@ -371,7 +371,7 @@ would refuse, is located at the target's file and line, at the report base, as a
 member's config error is today. The `error:` line is the one the target's standalone run
 prints, with its path taken from the report base, and one `note:` line after it names the
 import that reached the target, by the alias path the run spells it with and the table that
-declares it, as a recovery breadcrumb ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)):
+declares it, as a recovery breadcrumb ([§FS-errors.1](FS-errors.md#1-streams)):
 
 ```text
 error: ../graal/substratevm/grund.toml:3: unknown key `strcit` at the top level (expected grund_config_version or project_name)

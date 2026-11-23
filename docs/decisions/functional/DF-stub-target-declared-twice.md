@@ -12,7 +12,7 @@ of homes it built read a stub's target only for an ID the walk recorded more tha
 the first line of the target that declares the ID. So a lone stub to a target outside
 `[scan] include` that declares the stub's ID twice was one home: `check` passed the tree with
 `success`, while `show` and `refs` refused the ID as `ambiguous ID`, naming both declarations
-([§FS-show.2.3.7](../../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)), and the same tree with the target scanned reported `duplicate declaration`.
+([§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)), and the same tree with the target scanned reported `duplicate declaration`.
 Where a scanned second declaration of the ID made the walk read the target, the error named the
 target's first declaration and left its second out. The pull request behind that record had set
 the twice-declared target aside for the `refs` fix, which reached only the query `show` and `refs`

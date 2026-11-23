@@ -91,7 +91,7 @@ Fields:
 - `body` is exactly the text-mode body, including trailing newline when text mode would print one.
 - `sections`, present for `show --toc --format=json`, is the ordered section-map slice as objects with `path`, `title`, `depth`, and `anchor`, in that order; each entry's `anchor` is its own heading's.
 - `kind_title`, when the resolved target kind has a title, is a string after `sections` when present and before `anchor`. It is omitted when absent and remains `""` when configured empty ([§FS-config.3.4.3](FS-config.md#343-title)).
-- `anchor` is always present, a string without its leading `#` or `null`: the fragment `grund fmt --cross-refs` derives for the selected heading under the target project's anchor profile, and `null` where that site has no heading anchor ([§FS-show.3.1.3.1](FS-show.md#3131-the-heading-anchor)).
+- `anchor` is always present, a string without its leading `#` or `null`: the fragment `grund fmt --cross-refs` derives for the selected heading under the target project's anchor profile, and `null` where that site has no heading anchor ([§FS-show.3.1.3](FS-show.md#313-json)).
 - `path` and `line` point at the declaration or selected section start and are always the object's final pair, in that order.
 
 `show --toc --format=json` example:

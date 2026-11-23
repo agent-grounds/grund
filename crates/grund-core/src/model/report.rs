@@ -61,7 +61,7 @@ impl Code {
     pub(crate) const UNDECIDABLE_WORKSPACE_CLAIM: Code = Code("undecidable-workspace-claim");
 
     /// The check findings about a config line that a terminal still prints CLI-level,
-    /// the line in their text (§FS-errors.2.2.1) as well as in `line` (§FS-errors.5.2.3):
+    /// the line in their text (§FS-errors.2.2) as well as in `line` (§FS-errors.5.2.3):
     /// the version-2 window's warnings (§FS-config-v2.checks.config-not-toml,
     /// §FS-config-v2.checks.config-multiline-string,
     /// §FS-config-v2.checks.config-fetch-names-nothing), and the version-2 reader's load

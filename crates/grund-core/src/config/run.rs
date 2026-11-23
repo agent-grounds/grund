@@ -32,7 +32,7 @@ pub struct Run {
     /// The file the read one outranks (§FS-config.1.1).
     pub redundant_config_file: Option<PathBuf>,
     /// Whether discovery found no config at or above where it started, so the
-    /// run is held to the built-in defaults (§FS-check.2.2.2.5). Not the same as
+    /// run is held to the built-in defaults (§FS-check.2.2.2). Not the same as
     /// `config_file` being `None`: a workspace member with no file of its own
     /// is loaded under its workspace's config, which this run did read.
     pub(crate) found_no_config: bool,

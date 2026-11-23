@@ -7,7 +7,7 @@
 /// `--toc` joins the default body with the section-map body, separated by one
 /// blank line. Empty halves are dropped; if both are empty the result is empty.
 /// Each body already ends with `\n`, so `{a}\n{b}` produces `<a>\n\n<b>\n`
-/// (§FS-show.2.1.2.2).
+/// (§FS-show.2.1.2).
 pub(super) fn join_with_blank(default_body: &str, outline_body: &str) -> String {
     match (default_body.is_empty(), outline_body.is_empty()) {
         (true, true) => String::new(),

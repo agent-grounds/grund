@@ -155,7 +155,7 @@ fn phase_one_subject(reading: &mut Reading<'_>) -> Result<(), Refusal> {
     let Some(refusal) = section_wildcard(subject, vocabulary) else {
         return Ok(());
     };
-    // §FS-errors.3.8.1: joined by `and` or not, the wildcard reason opens the
+    // §FS-rule-refusals.sentences.order: joined by `and` or not, the wildcard reason opens the
     // refusal; a subject rebuilt into a conjunction offers no form
     // (§FS-rule-refusals.sentences.rewrite.reparsed).
     Err(subject_refusal(refusal, subject, title, vocabulary))
