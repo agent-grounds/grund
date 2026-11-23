@@ -925,61 +925,87 @@ or tests. The interpreter and ABI boundary remains the one in
 
 ## release-floor: One shared minimum publishable release
 
-The tree records one explicit minimum publishable release in the single-line
-`scripts/release-floor.txt`. The release guard, `scripts/check_release_ramps.py`,
-reads that value from the tree being checked and refuses every version below it,
-even when no diagnostic message names a landed change. All release transitions
-share this one value; none adds a floor of its own. The floor remains in force
-after a helper rewrites the development manifest for a release.
-
-The effective lower bound is the greater of this floor and the message-derived
-landed bound of [§FS-distribution.4.2.2](FS-distribution.md#422-the-release-guard-reads-the-releases-the-tree-names). The pending-message ceiling still applies.
-At the floor a release is allowed when no independent promise forbids it; when
-the lower bound meets or exceeds the ceiling, no release is possible. The
-refusal identifies the floor file and value as well as contradictory messages
-and the resulting release window ([§FS-distribution.4.2.5](FS-distribution.md#425-the-refusal-names-the-window-left)). Development versions
-need not equal the floor; every publication path runs the guard
-([§FS-distribution.4.2.6](FS-distribution.md#426-every-publication-path-runs-the-release-guard)).
+The tree records one minimum publishable release, the single line of
+`scripts/release-floor.txt`, which every release transition shares; none adds a floor of
+its own. The release guard, `scripts/check_release_ramps.py`
+([§FS-distribution.4.2.2](FS-distribution.md#422-the-release-guard-reads-the-releases-the-tree-names)), reads it from the tree being checked and refuses every version
+below it, even when no message names a landed change, and it still binds the tree a helper
+rewrites for a release. The floor joins the landed bound the messages name as the release
+window's inclusive lower bound, so a release at the floor is allowed when no pending line or
+plan deadline ([§FS-distribution.4.2.2](FS-distribution.md#422-the-release-guard-reads-the-releases-the-tree-names)) forbids it, and a refusal names the floor's file and
+value beside the messages it contradicts ([§FS-distribution.4.2.5](FS-distribution.md#425-the-refusal-names-the-window-left)). A development version
+need not equal the floor.
 
 ## 4. Release process
 
-The implemented release workflow publishes the Cargo CLI today and builds downloadable PGO binaries for every supported desktop CI platform. `release.yml` publishes a commit that already carries its version ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)), and two helper workflows make that commit on a candidate they validate first ([§FS-distribution.4.4](FS-distribution.md#44-two-helper-workflows-bump-the-version-on-a-validated-candidate)), with a version bump that covers the manifests, the lockfile, `--version` fixtures, ramp constants and the changelog rotation ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)). The release writes its own changelog section, listing the pull requests merged since the previous tag and the compatibility notices the decision records added since it ([§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)), so no change waits in the tree for it ([§FS-distribution.4.12](FS-distribution.md#412-pending-changelog-entries-are-one-file-each)); the bump writes that section inline ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)), and the changelog supplies the GitHub release notes ([§FS-distribution.4.7](FS-distribution.md#47-the-changelog-is-the-source-of-release-notes)). Linux binaries build in digest-pinned `manylinux2014` containers and every job on one pinned toolchain ([§FS-distribution.4.8](FS-distribution.md#48-one-old-glibc-baseline-one-pinned-toolchain)); distributed binaries are PGO-built, with an LTO-only fallback for a platform whose PGO training is broken ([§FS-distribution.4.9](FS-distribution.md#49-distributed-binaries-are-profile-guided-optimized)); crates publish to crates.io in dependency order before artifacts upload ([§FS-distribution.4.10](FS-distribution.md#410-cratesio-publishes-in-dependency-order-and-artifacts-upload-last)). npm and PyPI take a lane of their own rather than joining `release.yml`: a candidate is assembled and rehearsed without credentials, and a separate, disabled publisher may one day upload exactly it ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published), [§FS-distribution.4.11](FS-distribution.md#411-the-full-ecosystem-release)).
+`release.yml` publishes a release from a commit that already carries its version: a tag
+push or a manual dispatch runs it directly, and two helper workflows make that commit from
+`main` on a candidate they validate first, then dispatch it.
 
 ### 4.1 Between releases, main carries a dev version
 
-A release leaves `main` holding the version it just published, so every build from `main` until the next release reports the tag it is already ahead of. Nothing then distinguishes a binary built from `main` from the released one, and a fix that is merged but not installed looks exactly like one that is installed. So the release advances `main` as its last act: after publishing `X.Y.Z` both helpers push `X.Y.(Z+1)-dev`, a commit they built over the release commit and ran CI on before either reached `main` ([§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). The suffix is what makes `grund --version` say which side of the tag a build came from. A development `grund` also names the commit it was built from, so two builds on the same side of the tag can be told apart ([§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)). A `-dev` manifest is never publishable — `release.yml` still verifies that the selected commit carries the exact version being released ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)), and the helpers set that clean version on their candidate branch — so the rule that a released version matches its tag is unchanged.
+After publishing `X.Y.Z`, the release helpers push `X.Y.(Z+1)-dev` to `main` as the
+release's last act, a commit CI passed before it reached `main` ([§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed));
+a run that releases nothing opens none. So a build from `main` says by its suffix that it
+is ahead of the last tag, and a fix merged but not installed cannot pass for one installed.
+A `-dev` version is never published: `release.yml` publishes only a commit that carries
+exactly the version it releases ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)).
 
 #### 4.1.1 A development build names its commit
 
-A development `grund` — one whose version ends in the `-dev` suffix of [§FS-distribution.4.1](FS-distribution.md#41-between-releases-main-carries-a-dev-version) — reports that version with the commit it was built from as SemVer build metadata: `0.20.1-dev+41a08f39c2`, or `0.20.1-dev+41a08f39c2.dirty` when a tracked file differed from that commit in the index or the working tree. Untracked and ignored files never make it dirty. The commit is exactly the first ten lowercase hexadecimal digits of its full SHA, whatever abbreviation the clone would choose. Every other version answer — `grund-lsp --version`, the server's `serverInfo.version`, and the Node binding's `engineVersion` and `packageVersion` — is the bare version.
+A development `grund`, one whose version carries the `-dev` suffix, reports it with the
+commit it was built from as SemVer build metadata: `X.Y.Z-dev+<commit>`, or
+`X.Y.Z-dev+<commit>.dirty` when a tracked file differs from that commit, in content or
+mode, in the index or the working tree. Untracked and ignored files never make it dirty.
+`<commit>` is exactly the first ten lowercase hexadecimal digits of the full SHA. Every
+other version answer — `grund-lsp --version`, the server's `serverInfo.version`, and the
+Node binding's `engineVersion` and `packageVersion` — is the bare version, and a release
+version reads neither git nor `GRUND_BUILD_COMMIT`.
 
 The build takes the commit from the first of these it has:
 
-1. qualifying git: this source tree's own repository, whose top level is the workspace root, in which the crate's own directory is `crates/grund-cli/`, and which tracks the CLI's manifest there. A tree inside some other repository, a crate copy nested inside a checkout, one git refuses to read, and one with no commit have none;
-2. `GRUND_BUILD_COMMIT`: ten lowercase hexadecimal digits, optionally followed by `.dirty`, used as given, with nothing derived beside it;
+1. qualifying git: this source tree's own repository, whose top level is the workspace
+   root, which git can read, which has a commit, and which tracks the CLI's manifest in
+   `crates/grund-cli/`, the crate's own directory; a tree inside another repository and a
+   crate copy nested in a checkout have none;
+2. `GRUND_BUILD_COMMIT`: ten lowercase hexadecimal digits, optionally followed by
+   `.dirty`, used as given;
 3. nothing: the build reports the bare version.
 
-A development build that finds `GRUND_BUILD_COMMIT` set to anything else, the empty string included, fails, whether or not git supplies the commit, so no spelling suppresses it. A release version reads neither git nor `GRUND_BUILD_COMMIT` and reports exactly its version.
+A development build fails when `GRUND_BUILD_COMMIT` is set to anything else, the empty
+string included, even when git supplies the commit.
 
-A fresh compile derives the correct commit and dirty state from those sources. Subsequent builds refresh the label when Cargo observes a change to a watched path's modification time (HEAD, the refs, the index, and tracked or changed files), whether qualifying git exists, or `GRUND_BUILD_COMMIT`. A Git-visible change that moves no watched modification time can leave the previous label embedded until a watched input changes or the build is forced. This includes an unstaged executable-bit change in either direction and a content edit whose modification time was restored; a mode change still counts as a tracked difference. To force a rebuild on Ubuntu, macOS or Windows, run `cargo clean -p grund` from the workspace root, then the normal Cargo build, using the same target directory and profile as the build being replaced (including any `--target-dir` and `--profile` options or Cargo environment settings).
+A rebuild refreshes the label only when Cargo sees a watched input change: the
+modification time of HEAD, the refs, the index or a tracked or changed file, whether
+qualifying git exists, or `GRUND_BUILD_COMMIT`. A change that moves no watched modification
+time, such as an unstaged executable-bit change or an edit whose time was restored, can
+leave the old label. `cargo clean -p grund` from the workspace root, then the same build
+with the same target directory and profile, forces a fresh one.
 
-The label names where a build came from; it is not a fingerprint of its source. For [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree), two development builds are the same version when they were built from the same source contents, uncommitted modifications included, with the same build inputs; equal labels alone do not establish it. Two builds of one dirty tree that disagree on an output byte from the same input cross the bright line although each says `.dirty`, and builds of two different patches over one commit are different versions although their labels match ([§DF-dev-build-names-its-commit](../decisions/functional/DF-dev-build-names-its-commit.md#df-dev-build-names-its-commit-a-development-builds---version-names-its-commit-and-what-a-development-build-prints-between-releases-was-never-a-promise)).
+The label names where a build came from, not what it holds: two development builds are the
+same version for [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree) exactly when built from the same source contents,
+uncommitted changes included, with the same build inputs, whatever their labels say
+([§DF-dev-build-names-its-commit](../decisions/functional/DF-dev-build-names-its-commit.md#df-dev-build-names-its-commit-a-development-builds---version-names-its-commit-and-what-a-development-build-prints-between-releases-was-never-a-promise)).
 
 ### 4.2 A release may not contradict the releases the tree's own messages name
 
-A ramp is a promise written into a message: a warning names the release it becomes an error in, or names the release in which a scalar status will move ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)), and once an error ramp lands the error that replaced it names the release the change was made in. Both halves are claims about a version, and each is false at the wrong one. A pending warning shipped *at* its deadline breaks the promise it makes; a landed change shipped *below* the release its own message names is worse, because it puts a breaking change in a release whose version says there is none.
-
-A unit test against the running version can hold only the pending half ([§FS-distribution.4.2.1](FS-distribution.md#421-a-test-can-hold-only-the-pending-half)), so the release guard reads the release each message names and refuses a version that contradicts one ([§FS-distribution.4.2.2](FS-distribution.md#422-the-release-guard-reads-the-releases-the-tree-names)), in a closed vocabulary ([§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)) whose scalar clause is the `refs` warning's ([§FS-distribution.4.2.4](FS-distribution.md#424-the-scalar-clause-is-the-refs-warnings)). Its refusal names every line that disagrees and the window of releases left ([§FS-distribution.4.2.5](FS-distribution.md#425-the-refusal-names-the-window-left)), and it runs on every publication path and checks that some release remains possible on every pull request ([§FS-distribution.4.2.6](FS-distribution.md#426-every-publication-path-runs-the-release-guard)).
-
-#### 4.2.1 A test can hold only the pending half
-
-A unit test can hold the pending half — the bump that reaches a deadline bumps the running version, and a test can read it — but not an ordinary landed-message half: on `main` a landed message rightly names the release still to be cut, and it is false only at the version the helpers set on a candidate branch that is neither `main` nor a pull request ([§FS-distribution.4.4](FS-distribution.md#44-two-helper-workflows-bump-the-version-on-a-validated-candidate)). The suite does run on that candidate ([§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)), but only once it is pushed; the release guard asks before anything is.
-
-This limits checks against a particular candidate version, not checks that any version remains possible. The version-free check of [§FS-distribution.4.2.5](FS-distribution.md#425-the-refusal-names-the-window-left) can hold both message bounds on `main` without choosing a release.
+A ramp is a promise written into a message: a warning names the release it becomes an
+error in, or the release a scalar status moves in ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)), and the
+error that lands names the release it landed in. Shipping a pending warning at its deadline,
+or a landed change below the release it names, breaks that promise. A test can hold only the
+pending half: on `main` a landed message rightly names the release still to be cut, and the
+release version exists only on a candidate, whose suite runs only once it is pushed. So the
+release guard reads the release each message names and refuses a version that contradicts
+one ([§DF-index-compatibility-ramp.2.3](../decisions/functional/DF-index-compatibility-ramp.md#23-both-findings-name-their-versions-and-a-test-keeps-the-names-honest)), and on a helper's path it asks before a candidate is
+pushed ([§FS-distribution.4.2.6](FS-distribution.md#426-every-publication-path-runs-the-release-guard)).
 
 #### 4.2.2 The release guard reads the releases the tree names
 
-The release path asks directly: the release guard, `scripts/check_release_ramps.py <version>`, reads the release each message names out of the tree's own message text — the Rust sources under `crates/`, and the checked `expected.stdout` and `expected.stderr` goldens under `tests/e2e/cases/` that pin the bytes a user sees — and refuses a version that contradicts one, together with the shared minimum of [§FS-distribution.release-floor](FS-distribution.md#release-floor-one-shared-minimum-publishable-release):
+`scripts/check_release_ramps.py <version>`, the release guard, reads the release each
+message names out of the tree's message text — the Rust sources under `crates/` and the
+`expected.stdout` and `expected.stderr` goldens under `tests/e2e/cases/` — and refuses a
+version that contradicts one or is below the floor ([§FS-distribution.release-floor](FS-distribution.md#release-floor-one-shared-minimum-publishable-release)).
+`<release>` may also be written `grund <release>`:
 
 | clause | what the line claims | the version being cut |
 |---|---|---|
@@ -994,254 +1020,372 @@ The release path asks directly: the release guard, `scripts/check_release_ramps.
 | `will exit <status> ... in <release>` | a scalar exit-status change has not been made yet | must be **below** that release |
 | `wording changes in <release>` | the message wording has not changed yet | must be **below** that release |
 
-`are warnings until <release>` is a pending claim, including the spelling
-`are warnings until grund <release>`: the named release closes the window,
-so a cut must be strictly below it.
-
-##### 4.2.2.1 The preflight reads the plan as the release would record it
-
-Before constructing a candidate, the same preflight also reads the releases
-section of the core-concerns plan, [§DISC-core-concerns.9](../discussions/proposals/2026-09-30-core-concerns.md#9-the-releases), and refuses the
-requested release where the plan still calls something due by it unshipped:
-
-- a `planned` notice in the deprecation ledger at [§DISC-core-concerns.9.9](../discussions/proposals/2026-09-30-core-concerns.md#99-the-deprecation-ledger)
-  whose notice release is at or below the requested release;
-- a phase of [§DISC-core-concerns.9](../discussions/proposals/2026-09-30-core-concerns.md#9-the-releases) whose lead opens `Not shipped` and names a
-  release it is planned for at or below the requested release. A series
-  `0.N.x` is at or below it once the requested release is past `0.N`.
-
-This applies the plan's existing consistency rules to the release about to be
-recorded as shipped. Candidate CI holds those rules once the bump writes that
-release's changelog section; `main`'s CI cannot, because there the last shipped
-release is still the previous one, so without the preflight a tree would be
-refused only after its candidate was pushed. Its refusal names the plan's file,
+Given a version, the guard also treats it as shipped and refuses it where the releases
+section of the core-concerns plan ([§DISC-core-concerns.9](../discussions/proposals/2026-09-30-core-concerns.md#9-the-releases)) still calls something due by it
+unshipped: a `planned` notice in the deprecation ledger ([§DISC-core-concerns.9.9](../discussions/proposals/2026-09-30-core-concerns.md#99-the-deprecation-ledger)) whose
+notice release is at or below it, or a phase whose lead opens `Not shipped` and names a
+release at or below it, a series `0.N.x` being due once the version is past `0.N`. The plan
+is the guard's only source of these dates and statuses. That refusal names the plan's file,
 the notice's surface or the phase's number, and the release it is planned for.
-A future `planned` notice, a `shipped` notice, a phase planned for a later
-release and a phase whose lead does not open `Not shipped` do not themselves
-refuse that release; the message bounds and shared release floor still apply.
-The plan remains the only source of notice dates, statuses and phase plans,
-rather than a second deadline table.
 
 #### 4.2.3 The vocabulary is closed
 
-The vocabulary is closed on purpose: it is the wording the warnings and errors already use, so a ramp written in it is seen and a ramp written outside it names no release the release guard can read. It asks the general question rather than naming any one ramp, so a ramp that lands later is covered the day its message is written. `is removed in <release>` is the pending half of `was removed in <release>` — the clause a deprecation names its removal release with, where the two named-error clauses name a verdict's — and it is written in that spelling rather than "will be removed in" so the pending and landed halves of one removal read as the same claim in two tenses.
+The clauses of [§FS-distribution.4.2.2](FS-distribution.md#422-the-release-guard-reads-the-releases-the-tree-names) are the whole vocabulary, on purpose: they are the
+wording the messages already use, so a ramp written in them is read the day its message is
+written, and one written outside them names no release the guard can read.
+`is removed in <release>`, not "will be removed in", is the pending half of
+`was removed in <release>`.
 
-##### 4.2.3.1 The landed half of an attribution pair is read where it opens a clause
+The bare `an error in <release>` is the landed half of the attribution pair a moved verdict
+prints, `unchecked in grund <prior>, an error in <release>`. It is a substring of
+`becomes an error in` and `became an error in`, so it is read only where it opens a clause
+— at the start of a line, or after a comma, semicolon or colon — and each tense keeps the
+direction it spells; a tense the vocabulary does not carry, such as `become an error in`,
+is not read as landed.
 
-A verdict that moved names both of its releases in one message: the rules that carry an attribution pair print `unchecked in grund <prior>, an error in <release>`, so the same line says when the finding went unchecked and when it became an error. Both halves are claims, and the landed one is the bare `an error in <release>` — which is why the vocabulary carries that clause and not only the two it is a substring of.
-
-Being a substring is what gives it its left boundary. `becomes an error in <release>` and `became an error in <release>` both contain it, so the bare clause is read only where it **opens a clause** — at the start of a line, or after a comma, semicolon or colon — and never where a word stands in front of it. A tense therefore keeps the direction it spells rather than also yielding a bare landed claim, and a tense the vocabulary does not carry, such as the infinitive `become an error in <release>` of a promise not yet made, is not read as landed. The boundary enumerates no tenses, so a tense added to a message later cannot silently change what the guard reads.
-
-#### 4.2.4 The scalar clause is the `refs` warning's
-
-The scalar clause is the one the `refs` warning of grund 0.14.0 and 0.15.0 was written in ([§FS-output-shapes.6.1.1](FS-output-shapes.md#611-in-0140)). Its replacement, from 0.16.0, is the ordinary failed-query bytes, so it gains no historical release suffix and leaves the guard no landed clause to read; a contract test holds the landed phase instead, expecting exit `1` and the warning's absence ([§FS-refs.4](FS-refs.md#4-exit-codes)).
+The scalar clause `will exit <status> ... in <release>` has no landed half: once its change
+is made the command prints its ordinary bytes, naming no release, and a contract test holds
+that phase ([§FS-refs.4](FS-refs.md#4-exit-codes)).
 
 #### 4.2.5 The refusal names the window left
 
-The refusal names every line that disagrees and the window of releases the tree may still be cut as, combining message bounds with [§FS-distribution.release-floor](FS-distribution.md#release-floor-one-shared-minimum-publishable-release). That window can be empty when the shared floor or a landed ramp reaches an independent pending promise. Nothing may be published until the conflicting promises are fulfilled or the changes are reverted. When it is empty, the refusal names every pending line that sets the ceiling, each once, as the version-free check names every landed line that sets the floor, so the lines it lists are the whole set to land or revert rather than one example of it; the `<release>` invocation names the ceiling's lines the same way when its window is empty.
+A refusal names every line that disagrees and the window the tree may still be cut as: at
+or above its lower bound, the greater of the landed lines and the floor
+([§FS-distribution.release-floor](FS-distribution.md#release-floor-one-shared-minimum-publishable-release)), and below its ceiling, the earliest pending line. The window
+is empty when the floor or a landed ramp reaches a pending line, and nothing may then be
+published until the promises are kept or the changes reverted; its refusal names every
+pending line that sets the ceiling, each once, and the version-free check names every landed
+line that sets the lower bound too, so the lines listed are the whole set to land or revert.
 
-`scripts/check_release_ramps.py [--root <tree>]`, with no positional release, checks whether that message/shared-floor window permits any release. It exits `1` exactly when the inclusive floor is at or above the exclusive ceiling, reporting `no release at all`, both conflicting bounds and their source locations, including `scripts/release-floor.txt:1` when the shared floor conflicts. It exits `0` for a nonempty or unbounded window, even if the next patch would be refused. It reads the same sources and shared floor as the version-specific invocation, without excluding any ramp or choosing a candidate version to evaluate the plan's deadlines of [§FS-distribution.4.2.2.1](FS-distribution.md#4221-the-preflight-reads-the-plan-as-the-release-would-record-it). Configuration and I/O errors retain their error handling; they are not empty-window verdicts. The existing `<release>` invocation keeps its output, exit behavior, shared-floor enforcement and version-specific ledger preflight unchanged.
-
-`main` must never hold an empty release window: a pull request that would leave one must fail before it merges, until the conflicting promises are fulfilled or the changes are reverted.
+`scripts/check_release_ramps.py [--root <tree>]`, given no release, checks only that the
+window is not empty, reading the same sources and floor, excluding no ramp, and evaluating
+none of the plan's deadlines ([§FS-distribution.4.2.2](FS-distribution.md#422-the-release-guard-reads-the-releases-the-tree-names)). It exits `1` exactly when the window
+is empty, its lower bound at or above its ceiling, reporting `no release at all` and both
+conflicting bounds with their source locations, `scripts/release-floor.txt:1` among them
+when the floor sets the lower bound, and exits `0` for a nonempty or unbounded window, even
+when the next patch would be refused.
+A configuration or I/O error is an error, never an empty window.
 
 #### 4.2.6 Every publication path runs the release guard
 
-`release.yml`'s verify job runs the release guard on the version it is about to publish, which is every publication path — a `vX.Y.Z` tag push, a manual dispatch, and the non-publishing dry run both bump helpers wait on before they touch `main`. `auto-bump.yml` and `release-minor.yml` run it again on the version they compute or explicitly select, beside their existing gates, so a bump that could not be published fails before it pushes a candidate branch rather than after. Selecting `1.0.0` supplies no bypass of the shared floor or pending retirement promises. The cross-registry publisher is a publication path too, and runs it on its manifest's version before it uploads anything ([§FS-distribution-candidate.8.1](FS-distribution-candidate.md#81-publication-is-disabled-and-gated)).
-
-Every pull request also runs the version-free check of [§FS-distribution.4.2.5](FS-distribution.md#425-the-refusal-names-the-window-left) against the actual repository tree, with all scanned ramps included. This checks that some release exists before merging; publication preflights still check the particular version they will publish.
+`release.yml`'s verify job runs the release guard on the version it is about to publish, on
+every path into it: a `vX.Y.Z` tag push, a manual dispatch, and the non-publishing dry run
+the helpers wait on before they touch `main`. `auto-bump.yml` and `release-minor.yml` run it
+on the version they compute or select, so a bump that could not be published fails before
+it pushes a candidate branch; selecting `1.0.0` bypasses neither the floor nor a pending
+promise. The cross-registry publisher runs it on its manifest's version before it uploads
+anything ([§FS-distribution-candidate.8.1](FS-distribution-candidate.md#81-publication-is-disabled-and-gated)). Every pull request runs the version-free check
+([§FS-distribution.4.2.5](FS-distribution.md#425-the-refusal-names-the-window-left)) on the repository tree, with every scanned ramp, so one that would
+leave `main` an empty window fails before it merges.
 
 ### 4.3 `release.yml` publishes a commit that already carries its version
 
-A `vX.Y.Z` tag triggers `.github/workflows/release.yml` directly. The same workflow can also be run manually from the release commit: the operator enters the version, crate publishing is enabled by default, and the workflow creates `vX.Y.Z` if that tag does not already exist. If the requested tag already exists, that tag becomes the release source ref after the workflow verifies the tagged Cargo package versions match the requested version; this lets a failed release be recovered from a newer workflow commit without moving the release tag. In either entry path, the workflow verifies the tag/version matches the versions of all three Cargo packages it publishes ([§FS-distribution.4.10](FS-distribution.md#410-cratesio-publishes-in-dependency-order-and-artifacts-upload-last)), runs a fail-fast preflight on the crates.io token when crate publishing is enabled, re-runs `scripts/check-registry-names.sh` so claimed package names must still be available or owned by this project ([§FS-distribution.1.1](FS-distribution.md#11-package-names)), then builds and self-checks profile-guided-optimized binaries ([§FS-distribution.4.9](FS-distribution.md#49-distributed-binaries-are-profile-guided-optimized)) on six targets — `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `x86_64-apple-darwin`, `aarch64-apple-darwin`, `x86_64-pc-windows-msvc`, and `aarch64-pc-windows-msvc`. `release.yml` does not bump versions: the selected commit already carries the version being released, in every version source `scripts/distribution/candidate.py versions` reads ([§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package)), and its verify job checks them all. It publishes the Cargo crates and the GitHub release and nothing else: no entry into it reaches an npm or PyPI upload ([§FS-distribution-candidate.8.7](FS-distribution-candidate.md#87-the-cargo-release-cannot-reach-the-publisher)).
+A `vX.Y.Z` tag push runs `.github/workflows/release.yml`, and so does a manual dispatch from
+the release commit, which takes the version, publishes crates by default, and creates the
+tag when it does not exist. When the tag exists, the run publishes from it once the tagged
+Cargo package versions match, so a failed release is recovered from a newer workflow commit
+without moving its tag. The verify job checks the version against the three Cargo packages
+it publishes ([§FS-distribution.4.10](FS-distribution.md#410-cratesio-publishes-in-dependency-order-and-artifacts-upload-last)) and every other version source
+`scripts/distribution/candidate.py versions` reads ([§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package)), runs a
+fail-fast preflight on the crates.io token when publishing crates, and re-runs
+`scripts/check-registry-names.sh`, so each claimed package name must still be available or
+owned by this project ([§FS-distribution.1.1](FS-distribution.md#11-package-names)). It then builds and self-checks
+profile-guided-optimized binaries ([§FS-distribution.4.9](FS-distribution.md#49-distributed-binaries-are-profile-guided-optimized)) for the six Rust targets of
+[§FS-distribution-candidate.1.1](FS-distribution-candidate.md#11-six-rows-five-of-them-registry-rows). `release.yml` never bumps a
+version, and it publishes the Cargo crates and the GitHub release and nothing else
+([§FS-distribution-candidate.8.7](FS-distribution-candidate.md#87-the-cargo-release-cannot-reach-the-publisher)).
 
-A manual run may also be given `expected_release_sha`, the full commit it is to publish. Given, the verify job refuses, before anything is built, a source that is not that commit, naming both; omitted, nothing changes, so a failed release is still recovered by hand from its tag. A release helper always gives it, and dispatches the publisher on the release-candidate branch its runs passed ([§FS-distribution.4.4.1.3](FS-distribution.md#4413-the-push-to-main-reads-main-back)). A publishing run removes the `release-candidate/` branch it was dispatched from once it has published; the non-publishing dry run never does, because it runs on the very branch and commit the publisher is dispatched from afterwards.
+A manual run may name `expected_release_sha`, the full commit it is to publish; the verify
+job then refuses, before anything is built, a source that is not that commit, naming both.
+A release helper always names it ([§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). A publishing run deletes the
+`release-candidate/` branch it was dispatched from once it has published; the dry run never
+does, because the publisher is dispatched on that branch afterwards.
 
 ### 4.4 Two helper workflows bump the version on a validated candidate
 
-The manual helper defaults to the next minor and also accepts the deliberate first-stable selection of [§FS-distribution.4.4.2](FS-distribution.md#442-deliberately-select-the-first-stable-release-from-the-dispatch-main-tip); either choice follows the same preparation, candidate validation and publication sequence below.
+`.github/workflows/release-minor.yml`, dispatched by hand, selects `vX.(Y+1).0` from the
+latest `vX.Y.Z` tag, or the first stable release ([§FS-distribution.4.4.2](FS-distribution.md#442-deliberately-select-the-first-stable-release-from-the-dispatch-main-tip)), once `main` has
+commits since that tag and CI has passed on its tip. `.github/workflows/auto-bump.yml`,
+scheduled or dispatched, selects `vX.Y.(Z+1)` when `main` has substantive non-doc/CI changes
+since the latest tag and CI has passed on that exact tip. A patch below the lower bound of
+the tree's release window ([§FS-distribution.4.2.5](FS-distribution.md#425-the-refusal-names-the-window-left)), which `scripts/release_earliest.py` prints,
+is skipped like a run with nothing substantive and left to the manual helper; a patch the
+window refuses for any other reason fails at the release guard.
 
-Version bumping lives in separate helper workflows, and neither publishes directly. `.github/workflows/release-minor.yml` is a manual helper that starts from the latest `vX.Y.Z` tag, computes `vX.(Y+1).0`, verifies that `main` has commits since the previous tag and that CI is green on the current `main` tip, commits the workspace version bump ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)) to a temporary release-candidate branch, runs `release.yml` as a non-publishing dry run on that candidate and CI on it and on the `-dev` advance built over it ([§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)), and only then fast-forwards `main` and dispatches `release.yml` for the real publish. `.github/workflows/auto-bump.yml` is the scheduled/manual patch helper with the same shape: when `main` has substantive non-doc/CI changes since the latest `vX.Y.Z` tag and CI is green on that exact tip, it computes `vX.Y.(Z+1)`, validates the version bump on a temporary release-candidate branch, and publishes the bump to `main` only after the dry run and both CI runs succeed. A patch below the floor of the tree's release window ([§FS-distribution.4.2.5](FS-distribution.md#425-the-refusal-names-the-window-left)), which `scripts/release_earliest.py` prints, skips as a run with nothing substantive does and is left to the manual helper; a patch the window refuses for any other reason fails at the release guard. Neither helper waits for anything to be written first: the section a release publishes is built by the bump from what the repository already holds ([§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)), so either helper can run at any moment. `release-minor.yml`, dispatched by a person, refuses a range in which no pull request was merged, through the bump's own refusal ([§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)). In both, the advance to the next `-dev` version ([§FS-distribution.4.1](FS-distribution.md#41-between-releases-main-carries-a-dev-version)) is built only for a release and pushed only after it, so a run that releases nothing opens no `-dev` version. Both helpers use the release push credential configured for branch-protection bypass. Both hand everything from the candidates on to one controller, `scripts/release_candidates.py`: the rounds of [§FS-distribution.4.4.1.1](FS-distribution.md#4411-a-moved-main-is-followed-not-refused), the push to `main`, the publisher's dispatch and the `-dev` advance. What is decided once stays in each workflow, ahead of it: the version the helper resolves, the scheduled helper's substantive-change filter, and CI on the dispatch tip. Neither dispatches the rehearsal or the publisher: the scheduled patch release keeps shipping the crates and the GitHub release alone, and the cross-registry lane is started by hand ([§FS-distribution-candidate.8.7](FS-distribution-candidate.md#87-the-cargo-release-cannot-reach-the-publisher)).
+Neither publishes directly: each commits the version bump ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)) to a
+release-candidate branch, validates it ([§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)), and only then fast-forwards
+`main` and dispatches `release.yml`, pushing with the release credential configured to
+bypass branch protection. Neither waits for anything to be written, since the bump builds
+the release section from what the repository holds ([§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag));
+`release-minor.yml` refuses a range with no merged pull request through the bump's refusal
+([§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)). Neither dispatches the cross-registry rehearsal or publisher,
+which are started by hand ([§FS-distribution-candidate.8.7](FS-distribution-candidate.md#87-the-cargo-release-cannot-reach-the-publisher)).
 
 #### 4.4.1 Nothing reaches `main` that CI has not passed
 
-The gate on the current `main` tip says nothing about the commits a helper writes on top of it. The release commit rewrites every version source and the changelog, and the `-dev` advance rewrites the version again, so a test that reads either can pass on the tip and fail on the commit pushed after it. grund 0.17.0 did exactly that: its release section moved the release the tree counts as shipped, two compatibility rows still planned for it became violations, and `main` went red on the release commit and on the advance, neither of which any suite had run on. A red `main` is a release blocker nobody was told about ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
+CI on the `main` tip says nothing about the commits a helper writes on top of it, so each
+helper builds both before it pushes either: the release commit on a release-candidate
+branch, and the `-dev` advance over it on a second. It runs the CI a push to `main` gets on
+each, and the `release.yml` dry run on the release commit, and fails on the first that does
+not pass; only then does `main` move, to exactly those commits ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
 
-So each helper builds both commits before it pushes either: the release commit on its release-candidate branch, and the `-dev` advance over it on a second candidate branch. It dispatches the CI workflow — the one a push to `main` runs — on each, beside the `release.yml` dry run on the release commit, and waits on all three, failing on the first that does not pass. Only then does `main` move, to exactly those commits: the release commit, which `release.yml` is dispatched to publish, and then the advance. No commit is made after the runs, so nothing reaches `main` that they did not pass. A `main` the merge queue moves while the runs are going is followed rather than refused ([§FS-distribution.4.4.1.1](FS-distribution.md#4411-a-moved-main-is-followed-not-refused)), and only a run that did not pass leaves candidate branches for a person to read, with `main` as it was ([§FS-distribution.4.4.1.4](FS-distribution.md#4414-only-a-failure-leaves-branches)). A rejected push of the advance is not yet a refusal: while `main` is still the release commit the advance was built over, the same tested commit is pushed again, a few times with a short backoff; only a `main` that has moved is refused as moved, and a push that keeps failing onto an unmoved `main` names git's own error rather than a cause nobody checked.
+A helper not pinned to a tip — `auto-bump.yml`, and `release-minor.yml` without
+`expected_main_sha` ([§FS-distribution.4.4.2](FS-distribution.md#442-deliberately-select-the-first-stable-release-from-the-dispatch-main-tip)) — follows a `main` the merge queue moves, in
+rounds ([§DF-release-candidates-follow-main](../decisions/functional/DF-release-candidates-follow-main.md#df-release-candidates-follow-main-a-release-helper-follows-a-main-the-merge-queue-moves-rebuilding-and-re-running-its-candidates)). A round fetches `main` and the tags, builds both
+candidates on that tip by the whole preparation — the bump ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)), the
+release section ([§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)), the release guard ([§FS-distribution.4.2.6](FS-distribution.md#426-every-publication-path-runs-the-release-guard)) and the
+advance — pushes them to two new branches, each one path component under
+`release-candidate/` and never a name an earlier round used,
+`release-candidate/vX.Y.Z-<run>-<attempt>-r<n>` and the same with `-dev`, and dispatches the
+three runs, counting only the runs it started. When `main` moves, the round is given up, its
+runs cancelled and its branches deleted, and once `main` has held still for three minutes
+the next round rebuilds on the new tip and runs all three again.
+`main` only fast-forwards, to the commits the last round's runs passed, so a release
+dispatched while the queue lands pull requests ships them, and its section lists them. The
+version the helper resolves, CI on the dispatch tip and the scheduled helper's
+substantive-change filter are decided once; more merges cannot make the last two false, and
+each rebuilt candidate's own CI covers the new tip. Before a round pushes, a target tag that
+now exists, or version sources that no longer read what they read at the start, stop the
+helper, naming the tag or both versions, with nothing published.
 
-##### 4.4.1.1 A moved `main` is followed, not refused
+At most six rounds run, within the job's 300-minute timeout, and a round starts only while
+at least 90 minutes remain. A round's watch ends early enough for the push, the dispatch and
+the advance to fit after it, cancelling its runs and stopping the helper with its own
+message. A helper out of rounds or time publishes nothing, says which ran out, and says to
+dispatch it again.
 
-Every pull request lands through [the merge queue](../architecture/AR-ci.md#12-a-merge-queue-lands-every-pull-request), so `main` moves whenever the queue lands one, and the candidate runs take an hour. A helper that refused every moved `main` could release only in an hour nothing merged in. So a helper not pinned to a tip — `auto-bump.yml`, and `release-minor.yml` dispatched without `expected_main_sha` ([§FS-distribution.4.4.2](FS-distribution.md#442-deliberately-select-the-first-stable-release-from-the-dispatch-main-tip)) — works in rounds, and follows `main` from one to the next ([§DF-release-candidates-follow-main](../decisions/functional/DF-release-candidates-follow-main.md#df-release-candidates-follow-main-a-release-helper-follows-a-main-the-merge-queue-moves-rebuilding-and-re-running-its-candidates)).
+The release commit goes to `main` by a plain push, never a forced one. When git refuses it,
+the helper reads `main` back: at the release commit, the push landed; at the round's base,
+the helper stops with git's error; at any other commit, the queue landed first, which is a
+move. Once `main` holds the release commit, `release.yml` is dispatched on the round's
+release-candidate branch with `expected_release_sha` set to it ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)), and
+the advance follows; a failed dispatch says that the release commit has landed and how to
+publish it, and does not start over. A rejected push of the advance repeats the same commit
+a few times, with a short backoff, while `main` is still the release commit; a moved `main`
+is refused as moved, and an unmoved one that keeps refusing names git's own error.
 
-A round fetches `main` and the tags and builds both candidates on that tip by the whole preparation: the version bump and lockfile ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)), the release section from the range since the previous tag ([§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)), the release guard ([§FS-distribution.4.2.6](FS-distribution.md#426-every-publication-path-runs-the-release-guard)), and the `-dev` advance over the release commit. It pushes them to two branches named for the helper's run, its attempt and the round — one path component under `release-candidate/`, such as `release-candidate/v0.20.0-<run>-<attempt>-r<n>` and the same with `-dev`, never a name an earlier round used — and dispatches the three runs, keeping their run IDs, so that a round counts only the runs it started.
-
-While the runs are going, the helper reads `main` on every look at them. When `main` has moved, the round is given up: its runs still going are cancelled, its two branches deleted, and the helper waits until `main` has held still for three minutes before the next round builds on the new tip. That round runs all three runs again on the commits it rebuilt; nothing one round passed counts for another. `main` only ever fast-forwards, and only to the commits the last round's runs passed. A release dispatched while the queue is landing pull requests therefore ships them under it, and its section lists them.
-
-What is decided once is not decided again: CI on the dispatch tip, and the scheduled helper's substantive-change filter, which more merges cannot make false ([§FS-distribution.4.4](FS-distribution.md#44-two-helper-workflows-bump-the-version-on-a-validated-candidate)). The full CI on each rebuilt candidate covers the new tip. What a merge can change is checked on every round, before the round pushes anything: when the target tag now exists, or the version sources on the new tip no longer read what they read when the helper started, the helper stops, naming the tag or both versions, and publishes nothing.
-
-##### 4.4.1.2 Six rounds within five hours
-
-Rounds are bounded twice. At most six run, and the helper's job has a timeout of 300 minutes, of which a round starts only while at least 90 remain. The watch on a round has a deadline of its own, early enough that the push to `main`, the publisher's dispatch and the `-dev` advance still fit after it; when it passes, the round's runs are cancelled and the helper stops with its own message, rather than being killed by the timeout with runs still going, or between the push and the dispatch.
-
-A helper that runs out of rounds or of time publishes nothing and says which ran out. Six rounds cannot promise a release against a queue that never holds still for an hour in five; when they are spent, the helper is dispatched again.
-
-##### 4.4.1.3 The push to `main` reads `main` back
-
-The release commit the last round's runs passed goes to `main` by a plain push, never a forced one. When git refuses it, the helper reads `main` before it blames anything, as the advance does: `main` at the release commit means the push landed and the helper goes on; `main` still at the round's base means git refused for a reason of its own, and the helper stops with git's error and keeps the round's branches; any other commit means the queue landed first, which is a move like any other ([§FS-distribution.4.4.1.1](FS-distribution.md#4411-a-moved-main-is-followed-not-refused)) and costs a round.
-
-Once `main` holds the release commit, `release.yml` is dispatched on the round's release-candidate branch with `expected_release_sha` set to that commit ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)), and then the advance follows it. A dispatch that fails says that the release commit has landed and how to publish it, and does not start the release over.
-
-##### 4.4.1.4 Only a failure leaves branches
-
-A run that did not pass ends the helper: the round's runs still going are cancelled, and that round's two branches stay for a person to read, with `main` untouched. A failed run seen on the same look as a move is a failure, not a move. Every other ending deletes the round's branches, because nothing on them is evidence of anything: a round given up for a move, a helper out of rounds or time, and a pinned run refused on movement ([§FS-distribution.4.4.2](FS-distribution.md#442-deliberately-select-the-first-stable-release-from-the-dispatch-main-tip)). A rebuild the preparation refuses — a ramp a merged pull request landed, say — stops the helper before the round pushes a branch or starts a run. A forge call that cancels a run the forge reports as already finished ends nothing.
+Only a failure keeps a round's two branches, for a person to read; a run that did not pass,
+which cancels the rest and wins over a move seen on the same look, and a push git refused
+onto the round's base are among them, and leave `main` untouched. A round given up for a
+move, a helper out of rounds or time, and a pinned run refused on a move delete them. A
+rebuild the preparation refuses, such as a ramp a merged pull request landed, stops the
+helper before the round pushes a branch or starts a run.
 
 #### 4.4.2 Deliberately select the first stable release from the dispatch main tip
 
-`release-minor.yml` has a `version` choice, `next-minor` by default or `1.0.0`, and an optional `expected_main_sha` string. Omitting both inputs retains the next-minor algorithm in [§FS-distribution.4.4](FS-distribution.md#44-two-helper-workflows-bump-the-version-on-a-validated-candidate). Selecting `1.0.0` requires `expected_main_sha`: a full 40-hex commit SHA equal to the workflow's dispatch SHA, the checkout's `HEAD`, and the fetched `origin/main` tip. It identifies the **main tip the owner dispatches from**, not the freeze candidate recorded for 1.0; comparing that tip to the freeze evidence remains the owner's responsibility.
+`release-minor.yml` takes a `version` choice, `next-minor` by default or `1.0.0`, and an
+optional `expected_main_sha`, a full 40-hex SHA that must equal the dispatch SHA, the
+checkout's `HEAD` and the fetched `origin/main` tip; `1.0.0` requires it. It names the tip
+the owner dispatches from, not the freeze candidate recorded for 1.0, and comparing the two
+is the owner's responsibility.
 
-Before any version, fixture or changelog write or candidate push, explicit first-stable selection requires dispatch from `refs/heads/main`, agreement of all source versions read by `scripts/distribution/candidate.py versions` ([§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package)), a `0.x` source version, and a previous release, the highest stable `v0.x.y` tag reachable from that tip ([§FS-distribution.4.6.1](FS-distribution.md#461-the-range-is-every-commit-since-the-previous-tag)), with commits since it. No stable `vX.Y.Z` tag may be at or above `v1.0.0`, on any branch, and a higher stable tag the tip does not reach must be a patch of the previous release on a branch off its tag. A missing or malformed input, an unsupported selection, or any requirement unmet refuses with a diagnostic naming the condition and no writes. Prerelease tags are not stable history. An `expected_main_sha` supplied with `next-minor` must satisfy the same SHA agreement; omission preserves ordinary minor behavior.
+Before any write or push, first-stable selection requires dispatch from `refs/heads/main`;
+one `0.x` version across every source `scripts/distribution/candidate.py versions` reads
+([§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package)); a previous release, the highest stable `v0.x.y` tag
+reachable from the tip ([§FS-distribution.4.6.1](FS-distribution.md#461-the-range-is-every-commit-since-the-previous-tag)), with commits since it; no stable tag at or
+above `v1.0.0` on any branch; and every higher stable tag the tip does not reach being a
+patch of the previous release on a branch off its tag. Prerelease tags are not stable
+history. A missing or malformed input, an unsupported selection or an unmet requirement
+refuses with a diagnostic naming the condition, and writes nothing.
+`scripts/release_version.py` owns the selection, reading only local history and source
+versions, and returns the helper's `current`, `next`, `current_tag` and `next_tag`; the
+release guard runs on the result ([§FS-distribution.4.2.6](FS-distribution.md#426-every-publication-path-runs-the-release-guard)).
 
-One selector, `scripts/release_version.py`, owns that selection and preflight, reusing the candidate version reader. It returns the helper's existing `current`, `next`, `current_tag` and `next_tag` outputs; from `v0.21.3`, default selection gives `0.22.0` while explicit first-stable selection gives `1.0.0`. Selection only reads local history and source versions; the workflow fetches main and tags before selection and applies the release guard to the result ([§FS-distribution.4.2.6](FS-distribution.md#426-every-publication-path-runs-the-release-guard)).
-
-Both choices use the complete bump ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)), exact dispatch-tip CI, both candidate commits' full CI and the non-publishing release dry run ([§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). Only after those pass does the helper push the tested release commit, dispatch `release.yml`, then push the tested development commit; for `1.0.0` that advance is `1.0.1-dev`, Python `1.0.1.dev0`. There is no first-stable-only wait on publication. With `expected_main_sha`, main movement still refuses advancement: a pinned run follows no move ([§FS-distribution.4.4.1.1](FS-distribution.md#4411-a-moved-main-is-followed-not-refused)), and once its candidate runs are going it cancels them, deletes its branches and names the new tip, to be dispatched again with a fresh pin. Failed validation retains candidate branches. The publisher still requires matching manifests ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)) and a failed publication is retried from its release tag as for a minor. This selection adds no publisher and changes no publication authority.
+Both choices then take the path of [§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed) unchanged, `1.0.0` adding no
+wait on publication; for `1.0.0` the advance is `1.0.1-dev`, Python `1.0.1.dev0`. A pinned run
+follows no move of `main`: a move cancels its candidate runs, deletes its branches and names
+the new tip, to be dispatched again with a fresh pin. A failed publication is retried from
+its release tag, as for a minor.
 
 ### 4.5 What the version bump includes
 
-In both helpers, including either manual version choice ([§FS-distribution.4.4.2](FS-distribution.md#442-deliberately-select-the-first-stable-release-from-the-dispatch-main-tip)), "the version bump" includes:
+The version bump, in both helpers and for either manual choice, writes:
 
-- the Cargo manifests and the lockfile, and `pyproject.toml`'s PEP 440 spelling of the same version, all written by `scripts/distribution/candidate.py set-version`; the npm packages take theirs from those at assembly, so no committed npm file carries one ([§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package));
-- any checked fixture whose expected output embeds `grund --version`, including
-  `tests/e2e/cases/cli-version/expected.stdout` and its corresponding authored
-  `inputFiles` bytes in
-  `tests/integration/command_agreement_facts/cli-version.json`. The same
-  `candidate.py set-version` invocation owns both version-dependent writes, for
-  release and development versions alike; repeating it leaves them consistent.
-  The golden holds the bare version for a development version too: a
-  development build's test expects that line followed by exactly this build's
-  recorded metadata, `+<commit>` or `+<commit>.dirty` ([§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)),
-  compares it byte for byte, and writes the bare line back when it refreshes
-  the golden; separate tests hold how that metadata is derived.
-  It preserves unrelated fixture inputs, fact inputs and independent expected
-  answers ([§REQ-one-answer.proof.evidence](../requirements/REQ-one-answer.md#proofevidence-execution-and-independent-truth)), rather than rebuilding an inventory
-  from observed files or execution. Both helpers stage the complete version
-  update in each release and development candidate commit, so a later commit
-  cannot conceal an incomplete release commit;
-- every **ramp constant** whose window is stated as a version in message text — a deprecation deadline is a promise about a release, and a bump is the only moment it can come due ([§DF-index-compatibility-ramp.2.3](../decisions/functional/DF-index-compatibility-ramp.md#23-both-findings-name-their-versions-and-a-test-keeps-the-names-honest) states the rule);
-- the deterministic changelog rotation performed by `scripts/prepare_changelog_release.py prepare`: the section [§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag) builds — the list of pull requests and, after it, its compatibility notices — becomes the new inline release section, written where the former inline latest release stood; the former is archived under `docs/changelog/<version>.md`, and the older-release section gains its archive link, `- [<version>](changelog/<version>.md) — <date>: N pull requests, M compatibility notices.`, where M counts the archived section's bullets under `### Compatibility notices` and N every other bullet it holds, so a release archived in the earlier Keep-a-Changelog shape counts every bullet as a pull request; a count of one is written in the singular. `scripts/prepare_changelog_release.py preview` prints the body `prepare` would write under the new release heading, and writes nothing.
+- the version into the Cargo manifests, the lockfile and `pyproject.toml` (in PEP 440),
+  through `scripts/distribution/candidate.py set-version`; the npm packages take theirs at
+  assembly, so no committed npm file carries one ([§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package));
+- every checked fixture whose expected output embeds `grund --version`, including
+  `tests/e2e/cases/cli-version/expected.stdout` and its `inputFiles` bytes in
+  `tests/integration/command_agreement_facts/cli-version.json`, through the same
+  `set-version`, for a release and a development version alike. `set-version` replaces only
+  the version's bytes in them, leaving every other input and independent expected answer as
+  it was ([§REQ-one-answer.proof.evidence](../requirements/REQ-one-answer.md#proofevidence-execution-and-independent-truth)), and repeating it leaves them consistent. The
+  golden holds the bare version even for a development version: a development build's test
+  expects that line followed by its own `+<commit>` or `+<commit>.dirty`
+  ([§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)), and writes the bare line back when it refreshes the golden;
+- every ramp constant whose window a message states as a version
+  ([§DF-index-compatibility-ramp.2.3](../decisions/functional/DF-index-compatibility-ramp.md#23-both-findings-name-their-versions-and-a-test-keeps-the-names-honest));
+- the changelog rotation of `scripts/prepare_changelog_release.py prepare`: the section
+  [§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag) builds becomes the new inline release section of
+  `docs/changelog.md`, in the former one's place; the former one is archived under
+  `docs/changelog/<version>.md`, and the older-release section gains
+  `- [<version>](changelog/<version>.md) — <date>: N pull requests, M compatibility notices.`,
+  M counting the archived bullets under `### Compatibility notices`, N every other bullet,
+  and a count of one written in the singular. `preview` prints the body `prepare` would
+  write under the new release heading, and writes nothing.
 
-The helper refuses rather than publish an incomplete or invented section in every case [§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was) names, before it writes anything, so the release candidate is already e2e-clean and changelog-clean before `release.yml` runs.
-
-#### 4.5.1 Release-helper verification owns its temporary history through cleanup
-
-The tests of release listing, compatibility notices and archive rotation use real
-temporary Git histories.
-Their result includes strict removal of those histories: a successful release-helper
-assertion followed by a background Git writer racing cleanup is a failed test, not
-a release-helper failure to dismiss by rerunning. Automatic repository maintenance
-must not outlive the fixture's commands or write during cleanup. The fixture keeps
-cleanup errors visible; suppressing them does not satisfy the gate that protects
-[§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
+Each release and development candidate commit stages the whole update, and the bump refuses
+before it writes anything in every case [§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was) names, so a candidate is
+e2e-clean and changelog-clean before `release.yml` runs. A test of the bump that cannot
+remove its temporary git history cleanly fails, whatever its assertions said
+([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
 
 ### 4.6 The release lists the pull requests merged since the previous tag
 
-No change is gated on the changelog, and nothing is written for it before a release either: no hook, no CI job and no release step asks a change, or a person, for an entry. The bump ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)) builds the release section from two things the repository already holds — the pull requests merged since the previous tag, each by its title ([§FS-distribution.4.6.1](FS-distribution.md#461-the-range-is-every-commit-since-the-previous-tag), [§FS-distribution.4.6.2](FS-distribution.md#462-one-line-per-pull-request-its-title-linked)), and the compatibility notices the decision records added since that tag ([§FS-distribution.4.6.4](FS-distribution.md#464-compatibility-notices-come-from-the-decisions)) — or refuses and writes nothing ([§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)). So a pull request's title is its release line, and the one thing a title cannot carry, what a verdict change breaks and for whom, is written where the change is decided.
-
-The list is every merged pull request, with no docs or CI filter. `docs/` holds the specification, so a pull request that changes only docs can change what the tool promises, and a filter would hide exactly those. The scheduled helper's own filter ([§FS-distribution.4.4](FS-distribution.md#44-two-helper-workflows-bump-the-version-on-a-validated-candidate)) decides whether a patch release happens at all, not what a release lists. A list built from the merged pull requests cannot leave one out, which a hand-written record could only ask its writer to avoid; that is the release half of [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
+No change is gated on the changelog: no hook, CI job or release step asks a change, or a
+person, for a changelog entry, and nothing waits in the tree for a release. The bump
+([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)) builds the release section from what the repository already holds —
+the pull requests merged since the previous tag, by their titles, and the compatibility
+notices the decision records gained since it — or refuses and writes nothing. So a pull
+request's title is its release line, and the one record a change writes for a release, what
+a verdict change breaks, is a notice on the decision that makes it ([§FS-distribution.4.6.4](FS-distribution.md#464-compatibility-notices-come-from-the-decisions),
+[§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
 
 #### 4.6.1 The range is every commit since the previous tag
 
-`HEAD` is read once, first, and everything after reads that commit. The previous release is the highest `vX.Y.Z` tag reachable from it — a higher tag on a branch `HEAD` does not contain is not a previous release — and that tag must name the release `docs/changelog.md` keeps inline. For every commit in `<tag>..HEAD` the bump asks the forge which pull requests the commit belongs to, and keeps a pull request only when it is merged, its base is `main`, and its merge commit is in the range; a pull request is listed once however many of its commits the range holds.
-
-Merges are rebase-only, so every commit of a merged pull request lands on `main`, and a list that has asked about every commit in the range has seen every pull request merged into it. A commit that belongs to no pull request contributes no line. The commit that opens the next development version, `Open X.Y.Z-dev for development` ([§FS-distribution.4.1](FS-distribution.md#41-between-releases-main-carries-a-dev-version)), is expected to be one; any other is named in one warning on standard error, by its short hash and subject, and the release goes on.
-
-The list is newest first, ordered by where each pull request's last commit sits on `main`. The order is read from git, never from the forge's timestamps.
+`HEAD` is read once, first, and everything after reads that commit. The previous release is
+the highest `vX.Y.Z` tag reachable from it, never a higher tag on a branch `HEAD` does not
+contain, and it must name the release `docs/changelog.md` keeps inline. For every commit in
+`<tag>..HEAD` the bump asks the forge which pull requests it belongs to, and lists, once,
+each that is merged, has base `main` and has its merge commit in the range; merges are
+rebase-only, so that finds every pull request merged into it. Every one is listed, with no
+docs or CI filter, because a pull request that changes only `docs/` can change what the tool
+promises. A commit in no pull request adds no line; any but the
+`Open X.Y.Z-dev for development` commit ([§FS-distribution.4.1](FS-distribution.md#41-between-releases-main-carries-a-dev-version)) is named, by short hash and
+subject, in one warning on standard error, and the release goes on. The list is newest
+first, by where each pull request's last commit sits on `main`, read from git and never from
+the forge's timestamps.
 
 #### 4.6.2 One line per pull request, its title linked
 
-Each pull request is one line, `- [<title>](<url>) (PR #N)`. The title is the pull request's own, with every run of whitespace collapsed to one space and the ends trimmed; each of `` \ ` * _ [ ] < > & `` in it is escaped with a backslash, and `§` is written `&sect;`, because `docs/changelog.md` is scanned ([§FS-check](FS-check.md#fs-check-grund-validates-every-citation-in-a-repo)) and a title must not become a live citation the release is then held to. The URL is the pull request's address on this repository, `<repository>/pull/N` for the same `N`, where the repository is the one the forge answers for; a pull request whose URL is anything else is refused ([§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)), because a line that links elsewhere than it says is worse than none.
+Each pull request is one line, `- [<title>](<url>) (PR #N)`. The title is the pull request's
+own, with every run of whitespace collapsed to one space and the ends trimmed; each of
+`` \ ` * _ [ ] < > & `` in it is escaped with a backslash, and `§` is written `&sect;`,
+because `docs/changelog.md` is scanned ([§FS-check](FS-check.md#fs-check-grund-validates-every-citation-in-a-repo)) and a title must not become a live
+citation the release is then held to. The URL is `<repository>/pull/N` for the same `N`,
+where the repository is the one the forge answers for; a pull request whose URL is anything
+else is refused ([§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)).
 
 #### 4.6.3 A refused release leaves the tree as it was
 
-The bump reads everything it needs — the range, every commit's pull requests, and every notice it would publish — before it writes anything. It refuses, exits non-zero, names which case it met, and leaves every file byte for byte as it found it, when:
+The bump reads everything it needs — the range, every commit's pull requests and every
+notice it would publish — before it writes anything. It refuses, exits non-zero, names the
+case it met and leaves every file byte for byte as it was, when:
 
-- `gh` is missing, a call to the forge still fails after its three attempts ([§FS-distribution.4.6.3.1](FS-distribution.md#4631-a-forge-call-is-tried-three-times)), or any commit in the range goes unanswered;
-- the checkout is shallow, or the previous tag does not name the release `docs/changelog.md` keeps inline;
-- a compatibility notice it would publish is malformed ([§FS-distribution.4.6.4](FS-distribution.md#464-compatibility-notices-come-from-the-decisions)), or a pull request's URL is not this repository's ([§FS-distribution.4.6.2](FS-distribution.md#462-one-line-per-pull-request-its-title-linked));
-- the range holds no merged pull request at all.
+- `gh` is missing, a forge call still fails after three attempts, or any commit in the
+  range goes unanswered;
+- the checkout is shallow, or the previous tag does not name the release
+  `docs/changelog.md` keeps inline;
+- a notice it would publish is malformed ([§FS-distribution.4.6.4](FS-distribution.md#464-compatibility-notices-come-from-the-decisions)), or a pull request's URL
+  is not this repository's ([§FS-distribution.4.6.2](FS-distribution.md#462-one-line-per-pull-request-its-title-linked));
+- the range holds no merged pull request.
 
-A partial list is never written: a commit the forge did not answer for may be exactly the pull request a reader needed to see.
-
-##### 4.6.3.1 A forge call is tried three times
-
-A release asks the forge one question per commit in its range, hundreds of them in a row, so a refusal on the first dropped connection would make a failed release likelier with every commit, and would say nothing about the commits themselves. Each forge call the bump makes — for the repository, and for each commit's pull requests ([§FS-distribution.4.6.1](FS-distribution.md#461-the-range-is-every-commit-since-the-previous-tag)) — is therefore tried at most three times, waiting one second after the first failed attempt and two seconds after the second; a call answered on its first attempt waits for nothing.
-
-- An attempt fails when `gh` exits non-zero, whatever it printed, or when it exits zero with output that does not parse as JSON, which is what a truncated answer looks like. Both kinds count against the one budget of three, in whatever order they come. No message is read to tell a transient failure from a lasting one: a lasting one costs three seconds and the same refusal.
-- When the third attempt fails too, the bump refuses with that attempt's own diagnostic, unchanged — `the forge did not answer for …` or `the forge's answer for … is not JSON: …` — and writes nothing ([§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)).
-- A missing `gh` is refused before any attempt. An answer that parses but is the wrong shape — not a list for a commit, no address for the repository, a pull request whose URL is not this repository's ([§FS-distribution.4.6.2](FS-distribution.md#462-one-line-per-pull-request-its-title-linked)) — is refused at once and never retried: the forge did answer, and asking again would mistake bad data for an interrupted reply.
+A forge call, for the repository or for a commit's pull requests, is tried at most three
+times, one second after the first failed attempt and two after the second. An attempt fails
+when `gh` exits non-zero, whatever it printed, or exits zero with output that is not JSON,
+both against the one budget; after the third, the bump refuses with that attempt's own
+diagnostic, `the forge did not answer for …` or `the forge's answer for … is not JSON: …`.
+A missing `gh`, and an answer that parses but has the wrong shape — not a list for a
+commit, no address for the repository, a URL that is not this repository's — are refused at
+once, never retried.
 
 #### 4.6.4 Compatibility notices come from the decisions
 
-A decision record — a `DF` or a `DA` declaration — may carry the named section `## release-note: Release note`, holding exactly one bullet (`- ` and its text, continuation lines indented two spaces) and nothing else but blank lines, with its links written relative to the record's own file. A verdict correction must carry one: it is the release record [§REQ-backwards-compatibility.5](../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids) condition 3 and [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) ask for, and the meter `tests/integration/test_backwards_compatibility_routes.py` reads it there, offline, on the pull request that makes the correction.
+A decision record, a `DF` or `DA` declaration, may carry the named section
+`## release-note: Release note`, holding exactly one bullet (`- ` and its text,
+continuation lines indented two spaces) and nothing else but blank lines, its links
+relative to the record's own file. A verdict correction must carry one, as the release
+record [§REQ-backwards-compatibility.5](../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids) condition 3 and [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) ask
+for; `tests/integration/test_backwards_compatibility_routes.py` reads it there, offline, on
+the pull request that makes the correction.
 
-The bump publishes, under `### Compatibility notices` after the list, the bullet of every decision whose `release-note` section exists at `HEAD` and did not exist at the previous tag, ordered by decision ID. The two trees are compared by decision ID, so a record moved or renamed since the tag is the same record. Each bullet is published as written, with every relative link rebased from the record's directory to `docs/`, and a link to an anchor of the record's own file gaining that file's path. A notice already present at the tag is not published again, however it was edited since, because it shipped with the release that added it. A release that adds no notice has no `### Compatibility notices` subsection. A `release-note` section it would publish that is not one well-formed bullet is refused ([§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)).
+The bump publishes, under `### Compatibility notices` after the list, the bullet of every
+decision whose `release-note` section exists at `HEAD` and did not at the previous tag,
+ordered by decision ID; the two trees are compared by decision ID, so a moved or renamed
+record is the same record. Each bullet is published as written, its relative links rebased
+from the record's directory to `docs/`, and a link to an anchor of its own file gaining that
+file's path. A notice present at the tag is never published again, however it was edited
+since, and a release that adds none has no `### Compatibility notices`.
 
-##### 4.6.4.1 The shape is held on the pull request that writes it
-
-The bump is not the first to read a notice's shape. The repository's Python gate, which runs at every commit and on every pull request, reads every decision record's `release-note` section in the working tree with the bump's own reading, and fails when one is not a single well-formed bullet, naming each such decision and its record's file in the one run rather than stopping at the first. It reads every section, not only those the next bump would publish, because the shape above is every section's. So a notice the bump would refuse fails on the pull request that writes it, while its author can still fix it, rather than at the next release, where only the person cutting it could. This asks no change for a notice — a decision that writes none is not read — so it gates no change on the changelog ([§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)); it holds only a section a change chose to write.
-
-##### 4.6.4.2 A correction-audit refusal explains its citation trigger
-
-The repository's correction-route meter audits every decision whose text contains
-the live citation `§REQ-backwards-compatibility.5`, including a sentence that
-discusses or rejects that route. Selection does not interpret that sentence's
-intent. The five conditions remain those of
-[§REQ-backwards-compatibility.5](../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids).
-
-Whenever that audit refuses a selected decision, the contributor-visible failure
-must explain that the live section-5 citation put the decision under the
-correction-route audit. It must retain the placement or proof reasons and name
-both ways to discuss or reject the route without invoking it: write
-`<§>REQ-backwards-compatibility.5`, using the existing
-[§FS-citations.recognized.escapes](FS-citations.md#recognizedescapes-an-id-in-an-escape-position)
-convention, or cite `§REQ-backwards-compatibility` and name section 5 in prose.
-The guidance must remain visible in the actual test failure, including when the
-rejecting sentence is already in a numbered section and the refusal lists
-multiple missing proofs. These alternatives leave the decision outside this
-audit; a live rejecting citation still fails without the required proof, an
-unproved correction still fails, and a valid correction still passes.
+The repository's Python gate, at every commit and on every pull request, reads every
+decision record's `release-note` section with the bump's own reading and fails, naming every
+such decision and its file in one run, when one is not a single well-formed bullet; a
+decision that writes none is not read. The correction-route meter audits every decision
+whose text holds the live citation `§REQ-backwards-compatibility.5`, even one that discusses
+or rejects the route, and a refusal says so, keeps every placement or proof reason, and
+names the two ways to mention the route without invoking it:
+`<§>REQ-backwards-compatibility.5` ([§FS-citations.recognized.escapes](FS-citations.md#recognizedescapes-an-id-in-an-escape-position)), or
+`§REQ-backwards-compatibility` with section 5 named in prose.
 
 ### 4.7 The changelog is the source of release notes
 
-`release.yml` treats the changelog as the source of GitHub release notes. Before creating or updating a GitHub release, it extracts the requested `vX.Y.Z` section from `docs/changelog.md` at the selected release ref and passes that body to `gh release create` or `gh release edit`; if the section is missing or empty, the release fails before artifacts are published to the GitHub release.
+Before it creates or updates a GitHub release, `release.yml` extracts the requested
+`vX.Y.Z` section from `docs/changelog.md` at the selected release ref and passes that body to
+`gh release create` or `gh release edit`; a missing or empty section fails the release
+before any artifact is published to the GitHub release.
 
 ### 4.8 One old glibc baseline, one pinned toolchain
 
-Both Linux binaries are built on GitHub inside a `manylinux2014_<arch>` container (pinned by digest, not by tag) so the release artifact targets an old glibc baseline instead of inheriting whatever glibc happens to ship on `ubuntu-latest`. Every job — host-runner or in-container — installs the same pinned Rust toolchain so the six binaries are produced by the same compiler version. Every candidate payload is built the same way, for the six rows of [§FS-distribution-candidate.1.1](FS-distribution-candidate.md#11-six-rows-five-of-them-registry-rows), which pins each row's payload floor, runtime floors and installed-artifact runner ([§FS-distribution-candidate.1.3](FS-distribution-candidate.md#13-runtime-floors-are-inspected-not-assumed)); six `grund-lsp` archives join the six CLI archives.
+Both Linux binaries build inside a `manylinux2014_<arch>` container pinned by digest, not by
+tag, so the artifact targets an old glibc baseline rather than whatever glibc
+`ubuntu-latest` ships. Every job, on a host runner or in a container, installs the same
+pinned Rust toolchain, so the six binaries come from one compiler version. Every candidate
+payload is built the same way, for the six rows of [§FS-distribution-candidate.1.1](FS-distribution-candidate.md#11-six-rows-five-of-them-registry-rows) and the
+floors and runners each row pins ([§FS-distribution-candidate.1.3](FS-distribution-candidate.md#13-runtime-floors-are-inspected-not-assumed)); six `grund-lsp` archives
+join the six CLI archives.
 
 ### 4.9 Distributed binaries are profile-guided-optimized
 
-The distributed `grund` binaries are profile-guided-optimized: each platform build runs `scripts/pgo-build.sh`, which builds an instrumented binary, runs the [AR-benchmarks](../architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) self-repo hot command list (the commands agents and CI invoke most) against `grund`'s own conformant tree to record a profile, then rebuilds against it. The rationale, and why the self-repo benchmark workload is also the PGO training corpus, is [§DA-pgo-release](../decisions/architectural/DA-pgo-release.md#da-pgo-release-distributed-binaries-are-pgo-built-trained-on-the-benchmark-workload). If a hosted runner's PGO training is platform-broken while the ordinary release build still self-checks cleanly, that platform may publish a self-checked LTO-only fallback binary instead of blocking the whole release; Windows arm64 is the one such platform, where rustc crashes compiling the instrumented build, and in a candidate only that identified crash qualifies ([§FS-distribution-candidate.7.4](FS-distribution-candidate.md#74-only-an-identified-windows-arm64-compiler-crash-falls-back)). Every candidate payload — both executables, the Node addon and the Python extension — trains on its own product's workload, and the manifest proves the packaged bytes are the profile-use build ([§FS-distribution-candidate.7.1](FS-distribution-candidate.md#71-each-product-trains-on-its-own-workload), [§FS-distribution-candidate.7.3](FS-distribution-candidate.md#73-the-packaged-payload-is-the-profile-use-build)). PGO is not part of development builds or push/PR CI; it is a release-packaging step, and an explicit benchmarking step when comparing the optimized release artifact. A `cargo install grund` from source is LTO-optimized but not PGO'd — `cargo install` runs no custom build step — and is byte-for-byte behavior-identical to the distributed binary; only its performance differs.
+Each distributed `grund` binary is profile-guided-optimized: `scripts/pgo-build.sh` builds an
+instrumented binary, records a profile running the benchmarks' self-repo hot commands
+against `grund`'s own tree, and rebuilds against it ([§DA-pgo-release](../decisions/architectural/DA-pgo-release.md#da-pgo-release-distributed-binaries-are-pgo-built-trained-on-the-benchmark-workload)). A platform whose PGO
+training is broken on its hosted runner, while its ordinary release build self-checks
+cleanly, may publish a self-checked LTO-only binary instead; Windows arm64, where rustc
+crashes compiling the instrumented build, is the one such platform, and in a candidate only
+that identified crash qualifies ([§FS-distribution-candidate.7.4](FS-distribution-candidate.md#74-only-an-identified-windows-arm64-compiler-crash-falls-back)). Each candidate payload
+trains on its own product's workload ([§FS-distribution-candidate.7.1](FS-distribution-candidate.md#71-each-product-trains-on-its-own-workload),
+[§FS-distribution-candidate.7.3](FS-distribution-candidate.md#73-the-packaged-payload-is-the-profile-use-build)). Development builds and push and pull-request CI are never
+PGO-built. `cargo install grund` is built with LTO but no PGO, since `cargo install` runs no
+custom build step; it behaves byte for byte as the distributed binary does, and only its
+speed differs.
 
 ### 4.10 crates.io publishes in dependency order, and artifacts upload last
 
-After every platform binary passes its self-check, the workflow publishes `grund-core`, `grund`, and `grund-lsp` to crates.io when crate publishing is enabled. The dependency order is fixed: `grund-core` publishes first, and any run that still needs to publish `grund` or `grund-lsp` waits up to 30 minutes for Cargo to resolve the matching `grund-core` version before publishing the dependent crate. GitHub release artifacts are uploaded only after the platform PGO builds pass and, when enabled, crates.io publishing succeeds. The cross-registry publisher keeps Cargo core-first: it uploads nothing until the matching crates resolve ([§FS-distribution-candidate.8.4](FS-distribution-candidate.md#84-order-and-readiness)), and a rerun skips what a registry already holds with the same digest and stops on a different one rather than overwriting ([§FS-distribution-candidate.8.5](FS-distribution-candidate.md#85-reruns-resume-and-never-overwrite)).
+After every platform binary passes its self-check, the workflow publishes `grund-core`,
+`grund` and `grund-lsp` to crates.io when crate publishing is enabled, `grund-core` first; a
+run that still has `grund` or `grund-lsp` to publish waits up to 30 minutes for Cargo to
+resolve the matching `grund-core` before publishing it. GitHub release artifacts upload only
+after the platform PGO builds pass and, when enabled, crates.io publishing succeeds. The
+cross-registry publisher uploads nothing until the matching crates resolve
+([§FS-distribution-candidate.8.4](FS-distribution-candidate.md#84-order-and-readiness)) and never overwrites on a rerun ([§FS-distribution-candidate.8.5](FS-distribution-candidate.md#85-reruns-resume-and-never-overwrite)).
 
 ### 4.11 The full-ecosystem release
 
-The full-ecosystem release publishes one rehearsed candidate ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)): the crates through `release.yml` as today, then the npm and PyPI packages of [§FS-distribution-candidate.2.1](FS-distribution-candidate.md#21-thirty-nine-artifacts-from-one-version) through the publisher, from the same commit at the same version.
-
-A release is complete only when every artifact the candidate's plan names is published; until then it is partial, and the publisher says so, listing what is published and what is still missing, and resumes the same candidate on a rerun ([§FS-distribution-candidate.8.5](FS-distribution-candidate.md#85-reruns-resume-and-never-overwrite)). Versions across the CLI and the LSP move together within a release; each `grund-lsp` package pins or bundles the same `grund-core` version the matching CLI release ships, so a CLI/LSP version mismatch from the official packages is structurally avoided.
-
-### 4.12 Pending changelog entries are one file each
-
-Retired. No change waits in the tree for a release: the release lists the pull requests merged since the previous tag itself ([§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)), and the one record a change still writes for a release, a compatibility notice, lives on the decision record that makes the change ([§FS-distribution.4.6.4](FS-distribution.md#464-compatibility-notices-come-from-the-decisions)). `docs/changelog/unreleased/`, the store of pending entries this section specified, is gone with it. The number and its heading stay so that neither is reused, the way [§FS-config.2](FS-config.md#2-precedence) outlived its withdrawal.
+The full-ecosystem release publishes one rehearsed candidate ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)): the
+crates through `release.yml`, then the npm and PyPI packages of
+[§FS-distribution-candidate.2.1](FS-distribution-candidate.md#21-thirty-nine-artifacts-from-one-version) through the publisher, from the same commit at the same
+version. It is complete only when every artifact the candidate's plan names is published;
+until then it is partial, and the publisher says so, listing what is published and what is
+still missing, and resumes the same candidate on a rerun ([§FS-distribution-candidate.8.5](FS-distribution-candidate.md#85-reruns-resume-and-never-overwrite)).
+The CLI and the LSP move together within a release: each `grund-lsp` package pins or bundles
+the `grund-core` version the matching CLI release ships.
 
 ### 4.13 A candidate is rehearsed before anything is published
 
-Every npm and PyPI artifact comes from one candidate: assembled from one commit, recorded in an immutable `manifest.json`, installed fresh and proved on every registry row by a rehearsal that holds no credential, and receipted per row. Only those bytes may ever be uploaded, by a publisher that is disabled today and reachable only by a gated manual dispatch naming the candidate's SHA and manifest digest. The detail is [§FS-distribution-candidate](FS-distribution-candidate.md#fs-distribution-candidate-one-candidate-is-assembled-rehearsed-and-verified-before-any-registry-sees-it).
+Every npm and PyPI artifact comes from one candidate: assembled from one commit, recorded in
+an immutable `manifest.json`, installed fresh and proved on every registry row by a
+rehearsal that holds no credential, and receipted per row. Only those bytes may ever be
+uploaded, by a publisher that is disabled and reachable only by a gated manual dispatch
+naming the candidate's SHA and manifest digest ([§FS-distribution-candidate](FS-distribution-candidate.md#fs-distribution-candidate-one-candidate-is-assembled-rehearsed-and-verified-before-any-registry-sees-it)).
 
 ## 5. What a release promises
 
-From `1.0.0` the pre-release licence of [§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise) is spent: user-visible surfaces move only as [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) says, the `grund-core` names only as [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes) says. Not promised:
+From `1.0.0` the pre-release licence of [§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise) is spent: user-visible
+surfaces move only as [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) says, and the `grund-core` names only as
+[§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes) says. Not promised:
 
-- 100% identical APIs across languages. Each binding is idiomatic to its host (camelCase for Node, snake_case for Python, `Result<T,E>` for Rust). The *behavior* is identical; the surface fits each ecosystem.
-- Stable ABI for the C-level FFI. Bindings link against the Rust core at compile time; we do not ship a separate C library.
+- Identical APIs across languages. Each binding is idiomatic to its host (camelCase for
+  Node, snake_case for Python, `Result<T,E>` for Rust): the behavior is identical, and the
+  surface fits each ecosystem.
+- A stable ABI for a C-level FFI. Bindings link against the Rust core at compile time, and
+  no separate C library ships.
