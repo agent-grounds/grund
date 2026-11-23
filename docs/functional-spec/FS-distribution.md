@@ -1,6 +1,6 @@
 # FS-distribution: grund distribution targets
 
-`grund` is written in Rust; the target distribution is **all three** major language ecosystems — cargo, npm, and PyPI — with idiomatic API bindings on each. The check engine stays a single shared library; only the surfaces differ. Today the implemented release path publishes the Rust crates: `grund-core`, the Cargo CLI package `grund`, and the optional Cargo LSP package `grund-lsp`. The npm and PyPI packages, `grund-lsp` among them, are assembled and rehearsed as a local candidate and never published by any path that exists today ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)); their publication is tracked in [§RM-distribution](../roadmap.md#rm-distribution-cargo--npm--pypi-from-one-engine). Serves [§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms) and [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+`grund` is one Rust engine that targets the cargo, npm and PyPI ecosystems, each with the CLI, the optional LSP server and an idiomatic API; the check engine is one shared library and only the surfaces differ. This declaration says which packages carry it, what each binding offers, and how a release is cut and published. The release publishes the Rust crates `grund-core`, `grund` and `grund-lsp`; the npm and PyPI packages, `grund-lsp` among them, are assembled and rehearsed as a candidate and published by no path ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)). Serves [§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms) and [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 
 ## terms: Terms
 
@@ -14,49 +14,35 @@ alias), and [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity
 
 ## requirements: What every distribution of grund holds to
 
-Five requirements on the distributions as a whole, carrying the marks of [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). None restates that every install, operating system and binding gives the same bytes and the same answer, which [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes) and [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree) already require, or that an API name is removed only along [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path). Nor does [§FS-distribution.4](FS-distribution.md#4-release-process) earn a point of its own: how this repository cuts, bumps and lists a release, the release notes of [§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag) among them, is its process rather than anything `grund` does, and the one effect of it a user can observe is [§FS-distribution.requirements.versions](FS-distribution.md#requirementsversions-what-a-distributed-binary-says-about-versions-is-true-of-it--realized).
+These bind the distributions as a whole, beside what every install, operating system and binding already holds to: the same bytes and the same answer ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes), [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree)), and an API name removed only along [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
 
-### requirements.ecosystems: Every ecosystem the targets name installs `grund` — realized on cargo, deferred on npm and PyPI
+### requirements.ecosystems: Every ecosystem the targets name installs `grund`
 
-The three crates publish today ([§FS-distribution.1](FS-distribution.md#1-targets), [§FS-distribution.4.10](FS-distribution.md#410-cratesio-publishes-in-dependency-order-and-artifacts-upload-last)). The npm and PyPI packages are assembled and rehearsed as a candidate ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)), and none is published: the publisher is disabled ([§FS-distribution-candidate.8.1](FS-distribution-candidate.md#81-publication-is-disabled-and-gated)) and the authority to publish is not yet held ([§FS-distribution-candidate.8.2](FS-distribution-candidate.md#82-identity-is-not-authority)). Their publication is **deferred** to [§RM-distribution](../roadmap.md#rm-distribution-cargo--npm--pypi-from-one-engine). Serves [§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms).
+The three crates publish ([§FS-distribution.1](FS-distribution.md#1-targets), [§FS-distribution.4.10](FS-distribution.md#410-cratesio-publishes-in-dependency-order-and-artifacts-upload-last)), so it holds on cargo; on npm and PyPI it is deferred to [§RM-distribution](../roadmap.md#rm-distribution-cargo--npm--pypi-from-one-engine): the packages are assembled and rehearsed as a candidate ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)), and none is published, because the publisher is disabled ([§FS-distribution-candidate.8.1](FS-distribution-candidate.md#81-publication-is-disabled-and-gated)) and the authority to publish is not yet held ([§FS-distribution-candidate.8.2](FS-distribution-candidate.md#82-identity-is-not-authority)). Serves [§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms).
 
-### requirements.library: A binding answers as a library, never as a process — realized
+### requirements.library: A binding answers as a library, never as a process
 
-Every binding returns data and leaves its host as it found it: it prints nothing, reads no argv, never exits and never changes the working directory ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate), [§FS-distribution.3.1.1](FS-distribution.md#311-main_entry-is-absent-from-the-embedding-api), [§FS-distribution.3.2.3.1](FS-distribution.md#3231-execution), [§FS-distribution.3.3.4](FS-distribution.md#334-silent-synchronous-calls)). A failure is data too, carrying the class and location the engine gave it rather than ones parsed from rendered text ([§FS-distribution.3.2.2](FS-distribution.md#322-typed-readonly-host-records), [§FS-distribution.3.3.2](FS-distribution.md#332-operational-failures-and-invalid-arguments)), and the CLI stays the only renderer ([§FS-distribution.3.0.3.1](FS-distribution.md#3031-node-adapter-mapping-and-frozen-cli-wire-projection)). Serves [§GOAL-multi-language.2](../goals.md#2-idiomatic-surfaces).
+Every binding returns data and leaves its host as it found it: it prints nothing, reads no argv, never exits and never changes the working directory ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate), [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes), [§FS-distribution.3.2.3](FS-distribution.md#323-workers-loading-and-source-builds), [§FS-distribution.3.3.4](FS-distribution.md#334-silent-synchronous-calls)). A failure is data too, carrying the class and location the engine gave it rather than ones parsed from rendered text ([§FS-distribution.3.2.2](FS-distribution.md#322-typed-readonly-host-records), [§FS-distribution.3.3.2](FS-distribution.md#332-operational-failures-and-invalid-arguments)), and the CLI stays the only renderer ([§FS-distribution.3.0.3](FS-distribution.md#303-complete-data-and-canonical-parity)). Serves [§GOAL-multi-language.2](../goals.md#2-idiomatic-surfaces).
 
-### requirements.own-payload: An install runs the payload built for its host at its own version, or refuses saying how to get one — realized in the candidate
+### requirements.own-payload: An install runs the payload built for its host at its own version, or refuses saying how to get one
 
-npm installs the one platform package matching the host's OS, CPU and libc at exactly the umbrella's version, and the command and the addon share it ([§FS-distribution-candidate.2.2](FS-distribution-candidate.md#22-npm-selects-one-platform-package-by-os-cpu-and-libc)); a wheel carries the executable and the extension together ([§FS-distribution-candidate.3.1](FS-distribution-candidate.md#31-payloads-sit-where-each-registry-runs-them)). A platform package that is missing, of another version or for an unlisted row is an error naming the fix, never another row's payload, a download or a compile ([§FS-distribution-candidate.3.3](FS-distribution-candidate.md#33-a-missing-payload-is-an-error-never-a-substitute), [§FS-distribution.3.2.3.2](FS-distribution.md#3232-moduleruntimeload-interface)), and an npm install never compiles ([§FS-distribution-candidate.4.1](FS-distribution-candidate.md#41-npm-builds-from-source-only-when-asked)). A target the matrix defers may build from source and gains no support by succeeding ([§FS-distribution-candidate.1.4](FS-distribution-candidate.md#14-deferred-targets-gain-no-support)). Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+It holds in the candidate. npm installs the one platform package matching the host's OS, CPU and libc at exactly the umbrella's version, and the command and the addon share it ([§FS-distribution-candidate.2.2](FS-distribution-candidate.md#22-npm-selects-one-platform-package-by-os-cpu-and-libc)); a wheel carries the executable and the extension together ([§FS-distribution-candidate.3.1](FS-distribution-candidate.md#31-payloads-sit-where-each-registry-runs-them)). A platform package that is missing, of another version or for an unlisted row is an error naming the fix, never another row's payload, a download or a compile ([§FS-distribution-candidate.3.3](FS-distribution-candidate.md#33-a-missing-payload-is-an-error-never-a-substitute), [§FS-distribution.3.2.3](FS-distribution.md#323-workers-loading-and-source-builds)), and an npm install never compiles ([§FS-distribution-candidate.4.1](FS-distribution-candidate.md#41-npm-builds-from-source-only-when-asked)). A target the matrix defers may build from source and gains no support by succeeding ([§FS-distribution-candidate.1.4](FS-distribution-candidate.md#14-deferred-targets-gain-no-support)). Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 
-### requirements.versions: What a distributed binary says about versions is true of it — realized
+### requirements.versions: What a distributed binary says about versions is true of it
 
 A build from `main` reports the next version with its `-dev` suffix rather than the release it is ahead of, and `grund` names its commit too ([§FS-distribution.4.1](FS-distribution.md#41-between-releases-main-carries-a-dev-version), [§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)); a released binary carries its tag's version, which every package of the release shares ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version), [§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package)); and no release is cut at a version that contradicts a release its own messages name ([§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)). The release named in a warning is what buys a repository its time, and it buys nothing if it is false. Serves [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
 
-### requirements.next-operation: The next operation reaches every binding, or is excluded there by name — directional
+### requirements.next-operation: The next operation reaches every binding, or is excluded there by name
 
-Each binding offers the CLI's conceptual operations, and one that is absent is never advertised ([§FS-distribution.3](FS-distribution.md#3-api-surfaces)), so Node and Python each list their inventory and their exclusions ([§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals), [§FS-distribution.3.2.1.1](FS-distribution.md#3211-exclusions-and-later-adaptation), [§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory)). A subcommand added from here on joins each binding's inventory or, with its reason, that binding's exclusions, never neither; a field the engine adds to a result reaches each binding's record in that binding's spelling ([§FS-distribution.3.0.1](FS-distribution.md#301-report-and-finding), [§FS-distribution.3.3.1](FS-distribution.md#331-typed-immutable-results)). This binds what is added next, not the inventories already written. Serves [§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms).
+Each binding offers the CLI's conceptual operations, and one that is absent is never advertised ([§FS-distribution.3](FS-distribution.md#3-api-surfaces)), so Node and Python each list their inventory and their exclusions ([§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals), [§FS-distribution.3.3.5](FS-distribution.md#335-complete-inventory)). A subcommand added from here on joins each binding's inventory or, with its reason, that binding's exclusions, never neither; a field the engine adds to a result reaches each binding's record in that binding's spelling ([§FS-distribution.3.0.1](FS-distribution.md#301-report-and-finding), [§FS-distribution.3.3.1](FS-distribution.md#331-typed-immutable-results)). This binds what is added next, not the inventories already written. Serves [§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms).
 
 ## 1. Targets
 
-Local Python API support is required by [§FS-distribution.3.3](FS-distribution.md#33-python-grund-pypi-package) independently of registry
-availability. The initial binding supplies a locally installable extension and source
-distribution; the PyPI release matrix, CLI payload and publication remain separate work.
-An approved contract or a failing acceptance test does not establish implemented support.
-
-Local API readiness means a source-built, packed and freshly installed consumer
-passes [§FS-distribution.3.2.4](FS-distribution.md#324-acceptance-evidence). It does not mean npm registry availability,
-prebuilt-platform installation evidence or authorization to publish.
-
-Candidate readiness is the next rung and still not publication: one commit assembles
-every package below for the support matrix of [§FS-distribution-candidate.1.1](FS-distribution-candidate.md#11-six-rows-five-of-them-registry-rows), in the
-inventory of [§FS-distribution-candidate.2.1](FS-distribution-candidate.md#21-thirty-nine-artifacts-from-one-version), and a credential-free rehearsal installs
-and proves it on every registry row ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)). A `candidate` status in the
-table means exactly that. Only the disabled publisher of
-[§FS-distribution-candidate.8.1](FS-distribution-candidate.md#81-publication-is-disabled-and-gated), once separately authorized, can make one `published`.
+An `implemented` package is one the release publishes ([§FS-distribution.4.10](FS-distribution.md#410-cratesio-publishes-in-dependency-order-and-artifacts-upload-last)). A `candidate` package is assembled from one commit for the support matrix of [§FS-distribution-candidate.1.1](FS-distribution-candidate.md#11-six-rows-five-of-them-registry-rows), in the inventory of [§FS-distribution-candidate.2.1](FS-distribution-candidate.md#21-thirty-nine-artifacts-from-one-version), and installed and proved on every registry row by a rehearsal that holds no credential ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)); it is not published, and only the disabled publisher of [§FS-distribution-candidate.8.1](FS-distribution-candidate.md#81-publication-is-disabled-and-gated), once separately authorized, can make one `published`.
 
 | Registry | Package name        | Status      | Contents                                                                  |
 |----------|---------------------|-------------|---------------------------------------------------------------------------|
-| cargo    | `grund-core`          | implemented | Shared engine library used by the CLI, LSP, and future bindings.            |
+| cargo    | `grund-core`          | implemented | Shared engine library used by the CLI, the LSP and the bindings.            |
 | cargo    | `grund`               | implemented | CLI crate depending on `grund-core`; installs the `grund` binary.              |
 | cargo    | `grund-lsp`           | implemented | Optional LSP server crate ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) depending on `grund-core`; installs the `grund-lsp` binary. |
 | npm      | `grund-cli`           | candidate   | `grund` launcher + Node API (via `napi-rs`); five `@grund-cli/<suffix>` platform packages carry the CLI and addon. |
@@ -64,67 +50,42 @@ table means exactly that. Only the disabled publisher of
 | PyPI     | `grund`               | candidate   | Five `cp310-abi3` wheels carrying the `grund` executable + Python API (via `PyO3` / `maturin`), and an sdist. |
 | PyPI     | `grund-lsp`           | candidate   | Five `py3-none` wheels carrying the `grund-lsp` executable (`pipx install grund-lsp`), and an sdist. |
 
-The planned PyPI wheel installs the `grund` command and the import module `grund`, npm's CLI package is `grund-cli` because the unscoped `grund` is externally occupied, and every name is re-verified against the live registries before publish ([§FS-distribution.1.1](FS-distribution.md#11-package-names)). Support packages publish registry README content that links users to the `grund` CLI ([§FS-distribution.1.2](FS-distribution.md#12-support-packages-point-at-the-cli)), and the CLI install on each registry does not transitively pull in `grund-lsp` ([§FS-distribution.1.3](FS-distribution.md#13-the-cli-does-not-pull-in-the-lsp)).
-
 ### 1.1 Package names
 
-On PyPI the planned CLI package is also `grund`, whose wheel installs the `grund` command and the import module `grund` ([§FS-distribution.3.3](FS-distribution.md#33-python-grund-pypi-package)). On npm the planned CLI package is `grund-cli`, because the unscoped `grund` package is externally occupied; it still installs the `grund` command. [§DA-pypi-uses-grund-as-the-package-name](../decisions/architectural/DA-pypi-uses-grund-as-the-package-name.md#da-pypi-uses-grund-as-the-package-name-pypi-uses-grund-as-the-package-name) sets the final PyPI name and records why PyPI uses the bare name while npm keeps `grund-cli`; the tool itself was renamed from its pre-release working title `gnd` ([§DA-rename-to-grund](../decisions/architectural/DA-rename-to-grund.md#da-rename-to-grund-rename-gnd-to-grund-before-first-publish)). The release process re-verifies every one of these names — and the remaining unreserved npm/PyPI LSP slots — against the live registries before publish ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)). A name that no registry answers for is free, and the package's own endpoint is the only thing that can say so: a `404` there passes, while a failure to query that endpoint is a query failure and never an availability. Once it has answered that the package exists, nothing later turns the name back into a free one. What makes an existing package *this project's* is then registry-specific. On crates.io ownership is read from the registry's own owner record for the name ([§FS-distribution.1.1.1](FS-distribution.md#111-cratesio-ownership-is-the-registrys-owner-record)), never from metadata the package declares about itself, and ownership that cannot be established stops the release rather than being worked around ([§FS-distribution.1.1.2](FS-distribution.md#112-unproven-cratesio-ownership-stops-the-release)). On npm and PyPI a claimed name is this project's when the registry's own metadata for it names this repository; because that metadata is written by the last publish, it names the repository the package was published *from*, and a repository move reaches those registries only with the next release — the one this guard stands in front of — so there the former repository is accepted alongside the current one, or the move would lock the project out of its own names.
+The CLI package is `grund` on cargo and PyPI, where the wheel installs the `grund` command and the import module `grund`, and `grund-cli` on npm, because the unscoped `grund` package is externally occupied; it still installs the `grund` command ([§DA-pypi-uses-grund-as-the-package-name](../decisions/architectural/DA-pypi-uses-grund-as-the-package-name.md#da-pypi-uses-grund-as-the-package-name-pypi-uses-grund-as-the-package-name)). The npm platform packages are the five `@grund-cli/<suffix>` and five `@grund-lsp/<suffix>` names of [§FS-distribution-candidate.2.2](FS-distribution-candidate.md#22-npm-selects-one-platform-package-by-os-cpu-and-libc), one per registry row, whose scopes and names are provisional until held ([§FS-distribution-candidate.8.2](FS-distribution-candidate.md#82-identity-is-not-authority)).
 
-The npm platform packages are claimed too: the five `@grund-cli/<suffix>` and five `@grund-lsp/<suffix>` names of [§FS-distribution-candidate.2.2](FS-distribution-candidate.md#22-npm-selects-one-platform-package-by-os-cpu-and-libc), one per registry row, re-verified by the same guard under the same npm rule. Their scopes and names are provisional until held. Availability, project identity and publishing authority are three gates, not one: the guard answers the first two, and a name that passes both is still not one this project may publish to until the authority of [§FS-distribution-candidate.8.2](FS-distribution-candidate.md#82-identity-is-not-authority) exists.
+Before it publishes, the release's registry-name check, `scripts/check-registry-names.sh`, re-verifies every one of these names, the npm and PyPI LSP names and the platform packages included, against the live registries ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)). A name is free only when the package's own endpoint answers `404`: a failure to query that endpoint is a query failure and never an availability, and once a registry has answered that the package exists, nothing later turns the name back into a free one. Whether an existing package is this project's is registry-specific:
 
-#### 1.1.1 crates.io ownership is the registry's owner record
+- On crates.io, for `grund-core`, `grund` and `grund-lsp`, only the registry's owner record decides: the owner endpoint `/api/v1/crates/<name>/owners` must return a `users` entry whose `kind` is exactly `user` and whose `login` is exactly `vjovanov`, this project's crates.io identity. Nothing else in the response establishes ownership: not the display `name`, the URL text, the numeric id or the `github_username_matches` flag, not a bare organization string such as `agent-grounds`, and not a team record, since no team is part of the identity this project declares. The package's own `repository` metadata never participates: it is publisher-supplied, so any package may copy this repository's URL into it, and after a repository move only the publish the registry-name check stands in front of could correct it.
+- On npm and PyPI, a package is this project's when the registry's own metadata for it names this repository, or this project's repository before a move. That metadata is written by the last publish, so a move reaches those registries only with the next release, and accepting only the current repository would lock the project out of its own names.
 
-For the three crates.io names — `grund-core`, `grund`, and `grund-lsp` — an existing package is this project's only when the registry's owner endpoint for that name, `/api/v1/crates/<name>/owners`, returns a `users` entry whose `kind` is exactly `user` and whose `login` is exactly `vjovanov`. That login is this project's crates.io identity, and it is carried as a named constant rather than spelled into a pattern, because it is a credential and not a shape. Nothing else in the response establishes ownership: the mutable display `name`, the URL text, the opaque numeric id and the `github_username_matches` flag are publisher-supplied or meaningless out of context; a bare organization string such as `agent-grounds` is neither a user record nor Cargo's `github:org:team` team form; and team records establish nothing here, because no team is part of the identity this project declares — admitting one is an ownership-policy change of its own, not a widening that happens by accident. The package's own `repository` metadata never participates in the decision. It is written by the last publish, so after a repository move it can only be corrected *through* the publish this guard stands in front of; and it is publisher-supplied, so any package at all may copy this repository's URL into it.
+A crates.io name that exists and is not proven this project's stops the release with a non-zero exit, in one of four distinguishable ways, each naming the owner endpoint it asked, because the operator's next move differs in each. An owner record that is well-formed but holds no trusted user, an empty owner set or only untrusted owners, reports `error: crates.io/<name> is already taken without trusted owner vjovanov`. Owner data that is missing, malformed or of the wrong shape reports that the owner evidence could not be read. An owner endpoint that answers `404`, or any other non-`200`, reports that ownership could not be determined and names the status. A request that never completes reports the transport failure. None falls back to the package's declared metadata.
 
-#### 1.1.2 Unproven crates.io ownership stops the release
-
-A crates.io name that exists and is not proven this project's fails the release, and the message says which of four things went wrong, because the operator's next move differs in each. An owner record that is well-formed but carries no trusted user — an empty owner set, or only untrusted ones — reports `error: crates.io/<name> is already taken without trusted owner vjovanov` and names the owner endpoint. Owner data that is missing, malformed or the wrong shape reports that the owner evidence could not be read. An owner endpoint that answers `404`, or any other non-`200`, reports that ownership could not be determined and names the status. A request that never completes reports the transport failure rather than falling through as an unexplained non-zero exit. Each of the four exits non-zero, each is distinguishable from the other three, and each names the owner endpoint it asked. None of them falls back to the package's declared metadata: that fallback is what both the move deadlock and the copied-URL acceptance are made of, and ownership decided from unauthoritative data is not decided at all.
+Availability, project identity and publishing authority are three gates, not one: the registry-name check answers the first two, and a name that passes both is still not one this project may publish to until the authority of [§FS-distribution-candidate.8.2](FS-distribution-candidate.md#82-identity-is-not-authority) exists.
 
 ### 1.2 Support packages point at the CLI
 
-Support packages that are not the primary user-facing install, such as `grund-core`, publish registry README content that links users to the `grund` CLI and names sibling packages such as `grund-lsp` once they exist. The npm platform packages are support packages too: each README says which row it serves, that its umbrella installs it, and links to the CLI, and every npm and PyPI package carries the licence and says truthfully what it installs ([§FS-distribution-candidate.2.4](FS-distribution-candidate.md#24-every-package-says-what-it-holds)).
+A support package, one that is not the primary user-facing install, such as `grund-core`, publishes registry README content that links users to the `grund` CLI and names sibling packages such as `grund-lsp` once they exist. The npm platform packages are support packages too: each README says which row it serves and that its umbrella installs it, and links to the CLI. Every npm and PyPI package carries the licence and says truthfully what it installs ([§FS-distribution-candidate.2.4](FS-distribution-candidate.md#24-every-package-says-what-it-holds)).
 
 ### 1.3 The CLI does not pull in the LSP
 
-The CLI install on each registry does **not** transitively pull in `grund-lsp` — they are independent packages, per [§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary). A user who only runs `grund check` in CI installs the CLI alone; a user who wants editor integration installs `grund-lsp` separately and configures their editor to launch it ([§FS-lsp.2](FS-lsp.md#2-installation-and-lifecycle)). The same holds on npm and PyPI, and it is proved on the installed packages rather than read off a manifest: every registry row installs the CLI without the LSP and the LSP without the CLI, and each works alone ([§FS-distribution-candidate.5.2](FS-distribution-candidate.md#52-every-registry-row-installs-fresh-and-without-rust)).
+No registry's CLI install pulls in `grund-lsp`, directly or transitively: they are independent packages ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)). A user who only runs `grund check` in CI installs the CLI alone, and a user who wants editor integration installs `grund-lsp` separately and configures their editor to launch it ([§FS-lsp.2](FS-lsp.md#2-installation-and-lifecycle)). On npm and PyPI this is proved on the installed packages rather than read off a manifest: every registry row installs the CLI without the LSP and the LSP without the CLI, and each works alone ([§FS-distribution-candidate.5.2](FS-distribution-candidate.md#52-every-registry-row-installs-fresh-and-without-rust)).
 
 ## 2. CLI parity
 
-The `grund` binary behaves identically regardless of how it was installed: the same flags, the same exit codes, the same byte-for-byte report format ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). Users on Linux, macOS, and Windows who run `grund check .` against the same repo get the same answer.
-
-CLI reports use logical paths, relative to the base `--path-base` selects, else `relative_paths` ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from), [§FS-config.3.6](FS-config.md#36-output--report-format)), with `/` as the separator, even on Windows. This applies to text reports, JSON fields, `sites`, ID-query e2e fixture lists, stub-link targets, and generated cross-reference URLs; native platform paths may appear only in launch-time errors about paths outside the scanned repo, where there is no repo-relative path to print. The CI build/test matrix is the proof for this contract: every normal e2e case must pass on Linux, macOS, and Windows.
-
-"However it was installed" includes the npm launcher, the wheel's executable and the archive, and the proof for those is the installed artifact rather than a checkout build: the launcher adds nothing between the user and the payload ([§FS-distribution-candidate.3.2](FS-distribution-candidate.md#32-the-npm-launcher-is-invisible)), and the rehearsal compares every installed `grund` byte for byte against the goldens on every registry row ([§FS-distribution-candidate.5.3](FS-distribution-candidate.md#53-every-install-of-the-cli-answers-alike)).
+The `grund` binary behaves the same however it was installed, on Linux, macOS and Windows: the same flags, the same exit codes and the same report bytes ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). Every path it reports is logical, spelled from the report base ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from), [§FS-config.3.6](FS-config.md#36-output--report-format)) with `/` on every platform ([§FS-errors.4](FS-errors.md#4-determinism)), in text reports, JSON fields and `sites`, an E2E case's fixture list and a stub's link target alike, and so are the cross-reference URLs it generates; only a launch-time error about a path outside the scanned repository prints a native platform path, having no repository-relative one to print. "However it was installed" includes the npm launcher, the wheel's executable and the archive, and the proof for those is the installed artifact rather than a checkout build: the launcher adds nothing between the user and the payload ([§FS-distribution-candidate.3.2](FS-distribution-candidate.md#32-the-npm-launcher-is-invisible)), and the rehearsal compares every installed `grund` byte for byte against the goldens on every registry row ([§FS-distribution-candidate.5.3](FS-distribution-candidate.md#53-every-install-of-the-cli-answers-alike)).
 
 ## 3. API surfaces
 
-Each binding exposes the same conceptual operations as the CLI subcommands, plus a programmatic check-and-iterate path so the engine can be embedded inside test runners and editor servers.
-
-The initial Python inventory is normative in [§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory). Process
-transport and editor-only exclusions must be explicit; an absent operation cannot be
-advertised as supported. Node's complete disk-backed operation inventory and
-process/editor exclusions are normative in [§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals) and
-[§FS-distribution.3.2.1.1](FS-distribution.md#3211-exclusions-and-later-adaptation).
+Each binding offers the CLI's conceptual operations as calls that return data, with a check-and-iterate path so the engine can be embedded in test runners and editor servers. An operation a binding leaves out is named among its exclusions and never advertised as supported.
 
 ### 3.0 Language-neutral data shapes
 
-Every binding returns the same data, only spelled idiomatically: a report and its
-findings ([§FS-distribution.3.0.1](FS-distribution.md#301-report-and-finding)), and show
-options ([§FS-distribution.3.0.2](FS-distribution.md#302-showopts)). These fields are
-normative. Complete host data and the frozen CLI JSON projection are compared
-separately under [§FS-distribution.3.0.3](FS-distribution.md#303-complete-data-and-canonical-parity), serving
-[§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms)
-and tracked in [AR-goal-measurement.2](../architecture/AR-goal-measurement.md#2-goal-meters).
+Every binding returns the same data, spelled the way its language spells it. The shapes below are normative: the report and its findings as the CLI projects them, which each binding's own records extend, and the show options every binding takes. Serves [§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms).
 
 #### 3.0.1 Report and Finding
 
-Host results retain all engine data, including nullable columns, multi-site locations,
-rule authority, scan-error status, output-format metadata and run cautions. Run cautions
-remain distinct from report warnings, including when setup fails. Node's records also
-carry complete and selected reports and partial outputs, with empty collections as
-arrays and optional fields present as null ([§FS-distribution.3.2.2](FS-distribution.md#322-typed-readonly-host-records)). The CLI projection
-below stays frozen: it omits columns and projects empty sites/authority to null; it is
-not the complete host schema. [§FS-distribution.3.0.3](FS-distribution.md#303-complete-data-and-canonical-parity) compares both forms separately.
+Host results keep all of the engine's data: nullable columns, multi-site locations, rule authority, scan-error status, output-format metadata and run cautions, which stay apart from the report's warnings even when setup fails. Node's records also carry the complete and the selected report and partial outputs, with empty collections as arrays and optional fields present as null ([§FS-distribution.3.2.2](FS-distribution.md#322-typed-readonly-host-records)). The block below is the CLI's projection of that data, which stays frozen: it omits columns and projects empty sites and authority to null, so it is not the complete host schema ([§FS-distribution.3.0.3](FS-distribution.md#303-complete-data-and-canonical-parity)).
 
 ```
 Report {
@@ -158,12 +119,7 @@ Finding {
 
 #### 3.0.2 ShowOpts
 
-Python takes required query operands positionally and section/mode/format/root as
-keywords ([§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory)). Roots and query failures follow
-[§FS-distribution.3.3.3](FS-distribution.md#333-per-call-scope-and-path-encoding) and [§FS-distribution.3.3.2](FS-distribution.md#332-operational-failures-and-invalid-arguments). Batch setup failure raises
-once; individual failed queries remain ordered outcomes. An empty batch succeeds
-without loading configuration. Node's exact option defaults and typed query failures
-are in [§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals) and [§FS-distribution.3.2.2](FS-distribution.md#322-typed-readonly-host-records).
+The show options are a section, a slice of the `show` ladder ([§FS-show.1.6](FS-show.md#16-how-much---brief-the-default---toc---full)) and a format. Python takes the query operands positionally and these as keywords ([§FS-distribution.3.3.5](FS-distribution.md#335-complete-inventory)); Node takes them in an options object ([§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals)).
 
 ```
 ShowOpts {
@@ -178,89 +134,19 @@ ShowOpts {
 
 #### 3.0.3 Complete data and canonical parity
 
-The shared `tests/bindings/` corpus compares complete Rust and Python result,
-failure and run-caution data, preserving every field and engine array order. The Node
-adapter (`tests/bindings/node/`) runs against the same Rust oracle and protocol,
-extended by the oracle's `--metadata` reply and no-`root` framing
-([§FS-distribution.3.2.4](FS-distribution.md#324-acceptance-evidence)); neither binding's evidence claims the other's coverage.
-Adapters use supported data APIs, not CLI subprocesses or message-only comparisons.
+The Rust engine, Python and Node give the same complete data for one tree, every field present and every array in the engine's order, including failures and run cautions. The shared corpus `tests/bindings/` compares each binding with the same Rust oracle through the bindings' data APIs, never through a CLI subprocess or a comparison of messages. Both sides must come from the same source, engine version, config, tree, invocation and ignore state: a wrong version fails the comparison and is never normalized away.
 
-The canonical UTF-8 JSON envelope has exactly `failure`, `result`, `run_cautions`:
-one of failure/result is null, except that an empty successful result may be null.
-Objects sort keys recursively by UTF-8 bytes; arrays keep engine order. Nullable
-fields are present, empty collections are arrays, separators are compact, and exactly
-one LF ends the record. Unicode and `/` remain literal. Quote, backslash, LF, CR and
-tab use JSON escapes; every other U+0000–U+001F character uses lowercase `\u00xx`
-(including backspace and form feed). No raw Rust serialization substitutes for this
-specified projection. Full structured equality and exact canonical bytes are separate
-assertions.
+Complete data is compared as a canonical UTF-8 JSON envelope with exactly the keys `failure`, `result` and `run_cautions`, one of `failure` and `result` null, except that an empty successful result may be null. Run cautions sit in the top-level `run_cautions` alone, never again inside `result`. Object keys sort recursively by UTF-8 bytes and arrays keep engine order; nullable fields are present, empty collections are arrays, separators are compact, and exactly one LF ends the record. Unicode and `/` stay literal; quote, backslash, LF, CR and tab use their JSON escapes, and every other U+0000–U+001F character uses lowercase `\u00xx`, backspace and form feed included. The Node adapter writes this envelope itself rather than through `JSON.stringify`, whose escapes and key order differ, and maps the binding's fixed camelCase field names to snake_case while authored IDs and config keys stay opaque. Structured equality and exact canonical bytes are separate assertions.
 
-Compare the frozen CLI projection separately to existing stdout/stderr JSON goldens.
-It keeps global stable path/line/message ordering (null path first, absent line as
-zero, warning/error/suggestion tie order), suggestion channel instead of severity,
-null empty sites/authority, authority last, and no column key. Run cautions are
-accounted for separately from report warning records and raw stderr cautions.
+The same host records, projected into the CLI's wire form, give the CLI's stdout and stderr byte for byte, and its exit status where it has one. That projection is frozen, and these are its only differences from the envelope:
 
-Corpus acceptance includes clean/error trees, config failures, caution-only runs and
-cautions before failure, suggestions enabled/disabled, selector authority/safety,
-missing/ambiguous single and batch queries, workspaces, Unicode/control characters
-and logical separators. Every operation has success/refusal coverage. Writers run
-on isolated copies and compare preview/no-execution behavior and resulting bytes
-with core, including isolated integration user homes.
+- A check projects its selected report in the CLI's one global order and with its keys ([§FS-errors.4.1](FS-errors.md#41-ordering), [§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)), ties in warning, error, suggestion order, with no `column` key and with empty `sites` and `authority` as null; a clean non-empty JSON check prints nothing on either stream ([§FS-output-shapes.2](FS-output-shapes.md#2-empty-json-check)).
+- A finding with a line goes to stdout and one without to stderr. Run cautions render as `warning: <message>` text on stderr, even under JSON, before any later refusal or report, while a config warning carried as one of the report's warnings stays a JSON finding ([§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text)): neither channel is flattened into the other.
+- A single query failure is the frozen diagnostic object on stderr ([§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output)); a batch's failed query is its query, result and error record on stdout ([§FS-errors.5.3](FS-errors.md#53-show---batch)). A launch failure stays `error:` text, with its hints and known lists ([§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text)).
+- Every other command keeps its own JSON fields and key order ([§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes)), and no host field or null optional metadata adds a CLI key; size measurements become `lead_<unit>` and `full_<unit>` pairs in the caller's unit order ([§FS-output-shapes.5.2](FS-output-shapes.md#52-list---size---formatjson)).
+- The CLI escapes quote, backslash, LF, CR and tab, and every `char::is_control` character as lowercase `\uNNNN`, DEL and C1 included, which differs on purpose from the envelope's C0 rule.
 
-##### 3.0.3.1 Node adapter mapping and frozen CLI wire projection
-
-The Node adapter writes the envelope above itself, with no arbitrary
-JSON.stringify guarantee: that uses different escapes for backspace/form-feed
-and object order. Node conversion explicitly maps
-fixed host camelCase fields to snake_case; authored IDs/config keys are opaque.
-Separate top-level runCautions into run_cautions, do not duplicate them; complete
-check result keeps report/selected_report/had_scan_errors/output_format. Compare
-every native-only field too, including column, sites, authority and query details.
-Require same source SHA/engine version/config/tree/invocation and ignore state;
-wrong version fails comparison, never normalization of findings or messages.
-
-Second channel projects those same host records into the EXISTING CLI wire form.
-The comparator produces byte-identical stdout AND stderr, plus CLI status
-expectations where meaningful. Frozen wire projection is explicitly distinct
-from the lossless host envelope; these are the only permitted differences:
-
-- Check uses selectedReport, not the entire object. Stable sort by bytewise
-  `(path,line-or-0,message)`, null path before paths; ties retain initial
-  warning/error/suggestion chain order. Keys: severity OR suggestion channel,
-  path,line,code,message,sites,authority. Native-only column and envelope metadata
-  do not add CLI keys; sites/authority empty arrays become null only in this
-  frozen wire projection. Actual values/sites/order/authority do not disappear.
-- Line-present findings go to stdout; line-less findings go to stderr. Separate
-  run_cautions render as existing `warning: <message>\n` text on stderr even in
-  JSON mode, before any later refusal/report. Config diagnostic report warnings
-  remain JSON findings where existing CLI requires them. No generic warning
-  flattening between these channels. Clean nonempty JSON check has zero bytes;
-  empty scan has its existing stderr finding.
-- Single query failure uses the frozen diagnostic object on stderr; a batch
-  per-query failure uses the exact query/result/error envelope on stdout. Launch
-  failures stay CLI `error:` text, including existing hints/known lists. No
-  frontend message parsing to infer classes or locations.
-- Show uses existing engine query JSON when available and typed metadata to pin
-  it; optional kind_title placement and E2E/value shapes are preserved. Batch
-  preserves input/exhaustive order and the CLI's JSON batch bytes. Refs/list/cover
-  and size rows use their fixed command fields/key orders; host envelope fields
-  and null optional metadata do not invent extra CLI keys. Size measurements
-  lower to lead_<unit>/full_<unit> pairs in caller unit order. Test total/summary
-  projections separately.
-- CLI escaping is its actual json_escape contract: quote/backslash/LF/CR/tab
-  escapes plus ALL Rust char::is_control characters as lowercase `\\uNNNN`,
-  including DEL/C1. This differs deliberately from the lossless corpus C0 rule;
-  cover control-character fixtures so JSON.stringify cannot pass by accident.
-- Paths keep core '/' rendering and invocation/config base; no absolute-path
-  replacement, regex message repair, platform basename stripping or arbitrary
-  sort is allowed. Mutation/config/TOML/text surfaces use exact existing command
-  goldens where no JSON command exists; complete-data comparison is still required.
-
-Comparator/serializers are test infrastructure. Production bindings return
-records and never print; the CLI remains the renderer. Reuse tests/e2e cases,
-particularly json-report, show/refs ambiguities, rule authority, config warnings,
-workspace root/member modes, Unicode and formatter/init refusal fixtures. Fixture names in tests refer to concrete test inputs; future measured coverage is recorded only after the tests execute.
+Paths keep the engine's `/` and its report base. Neither the projection nor any binding parses a message to infer a class or a location. Serializers and comparators are test code: a binding returns records and never prints, and the CLI stays the renderer.
 
 ### 3.1 Rust (`grund-core` crate)
 
@@ -269,23 +155,19 @@ let report = grund_core::check(&path)?;
 let body = grund_core::show("FS-check", ShowOpts::default())?;
 ```
 
-`Report` and the underlying `Catalog` are exposed as plain data structures so callers can iterate, filter, or render their own output. The effective configuration is reachable through `effective_project`, as a `Project` whose `schema`, `rules` and `presentation` hold one concern each ([§FS-config.concerns](FS-config.md#concerns-every-key-belongs-to-exactly-one-concern)), but `Project` is `#[doc(hidden)]` and outside the promise of [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes), because its records still move ([§FS-schema.13](FS-schema.md#13-what-is-absent)). The former root names `Findings`, `Config`, `KindConfig` and `CitationRules` were deprecated aliases from `0.17.0` and were removed in `0.19.0` ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)): `Catalog` replaces `Findings`, and the configuration aliases have no promised replacement. Every function on this surface returns data and writes to no stream, which is what lets one answer be rendered by a terminal, an editor and an embedder alike — the report's warning channel included, so a caution settled before any report exists still reaches a caller as a warning rather than as a line on its stderr ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread), [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)). Process callers use the `grund` CLI package; embedders call the data-returning entry points [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes) names ([§FS-distribution.3.1.1](FS-distribution.md#311-main_entry-is-absent-from-the-embedding-api)).
-
-#### 3.1.1 `main_entry()` is absent from the embedding API
-
-`grund_core::main_entry()` is not exported in 0.15.0 or later. It was a process entry point — it parsed argv, printed, and returned an exit code — kept for `grund-core = "0.4"` consumers until 0.14.0 shipped a deprecation note naming its removal in 0.15.0, the sequence [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) requires. A former caller uses `check`, `show`, `scan`, or another data-returning engine API when embedding grund, and invokes the `grund` CLI package when it needs a process entry point. Removing the engine adapter changes none of the shipped CLI's commands, flags, rendered bytes, or exit decisions, and changes no LSP behavior.
+`Report` and the underlying `Catalog` are plain data, so a caller can iterate, filter, or render its own output. The effective configuration is reachable through `effective_project`, as a `Project` whose `schema`, `rules` and `presentation` hold one concern each ([§FS-config.concerns](FS-config.md#concerns-every-key-belongs-to-exactly-one-concern)), but `Project` is `#[doc(hidden)]` and outside the promise of [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes), because its records still move ([§FS-schema.13](FS-schema.md#13-what-is-absent)). Every function on this surface returns data and writes to no stream, so one answer renders alike in a terminal, an editor and an embedder; this includes the report's warning channel, so a caution settled before any report exists still reaches a caller as a warning rather than as a line on its stderr ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread), [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)).
 
 #### 3.1.2 What 1.0 freezes
 
-`grund-core` 1.0 freezes exactly the root names this point reaches: the entry points `check`, `check_with_opts`, `scan`, `show`, `list`, `list_sizes`, `refs`, `refs_outcome`, `cover`, `cover_text`, `cover_lines`, `format_references`, `propose_id`, `complete_ids`, `init`, `fetch_snapshot` and `integrations` ([§FS-distribution.3.1.3](FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)), the typed refusals `ShowQueryError`, `FmtScanAbort` and `FmtConflictAbort` ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)), and every root type their signatures reach, transitively. That is 118 names, `InitAllocation` and `InitAllocationHome` among them, which `InitNext.allocation` reaches ([§FS-init.2.2.2](FS-init.md#222-the-next-block)), and the rows whose disposition is `frozen at 1.0` in the [public-surface inventory](../discussions/proposals/2026-09-22-grund-core-public-surface-inventory.md) are the full list. An entry point with no typed refusal returns `anyhow::Result`.
+`grund-core` 1.0 freezes exactly the root names this point reaches: the entry points `check`, `check_with_opts`, `scan`, `show`, `list`, `list_sizes`, `refs`, `refs_outcome`, `cover`, `cover_text`, `cover_lines`, `format_references`, `propose_id`, `complete_ids`, `init`, `fetch_snapshot` and `integrations` ([§FS-distribution.3.1.3](FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)), the typed refusals `ShowQueryError`, `FmtScanAbort` and `FmtConflictAbort` ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)), and every root type their signatures reach, transitively. The rows whose disposition is `frozen at 1.0` in the [public-surface inventory](../discussions/proposals/2026-09-22-grund-core-public-surface-inventory.md) are the full list. An entry point with no typed refusal returns `anyhow::Result`. None is a process entry point: no root function parses argv, prints or returns an exit code, and a caller that needs a process runs the `grund` CLI package.
 
 Every other root name is `#[doc(hidden)]` and outside the promise, and so are the `test-*` Cargo features and what they export. Hiding retires nothing and changes no type: a hidden name still links and still works. Frozen means what Cargo reads into a `1.0.0`: a `1.x` release may add a name, a field or a variant and may deprecate a name, and only `2.0` removes or retypes one ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
-An option record is built from `Default` with its fields assigned; an output record or a refusal is read, never built. That is what lets `1.x` add a field or a variant, so since `0.21.0` every promised struct and enum is `#[non_exhaustive]`, and no other type and no variant is: outside the crate, building a promised record with a struct literal, or matching a promised enum without a wildcard arm, does not compile. The crate documentation gave that notice from `0.19.0`.
+An option record is built from `Default` with its fields assigned; an output record or a refusal is read, never built. That is what lets `1.x` add a field or a variant, so every promised struct and enum is `#[non_exhaustive]`, and no other type and no variant is: outside the crate, building a promised record with a struct literal, or matching a promised enum without a wildcard arm, does not compile.
 
 #### 3.1.3 `integrations` is the one integrations entry point
 
-`integrations(opts: IntegrationsOpts) -> Result<IntegrationsOutput, IntegrationsError>` answers what `grund integrations` answers, as data; its options, output and refusal are [§FS-integrations.1.3.1](FS-integrations.md#131-the-engines-answer)'s. The closed vocabularies it is spelled in keep exactly these methods: `IntegrationClient` keeps `ALL`, `name` and `from_name`; `InstallKind` keeps `name`; `ConversationRendering` keeps `name` and `from_name`; `ConversationTarget` keeps `name` and `from_name`, and its `ALL` became public in `0.19.0`, an addition; and `IntegrationAgent`, the six agents of [§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files), has `ALL`, `name` and `from_name`. The 30 root names the CLI assembled `--write` from before `0.19.0`, and the 9 other methods of those vocabularies, were deprecated in `0.19.0` and removed in `0.21.0` ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)): the inventory lists them under its removed names, and `crates/grund-core/src/lib.rs` keeps one line for each that names what answers it now.
+`integrations(opts: IntegrationsOpts) -> Result<IntegrationsOutput, IntegrationsError>` answers what `grund integrations` answers, as data; its options, output and refusal are [§FS-integrations.1.3.1](FS-integrations.md#131-the-engines-answer)'s. The closed vocabularies it is spelled in have exactly these methods: `IntegrationClient` has `ALL`, `name` and `from_name`; `InstallKind` has `name`; `ConversationRendering` has `name` and `from_name`; `ConversationTarget` has `ALL`, `name` and `from_name`; and `IntegrationAgent`, the six agents of [§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files), has `ALL`, `name` and `from_name`.
 
 ### 3.2 Node (`grund-cli` npm package)
 
@@ -296,100 +178,46 @@ const result = await check('./repo'); // findings are result.report.errors, warn
 const body = await show('FS-check', { mode: 'brief' });
 ```
 
-The native binding uses napi-rs over the shared core. This contract authorizes
-local buildable/installable API artifacts; registry publication remains pending.
-Supported prebuilt targets are packaging's GNU Linux x64/arm64, macOS x64/arm64
-and Windows x64 matrix. Local evidence does not certify that whole matrix.
-
-Packaging consumes that contract unchanged. Node 22.x and 24.x with N-API 8
-([§FS-distribution.3.2.3.2](FS-distribution.md#3232-moduleruntimeload-interface)) are what every registry row proves
-([§FS-distribution-candidate.1.2](FS-distribution-candidate.md#12-every-registry-row-proves-every-runtime-it-promises)); one exact-version platform package per row is
-selected by OS, CPU and libc ([§FS-distribution-candidate.2.2](FS-distribution-candidate.md#22-npm-selects-one-platform-package-by-os-cpu-and-libc)); and a host without one
-gets an actionable error and an explicit `npm run build:source`, never a download or an
-automatic compile ([§FS-distribution-candidate.3.3](FS-distribution-candidate.md#33-a-missing-payload-is-an-error-never-a-substitute), [§FS-distribution-candidate.4.1](FS-distribution-candidate.md#41-npm-builds-from-source-only-when-asked)).
+The binding is a native Node-API addon over the shared engine, and every call returns a Promise of a typed, readonly record.
 
 #### 3.2.1 Operations, options and refusals
 
-All functions below return Promises, including argument-validation and loader
-failures. Required strings are positional; options are an optional plain object.
-Unknown keys, wrong types, NUL, unpaired UTF-16 surrogates, non-finite numbers,
-unsafe integers, invalid enum values and conflicting options reject `input`.
-No URL, Buffer, config injection or argv API. Omitted optional values mean default;
-explicit null is allowed only for `section`, batch queries and nullable options
-whose declarations explicitly permit it. Arrays are copied at entry.
+Every function returns a Promise, and an invalid argument or a failed load rejects it. Required strings are positional, and options are one optional plain object. Unknown keys, wrong types, NUL, unpaired UTF-16 surrogates, non-finite numbers, unsafe integers, invalid enum values and conflicting options reject `input`. An omitted optional value means its default; an explicit `null` is allowed only for `section`, batch queries and options whose declarations make them nullable. Arrays are copied at entry. There is no URL, Buffer, config-injection or argv API.
 
-`RootOptions = {root?: string}`. Every tree operation snapshots cwd at entry,
-resolves a relative operand against that snapshot, and passes an absolute path
-plus the original omitted/explicit bit to core. It never calls chdir. `check`
-takes root positionally; init takes target positionally; other calls take root
-in options. `scan` requires an explicit root. Output bases remain the core's:
-config-root or invocation operand per existing relative_paths semantics. Any
-needed path-base carrier is additive core data, not a JS path resolver.
+`RootOptions` is `{root?: string}`. A tree operation snapshots the working directory at entry and resolves a relative operand against that snapshot, keeping whether the root was omitted or given, and it never calls `chdir`. `check` takes its root positionally, `init` its target positionally and `scan` an explicit root; every other call takes `root` in its options. Report paths keep the engine's base, the config root or the invocation operand as `relative_paths` decides ([§FS-config.3.6](FS-config.md#36-output--report-format)).
 
-Results are typed records with `runCautions: Finding[]` at their top level;
-these are separate from report warnings. A refusal carries the same array on
-`GrundError.failure`. Common config/I/O/operation failure classes apply to all
-calls that load a tree; the table names additional operation-specific cases.
+A result carries `runCautions: Finding[]` at its top level, apart from the report's warnings, and a refusal carries the same array on `GrundError.failure`. Every call that loads a tree can fail with the common `config`, `io` and `operation` classes; the table names the cases particular to each operation.
 
-| Public Promise signature | Options/defaults beyond root | Reused core; minimum additive seam | Result and refusal behavior |
-| --- | --- | --- | --- |
-| `check(root?: string, options?: CheckOptions): Promise<CheckResult>` | requireGrounding=false, suggestions=false, full=false, rule=null, only=[], ignore=[], onlyRule=false | `check_with_run_warnings`, `CheckFindingSelection`; typed `check_outcome` | complete report, selectedReport, outputFormat, hadScanErrors, runCautions; findings and partial file I/O resolve; failed setup rejects. Selection validated before discovery; ignore wins, rule-produced codes carry invalid-rule and every empty-citation-obligation row, safety io always survives, onlyRule requires rule. selectedReport also holds one selected-check-off warning per `only` code the run left off, which the complete report does not ([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). |
-| `scan(root: string): Promise<ScanResult>` | Explicit path; no checker flags | `scan`/strict scan, additive `scan_outcome` over the same pipeline with warning and normalized snapshot carriers | declarations/citations/scan facts available as arrays, not a live iterator; strict scan failures reject with available partial facts and cautions. No parallel JS scan. |
-| `show(id: string, options?: ShowOptions): Promise<ShowResult>` | section=null, mode=lead, format=text; modes lead/brief/toc/full, formats text/md/json | `show_with_scope`, typed query errors, additive `show_outcome` | body/path/line/sections/json plus cautions. Query refusal rejects query with sites or candidate IDs; setup rejects config/io. Inline section plus section option is a query failure, not a JS parser reinterpretation. |
-| `showBatch(queries: readonly (string \| ShowQuery)[] \| null, options?: BatchOptions): Promise<BatchResult>` | null means all coordinates; [] is empty without config loading; mode=lead, globs=[] (null with globs generates and filters; explicit queries with globs reject `input`) | `show_batch_with_scope`'s single-context machinery; additive `show_batch_data_outcome` before the existing JSON rendering | ordered `{query,ok:true,result}` or `{query,ok:false,failure}` records, plus note and cautions. Validate entire input before discovery. Per-query failures continue; setup failure rejects once. No stdin/NDJSON input API. |
-| `refs(id: string \| null, options?: RefsOptions): Promise<RefsResult>` | section=null, descendants=false, globs=[], from=null; id, globs and from select one mode, and mixing them rejects `input` ([§FS-coordinate-globs.bindings](FS-coordinate-globs.md#bindings-node-and-python)) | `refs_with_metadata`/`refs_outcome`, typed `refs_metadata_outcome` | hits, workspace, outputFormat, note, scanErrors, kindTitle, derived summaries/totals, cautions. Valid undeclared target retains hits/note; invalid ID/ambiguity, refused glob or refused `from` source rejects query with available context. No imposed show-not-found rule for an ID. |
-| `list(options?: ListOptions): Promise<ListResult>` | kinds=[], projects=[], unused=false, selector=null, globs=[] | `list_with_run_warnings`, typed `list_outcome` | entries/summaries/workspace/outputFormat/scanErrors/note/cautions. Unknown/non-citable kinds, unknown project, project filter without workspace, invalid/unresolved selector, refused glob ([§FS-coordinate-globs.bindings](FS-coordinate-globs.md#bindings-node-and-python)) reject; not empty success. |
-| `listSizes(options?: SizeOptions): Promise<SizeResult>` | list options (globs included) plus units=[lines,words,bytes], top=null; units nonempty, unique, caller ordered; top positive | `list_sizes`, typed warning-preserving `list_sizes_outcome` | entries with ordered unit/nullable lead/full measurements, workspace/outputFormat/scanErrors/note/cautions. Filters precede top; first unit ranks; existing stable tie-break; broken stub measures remain null. |
-| `cover(options?: CoverOptions): Promise<CoverResult>` | globs=[] ([§FS-coordinate-globs.bindings](FS-coordinate-globs.md#bindings-node-and-python)) | `cover`, typed `cover_outcome` | entries including empty files, all citation/site/project/enclosing coordinates or those globs select, outputFormat, note, scanErrors/cautions. `cover_text` is a rendering-oriented lower-detail projection, not an additional public operation; complete cover data can supply it. |
-| `fmt(options?: FmtOptions): Promise<FmtResult>` | write=false, marker=false, crossRefs=false | `format_references`, `FmtScanAbort`, `FmtConflictAbort`, typed `format_outcome` | changes/path/line/label, scanErrors, refusedWrites, cautions. Core completed partial runs resolve with diagnostics; fatal preflight or later write errors reject with partial output. A conflict refusal rejects with kind operation and code conflict-marker, carrying path, line, sites, empty partial changes and details.conflicts as Python does ([§FS-distribution.3.3.2](FS-distribution.md#332-operational-failures-and-invalid-arguments)). Config-enabled cross refs still runs when crossRefs=false. Preview is default; no added check flag/exit decision. |
-| `proposeId(kind: string, title: string, options?: IdOptions): Promise<IdResult>` | width=3, nonnegative safe integer | `propose_id_with_run_warnings`, typed `propose_id_outcome` | id/kind/number/slug/folder/file/e2eCaseDir/fileHoldsSingleDeclaration/cautions. Unknown/non-citable kind rejects operation with known kinds; empty slug or collision rejects query. No writes or implicit declaration creation. |
-| `init(target?: string, options?: InitOptions): Promise<InitResult>` | name=null, description=null, docs=false, force=false, dryRun=false, check=false, noVcs=false, agents=null (automatic) | `init`, `InitError`, additive typed `init_outcome` | events/errors/notes/next/pendingChanges/cautions. Explicit call writes by default, unlike fmt. check implies dryRun. Core preflight refusals reject; completed validation findings resolve; partial write failure rejects with events. Home/global/VCS guards, protected config and companion bytes preserved. |
-| `completeIds(options?: CompleteOptions): Promise<CompleteResult>` | prefix="", sections=false | `complete_ids_with_run_warnings`, typed `complete_ids_outcome` | ids/cautions; deterministic sorted deduplicated candidates, aliases and separators from core. Core errors reject here; only shell keystroke frontend has silent-error policy. |
-| `effectiveConfig(options?: RootOptions): Promise<ConfigResult>` | none | `effective_config`, config warning helpers, additive `effective_config_outcome` plus schema-keyed values projection | root/configFile/values/cautions; discovered config with effective defaults; no declaration scan, no broad Rust Config object. |
-| `validateConfig(options?: RootOptions): Promise<ConfigResult>` | none | `validate_config`, additive `validate_config_outcome` | same record; expands member configs exactly as core, scans no declaration bodies; invalid config rejects config with location and earlier cautions. |
-| `fetch(id: string, options?: RootOptions): Promise<FetchResult>` | Explicit fetch is the write authorization; no invented preview flag | `fetch_snapshot_with_run_warnings`, additive typed `fetch_outcome` before string flattening | id/cautions; typed query/config/io/operation failures; captures integration outputs as core does. Only this operation executes configured integration; no implicit fetching. |
-| `integrations(options?: IntegrationOptions): Promise<IntegrationResult>` | client=null, write=false, conversation=null, conversationTarget=null, agent=null; client set codium/iterm2/kitty/tmux/vscode/wezterm; conversation plain/link; target file/path/web/vscode/vscodium/cursor | Existing IntegrationClient/detection/artifact/managed writers; additive shared `integrations_outcome` orchestration | detected clients/descriptors/artifact data or events/notes/preferences/manualSteps, cautions; user-global operation, no root. Preserve validation, user-config-before-write, active-agent gates and owned paths. Only explicit write mutates. No fabricated CLI JSON-install mode. |
-| `referenceStyle(path: string): Promise<StyleResult>` | explicit document path | `reference_style`, typed `reference_style_outcome` | marker/trigger/cautions; member configuration wins exactly as core. |
-| `agentSetupInstructions(): Promise<SetupResult>` | none | the whole setup guide through `canonical_template_text`: the text `grund guide --full` prints ([§FS-init.5.5](FS-init.md#55-the-core-and-its-sections)) | instructions, empty cautions; existing packaged workflow returned as data, never printed. No section argument: the caller chooses what of the guide reaches a model. |
+| Public Promise signature | Options and defaults beyond root | Result and refusal behavior |
+| --- | --- | --- |
+| `check(root?: string, options?: CheckOptions): Promise<CheckResult>` | requireGrounding=false, suggestions=false, full=false, rule=null, only=[], ignore=[], onlyRule=false | A completed run resolves, its findings and per-file I/O failures included; a failed setup rejects. Selection is validated before discovery and narrows `selectedReport` alone, by `check`'s rules ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore), [§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)), `onlyRule` requiring `rule`. `selectedReport` also holds one selected-check-off warning per `only` code the run left off, which the complete report does not ([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). |
+| `scan(root: string): Promise<ScanResult>` | Explicit path; no checker flags | Declarations, citations and scan facts as arrays, not a live iterator; a strict scan failure rejects with the partial facts and cautions it has. |
+| `show(id: string, options?: ShowOptions): Promise<ShowResult>` | section=null, mode=lead, format=text; modes lead/brief/toc/full, formats text/md/json | A query refusal rejects `query` with its sites or candidate IDs; a setup failure rejects `config` or `io`. An inline section beside the `section` option is a query failure the engine decides, never a JS parser's reinterpretation. |
+| `showBatch(queries: readonly (string \| ShowQuery)[] \| null, options?: BatchOptions): Promise<BatchResult>` | null means all coordinates; [] is empty without config loading; mode=lead, globs=[] (null with globs generates and filters; explicit queries with globs reject `input`) | Ordered `{query,ok:true,result}` or `{query,ok:false,failure}` records, plus note and cautions. The whole input is validated before discovery; a failed query does not stop the rest, and a setup failure rejects once. No stdin or NDJSON input. |
+| `refs(id: string \| null, options?: RefsOptions): Promise<RefsResult>` | section=null, descendants=false, globs=[], from=null; id, globs and from select one mode, and mixing them rejects `input` ([§FS-coordinate-globs.bindings](FS-coordinate-globs.md#bindings-node-and-python)) | A valid undeclared target resolves with its hits and note; an invalid ID, an ambiguity, a refused glob or a refused `from` source rejects `query` with the context it has. |
+| `list(options?: ListOptions): Promise<ListResult>` | kinds=[], projects=[], unused=false, selector=null, globs=[] | An unknown or non-citable kind, an unknown project, a project filter without a workspace, an invalid or unresolved selector, and a refused glob ([§FS-coordinate-globs.bindings](FS-coordinate-globs.md#bindings-node-and-python)) reject rather than resolve empty. |
+| `listSizes(options?: SizeOptions): Promise<SizeResult>` | list options (globs included) plus units=[lines,words,bytes], top=null; units nonempty, unique, caller ordered; top positive | Each entry has one nullable lead and full measurement per unit, in the caller's order; a broken stub's stay null. Filters apply before `top`, the first unit ranks, and ties keep the CLI's stable order. |
+| `cover(options?: CoverOptions): Promise<CoverResult>` | globs=[] ([§FS-coordinate-globs.bindings](FS-coordinate-globs.md#bindings-node-and-python)) | Entries include empty files, and every citation, site, project and enclosing coordinate, or those the globs select. `cover`'s text rendering is not another operation: the complete data supplies it. |
+| `fmt(options?: FmtOptions): Promise<FmtResult>` | write=false, marker=false, crossRefs=false | Previews by default and adds no check flag or exit decision. A partial run the engine completes resolves with its diagnostics; a fatal preflight or a later write error rejects with the partial output. A conflict refusal rejects with kind `operation` and code `conflict-marker`, carrying path, line, sites, empty partial changes and `details.conflicts` as Python does ([§FS-distribution.3.3.2](FS-distribution.md#332-operational-failures-and-invalid-arguments)). Config-enabled cross-references still run when crossRefs=false. |
+| `proposeId(kind: string, title: string, options?: IdOptions): Promise<IdResult>` | width=3, nonnegative safe integer | An unknown or non-citable kind rejects `operation` with the known kinds; an empty slug or a collision rejects `query`. No write and no implicit declaration. |
+| `init(target?: string, options?: InitOptions): Promise<InitResult>` | name=null, description=null, docs=false, force=false, dryRun=false, check=false, noVcs=false, agents=null (automatic) | Writes by default, unlike fmt; check implies dryRun. A preflight refusal rejects; completed validation findings resolve; a partial write failure rejects with its events. The home, global and VCS guards, protected config and companion bytes hold as in the CLI. |
+| `completeIds(options?: CompleteOptions): Promise<CompleteResult>` | prefix="", sections=false | Sorted, deduplicated candidates, with the engine's aliases and separators. An engine error rejects; only the shell's keystroke frontend stays silent on errors. |
+| `effectiveConfig(options?: RootOptions): Promise<ConfigResult>` | none | The discovered config with effective defaults; no declaration scan and no Rust `Config` object. |
+| `validateConfig(options?: RootOptions): Promise<ConfigResult>` | none | The same record; expands member configs as the engine does and scans no declaration body. An invalid config rejects `config` with its location and earlier cautions. |
+| `fetch(id: string, options?: RootOptions): Promise<FetchResult>` | The call is the write authorization; no preview flag | Captures integration output as the engine does, with typed `query`, `config`, `io` and `operation` failures. The only operation that runs a configured integration; nothing fetches implicitly. |
+| `integrations(options?: IntegrationOptions): Promise<IntegrationResult>` | client=null, write=false, conversation=null, conversationTarget=null, agent=null; client set codium/iterm2/kitty/tmux/vscode/wezterm; conversation plain/link; target file/path/web/vscode/vscodium/cursor | User-global, with no root. Validation, user config before write, the active-agent gates and owned paths hold as in the CLI, and only an explicit write mutates. No JSON install mode the CLI lacks. |
+| `referenceStyle(path: string): Promise<StyleResult>` | explicit document path | Member configuration wins exactly as in the engine. |
+| `agentSetupInstructions(): Promise<SetupResult>` | none | The whole setup guide, the text `grund guide --full` prints ([§FS-init.5.5](FS-init.md#55-the-core-and-its-sections)), with empty cautions, returned and never printed. No section argument: the caller chooses what of the guide reaches a model. |
 
-`summaries` and `totals` in refs are transport projections over existing hits,
-with byte-sorted paths and site counts; no new graph query or resolution rule.
-All flags affecting engine behavior map to current core mechanisms. Output-only
-CLI switches (refs total/summary, id explain, format exit code) become returned
-records/derived fields, not fake process options. The omitted showBatch mode
-format is deliberate: typed results plus canonical json are always returned;
-the bindings project the CLI's JSON batch bytes, the one batch
-format that is data; its `text` and `md` framing is for reading ([§FS-show.3.3](FS-show.md#33-batch-query)).
+The table's option names and defaults are the exact public ones. `agents` is null or omitted for automatic selection, otherwise a nonempty readonly array of canonical/claude/gemini/pi/copilot/cursor/windsurf/zed, each one of `init`'s agent entrypoint selections, and `[]` rejects rather than silently selecting automatically. An integration agent name is one of the closed set the CLI knows, and any other rejects `input`. conversation, conversationTarget and agent require write=true, agent also requires conversationTarget, and a write with no client requires conversation or conversationTarget. Validation precedes any mutation.
 
-##### 3.2.1.1 Exclusions and later adaptation
+CLI switches that only shape output, such as `refs`' total and summary, `id`'s explain and `fmt`'s exit code, become returned fields rather than options: `refs`' `summaries` and `totals` are derived from its hits, with byte-sorted paths and site counts. `showBatch` takes no format, because typed results and canonical JSON are always returned, and the bindings project the CLI's JSON batch bytes, the one batch format that is data; its `text` and `md` framing is for reading ([§FS-show.3.3](FS-show.md#33-batch-query)).
 
-LSP snapshots/overlays/hover/on-type edits and protocol lifecycle remain the LSP
-frontend's: only disk-backed batch operations, completion and referenceStyle are
-public here. No generated first-party editor plugin or Node watch/streaming API.
-Help/version dispatch, argv, exit codes, SIGPIPE, static shell completion-script
-printing and CLI/LSP launchers remain process surfaces. Build/engine version
-metadata is available privately for package matching, not another engine API.
-`cover` line ownership ([§FS-cover.6](FS-cover.md#6-line-ownership)) is excluded from the initial inventory,
-pending later adaptation: `cover` takes no `lines` option.
-#459 format/path-base/v2 settings and #463 schema-view wait for their actual core
-implementation, then require a separate contract extension. No placeholder API
-or JS interpretation of those proposals. #453/#454/#466 are later internal
-adaptation, not landing blockers. #470 shared corpus and #471 assembly are
-coordination interfaces; no separate GitHub issue must close first.
+The process and editor surfaces are excluded. Help and version dispatch, argv, exit codes, SIGPIPE, static shell completion-script printing and the CLI and LSP launchers stay processes. LSP snapshots, overlays, hover, on-type edits and the protocol lifecycle stay the LSP's, so completion and `referenceStyle` are the only editor operations here, and there is no generated editor plugin and no watch or streaming API. Build and engine version metadata serves package matching privately and is not another engine API. `cover` line ownership ([§FS-cover.6](FS-cover.md#6-line-ownership)) is not in the inventory, so `cover` takes no `lines` option.
 
 #### 3.2.2 Typed readonly host records
 
-Records
-are ordinary JS objects, arrays iterate synchronously after the Promise resolves,
-and TS properties are readonly. No persistent native handles, session objects,
-live iterators or permanent promise to mirror Rust `Config`/`Findings` layout.
-Optional result fields are present as null, never silently omitted/undefined;
-collections are [] when empty. Schema-controlled input defaults are in [§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals).
-Integers crossing as number must be within Number.MAX_SAFE_INTEGER; unexpected
-overflow rejects operation with code `numeric-overflow`, never truncates.
-Coordinates keep core one-based byte-column units; do not convert to UTF-16.
-
-##### 3.2.2.1 Common records
+Records are ordinary JS objects whose TS properties are readonly, and their arrays iterate synchronously once the Promise resolves: no persistent native handle, session object or live iterator, and no promise to mirror a Rust layout. An optional result field is present as null, never omitted or undefined, and an empty collection is `[]`. An integer crossing as a number stays within `Number.MAX_SAFE_INTEGER`: an overflow rejects `operation` with code `numeric-overflow` and never truncates. Coordinates keep the engine's one-based byte columns and are never converted to UTF-16.
 
 ```ts
 type Site = { readonly path: string; readonly line: number };
@@ -433,329 +261,40 @@ type PartialOutcome =
 declare class GrundError extends Error { readonly failure: Failure }
 ```
 
-`kind` is the stable discriminant; `code` is a documented machine code, not a
-localized sentence. Expected query codes preserve not-found, missing-section,
-broken-stub, ambiguous, ambiguous-section, invalid-id and query-failed. Other
-codes identify invalid-argument/unknown-option/conflicting-options/path-encoding,
-invalid-config, filesystem, operation-failed, native-load, worker-failed,
-native-panic, writer-busy and numeric-overflow. Specific engine codes/details
-can extend this string catalog compatibly; callers branch on kind and known codes.
-Query details include candidates/formatHint where core supplies them; I/O includes
-OS code when available; load includes expected target/addon/versions, attempted
-locations and cause chain. No unsupported source location is invented.
+`kind` is the stable discriminant, and `code` is a documented machine code, not a localized sentence. Query codes are `not-found`, `missing-section`, `broken-stub`, `ambiguous`, `ambiguous-section`, `invalid-id` and `query-failed`; other codes identify `invalid-argument`, `unknown-option`, `conflicting-options`, `path-encoding`, `invalid-config`, `filesystem`, `operation-failed`, `native-load`, `worker-failed`, `native-panic`, `writer-busy` and `numeric-overflow`. Engine codes and details can extend this catalog compatibly, so callers branch on `kind` and the codes they know. A query failure's details carry the candidates and `formatHint` where the engine supplies them, an I/O failure the OS code when there is one, and a load failure the expected target, addon and versions, the locations tried and the cause chain; no source location is invented. Import succeeds without a compatible addon, and the first call rejects `load`; a JS package too corrupt to import is a module-system error outside any operation's Promise. Errors do not print, and ESM and CJS share one `GrundError` class.
 
-Input validation and synchronous napi conversion errors are caught inside async
-public wrappers; therefore callers always receive rejected Promises. Lazy load
-lets import succeed even without a compatible addon; the first call rejects
-load. A corrupt JS package that cannot be parsed/imported is a module-system
-error outside an operation Promise. Errors do not print. Same class identity
-is shared by ESM and CJS. Batch query failures use the same Failure data without
-throwing; batch setup failures reject GrundError once.
+Every result record below adds `runCautions`, and warnings a native output carries move there once rather than repeating in the data. Other fields have fixed camelCase host names; the canonical corpus converts them to snake_case and never renames an authored ID or configuration key ([§FS-distribution.3.0.3](FS-distribution.md#303-complete-data-and-canonical-parity)). The engine's output format is kept as metadata, never as leave to return a string in place of typed data.
 
-##### 3.2.2.2 Result fields
-
-Every following record adds Cautions; warning vectors present on native outputs
-are moved there once, not repeated in data. Other fields use fixed camelCase
-host names, listed here. The shared canonical corpus converts them to snake_case
-and preserves authored arbitrary keys; it never mechanically renames IDs or
-configuration keys. The existing core output_format is preserved as metadata,
-not permission to return a string in place of typed data.
-
-- CheckResult: `report`, `selectedReport`, `hadScanErrors`, `outputFormat`.
-  `report` is complete under the requested scope/options, selectedReport is
-  computed with core CheckFindingSelection. With no filters they are equal.
-  hadScanErrors=true means incomplete, even if selectedReport has no errors.
-- ShowResult: `id`, `section:string|null`, `kindTitle:string|null`, `body`,
-  `path`, `line`, `sections: {path,title,depth}[]`,
-  `json: string|null` (core's exact existing JSON when requested),
-  `manifest:{kind:'E2E',args:string[],expectedExit:number,fixtures:string[]}|null`.
-  The additive outcome supplies query metadata from the same loaded context,
-  before rendering; no second scan or parsing rendered prose.
-  JSON source/E2E/value bodies preserve core semantics rather than treating all
-  output as prose. All four slice modes and all three single-show formats exist.
-- BatchResult: `records: {query:{id,section:string|null},ok:true,result:ShowData}
-  | {query,ok:false,failure:Failure}[]`, `note:string|null`. ShowData has ShowResult's fields except
-  cautions, mode is invocation-wide, canonical per-query JSON is preserved.
-- RefsData: `outputFormat`, `workspace`, `kindTitle:string|null`, `note:string|null`,
-  `hits`, `scanErrors`, `summaries:{project:string|null,path,count,lines:number[]}[]`,
-  `totals:{sites,files}`. Every RefHit has project/path/line/column/id/
-  section/marker/text/enclosingDeclaration/enclosingSection; nullable coordinates
-  stay null. Summary lines retain the CLI's duplicate-line policy and ordering.
-- ListResult: `outputFormat`, `workspace`, `entries`, `summaries`, `scanErrors`, `note:string|null`.
-  Entry: project/id/section/sectionSeparator/kind/path/line/title/stub/defines/
-  refs/duplicate/valueRoots:{id,valid}[]. Summary: project/kind/title/home/count.
-  project/section/title/defines nullable; output wire omits keys only where the
-  existing CLI shape does. Keep kind titles and authored project/kind order.
-- SizeResult: outputFormat/workspace/scanErrors/note:string|null/entries. Size entry:
-  project/id/section/sectionSeparator/kind/path/line/stub/defines/duplicate/
-  measurements:{unit:'lines'|'words'|'bytes',lead:number|null,full:number|null}[].
-- CoverResult: outputFormat/scanErrors/note:string|null/entries:{project,path,citations:RefHit[]}[];
-  no loss of empty files or citing-side membership.
-- FmtData: changes:{path,line,label,counts,lockFile}[]/scanErrors/refusedWrites:string[].
-  Completed partial run carries changes and scan errors; refusal partial may
-  contain no changes. No made-up rollback or atomic-all-files guarantee.
-  `label` is the CLI row after `path:line: `, with the same kinds appended
-  ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)), the same text an expansion or a link writes
-  ([§FS-fmt.3.6](FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes)), and the same `; creates the file` or `; deletes the file`
-  ([§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)), so a caller comparing `label` exactly breaks
-  as an exact-line script does; it should read `counts` and `lockFile` instead.
-  `counts:{triggersMarked,citationsMarked,localSectionsExpanded,shorthandsExpanded,
-  linksWritten,sectionLockEntries}` are the change's occurrences of each kind, the
-  numbers the `--write` totals sum ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)); `lockFile:'created'|'deleted'|null`
-  is set on a lock row whose write creates or deletes its file, and null elsewhere.
-- IdResult: id/kind/number:number|null/slug/folder:string|null/file:string|null/
-  e2eCaseDir:string|null/fileHoldsSingleDeclaration:boolean.
-- InitData: events:{verb,path}[]/errors:Finding[]/notes:string[]/
-  next:{docs:boolean,declaresKinds:boolean,entrypoint:string,scanReadsFile:boolean,fsHome:Home,
-  allocation:{kind:string,home:Home|null,homeExists:boolean}|null}|null/pendingChanges:boolean, where Home is
-  {kind:'file',path:string,headingName:string,headingMarker:string} | {kind:'folder',path:string}.
+- CheckResult: `report`, `selectedReport`, `hadScanErrors`, `outputFormat`. `report` is complete under the requested scope and options, and `selectedReport` is selected from it by `check`'s selection, so with no filter the two are equal. `hadScanErrors=true` means the run is incomplete, even when `selectedReport` has no errors.
+- ShowResult: `id`, `section:string|null`, `kindTitle:string|null`, `body`, `path`, `line`, `sections: {path,title,depth}[]`, `json: string|null` (the engine's exact JSON when requested), `manifest:{kind:'E2E',args:string[],expectedExit:number,fixtures:string[]}|null`. Source, E2E and value bodies keep the engine's meaning rather than reading as prose, and all four slice modes and all three single-show formats exist.
+- BatchResult: `records: {query:{id,section:string|null},ok:true,result:ShowData} | {query,ok:false,failure:Failure}[]`, `note:string|null`. ShowData has ShowResult's fields but its cautions, the mode is the call's, and each query's canonical JSON is kept.
+- RefsData: `outputFormat`, `workspace`, `kindTitle:string|null`, `note:string|null`, `hits`, `scanErrors`, `summaries:{project:string|null,path,count,lines:number[]}[]`, `totals:{sites,files}`. Every RefHit has project/path/line/column/id/section/marker/text/enclosingDeclaration/enclosingSection, a coordinate it lacks staying null. Summary lines keep the CLI's duplicate-line policy and order.
+- ListResult: `outputFormat`, `workspace`, `entries`, `summaries`, `scanErrors`, `note:string|null`. Entry: project/id/section/sectionSeparator/kind/path/line/title/stub/defines/refs/duplicate/valueRoots:{id,valid}[], of which project, section, title and defines are nullable. Summary: project/kind/title/home/count. The wire form omits a key only where the CLI's shape does, and kind titles and the authored project and kind order are kept.
+- SizeResult: outputFormat/workspace/scanErrors/note:string|null/entries. Size entry: project/id/section/sectionSeparator/kind/path/line/stub/defines/duplicate/measurements:{unit:'lines'|'words'|'bytes',lead:number|null,full:number|null}[].
+- CoverResult: outputFormat/scanErrors/note:string|null/entries:{project,path,citations:RefHit[]}[], losing neither empty files nor the citing side's membership.
+- FmtData: changes:{path,line,label,counts,lockFile}[]/scanErrors/refusedWrites:string[]. A completed partial run carries its changes and scan errors, and a refusal's partial output may hold no change; no rollback or atomicity across files is promised. `label` is the CLI's preview row after `path:line: `, byte for byte, with its kinds ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)), the text an expansion or a link writes ([§FS-fmt.3.6](FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes)) and any `; creates the file` or `; deletes the file` ([§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)), so a caller comparing `label` exactly breaks as an exact-line script does; `counts` and `lockFile` are the stable reading. `counts:{triggersMarked,citationsMarked,localSectionsExpanded,shorthandsExpanded,linksWritten,sectionLockEntries}` are the change's occurrences of each kind, the numbers the `--write` totals sum ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)); `lockFile:'created'|'deleted'|null` is set on a lock row whose write creates or deletes its file, and null elsewhere.
+- IdResult: id/kind/number:number|null/slug/folder:string|null/file:string|null/e2eCaseDir:string|null/fileHoldsSingleDeclaration:boolean.
+- InitData: events:{verb,path}[]/errors:Finding[]/notes:string[]/next:{docs:boolean,declaresKinds:boolean,entrypoint:string,scanReadsFile:boolean,fsHome:Home,allocation:{kind:string,home:Home|null,homeExists:boolean}|null}|null/pendingChanges:boolean, where Home is {kind:'file',path:string,headingName:string,headingMarker:string} | {kind:'folder',path:string}.
 - CompleteResult: ids:string[]. FetchResult: id:string (the requested operand).
-- ConfigResult: root:string/configFile:string|null/values:ConfigValues.
-  ConfigValues is a readonly, typed tree of current public configuration keys:
-  version/project_name/project_description/reference/id/kinds/scan/fmt/output/
-  workspace. Key spelling is the TOML schema, intentionally not renamed; this
-  is inspectable configuration, not a Rust memory layout. Only effective keys
-  known to the schema are included; optional entries remain null where absent;
-  rules, kind order, resolution/fetch and inheritance preserve current meaning.
-  Root/configFile give discovery provenance; no invented per-key provenance.
+- ConfigResult: root:string/configFile:string|null/values:ConfigValues. ConfigValues is a readonly, typed tree of the current public configuration keys, version/project_name/project_description/reference/id/kinds/scan/fmt/output/workspace, spelled as the TOML schema spells them. It holds only effective keys the schema knows, optional entries null where absent, and rules, kind order, resolution, fetch and inheritance keep their meaning. `root` and `configFile` say where the configuration was discovered; no per-key provenance is given.
 - StyleResult: marker/trigger. SetupResult: instructions.
-- IntegrationResult is discriminated by `mode:'detection'|'artifact'|'install'`.
-  Detection has detected:string[] and clients:ClientDescriptor[]; artifact
-  has client:ClientDescriptor/artifacts:{path:string|null,content:string}[]/
-  manualSteps:string[]; install has events:{verb,path}[]/notes:string[]/
-  preferences:{conversation,conversationTarget,agentOverrides}/manualSteps.
-  Descriptor: client/kind/detected/installed:boolean|null/installKind/
-  configTarget/resolverTarget:string|null; manual clients keep installed=null.
-  These are transport facts from existing helpers; orchestration policy stays
-  in core. User-global paths may be absolute, as integrations already documents.
+- IntegrationResult is discriminated by `mode:'detection'|'artifact'|'install'`. Detection has detected:string[] and clients:ClientDescriptor[]; artifact has client:ClientDescriptor/artifacts:{path:string|null,content:string}[]/manualSteps:string[]; install has events:{verb,path}[]/notes:string[]/preferences:{conversation,conversationTarget,agentOverrides}/manualSteps. Descriptor: client/kind/detected/installed:boolean|null/installKind/configTarget/resolverTarget:string|null, a manual client keeping installed=null. User-global paths may be absolute, as integrations already documents.
 
-##### 3.2.2.3 Scan snapshot
-
-ScanResult exposes `snapshot:ScanSnapshot`, not arbitrary object-valued native
-Findings. Snapshot includes declarations, citations, escapedCitations,
-scannedFiles, walkedDirs, fileStructures, valueBindings, invalidValueDeclarations,
-invalidValueBindings, sectionHeadingsOutsideDeclarations, unmarkedHeadings and
-nearMissHeadings. Arrays preserve deterministic core order. Declaration groups
-are flattened by rendered ID/path/line, retaining every duplicate site; sections
-are ordered entries, retaining duplicate section claims separately. Private
-legacy/local candidate lists remain private; promoted citations already expose
-the semantic edges. Strict scan errors reject, with available snapshot partial, and the first failure's message is its reason and *Fix*, as `check` prints it ([§FS-check.2.4.3](FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix)).
-
-Declaration records: id/kind/number/slug/path/line/headingLevel/title/sections/
-duplicateSections/stub/defines/e2eCase/bodyStart/bodyEnd/bodyHasContent/source/
-valueValid. Citation records retain namespace/id/section/path/line/column/marker/
-  shorthand/localSection/shorthandRewritable/numericRun/text/inlineSite/
-  enclosingDeclaration/enclosingSection. A front-matter coordinate is a Section
-record like any other, with `headingLevel` `0` and no new field
-([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
-An `e2eCase`'s `dir` is the case directory spelled exactly as the same record's
-`path`, from the same report base, reading `.` when the case directory is that
-base ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), so it does not change with where the tree sits; its
-`fixtures` stay relative to that directory.
-Each structural/value fact is a fixed typed record carrying the actual source
-fields under camelCase, with paths rendered through core; source is discriminated
-`kind: 'text'` versus `kind: 'json'` memberSlice/keyColumn/keyText/format. `kind:
-'json'` means a member of a structured value source (§FS-values.terms) of either
-format, and `format: 'json' | 'yaml'` says which, so a consumer that reads only
-`kind` keeps working. Value numbers stay normalized
-coefficient/exponent strings or source strings, never lossy JS floating values.
-No new checker verdict is derived from these facts in JS.
-
-##### 3.2.2.4 Option record details
-
-Options in [§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals) are the exact public names and defaults. agents
-is null/omitted for automatic selection, otherwise a nonempty readonly array
-of canonical/claude/gemini/pi/copilot/cursor/windsurf/zed. Each maps to existing
-InitAgentEntrypointSelection flags; [] rejects rather than silently auto-selects.
-Integration agent names reuse known_agent's closed supported set; unsupported
-names reject input. conversation/target/agent require write=true; agent also
-requires conversationTarget; write with no client requires conversation or
-conversationTarget. Validation precedes mutation and is reused from shared core.
+ScanResult exposes `snapshot:ScanSnapshot`, whose arrays keep the engine's deterministic order: declarations, citations, escapedCitations, scannedFiles, walkedDirs, fileStructures, valueBindings, invalidValueDeclarations, invalidValueBindings, sectionHeadingsOutsideDeclarations, unmarkedHeadings and nearMissHeadings. Declaration groups are flattened by rendered ID, path and line, keeping every duplicate site, and sections are ordered entries keeping duplicate section claims apart. Declaration records: id/kind/number/slug/path/line/headingLevel/title/sections/duplicateSections/stub/defines/e2eCase/bodyStart/bodyEnd/bodyHasContent/source/valueValid. Citation records: namespace/id/section/path/line/column/marker/shorthand/localSection/shorthandRewritable/numericRun/text/inlineSite/enclosingDeclaration/enclosingSection. A front-matter coordinate is a Section record like any other, with `headingLevel` `0` and no new field ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)). An `e2eCase`'s `dir` is the case directory spelled exactly as the same record's `path`, from the same report base, reading `.` when the case directory is that base ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), so it does not change with where the tree sits; its `fixtures` stay relative to that directory. Each structural or value fact is a fixed typed record of its source fields in camelCase, with paths rendered by the engine; `source` is discriminated `kind: 'text'` versus `kind: 'json'` with memberSlice/keyColumn/keyText/format. `kind: 'json'` means a member of a structured value source ([§FS-values.terms](FS-values.md#terms-terms)) of either format, and `format: 'json' | 'yaml'` says which, so a consumer that reads only `kind` keeps working. Value numbers stay normalized coefficient and exponent strings or source strings, never lossy JS floating values. A strict scan failure rejects with the snapshot it has as its partial, and the first failure's message is its reason and *Fix*, as `check` prints it ([§FS-check.2.4.3](FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix)).
 
 #### 3.2.3 Workers, loading and source builds
 
-##### 3.2.3.1 Execution
+Engine work, config, filesystem, scan, query and write alike, runs off the JS thread and never in a subprocess of the CLI, so the event loop keeps turning during a call. A call validates and copies its operands before its first `await` and captures the working directory once, so changing either afterwards changes nothing it does, and `worker_threads` environments are supported. The binding never changes the global working directory, parses argv, exits its host or writes to stdout or stderr.
 
-Use napi-rs AsyncTask over Node-API async work. Native `invoke` snapshots and
-owns Rust inputs before dispatch; compute performs all config, filesystem,
-scan/query/write and host-neutral record construction on libuv workers. Resolve
-only marshals owned results on the live JS thread. No Tokio runtime, JS engine
-logic or subprocess CLI. JS async wrappers validate/copy operands before the
-first await; cwd is captured synchronously once and passed as request data.
-Support worker_threads environments; never retain JS values/napi_env in compute.
+A second mutating call while one runs rejects `busy` with code `writer-busy` rather than queueing, across roots: `fmt` with write, `init` unless check or dryRun, `fetch`, and `integrations` with write. Previews and reads take no lease, and the lease is held from before the engine's first side effect until the call ends, on success, error or unwind. Independent reads overlap, and a read concurrent with a writer may observe its changes: no snapshot across calls or against an external writer is promised, so callers serialize reads and writes when they need a fixed tree. Separate installed copies and processes are separate native instances and coordinate nothing.
 
-An atomic writer lease shared by the loaded addon rejects a second simultaneous
-mutating call with `busy/writer-busy`, rather than queueing pool workers on a
-mutex. This is deliberately conservative across roots: fmt(write), init unless
-check/dryRun, fetch and integrations(write). Preview/read calls do not acquire
-it. Lease acquired before engine side effects, released by RAII on success,
-error or unwind. Independent reads overlap. Reads concurrent with a writer may
-observe filesystem changes; no atomic snapshot across calls or external writers
-is promised. Callers serialize read/write groups when they need a fixed tree.
-Multiple installed copies/processes are separate native instances and remain
-the caller's coordination responsibility. No filesystem lock/cache is introduced.
+A recoverable panic in the engine or at a native boundary rejects `native` with code `native-panic`, prints nothing, and leaves the panic hook of any other native Rust caller in place; a typed engine error stays an error, never a panic. An abort, an out-of-memory or a corrupted process is not contained. Each Node environment has its own addon context: at teardown it accepts no new job, discards callbacks to the destroyed environment, and releases a job's resources and lease once its running work completes, and a pending call keeps the host alive. A forced worker termination may let a native write in flight finish, with no rollback, and there is no cancellation, `AbortSignal` or watch API. The binding refuses a workspace member whose unnamed path is not Unicode before deriving its alias, through the preflight the Python binding runs and the CLI does not ([§FS-distribution.3.3.3](FS-distribution.md#333-per-call-scope-and-path-encoding)).
 
-Pin unwind-capable addon builds. Catch unwinding panics in compute and every
-native conversion/resolve/reject boundary, returning native/native-panic; typed
-engine errors remain errors, never panics. Build failure if panic=abort is chosen
-for this supported builder. To keep contained panics silent, a once-installed
-Rust panic-hook dispatcher suppresses printing only under a thread-local binding
-request guard and chains the previous hook otherwise; do not repeatedly swap
-hooks per call. The dispatcher captures no napi_env and lasts for the addon
-lifetime. Run core parallel work inside an addon-owned bounded Rayon pool using
-`ThreadPool::install`; mark its workers with the same suppression guard through
-start/exit handlers. Otherwise nested scanner worker panics would print before
-the compute catch sees their propagated unwind. This reuses the core's Rayon
-walk, without changing its global pool or placing Node dependencies in core.
-Pool ownership is reference-counted by environments and in-flight Rust jobs;
-drop it after the last one finishes. TLS and writer guards drop on unwind; panic payload handling itself
-must not re-panic. Validate the known non-Unicode unnamed-member case through
-shared core preflight before the existing alias derivation, preserving CLI's
-documented deviation until its separate fix. Recoverable panics are contained;
-abort/OOM/process corruption are not an in-process isolation promise. Do not
-claim catch_unwind handles those. Test hook chaining alongside another native
-Rust caller, including worker completion and teardown.
+The binding supports Node 22.x and 24.x with N-API 8, as ESM and CJS, and every registry row proves both ([§FS-distribution-candidate.1.2](FS-distribution-candidate.md#12-every-registry-row-proves-every-runtime-it-promises)). It has a prebuilt addon for each of the five registry rows of [§FS-distribution-candidate.1.1](FS-distribution-candidate.md#11-six-rows-five-of-them-registry-rows), whose npm suffixes are `linux-x64-gnu`, `linux-arm64-gnu`, `darwin-x64`, `darwin-arm64` and `win32-x64-msvc`, and none for musl or Windows arm64; npm `engines` is `^22.0.0 || ^24.0.0`, which declares those majors and promises no newer Node host, nor Electron, Bun, Deno or a browser.
 
-Addon context is per Node environment; request Rust data lives independently
-until completion. Register cleanup through Node-API/napi-rs mechanisms; stop
-accepting jobs on teardown, discard callbacks to destroyed environments, and
-release job resources/leases after any already-running compute completes.
-Normal pending calls keep the host alive. Forceful worker termination may let
-in-flight native writes finish; no rollback. No AbortSignal/cancellation/watch
-API this delivery; napi's queued-only cancellation would not stop running writes.
-No global cwd change, argv parsing, host exit or unexpected stdout/stderr.
+ESM and CJS share one lazy loader, so they share errors and option semantics, and the package's public exports are exactly the functions of [§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals)'s table and `GrundError`, named under both `import` and `require`. The loader takes the first of a local source-built `native/grund.node` whose metadata matches and the optional platform package of exactly the same version selected by OS, CPU and libc ([§FS-distribution-candidate.2.2](FS-distribution-candidate.md#22-npm-selects-one-platform-package-by-os-cpu-and-libc)), and it validates an addon's metadata before accepting a request. A present local artifact that is incompatible or corrupt fails rather than falling back, and there is no architecture substitution, network download, CLI subprocess or silent rebuild: a selection or load failure rejects `load` with the target, the paths tried and the original cause. A host without a platform package gets that actionable error and an explicit `npm run build:source`, never a download or an automatic compile ([§FS-distribution-candidate.3.3](FS-distribution-candidate.md#33-a-missing-payload-is-an-error-never-a-substitute), [§FS-distribution-candidate.4.1](FS-distribution-candidate.md#41-npm-builds-from-source-only-when-asked)). `import` maps to `index.mjs` with `index.d.mts` and `require` to `index.cjs` with `index.d.cts`, each `types` condition before its implementation, and the root `types` may point to `index.d.mts`. The package holds the JS and TS declarations, the loader, its README and licence, the native payload when built, and, for the explicit fallback, a minimal complete Cargo source closure: the workspace and package manifests, the lockfile, the toolchain file, the core and node sources and the core assets. It has no LSP dependency and no `grund-lsp` bin, the assembled package's `grund` launcher and platform `optionalDependencies` are [§FS-distribution-candidate.3.1](FS-distribution-candidate.md#31-payloads-sit-where-each-registry-runs-them)'s and [§FS-distribution-candidate.2.2](FS-distribution-candidate.md#22-npm-selects-one-platform-package-by-os-cpu-and-libc)'s, and no addon or build path is a public export.
 
-##### 3.2.3.2 Module/runtime/load interface
-
-Support Node 22.x and 24.x, N-API 8, ESM and CJS. npm engines is
-`^22.0.0 || ^24.0.0`; this declares majors, not an automatic promise of all newer
-Node hosts or Electron/Bun/Deno/browser runtimes. Platform support is packaging's
-five addon targets: linux-x64-gnu/linux-arm64-gnu/darwin-x64/darwin-arm64/
-win32-x64-msvc; no musl or Windows-arm prebuilt claim. Payload/runtime floors
-follow the approved #471 matrix; this machine proves only its local source build.
-
-Artifact name `grund.node`, internal exports `invoke` (owned request → async
-native outcome) and `metadata` (apiSchemaVersion=1, engineVersion, packageVersion,
-target, napiVersion=8). Each platform package exposes its exact-version addon
-path and metadata. These are private ABI glue, not a standalone C ABI contract.
-Local build metadata is also written as `native/metadata.json`.
-The optional platform module exposes `{addonPath, metadata}`, with an absolute
-addon path and the same metadata record; packaging owns its package name and
-exact-version dependency. These private descriptor field names fix the loader
-handoff without creating a public package subpath.
-Public wrappers/types provide exactly the function inventory in the matrix.
-
-Lazy CJS loader is the shared implementation; ESM facade uses explicit named
-exports from it so require/import share errors/options semantics. Precedence:
-1. Local source-built `native/grund.node` when matching metadata exists.
-2. Exact same-package-version optional platform payload selected by OS/CPU/libc.
-No architecture substitution, network download, CLI subprocess or silent rebuild.
-Selection/loading failures reject GrundError(load), with target/attempted paths
-and original cause details. A present incompatible/corrupt local artifact fails,
-not silent fallback. Validate metadata before accepting requests. #471 owns
-platform dependency generation and distribution, Node provides loader protocol.
-
-Conditional exports map import to index.mjs with index.d.mts, require to
-index.cjs with index.d.cts; types conditions precede implementations. Root types
-may point to index.d.mts for tools reading package metadata. Private addon/build
-paths are not public package exports. Files include JS/TS declarations, loader,
-README/license, local native payload when built, and builder/source closure for
-explicit fallback. No LSP dependency/bin. #471 alone adds grund launcher/bin,
-optional platform dependencies and CLI payloads to the shared assembly manifest.
-
-##### 3.2.3.3 Source build/local package ownership
-
-#469 owns `crates/grund-node` Rust binding/build.rs, JS/TS assets, source builder,
-and `package-api.json`: an API export/file/build metadata fragment, not a second
-package manifest. #471 owns the single assembly manifest/recipe. A local staging
-helper materializes a disposable API-only `grund-cli/package.json` from that
-fragment and workspace version when no assembly recipe exists yet; it never
-commits a competing umbrella manifest. #471 later consumes the same fragment,
-adds CLI assembly and rejects divergent export/source-build metadata. Local
-API-only package is explicitly labelled a rehearsal; no CLI executable claim.
-
-Builder contract:
-`node crates/grund-node/build.mjs --source-root <repo> --out-dir <stage>/native
- --target <rust-triple> --target-dir <external-cargo-target> --profile release`.
-It calls Cargo with --locked against bundled workspace/core/node sources, then
-copies the cdylib to grund.node and writes metadata. Default target is host;
-release is ordinary LTO, not new PGO training. Require Rust/Cargo at the native
-builder's pinned toolchain (1.95.0), linker/SDK and Node/npm; dependency access
-or populated caches required for source builds. Node API construction stays
-napi-rs; no node-gyp dependency or Node header scraping.
-
-Disposable package has script `build:source` invoking `node build/source.mjs`.
-The local helper is `node crates/grund-node/stage.mjs --out-dir <package>
---target-dir <external-cargo-target>`. The source entry point accepts an
-explicit `--target-dir` and uses its bundled `build/sources/` closure.
-Unpacked package includes build/source.mjs and the minimal complete Cargo source
-closure (workspace/package manifests/lock/toolchain, core/node sources and core
-assets), with copied workspace membership adjusted for that source bundle only.
-External target-dir and output-dir are explicit; generated files stay outside
-checkout. Run `npm run build:source`, `npm pack`, install tarball in a fresh
-consumer, then prove ESM/CJS/TS. Also remove native artifacts from an unpacked
-tarball and repeat source build/import to prove the bundled fallback, not just
-a build that accidentally reaches the checkout. #471 composes this entry point
-with its CLI builder; it does not invent a second native invocation. npm install
-does no automatic source compilation. Lock fragment/build tool versions, record
-input SHA and artifact engine/package versions for packaging and corpus matching.
-
-The package takes the workspace version by the one mapping of
-[§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package); no repository version bump. A removal or rename
-of its records or operations takes
-[§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), or before `1.0`
-[§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise). #466 adaptation must not silently alter approved host/wire
-behavior. Full ecosystem release alignment and a later binding-only maintenance
-cadence remain #471's policy; no publication, registry changes or PGO evidence
-are created here.
-
-#### 3.2.4 Acceptance evidence
-
-Usage/API documentation lives in `docs/user-facing/node-api.md`, with the
-captured `examples/node-api/example.mjs` and `expected.stdout` example and
-honest local-versus-registry status in README/guide/example indexes.
-`crates/grund-node/README.md` and packaged JS/TS guidance document prerequisites,
-loader/export metadata and the #471 handoff. Public examples execute against the
-locally built package; no unpublished registry availability is implied.
-
-| Ticket criterion | Failing test before implementation | Future implementation proof |
-| --- | --- | --- |
-| Surface and local example | `node_local_package` attempts the reproducible local builder/pack/install entry point and asserts a real package contract; fails today because the capability is absent, not because an existing addon was never built | fresh npm consumer runs check/show example and verifies dangling code/body; each exported operation and matching declaration exists |
-| All operations/core/data failures | parameterized success/refusal fixtures over all 18 declared operations | Rust/Node complete-data equality, warning-preserving errors, Promise rejection for invalid args, completed failed check resolves; selection from same complete report; strict scan, partial fmt/init and batch distinctions |
-| Responsive event loop/native safety | timer advances before a controlled long native compute finishes; test-only native failure seam | AsyncTask engine work off JS thread; catch unwind/native conversion and worker rejection; writer lease drops; host alive, no unwinding FFI; no production fault-injection export |
-| Canonical parity | Native Node path absent; serializer/corpus assertions are blocked | same-version stdout/stderr bytes and complete envelopes; null/multi-sites/authority, Unicode/control chars, query/warning-before-failure/partial scan and repeated determinism |
-| Core read/write/config semantics | copied tree mutation fixtures and forbidden fetch sentinel | compare read-only tree digest; core-owned exact post-write bytes; preview/force/dryRun/check/protected config/external symlink/whole-set preflight/partial-run refusals; reads execute no fetcher |
-| Concurrency/lifecycle/silence | independent two-root options loop; barrier before writer lease release; worker-thread teardown | cwd unchanged, input mutations cannot change owned requests, repeat/concurrent reads match isolated runs; overlapping writes reject busy without side effects; cleanup safe, controlled panic silent, unrelated hook preserved; stdout/stderr empty |
-| Source build/import/TS | clean staging/unpacked tarball consumer contract | pinned Node 22 and 24, Rust toolchain/linker; explicit npm build:source with missing addon; npm pack/install; ESM/CJS both work; strict tsc NodeNext and CJS consumers, wrong options rejected by TS and runtime |
-| Isolation/handoff/docs | add frontend graph/engine-boundary expectations | core lacks napi/Node/frontends; Node direct core dependency only; CLI/LSP cargo builds work without npm/Node; native metadata matches fragment; package contents/types/sources; documentation examples actually captured |
-
-Tests must use deterministic barriers for writer overlaps, not scheduling luck.
-Event-loop proof measures timer progress while compute is active, not a timer
-that fires before dispatch. Hook tests include an actual panic in a subprocess
-consumer (the API implementation itself invokes no CLI subprocess), so unintended
-host termination/streams are caught without terminating the test runner. Defer
-all installed-prebuilt platform matrix, npx/LSP/PGO/publisher evidence to #471.
-Local host evidence never certifies the entire support matrix.
-
-No task-specific plan/run.sh reproducer exists. The triage capability inventory
-is evidence, not the final failing user test. Specify commits spec/failing tests
-first, then implement adapters/types/builder, then review/green runs binding
-checks and the ordinary `pre-commit run --all-files`. Node acceptance must be
-part of the documented checked workflow, not only a developer's manual command;
-ordinary CLI/LSP builds still require no Node. `fissile check --staged` is required
-before final completion. Local readiness is measured independently of registry availability.
-
-The native source-build proof runs with the bounded, profile-aware harness
-deadlines and supplemental mechanism checks defined in the
-[Node acceptance architecture](../architecture/AR-ci.md#3411-one-release-build-and-every-build-on-one-line), preserving
-the real release/LTO build and the development consumer proofs.
-
-The documented checked workflow runs `python tests/bindings/node/run.py` as
-well as `pre-commit run --all-files` and `fissile check --staged`. The binding
-suite requires Node/npm, the pinned Rust toolchain, linker/SDK and dependency
-access or populated caches; ordinary CLI/LSP Cargo builds need no Node tooling.
-No cancellation, rollback, external-writer snapshot, abort/OOM recovery,
-publishing, registry reservation, version bump or release dispatch is promised.
+`npm run build:source` runs `node build/source.mjs`, which builds the addon from the package's bundled `build/sources/` closure and accepts an explicit `--target-dir`. It runs Cargo with `--locked` at the native builder's pinned toolchain, 1.95.0, for the host target by default, and needs that toolchain, a linker and SDK, Node and npm, and dependency access or populated caches. From a checkout, `crates/grund-node/stage.mjs` stages a disposable API-only package from the workspace version, labelled a rehearsal and claiming no CLI executable, and leaves its generated files outside the checkout. The package takes the workspace version by the one mapping of [§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package), and a removal or rename of its records or operations takes [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), or before `1.0` [§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise).
 
 ### 3.3 Python (`grund` PyPI package)
 
@@ -769,89 +308,27 @@ for finding in result.report.errors:
 assert "FS-999-missing" in show("FS-001-alpha", root=repo, mode="brief").body
 ```
 
-The Python binding requires PyO3 and maturin. Future release wheels use cibuildwheel;
-the local source/build handoff is [§FS-distribution.3.3.7](FS-distribution.md#337-local-source-and-typing-handoff). Distribution and import
-names are both `grund` ([§DA-pypi-uses-grund-as-the-package-name](../decisions/architectural/DA-pypi-uses-grund-as-the-package-name.md#da-pypi-uses-grund-as-the-package-name-pypi-uses-grund-as-the-package-name)).
-
-Packaging consumes the binding's stable-ABI choice ([§FS-distribution.3.3.7](FS-distribution.md#337-local-source-and-typing-handoff)): one
-`cp310-abi3` wheel per registry row carries the extension and the `grund` executable, is
-proved on CPython 3.10 through 3.14 ([§FS-distribution-candidate.1.2](FS-distribution-candidate.md#12-every-registry-row-proves-every-runtime-it-promises)), and an sdist that
-builds both is the explicit fallback ([§FS-distribution-candidate.4.2](FS-distribution-candidate.md#42-python-builds-from-the-sdist-only-when-asked)).
-
-The Python frontend may require additive warning-preserving, structured-failure,
-workspace-path-preflight and managed-integration adapters. They belong in core and
-preserve supported Rust entry points and existing CLI defaults, verdicts and bytes.
-Classification originates where the failure occurs; frontends do not parse Display
-messages for diagnostic fields. The public Python schema does not freeze the hidden
-Rust records it is built from. Carry “Adapt Python marshalling to #466/#453/#454” when
-Python precedes that transition: replace internal adapters and rerun parity while
-preserving the approved Python schema.
-
-The additive `ApiOutcome<T>` and source-classified `ApiFailure` carriers, which
-are `#[doc(hidden)]` and outside [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes), retain
-earlier run cautions on both success and failure. Typed batch records, schema
-config values and integration-install orchestration reuse current engine
-loaders, queries and write policies. All supported Rust signatures and existing
-Display/CLI bytes remain unchanged. Classification occurs at the producing
-source, never by parsing rendered messages; unexpected recoverable failures
-retain an operation class and cause chain. No Node dependency enters the core.
-
-The following is the required local contract; registry availability remains pending.
+The binding is a PyO3 extension built with maturin, distributed and imported as `grund` ([§FS-distribution.1.1](FS-distribution.md#11-package-names)), whose calls are synchronous and return frozen records. One `cp310-abi3` wheel per registry row carries the extension and the `grund` executable and is proved on CPython 3.10 through 3.14 ([§FS-distribution-candidate.1.2](FS-distribution-candidate.md#12-every-registry-row-proves-every-runtime-it-promises)), and an sdist that builds both is the explicit fallback ([§FS-distribution-candidate.4.2](FS-distribution-candidate.md#42-python-builds-from-the-sdist-only-when-asked)).
 
 #### 3.3.1 Typed immutable results
 
-Results/options are frozen dataclasses; collections are tuples, with explicit None
-for optional fields. Effective config is a read-only schema-keyed mapping, including
-nested mappings, rather than an exported internal Rust Config record. CheckResult
-carries `report`, `selected_report`, `had_scan_errors`, `output_format` and separate
-`run_cautions`. Report has errors/warnings/suggestions tuples; iteration yields those
-groups in that order, preserving engine order within each. Findings retain
-severity/channel, code, path, line, column, message, sites and authority. Scan returns
-a catalog/citations/scan-diagnostic snapshot. Other operation records retain every
-supported engine output field and expose run_cautions separately. ShowQuery is a
-frozen record with `id` and nullable `section=None`. Batch records have nullable
-`result`/`failure` fields. Refs includes file summaries and site/file totals; list
-includes summaries. Empty collections never become None.
+Results and options are frozen dataclasses; collections are tuples, with explicit None for optional fields, and an empty collection never becomes None. Effective config is a read-only schema-keyed mapping, nested mappings included, rather than an exported internal Rust config record. CheckResult carries `report`, `selected_report`, `had_scan_errors`, `output_format` and separate `run_cautions`. Report has errors/warnings/suggestions tuples, and iteration yields those groups in that order, each in engine order. Findings keep severity or channel, code, path, line, column, message, sites and authority. Scan returns a snapshot of the catalog, the citations and the scan diagnostics. Every other operation's record keeps every supported engine output field and exposes run_cautions separately. ShowQuery is a frozen record with `id` and a nullable `section=None`. Batch records have nullable `result` and `failure` fields. Refs includes file summaries and site and file totals; list includes summaries.
 
 #### 3.3.2 Operational failures and invalid arguments
 
-GrundError has ConfigError, FilesystemError, QueryError and fallback OperationError subclasses. Each carries typed `.failure`: code,
-message, nullable path/line/column, sites, authority, causes, run_cautions, partial_output and structured details (such as candidates
-and OS error codes). Locations come from engine data, never text parsing. Completed checks containing findings return normally. Single
-unsuccessful queries raise QueryError; a batch continues with the same failure per record, while setup failure raises once. Empty
-batch input succeeds without config loading. Unknown ID kind in propose_id raises OperationError; rejected queries raise QueryError.
-An fmt refused for unresolved merge conflicts ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)) raises OperationError with code conflict-marker: path and line are the
-first block's first line, sites holds each block's first line, partial_output holds empty changes, scan_errors and refused_writes, and
-details.conflicts holds every block's finding ([§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)). An fmt whose walk fails to read a file
-carries partial_output with empty changes ([§FS-fmt.7.4.3](FS-fmt.md#743-nothing-is-written-before-the-last-refusal)). Wrong Python types raise TypeError; invalid option values raise ValueError.
-PathEncodingError is a ValueError subclass for rejected path encodings.
+GrundError has ConfigError, FilesystemError, QueryError and fallback OperationError subclasses. Each carries a typed `.failure`: code, message, nullable path/line/column, sites, authority, causes, run_cautions, partial_output and structured details (such as candidates and OS error codes). Locations come from engine data, never text parsing. Completed checks containing findings return normally. A single unsuccessful query raises QueryError; a batch continues with the same failure per record, while a setup failure raises once, and empty batch input succeeds without config loading. An unknown ID kind in propose_id raises OperationError; rejected queries raise QueryError. An fmt refused for unresolved merge conflicts ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)) raises OperationError with code conflict-marker: path and line are the first block's first line, sites holds each block's first line, partial_output holds empty changes, scan_errors and refused_writes, and details.conflicts holds every block's finding ([§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)). An fmt whose walk fails to read a file carries partial_output with empty changes ([§FS-fmt.7.4.3](FS-fmt.md#743-nothing-is-written-before-the-last-refusal)). Wrong Python types raise TypeError; invalid option values raise ValueError. PathEncodingError is a ValueError subclass for rejected path encodings.
 
 #### 3.3.3 Per-call scope and path encoding
 
-Paths accept str or os.PathLike[str]. root=None snapshots cwd at entry and means
-omitted scope; explicit files/directories keep explicit-path engine semantics.
-Reuse config discovery without config injection. Calls against different roots are
-independent. Report paths are engine logical strings with `/`, independently of
-native filesystem inputs. Reject bytes/byte-returning PathLike with TypeError,
-surrogates with PathEncodingError and embedded NUL with ValueError before work.
-Core preflight reuses workspace discovery to reject the known unnamed non-Unicode
-member alias case with PathEncodingError before unsafe alias derivation. This bounded
-protection changes no CLI behavior and promises no arbitrary Rust panic recovery.
+Paths accept str or os.PathLike[str]. root=None snapshots the working directory at entry and means omitted scope, while explicit files and directories keep the engine's explicit-path meaning. Config is discovered as the engine discovers it, never injected, and calls against different roots are independent. Report paths are the engine's logical strings with `/`, whatever the native filesystem inputs. Before any work, bytes or a byte-returning PathLike raise TypeError, surrogates PathEncodingError and an embedded NUL ValueError, and the bindings' preflight, through workspace discovery, rejects a workspace member whose unnamed path is not Unicode with PathEncodingError before deriving its alias. Only the bindings run that preflight: the CLI derives such a member's alias without it, a known deviation. The guard promises no recovery from an arbitrary Rust panic.
 
 #### 3.3.4 Silent synchronous calls
 
-Calls read no process argv, print nothing, never exit Python or change global cwd.
-Synchronous Rust work releases the GIL. Independent reads may overlap; callers serialize
-writers to the same files. Pending Python interrupts are checked on return; Rust may finish
-before KeyboardInterrupt. An interrupt arriving after the call is not evidence of loss.
-No async API, mid-call cancellation or additional rollback is promised.
+Calls read no process argv, print nothing, never exit Python and never change the global working directory. Synchronous Rust work releases the GIL. Independent reads may overlap; callers serialize writers to the same files. Pending Python interrupts are checked on return, so Rust may finish before KeyboardInterrupt, and an interrupt arriving after the call is not evidence of loss. No async API, mid-call cancellation or additional rollback is promised.
 
-#### 3.3.5 Complete initial inventory
+#### 3.3.5 Complete inventory
 
-Required operands are positional; all other arguments are keywords. Every disk-tree
-operation below also accepts root=None; check accepts root positionally. scan requires
-its root positionally. init uses target in place of root; integrations and setup
-instructions have no root. Defaults below are normative, not merely examples.
+Required operands are positional and all other arguments are keywords, and the names and defaults below are the exact public ones. Every disk-tree operation also accepts root=None, and check accepts its root positionally; scan requires its root positionally, init takes target in place of root, and integrations and the setup instructions have no root.
 
 | Operation signature (besides common root) | Result/core meaning |
 | --- | --- |
@@ -872,56 +349,17 @@ instructions have no root. Defaults below are normative, not merely examples.
 | `complete_ids(prefix="", *, sections=False)` / `reference_style()` | Completion/style data |
 | `agent_setup_instructions()` | Canonical setup payload: the whole guide, the text `grund guide --full` prints ([§FS-init.5.5](FS-init.md#55-the-core-and-its-sections)) |
 
-Modes are lead/brief/toc/full; formats text/md/json. Filters/selectors are string
-sequences. Units are lines/words/bytes; top is positive, width non-negative.
-Selectors narrow only selected_report; ignore wins, rule-produced codes carry
-invalid-rule and every empty-citation-obligation row, rule selection requires rule,
-and safety io findings remain. selected_report also holds one selected-check-off
-warning per `only` code the run left off, which report does not
-([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). Kind overrides, workspace aliases, exclusions and
-scope remain engine decisions. Config-enabled cross-reference formatting applies
-even when cross_refs=False. No unimplemented inventory entry counts as support.
-
-Shell scripts, stdin/NDJSON transport, watch/process lifecycle, exit codes and LSP
-transport are frontend concerns. Optional overlay/on-type/hover editor utilities
-are excluded from the initial disk-backed API; no CLI conceptual operation is dropped.
+Modes are lead/brief/toc/full; formats text/md/json. Filters and selectors are string sequences. Units are lines/words/bytes; top is positive, width non-negative. Selectors narrow only selected_report, by `check`'s rules ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore), [§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)), and selected_report also holds one selected-check-off warning per `only` code the run left off, which report does not ([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). Scope, workspace aliases, exclusions and kind overrides are the engine's decisions, as they are the CLI's. Config-enabled cross-reference formatting applies even when cross_refs=False. Shell scripts, stdin/NDJSON transport, watch and process lifecycle, exit codes and LSP transport are frontend concerns, and the optional overlay, on-type and hover editor utilities are excluded from this disk-backed API; no CLI conceptual operation is dropped.
 
 #### 3.3.6 Explicit mutation opt-ins
 
-fmt previews by default. init maps write=False to dry-run; check=True suppresses
-writes and reports pending changes. Force never replaces config. fetch refuses
-write=False with ValueError before execution; it promises no preview. Integration
-reads return artifacts/detection; writes preserve preference validation, agent gates,
-managed ownership and manual steps. Reads never execute fetchers. Existing engine
-data-preservation contracts and CLI defaults remain unchanged.
+fmt previews by default. init maps write=False to a dry run, and check=True suppresses writes and reports pending changes. Force never replaces config. fetch refuses write=False with ValueError before execution; it promises no preview. Integration reads return artifacts or detection, and writes keep preference validation, the agent gates, managed ownership and manual steps. Reads never execute fetchers.
 
-#### 3.3.7 Local source and typing handoff
+#### 3.3.7 Interpreters, source installs and typing
 
-Require CPython 3.10+ with GIL and abi3-py310. PyPy and free-threaded Python support
-are not promised. The binding is one directory, `crates/grund-py/`: its pyproject.toml
-selects maturin, its python/grund supplies the public API/types/py.typed, and
-grund._native is private. The repository root carries no pyproject.toml or python/, and
-a checkout installs the binding with `python -m pip install crates/grund-py`. Clean
-checkout and independently unpacked sdist both install importable grund without registry
-credentials. The sdist includes necessary workspace manifests, lockfile, Rust
-sources/assets, Python/types and licence. Python-only dependencies do not become ordinary Cargo CLI requirements.
-Add no competing CLI console entrypoint; release matrix, prebuilt CLI placement and
-publication belong to #471. Accurate signatures/type information and runnable
-check/iteration/show examples belong in user documentation and example indexes.
-Local support is described independently of unpublished PyPI availability.
+The binding requires CPython 3.10 or later with the GIL, and abi3-py310; PyPy and free-threaded Python support are not promised. The package ships its types and `py.typed`, `grund._native` is private, and a checkout installs the binding with `python -m pip install crates/grund-py`. A clean checkout and an independently unpacked sdist both install an importable grund without registry credentials; the sdist includes the necessary workspace manifests, the lockfile, Rust sources and assets, the Python code and types, and the licence. Python-only dependencies do not become ordinary Cargo CLI requirements, and the binding adds no competing CLI console entrypoint.
 
-##### 3.3.7.1 Raw Cargo extension builds
-
-On supported desktop platforms, enabling `grund-py/extension-module` in a raw
-Cargo build must produce a Python extension that the supported interpreter can
-import, including when Python and Node natives are built together from one
-checkout for command agreement ([§REQ-one-answer.proof.matrix](../requirements/REQ-one-answer.md#proofmatrix-the-complete-comparison-matrix)).
-The build must supply the platform's extension-module linker setup itself;
-macOS must resolve Python symbols through the importing interpreter without
-requiring maturin to inject linker arguments. This setup applies to the extension
-cdylib without imposing extension-only linking on ordinary workspace executables
-or tests. The interpreter and ABI boundary remains the one in
-[§FS-distribution.3.3.7](FS-distribution.md#337-local-source-and-typing-handoff).
+On supported desktop platforms, enabling `grund-py/extension-module` in a raw Cargo build produces an extension the supported interpreter imports, with no linker arguments from maturin, including when the Python and Node natives are built together from one checkout for command agreement ([§REQ-one-answer.proof.matrix](../requirements/REQ-one-answer.md#proofmatrix-the-complete-comparison-matrix)); on macOS the importing interpreter supplies the Python symbols. Ordinary workspace executables and tests get no extension-only linking.
 
 ## release-floor: One shared minimum publishable release
 
