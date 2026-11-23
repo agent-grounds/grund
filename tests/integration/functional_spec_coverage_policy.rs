@@ -201,7 +201,6 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-non-goals.12.1", reason: "explicit non-goal" },
     Exception { id: "FS-non-goals.12.2", reason: "explicit non-goal" },
     Exception { id: "FS-non-goals.14.1", reason: "explicit non-goal" },
-    Exception { id: "FS-check.2.3.3", reason: "planned capability: the gap report" },
     Exception { id: "FS-config.3.7.1", reason: "reserved home for a later markup family" },
     Exception { id: "FS-fmt.6.7.4", reason: "reserved settings for a later markup family" },
     Exception { id: "FS-lsp.1.5", reason: "planned LSP capability" },
