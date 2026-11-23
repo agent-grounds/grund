@@ -117,7 +117,7 @@ pub fn show_batch_with_scope(
 /// carries its answer in `opts.format`, or its failure with its hint, and the
 /// coordinate a `text` or `md` header names it by (§FS-show.3.3). Only
 /// coordinate-level refusals become records; an unexpected body read or other
-/// operational error aborts the run (§FS-show.2.6.3).
+/// operational error aborts the run (§FS-show.2.6).
 #[doc(hidden)]
 pub fn show_batch_with_globs(
     queries: Option<Vec<BatchShowQuery>>,

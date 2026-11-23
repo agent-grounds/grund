@@ -313,7 +313,7 @@ Exit codes are unchanged ([§FS-refs.4](FS-refs.md#4-exit-codes)). `--total` ren
   here ([§FS-refs.4.1.1](FS-refs.md#411-a-broken-stub-beside-a-real-home-is-set-aside-with-a-warning)): `refs` refuses both as `show` does
   ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id),
   [§FS-show.2.2.2](FS-show.md#222-ambiguous-section)), and under JSON that
-  object names its `sites` ([§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal)).
+  object names its `sites` ([§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output)).
 - `2` — scan / I/O error ([§FS-check.2](FS-check.md#2-outputs) partial-scan
   semantics apply: an incomplete scan exits `2` and the lookup is not
   trustworthy as complete), an unsupported `--format`, an unknown alias, or
@@ -330,7 +330,7 @@ section, with every claimant's path and line in show's deterministic order.
 Only the selected section coordinate is checked for a section collision, whether
 selected inline or by `--section`. A different duplicated section does not
 invalidate a clean selected path, and a bare ID remains queryable when only a
-section collides ([§FS-show.2.2.2.4](FS-show.md#2224-only-the-requested-path-can-collide)).
+section collides ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)).
 A valid stub paired with its inline declaration remains one home
 ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)). These ambiguity checks do not
 require a declaration or selected section to exist: `refs` still lists citations
@@ -364,7 +364,7 @@ operand carries a section.
 ### 4.1 A stub's homes are found in its target
 
 `refs` finds the homes of a stub's ID as `show` does
-([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), from the one verdict the scan reaches on each stub
+([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)), from the one verdict the scan reaches on each stub
 ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)): it reads the stub's
 target for that ID, and a target outside `[scan] include` answers exactly as it
 would were it scanned. A target that declares the ID twice is an ambiguous ID at

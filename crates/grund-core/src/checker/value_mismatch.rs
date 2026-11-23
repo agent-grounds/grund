@@ -1,6 +1,6 @@
 //! What a `value-mismatch` says: the coordinate or root it names, the canonical
 //! text, and the kind clause a mixed-kind pair appends (§FS-values.5.2,
-//! §FS-values.5.2.1, §FS-values.5.2.2, §FS-errors.3.9.1).
+//! §FS-values.5.2.1, §FS-values.5.2.2).
 
 use crate::config::{Display, Schema};
 use crate::model::remedies;
@@ -87,7 +87,7 @@ pub(super) struct RootComponent<'a> {
 /// its section path and carrying that component's one declaration site
 /// (§FS-values.5.2.2). Its kind clause names that component, since the whole
 /// literal and the joined components can print the same bytes either way
-/// (§FS-values.5.2.1). The message is §FS-errors.3.9.1's template alone.
+/// (§FS-values.5.2.1). The message is §FS-values.5.2.2's template alone.
 pub(super) fn root_value_mismatch(
     binding: &ValueBinding,
     at: RootComponent<'_>,

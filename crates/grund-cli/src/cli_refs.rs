@@ -120,7 +120,7 @@ fn command_refs(args: &[String]) -> ExitCode {
     opts.id = id_arg;
     opts.section = section_override;
     opts.descendants = descendants;
-    // §FS-show.3.5.1: prose travels beside the unchanged public result records.
+    // §FS-show.3.5: prose travels beside the unchanged public result records.
     let annotated = grund_core::refs_with_text_annotations(opts);
     let (metadata, hint, index_entries, set_aside) = match annotated {
         Ok(output) => output,
@@ -139,7 +139,7 @@ fn command_refs(args: &[String]) -> ExitCode {
                 if !output.scan_errors.is_empty() {
                     return exit_after_scan_errors(&output.scan_errors);
                 }
-                // §FS-errors.5.2.1: use the shared typed sites, not a prose parse.
+                // §FS-errors.5.2: use the shared typed sites, not a prose parse.
                 if format == "json" {
                     print_bare_query_json(refusal.code, &refusal.message, &refusal.sites);
                 } else {
@@ -202,7 +202,7 @@ fn render_refs_query_failure(failure: &RefsQueryFailure, format: &str, hint: Opt
         print_bare_query_json(failure.kind.code(), &failure.message, &[]);
     } else {
         eprintln!("{}", failure.message);
-        // §FS-show.3.5.1: the core's selected-project guidance owns this sentence.
+        // §FS-show.3.5: the core's selected-project guidance owns this sentence.
         if let Some(hint) = hint {
             eprintln!("{hint}");
         }

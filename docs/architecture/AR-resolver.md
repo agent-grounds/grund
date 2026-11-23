@@ -148,14 +148,14 @@ A failed query's `hint:` lines in a `text` or `md` batch
 ([§FS-show.3.3.2](../functional-spec/FS-show.md#332-a-failure-stays-in-its-place)) are built from the context the batch already loaded, and never
 by resolving configuration again. The project the query names, its alias's or
 the current one, supplies both inputs a hint reads: the ID format an invalid-ID
-hint names ([§FS-show.3.5.1](../functional-spec/FS-show.md#351-an-id-the-grammar-rejects)) and the section separator a missing-section hint
+hint names ([§FS-show.3.5](../functional-spec/FS-show.md#35-the-hint-for-each-failure)) and the section separator a missing-section hint
 cuts the query at ([§FS-show.3.5](../functional-spec/FS-show.md#35-the-hint-for-each-failure)). One function chooses the hint lines for a
 failure, and the single read calls it with the context it loaded too, so the two
 print the same lines for the same failure.
 
 That holds for the bare form's filesystem-path breadcrumb too
-([§FS-show.3.5.2](../functional-spec/FS-show.md#352-the-filesystem-path-migration-breadcrumb)). Its refusal is an unknown alias, but the format hint it prints
-is the invalid-ID hint of [§FS-show.3.5.1](../functional-spec/FS-show.md#351-an-id-the-grammar-rejects), so the same function builds it, from the
+([§FS-show.3.5](../functional-spec/FS-show.md#35-the-hint-for-each-failure)). Its refusal is an unknown alias, but the format hint it prints
+is the invalid-ID hint of [§FS-show.3.5](../functional-spec/FS-show.md#35-the-hint-for-each-failure), so the same function builds it, from the
 context the single read loaded and for the project an invalid ID with that alias
 is hinted from, the run's own, since the alias names none. Only the breadcrumb
 asks for that line: a batch query with the same unknown alias still earns no hint,
@@ -327,7 +327,7 @@ reads nothing: the scanner already put the target through its own pass when it
 reached the stub's verdict, and kept the target's records of the ID on the stub
 ([§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)). The declaration a stub stands for is one of those records, paired by
 `paired_declarations` ([§FS-declarations.stubs.verdict](../functional-spec/FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)), so `show` slices its body out of the record `check` resolves its
-sections against, and the two count one section set ([§FS-show.2.2.2.2](../functional-spec/FS-show.md#2222-the-headings-check-counts)).
+sections against, and the two count one section set ([§FS-show.2.2.2](../functional-spec/FS-show.md#222-ambiguous-section)).
 
 `section_resolves` in `model/stub_resolution.rs` is the one test. Every reader in `check` asks it: the
 missing-section finding ([§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), the `grund fmt --write` clause that
@@ -338,7 +338,7 @@ index entry the index rule admits ([§FS-check.3.17.4](../functional-spec/FS-che
 Where no recorded declaration holds the path, it answers from the ID's one
 declaration where a stub stands for it: the target's record of it. A broken stub
 pairs with no record and gains no section, and an ID with more than one declaration
-lends none, as `show` refuses it ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id)). The rule adapter mints every declaration's chapters as nodes from the record it is
+lends none, as `show` refuses it ([§FS-show.2.3](../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id)). The rule adapter mints every declaration's chapters as nodes from the record it is
 paired with, the target's in place of the stub, so the fact's target is the chapter the
 citation names, as on the scanned tree, and those chapters are a rule's subjects and are
 counted ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged), [§AR-rules.3](AR-rules.md#3-rulefacts)).

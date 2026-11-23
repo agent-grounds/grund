@@ -40,7 +40,7 @@ change.
 - The old tail could never be pasted back into `--selector`, so nothing that
   worked depended on it.
 - These refusals carry no `code`. They are bare `error:` lines on stderr at exit
-  `2`, even under `--format json`. As [§FS-errors.3.7](../../functional-spec/FS-errors.md#37-the-rule-site-unknown-alias-wording-migration) says of `check --rule`'s
+  `2`, even under `--format json`. As [§FS-errors.3.7](../../functional-spec/FS-errors.md#37-the-rule-site-unknown-alias-reasons) says of `check --rule`'s
   matching pre-scan refusal, a consumer of them keys on the exit code and on the
   input it passed, and this change moves neither.
 
@@ -68,7 +68,7 @@ on the reason.
 | Approach | Why rejected |
 |---|---|
 | Append the selector after the released line, the [§FS-rules.3.5.1](../../functional-spec/FS-rules.md#351-presence-name-whitespace-refusal) route | The false reason and the rule sentence that fails again would still come first, so the reader would get two contradictory suggestions. It does not answer the report. |
-| Migrate over three releases, as [§FS-errors.3.7](../../functional-spec/FS-errors.md#37-the-rule-site-unknown-alias-wording-migration) did | A window lets exact-line consumers move to a stable `code`. These refusals have none, so nobody has anything to migrate to, and the misleading text would print for two more releases. |
+| Migrate over three releases, as [§FS-errors.3.7](../../functional-spec/FS-errors.md#37-the-rule-site-unknown-alias-reasons) did | A window lets exact-line consumers move to a stable `code`. These refusals have none, so nobody has anything to migrate to, and the misleading text would print for two more releases. |
 | Classify selector failures separately from rule subjects | Two parsers each deciding what failed is how the `KIND.NAME` branch came to skip the numbered check. |
 
 ## release-note: Release note

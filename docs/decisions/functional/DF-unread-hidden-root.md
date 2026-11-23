@@ -25,7 +25,7 @@ It is the same finding rather than a sibling code because it is the same fact (a
 
 ### 2.1 One warning names both rules
 
-A root that is hidden and whose extension the list also refuses, such as `.notes.txt` with `extensions = ["md"]`, earns **one** warning, and its reason names both rules. Naming one of two true causes sends the reader to an edit that does not finish the job: renaming the file alone leaves the extension refusal standing, and listing `txt` alone changes nothing. The `grund check docs/.notes.txt` caution already settled this for a path typed on the command line ([§FS-check.2.2.2.3](../../functional-spec/FS-check.md#2223-a-hidden-file)), so the root gate asks the same extension test it asks and records both answers.
+A root that is hidden and whose extension the list also refuses, such as `.notes.txt` with `extensions = ["md"]`, earns **one** warning, and its reason names both rules. Naming one of two true causes sends the reader to an edit that does not finish the job: renaming the file alone leaves the extension refusal standing, and listing `txt` alone changes nothing. The `grund check docs/.notes.txt` caution already settled this for a path typed on the command line ([§FS-check.2.2.2](../../functional-spec/FS-check.md#222-the-message-names-the-likely-cause)), so the root gate asks the same extension test it asks and records both answers.
 
 ### 2.2 What it leaves as it was
 

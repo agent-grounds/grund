@@ -103,7 +103,7 @@ the target scanned, a target that declares the ID twice included ([§FS-list.3.4
 ### text.targets: A stub's target answers as its saved text would
 
 The verdict on a stub and the body `show` slices out of its target never come from two
-versions of the target ([§FS-declarations.stubs.target.1](../functional-spec/FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it), [§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)). An unsaved
+versions of the target ([§FS-declarations.stubs.target.1](../functional-spec/FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it), [§FS-show.2.3](../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)). An unsaved
 edit to the target moves every answer at once, the editor's diagnostics and its navigation
 included, exactly as saving it would: every answer is the one the same text gives once it
 is saved.
@@ -126,7 +126,7 @@ under neither ([§FS-check.1.3.6.1](../functional-spec/FS-check.md#1361-a-path-s
 
 ### writes.anchors: `show`'s anchor is the anchor `fmt` writes
 
-The `anchor` `show` reports for a heading ([§FS-show.3.1.3.1](../functional-spec/FS-show.md#3131-the-heading-anchor)) is exactly the anchor
+The `anchor` `show` reports for a heading ([§FS-show.3.1.3](../functional-spec/FS-show.md#313-json)) is exactly the anchor
 `grund fmt --cross-refs` derives for a citation of the same coordinate ([§FS-fmt.6.2](../functional-spec/FS-fmt.md#62-form)).
 
 ## differences: The differences known when this requirement landed

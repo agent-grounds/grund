@@ -46,13 +46,13 @@ fn known_target(
     let reason = match vocab.objects.verdict(scope, kind) {
         KindVerdict::Citable => return Ok(render_citation_target(&parsed)),
         // §FS-rules.4.1.1: a namespaced object kind the run holds no workspace
-        // vocabulary for is one this scope cannot judge either way; §FS-errors.3.7.1
+        // vocabulary for is one this scope cannot judge either way; §FS-errors.3.7
         // gives the true clause alone, the final template.
         KindVerdict::Unverifiable => {
             unverifiable.get_or_insert(unverifiable_reason(alias, kind));
             return Ok(render_citation_target(&parsed));
         }
-        // §FS-errors.3.8.1: a kind its scope configures without IDs says so alone.
+        // §FS-errors.2.5.1: a kind its scope configures without IDs says so alone.
         KindVerdict::NonCitable(entry) => entry.non_citable_reason(Quote::Double),
         // §FS-errors.2.5.1: `code` with no row is refused as not citable too.
         KindVerdict::Unknown => {

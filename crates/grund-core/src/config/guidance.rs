@@ -1,4 +1,4 @@
-//! Loaded configuration vocabulary for repair guidance (§FS-show.3.5.1).
+//! Loaded configuration vocabulary for repair guidance (§FS-show.3.5).
 
 use super::{Frame, Schema};
 
@@ -11,14 +11,14 @@ pub(crate) fn source_scope_name(version: u32) -> &'static str {
     }
 }
 
-/// §FS-show.3.5.1: the effective template together with the key that owns it.
+/// §FS-show.3.5: the effective template together with the key that owns it.
 pub(crate) struct FormatGuidance<'a> {
     pub(crate) key: String,
     pub(crate) template: &'a str,
 }
 
 impl FormatGuidance<'_> {
-    /// §FS-show.3.5.1: the sentence naming the effective template, which every
+    /// §FS-show.3.5: the sentence naming the effective template, which every
     /// query refusal adapter reaches through the api's `invalid_id_hint`, the one
     /// place that asks first whether a config below the run is the cause.
     pub(crate) fn hint(&self) -> String {
@@ -56,7 +56,7 @@ impl FormatGuidance<'_> {
     }
 }
 
-/// §FS-show.3.5.1: use the selected kind's override, or the global template
+/// §FS-show.3.5: use the selected kind's override, or the global template
 /// when no kind was selected. Recognition here only selects advice; it never
 /// changes the resolver's decision about the operand.
 pub(crate) fn format_guidance<'a>(
@@ -68,7 +68,7 @@ pub(crate) fn format_guidance<'a>(
     kind_format_guidance(schema, frame, name)
 }
 
-/// §FS-show.3.5.1: [`format_guidance`] for a kind the caller already selected,
+/// §FS-show.3.5: [`format_guidance`] for a kind the caller already selected,
 /// as §FS-check.checks.off-format-citation names the kind its token opens with.
 pub(crate) fn kind_format_guidance<'a>(
     schema: &'a Schema,

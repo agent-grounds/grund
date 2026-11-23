@@ -1,6 +1,6 @@
 //! The project configs below a run that loaded none, named the one way both
-//! messages that read them name them (§FS-check.2.2.2.5.1): the empty-scan
-//! warning (§FS-check.2.2.2.5) and the invalid-ID hint (§FS-show.3.5.1). One
+//! messages that read them name them (§FS-check.2.2.2): the empty-scan
+//! warning (§FS-check.2.2.2) and the invalid-ID hint (§FS-show.3.5). One
 //! search answers both, so a check and a query over one tree cannot name
 //! different projects (§AR-system.principle).
 
@@ -8,7 +8,7 @@ use super::scope_cautions::{display_scope, quoted_list};
 use crate::config::{Config, Display};
 use crate::scanner::project_configs_below;
 
-/// §FS-check.2.2.2.5.1: how many configs are named before the rest are counted.
+/// §FS-check.2.2.2: how many configs are named before the rest are counted.
 const NAMED: usize = 3;
 
 /// The configs a run that loaded none did not read: the first [`NAMED`] of them
@@ -21,7 +21,7 @@ pub(super) struct UnreadConfigs {
 }
 
 impl UnreadConfigs {
-    /// §FS-check.2.2.2.5.2: the configs below `config`'s root, or `None` — at once,
+    /// §FS-check.2.2.2: the configs below `config`'s root, or `None` — at once,
     /// without walking, for a run that loaded a config, and after the search for a
     /// run that finds none. Paths are spelled as `display` spells every other
     /// path of the run (§FS-workspace.5.3).
@@ -42,7 +42,7 @@ impl UnreadConfigs {
         })
     }
 
-    /// §FS-check.2.2.2.5.1: `` `suite/grund.toml` declares a project this run does
+    /// §FS-check.2.2.2: `` `suite/grund.toml` declares a project this run does
     /// not read ``, the names joined in path order with `and N more` past three.
     pub(super) fn names(&self) -> String {
         let mut names: Vec<String> = self.configs.iter().map(|c| format!("`{c}`")).collect();
@@ -61,18 +61,18 @@ impl UnreadConfigs {
         }
     }
 
-    /// §FS-check.2.2.2.5: the routes that read them, for `grund check`, which also
+    /// §FS-check.2.2.2: the routes that read them, for `grund check`, which also
     /// takes the first directory as its path.
     pub(super) fn check_routes(&self) -> String {
         self.routes(&format!(" (or `grund check {}`)", self.dirs[0]))
     }
 
-    /// §FS-show.3.5.1: the routes a query is offered, which no `grund check` answers.
+    /// §FS-show.3.5: the routes a query is offered, which no `grund check` answers.
     pub(super) fn query_routes(&self) -> String {
         self.routes("")
     }
 
-    /// §FS-check.2.2.2.5.1: running from a config's directory, then a root
+    /// §FS-check.2.2.2: running from a config's directory, then a root
     /// `[workspace]` whose `members` lists every directory when every config is
     /// named, since a list of the three named would leave the rest unread.
     fn routes(&self, check: &str) -> String {

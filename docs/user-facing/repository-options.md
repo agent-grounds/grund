@@ -98,7 +98,7 @@ so a fresh workspace needs one `grund init` per project, in any order
 root's `grund check` reports each one and names the directory to run
 `grund init` in, as in ``run `grund init` in packages/billing to refresh``;
 running it in each named directory clears them
-([§FS-errors.3.6.1](../functional-spec/FS-errors.md#361-the-final-templates)). Only
+([§FS-errors.3.6](../functional-spec/FS-errors.md#36-the-agents-init-messages)). Only
 that run judges the two workspace sections: a check inside a member, at a nested
 group's root, or in a checkout without one of the `optional_members` leaves them
 alone, and in the last case the absent member's warning says so
@@ -121,13 +121,13 @@ Handing such a link to `grund check x` reads nothing below it, and the warning
 says so: `x` is a directory link out of the project root that grund does not
 follow. Name a file below it, which is read, or move the target inside the
 project
-([§FS-check.2.2.2.6](../functional-spec/FS-check.md#2226-a-directory-link-out-of-the-project)).
+([§FS-check.2.2.2](../functional-spec/FS-check.md#222-the-message-names-the-likely-cause)).
 The same holds one level down: when `grund check real` reads nothing because
 the only thing under `real` is such a link, the warning names the link,
 `real/subx`, rather than grund's extensions. An exclude pattern that pruned a
 file under `real` is named ahead of it, and a directory that holds no file
 grund reads and no outward link still names the extensions
-([§FS-check.2.2.2.6.1](../functional-spec/FS-check.md#22261-a-directory-link-out-of-the-project-below-the-path)).
+([§FS-check.2.2.2](../functional-spec/FS-check.md#222-the-message-names-the-likely-cause)).
 
 A file reached by two names is one file, read as [How a linked file is read](sources.md#how-a-linked-file-is-read)
 says. A finding about what the file holds prints once, at the name listed first,

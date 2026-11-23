@@ -284,7 +284,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// its only reader: for each escape it runs the same resolver as the dangling
 /// check (§AR-checker.2.3) and, when the escaped coordinate resolves — the ID to a
 /// real declaration and any section the escape writes by the missing-section
-/// lookup (§FS-check.2.3.1.3) — emits an `escaped-citation-resolves` suggestion
+/// lookup (§FS-check.2.3.1) — emits an `escaped-citation-resolves` suggestion
 /// naming that coordinate, section kept. It is the mirror of dangling and of a
 /// missing section, which fire when a *live* citation does not resolve. It is a
 /// suggestion, never a warning or error, so it is withheld unless `--suggestions`
@@ -369,7 +369,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// (§DF-duplicate-section-path.2.4).
 ///
 /// Nothing here re-derives *which* headings a declaration owns — the scan
-/// answered that once, which is what makes `show`'s refusal (§FS-show.2.2.2.2) name
+/// answered that once, which is what makes `show`'s refusal (§FS-show.2.2.2) name
 /// exactly the coordinates this rule reports. A heading in the next item's
 /// doc-comment and a stub's prose are outside the body and never reach the list,
 /// so neither is filtered here (§FS-declarations.checks.duplicate-section.2).

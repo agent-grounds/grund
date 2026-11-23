@@ -104,7 +104,7 @@ fields it does
 ([§FS-rule-refusals.sentences.whose](../../docs/functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)).
 Through grund 0.21.0 the reason carried the `unknown kind` prefix grund printed
 before whose clauses existed; since 0.22.0 it is printed alone
-([§FS-errors.3.10](../../docs/functional-spec/FS-errors.md#310-the-whose-clause-wording-migration)).
+([§FS-rule-refusals.sentences.whose](../../docs/functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)).
 
 ## Trade-offs
 

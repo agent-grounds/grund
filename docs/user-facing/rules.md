@@ -329,7 +329,7 @@ quantifier, object kind or predicate is refused, and `list --selector` follows
 one with `known kinds:` only where the kind is not configured. Through grund
 0.21.0 the reason carried the one grund printed before clauses existed as a
 prefix
-([the closed window](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-errors.md#310-the-whose-clause-wording-migration)):
+([the closed window](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)):
 
 ```text
 $ grund check --rule 'Each SWR whose verification is Tset must be cited by at least one TC.'
@@ -510,7 +510,7 @@ ID; `test` is distinct from the non-citable `e2e` place above:
 $ grund check --rule "Each test must cite at least one FS." --only-rule
 warning: --rule applies to nothing — tests/e2e/ declares no test ID
 ```
-[§FS-check.1.4](../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits) [§FS-check.2.2.1.4](../functional-spec/FS-check.md#2214-a-rules-obligation)
+[§FS-check.1.4](../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits) [§FS-check.2.2.1](../functional-spec/FS-check.md#221-citation-direction-obligation-applies-to-nothing)
 
 Under `--format json` every finding record carries the same authority as its
 last field — `null` where no rule authored it, `["--rule"]` for the trial

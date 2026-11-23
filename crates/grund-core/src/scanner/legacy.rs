@@ -52,7 +52,7 @@ pub(crate) fn resolve_id_arg(
 }
 
 /// Every ID `raw` may name in `findings`, sorted: one where [`resolve_id_arg`]
-/// resolves it, several where it is ambiguous (§FS-show.2.2.1.1).
+/// resolves it, several where it is ambiguous (§FS-show.2.2.1).
 pub(crate) fn id_arg_targets(
     raw: &str,
     schema: &Schema,

@@ -199,7 +199,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     opts.section = section_override;
     opts.mode = mode;
     opts.format = show_format;
-    // §FS-show.3.5.2: the bare form is the core's to know; whether the breadcrumb
+    // §FS-show.3.5: the bare form is the core's to know; whether the breadcrumb
     // replaces a refusal comes back with its hints.
     let (run_warnings, result, hints) =
         show_with_scope(&id_arg, opts, path_provided, default_invocation);
@@ -239,12 +239,12 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     }
 }
 
-/// The positional path that does not exist, where §FS-show.1.4.1 may append its hint.
+/// The positional path that does not exist, where §FS-show.3.5 may append its hint.
 fn is_missing_positional_path(message: &str, path_positional: bool) -> bool {
     path_positional && message.starts_with("path does not exist:")
 }
 
-/// §FS-show.1.4.1: a missing positional path shaped like a coordinate (under the
+/// §FS-show.3.5: a missing positional path shaped like a coordinate (under the
 /// grammar discovered from the working directory) was meant as a second read, so
 /// the refusal shows the batch form that reads both, in the read's own format.
 /// Shape only; nothing resolves.
@@ -274,7 +274,7 @@ fn print_second_coordinate_hint(
         ),
         None => format!("{{\"id\":\"{}\"}}", json_escape(id_arg)),
     };
-    // §FS-show.1.4.1: the batch asked for the read's format, the default `text` unnamed.
+    // §FS-show.3.5: the batch asked for the read's format, the default `text` unnamed.
     let format = match format {
         ShowFormat::Text => "",
         ShowFormat::Markdown => " --format=md",
@@ -289,7 +289,7 @@ fn print_second_coordinate_hint(
 
 /// A refused single read: its message, the sites an ambiguous refusal names, the
 /// `hint:` lines the core built from the read's own context (§FS-show.3.5), and
-/// whether the core found the filesystem-path breadcrumb's case (§FS-show.3.5.2).
+/// whether the core found the filesystem-path breadcrumb's case (§FS-show.3.5).
 struct ShowRefusal<'a> {
     message: &'a str,
     sites: &'a [FindingSite],
@@ -298,7 +298,7 @@ struct ShowRefusal<'a> {
 }
 
 /// Render query refusals, the filesystem-check migration breadcrumb in place of
-/// one where the core found its guarded existing-path case (§FS-show.3.5.2).
+/// one where the core found its guarded existing-path case (§FS-show.3.5).
 fn render_show_error(
     id_arg: &str,
     default_invocation: bool,
@@ -364,7 +364,7 @@ fn show_query_error_code(message: &str) -> Option<&'static str> {
         Some("invalid-id")
     } else if message.starts_with("ambiguous ID:") {
         Some("ambiguous")
-    // §FS-show.2.2.2.1: the section-level twin of the ambiguous-ID refusal, under
+    // §FS-show.2.2.2: the section-level twin of the ambiguous-ID refusal, under
     // its own code — the two need different edits, and a JSON consumer should not
     // have to read the prose to tell them apart (§DF-duplicate-section-path.2.5).
     } else if message.starts_with("ambiguous section:") {

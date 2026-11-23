@@ -409,7 +409,7 @@ pub(crate) fn unknown_project_message<'a>(
     scope_path: &str,
 ) -> String {
     if !scope_path.is_empty() && !alias_strictly_extends_scope(namespace, scope_path) {
-        // §FS-check.3.8.4: the final wording §FS-errors.3.3's migration reached in 0.16.0.
+        // §FS-check.3.8.4: the final wording §FS-check.3.8.4's migration reached in 0.16.0.
         return format!(
             "unknown project alias {namespace}; the {scope_path} project and its descendants are in scope here — {}",
             remedies::unknown_project_subtree()

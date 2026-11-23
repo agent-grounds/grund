@@ -45,7 +45,7 @@ Three requirements on the rule language as a whole, each carrying a mark — *re
 
 ### requirements.unseen: Nothing a rule governs passes unseen — realized, one case deferred
 
-A rule that cannot run is reported at its own heading and never silently omitted: the run keeps its other findings and exits nonzero, and `init` writes no block over an invalid rule ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)); a sentence the run's scope cannot verify is reported all the same ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)); and a run narrowed to the rule-produced codes keeps every `invalid-rule` row ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)). A `must` or `should` rule whose subject names a kind with no local declaration says it applies to nothing, scoped or narrowed, rather than passing ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)); a whose clause that selects none of the kind's declarations yet describes the project's state, not a broken rule, and says nothing. A declaration a whose clause leaves outside the rule does not pass unseen either: the clause selects by a scalar field the kind declares, so the declaration's field holds another value of its `one_of`, or is absent where the field is `may` and absence is allowed, or is reported on its own — an absent `must`, `warn` or `should` field as `missing-field` and a value outside `one_of` as `invalid-field-value`, at every strength ([§FS-fields.strengths.table](FS-fields.md#strengthstable-which-strength-each-finding-takes), [§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)). A run narrowed by `--only-rule` drops those field findings with everything else the trial sentence did not author, so it shows nothing for such a declaration ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A declaration a quantified chapter subject cannot reach is reported where it is declared rather than passed over ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)), and an incomplete snapshot yields no closed-world absence or count and keeps exit 2 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). A chapter-presence rule beside a chapter-scoped citation rule suppresses nothing, but it counts display names where the citation rule selects handles ([§FS-rules.3.1](FS-rules.md#31-chapter-presence), [§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so the two report one absence together only where chapters are titled by their handles, as `## terms: Terms` is. A `[citations]` direction absorbs a duplicate rule's finding only where it reports the same unit itself, so a unit only the rule fails, because its only citation of the target kind does not resolve, is reported as the rule's ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)). One case is **deferred**, owed to its own change: a trial sentence that duplicates a `[citations]` direction authors nothing for a unit the direction itself reports, so `check --rule … --only-rule` prints `success` there while the tree's own findings stand ([§FS-rules.8](FS-rules.md#8-command-surfaces)). Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), on the model [§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips) sets for a file the scan cannot read.
+A rule that cannot run is reported at its own heading and never silently omitted: the run keeps its other findings and exits nonzero, and `init` writes no block over an invalid rule ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)); a sentence the run's scope cannot verify is reported all the same ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)); and a run narrowed to the rule-produced codes keeps every `invalid-rule` row ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)). A `must` or `should` rule whose subject names a kind with no local declaration says it applies to nothing, scoped or narrowed, rather than passing ([§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing)); a whose clause that selects none of the kind's declarations yet describes the project's state, not a broken rule, and says nothing. A declaration a whose clause leaves outside the rule does not pass unseen either: the clause selects by a scalar field the kind declares, so the declaration's field holds another value of its `one_of`, or is absent where the field is `may` and absence is allowed, or is reported on its own — an absent `must`, `warn` or `should` field as `missing-field` and a value outside `one_of` as `invalid-field-value`, at every strength ([§FS-fields.strengths.table](FS-fields.md#strengthstable-which-strength-each-finding-takes), [§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)). A run narrowed by `--only-rule` drops those field findings with everything else the trial sentence did not author, so it shows nothing for such a declaration ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A declaration a quantified chapter subject cannot reach is reported where it is declared rather than passed over ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)), and an incomplete snapshot yields no closed-world absence or count and keeps exit 2 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). A chapter-presence rule beside a chapter-scoped citation rule suppresses nothing, but it counts display names where the citation rule selects handles ([§FS-rules.3.1](FS-rules.md#31-chapter-presence), [§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so the two report one absence together only where chapters are titled by their handles, as `## terms: Terms` is. A `[citations]` direction absorbs a duplicate rule's finding only where it reports the same unit itself, so a unit only the rule fails, because its only citation of the target kind does not resolve, is reported as the rule's ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)). One case is **deferred**, owed to its own change: a trial sentence that duplicates a `[citations]` direction authors nothing for a unit the direction itself reports, so `check --rule … --only-rule` prints `success` there while the tree's own findings stand ([§FS-rules.8](FS-rules.md#8-command-surfaces)). Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), on the model [§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips) sets for a file the scan cannot read.
 
 ### requirements.addition: The language grows by addition — directional
 
@@ -510,7 +510,7 @@ member's own `grund.toml` ([§FS-workspace.2](FS-workspace.md#2-workspace-config
 any-member object kind names something the scope cannot judge either way. Such
 a sentence is **unverifiable here** rather than invalid. It is reported at the
 rule's own heading, keeps the code `invalid-rule`, takes the wording
-[§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-wording-migration) fixes, and the run still exits nonzero.
+[§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-reasons) fixes, and the run still exits nonzero.
 
 Unverifiability is a verdict about the object kind's alias and about nothing
 else. Every other part of the sentence is judged against the facts the scope
@@ -956,7 +956,7 @@ one clause naming every citation the count read:
   and not to its count, which is the declarations they name: three citations
   of one source are three entries under `cites 1 distinct SRC`.
 - **Entry form.** `<path>:<line>` is where the citation is written, its path
-  named as the report names every path ([§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line)), at the name a whole run
+  named as the report names every path ([§FS-errors.3](FS-errors.md#3-message-text)), at the name a whole run
   gives a file with two names ([§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name)).
   `<citation>` is the citation as written, without its `§`: a citation of the
   item's own numbered section shows as `INPUT-001-diesel.1`, which is the one an
@@ -984,7 +984,7 @@ may carry, and not part of the remedy ([§FS-errors.5.5.1](FS-errors.md#551-how-
 `citation-cardinality` and `uncited-unit` and `grund config explain` stay as
 they are. Appended after the whole message, it keeps that message a verbatim
 contiguous prefix, so it ships in one release with no window
-([§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change)).
+([§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes)).
 
 On a file with two names, the identity clause ` (also at <path>:<line>)` stays
 directly after the remedy, where it stands on every row, and `; counted at …`
@@ -1056,7 +1056,7 @@ citation directions ([§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinali
 `suggested-citation` — and `empty-citation-obligation`, the line a `must` or
 `should` rule shares with the `[citations]` table when its subject's kind has no
 local declaration
-([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)), so `--only
+([§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing)), so `--only
 empty-citation-obligation` keeps the `invalid-rule` row of a rule that could not
 say so. `invalid-rule` is selectable like every other public code,
 and is also selected whenever a code from that set is: a run narrowed to what
@@ -1065,7 +1065,7 @@ run did not evaluate
 ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
 `--ignore invalid-rule` still removes them. Every `empty-citation-obligation`
 row is carried the same way, because a rule whose subject's kind has no local
-declaration is a check that run judged nothing with ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)), and
+declaration is a check that run judged nothing with ([§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing)), and
 `--ignore empty-citation-obligation` removes those.
 
 A `citation-cardinality` or `uncited-unit` row whose count is above zero names
@@ -1084,7 +1084,7 @@ it rather than a group's: an `invalid-rule`
 ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)) names that rule, so a trial
 sentence whose literal subject does not resolve is attributed to `--rule` and is
 retained by a report scoped to it. So does the line saying a `must` or `should`
-rule applies to nothing ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)): it names its one rule, and a trial
+rule applies to nothing ([§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing)): it names its one rule, and a trial
 sentence's line is retained by `--only-rule`. A finding no rule authored — a
 citation direction, a dangling or duplicate declaration, any other run-level
 warning — carries an empty `authority`.
@@ -1226,7 +1226,7 @@ which reads as a verdict rather than as the mistake it is. It composes with
 ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
 Bare `--rule` keeps its stdout and its exit: a run that passes no selector
 prints the same findings and exits the same way, and gains only the stderr line
-of [§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation) when the sentence's subject names a kind with no local
+of [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) when the sentence's subject names a kind with no local
 declaration. A sentence that applies to nothing is said to, scoped or not,
 because `success` there would read as the sentence's pass. A whose clause that
 selects none of the kind's declarations is not that case and adds no line

@@ -63,7 +63,7 @@ pub(super) fn scannable_walker(
 pub(super) type MetCases = std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>;
 
 /// The directory links one walk refused because their canonical target lies outside the project
-/// root, as the walk spelled them, for the empty-scan warning to name (§FS-check.2.2.2.6.1).
+/// root, as the walk spelled them, for the empty-scan warning to name (§FS-check.2.2.2).
 pub(super) type MetLinks = std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>;
 
 /// What one walk records of the directories its filter prunes, for a pass that reads them once
@@ -87,7 +87,7 @@ impl Met {
     }
 
     /// A walk that records into `links` every directory link its gate refuses as out of the
-    /// project root (§FS-check.2.2.2.6.1).
+    /// project root (§FS-check.2.2.2).
     pub(super) fn outward_links(links: &MetLinks) -> Self {
         Self {
             cases: None,
@@ -98,7 +98,7 @@ impl Met {
 
 /// [`scannable_walker`] before it is built, so a probe that only needs the walk's
 /// first levels bounds its depth without a second copy of its rules
-/// (§FS-check.2.2.2.5.2). `met` is what the walk records of the directories it prunes.
+/// (§FS-check.2.2.2). `met` is what the walk records of the directories it prunes.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn scannable_walk_builder(
     schema: &Schema,
@@ -214,7 +214,7 @@ pub(super) struct WalkDirFilter {
     looping_links: std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
     /// Where the walk records each E2E case directory it meets and the configuration does not
     /// keep out, for the manifest pass (§FS-declarations.e2e-case.excluded), and each outward
-    /// directory link it refuses, for the empty-scan probe (§FS-check.2.2.2.6.1); records
+    /// directory link it refuses, for the empty-scan probe (§FS-check.2.2.2); records
     /// nothing for the read predicate's filter, which walks nothing.
     met: Met,
 }
@@ -294,7 +294,7 @@ impl WalkDirFilter {
     ///
     /// Where the empty-scan probe asks for them, `met` also records each directory link the gate
     /// refuses as out of the project root, as the gate's own verdict, so the warning names the
-    /// link this walk pruned and judges none again (§FS-check.2.2.2.6.1). A case that links out of
+    /// link this walk pruned and judges none again (§FS-check.2.2.2). A case that links out of
     /// the project is not one of them: the manifest pass reads it, so nothing went unread there.
     fn keep(&self, entry: &ignore::DirEntry) -> bool {
         let is_dir = entry.file_type().is_some_and(is_directory);
@@ -310,7 +310,7 @@ impl WalkDirFilter {
         {
             record(met);
         }
-        // §FS-check.2.2.2.6.1: the gate refuses a directory link before anything below it.
+        // §FS-check.2.2.2: the gate refuses a directory link before anything below it.
         if let Some(met) = &self.met.outward_links
             && refusal == Some(Unread::OutsideProject)
             && !case()

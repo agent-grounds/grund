@@ -235,7 +235,7 @@ note: no configured kind in scope starts with "POLICY-"
 The quoted prefix is the ID atom's text before its first operator, a `{` included. A kind can
 start it when that prefix and the kind head ([§FS-config.3.2.9](FS-config.md#329-kind-head))
 are each a prefix of the other; a kind whose format does not begin with `{kind}` can start
-every pattern. The `; did you mean "…"?` clause ([§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape)) appears only when exactly
+every pattern. The `; did you mean "…"?` clause ([§FS-errors.3](FS-errors.md#3-message-text)) appears only when exactly
 one kind matches with ASCII case ignored, and offers the pattern with that kind's spelling.
 The note is printed on every `--glob` surface, never changes stdout or the exit, and a pattern
 whose prefix a kind can start gets none, however little it matches: `FS-{001,002}.requirements`
@@ -317,4 +317,4 @@ unescaped `.`.
 
 A row from another project is printed as that surface already prints it, its ID qualified by
 the project's alias ([§FS-workspace.8.3](FS-workspace.md#83-grund-list)), and a generated batch query is qualified as
-[§FS-show.2.6.2](FS-show.md#262-exhaustive-generation) says.
+[§FS-show.2.6](FS-show.md#26-batch-resolution) says.

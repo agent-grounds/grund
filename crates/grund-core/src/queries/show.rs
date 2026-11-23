@@ -36,7 +36,7 @@ pub(crate) fn show_declaration(
 }
 
 /// `path_config` renders every path this function reports (§FS-config.3.6) — the
-/// sites a refusal names (§FS-errors.3.1) as well as the E2E manifest's, whose
+/// sites a refusal names (§FS-errors.3) as well as the E2E manifest's, whose
 /// JSON is baked here rather than in `render_show_output_json`. It must be the
 /// same config the caller hands that renderer, so a member's declaration reports
 /// against the root the rest of the run spells its paths from
@@ -44,7 +44,7 @@ pub(crate) fn show_declaration(
 /// `render_id` reads and the tree the body is read out of.
 ///
 /// Beside the output it returns the record the body was read out of, a stub's
-/// target declaration rather than the stub (§FS-show.2.3.7), which is the record
+/// target declaration rather than the stub (§FS-show.2.3), which is the record
 /// `render_show_output_json` derives the heading anchors from.
 ///
 /// Which record that is, and whether the ID is refused instead, is the one
@@ -143,7 +143,7 @@ pub(crate) fn show_declaration_with_home<'a>(
         };
         return Ok((output, record));
     }
-    // §FS-show.2.3.7: a stub reads its target's declaration, found by the ID.
+    // §FS-show.2.3: a stub reads its target's declaration, found by the ID.
     let output = extract_declaration_body(
         &findings.files,
         id,
@@ -294,7 +294,7 @@ pub(crate) fn render_show_output_json(
     {
         extra.push_str(&format!(",\"kind_title\":\"{}\"", json_escape(title)));
     }
-    // §FS-show.3.1.3.1: the heading anchor always precedes the closing location pair.
+    // §FS-show.3.1.3: the heading anchor always precedes the closing location pair.
     extra.push_str(&format!(
         ",\"anchor\":{}",
         json_anchor(anchors.selected.as_deref())
@@ -320,13 +320,13 @@ fn json_anchor(anchor: Option<&str>) -> String {
     }
 }
 
-/// The heading anchors a JSON show object carries (§FS-show.3.1.3.1): the
+/// The heading anchors a JSON show object carries (§FS-show.3.1.3): the
 /// selected coordinate's, and one per `--toc` entry in the entries' order. Each
 /// is the fragment `fmt --cross-refs` derives under the target project's profile
 /// (`config`), or `None` where the site has no heading anchor — a source or JSON
 /// home, or the `none` profile. Derived from the record the body was read out
 /// of, so a stub reports its target's (null for source), scanned or not
-/// (§FS-show.2.3.7), and never its own heading.
+/// (§FS-show.2.3), and never its own heading.
 struct ShowAnchors {
     selected: Option<String>,
     sections: Vec<Option<String>>,
@@ -351,7 +351,7 @@ impl ShowAnchors {
         {
             return none();
         }
-        // §FS-show.3.1.3.1: each `--toc` entry anchors on its own heading site.
+        // §FS-show.3.1.3: each `--toc` entry anchors on its own heading site.
         // The entries are the recorded sites after the selected heading, in
         // document order; a path the cursor cannot place falls back to the map.
         let mut sites: Vec<(&str, &SectionInfo)> = decl

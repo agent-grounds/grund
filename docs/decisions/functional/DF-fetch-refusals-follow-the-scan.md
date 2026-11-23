@@ -55,7 +55,7 @@ the empty file, then fetch.
 ## 3. Compatibility
 
 The four lines change in place under the pre-1.0 licence of [[§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise)], as
-a named exception of [[§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change)], because a window would keep
+a named exception of [[§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes)], because a window would keep
 naming, on purpose, what is not there: an ID that is not in the file, a heading `check` reads, a
 limit `fetch` no longer has, a folder that reads fine. Consumers match `fetch`'s exit 2, which
 does not move. The change lands in 0.23.0, the last release before 1.0

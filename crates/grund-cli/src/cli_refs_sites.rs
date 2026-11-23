@@ -165,7 +165,7 @@ fn refs_sites_refused(
     // §FS-refs.3: refs' own format, `--format` or else the configured one, which
     // §AR-resolver.3.1.1.1 has the core return from the context the run loaded.
     let format = format.as_deref().or(output_format).unwrap_or("text");
-    // §FS-show.3.5.2: `refs` is never the bare form, so no breadcrumb replaces the refusal.
+    // §FS-show.3.5: `refs` is never the bare form, so no breadcrumb replaces the refusal.
     let refusal = ShowRefusal {
         message: &message,
         sites,

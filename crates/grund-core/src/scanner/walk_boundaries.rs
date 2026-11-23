@@ -49,7 +49,7 @@ pub(super) struct PlacedRoot {
 
 /// The one place a scan root is looked up, placed, and judged against the outward directory-link
 /// gate. The reporting walk prunes on it, and the empty-scan warning asks it why a handed path
-/// read nothing, so the two cannot disagree (§FS-check.2.2.2.6). `None` where the lookup says the
+/// read nothing, so the two cannot disagree (§FS-check.2.2.2). `None` where the lookup says the
 /// root is absent (§FS-scan.scope.homes.lookup).
 ///
 /// A root the disk refused is placed as far as it answers, so the gate judges where it goes and

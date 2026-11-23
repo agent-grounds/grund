@@ -147,7 +147,7 @@ Finding {
   sites:    [{ path, line }]?  // null for a single-site finding; a list naming every site for a multi-site
                                // finding (a duplicate declaration) or an ambiguous-ID / ambiguous-section
                                // query failure that names sites; null for the number-only shorthand's
-                               // `ambiguous` refusal, which names candidates instead (FS-errors.5.2.1)
+                               // `ambiguous` refusal, which names candidates instead (FS-errors.5.2)
   authority: [string]?         // last key; the bytewise-sorted rule origins that authored this finding
                                // (FS-rules.7.6) — a declared rule's ID, or "--rule" for a `check --rule`
                                // trial sentence, or both where they reached the same meaning (FS-rules.6);

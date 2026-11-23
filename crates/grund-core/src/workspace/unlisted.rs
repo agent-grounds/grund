@@ -37,7 +37,7 @@ use crate::model::{format_path, relative_from_base};
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Placement {
     /// The location is the finding's own `path` and `line` and the message does not
-    /// repeat it — §FS-errors.2.2.1's shape for a finding a frontend places:
+    /// repeat it — §FS-errors.2.2's shape for a finding a frontend places:
     /// `check`'s report error behind the §FS-check.2.1 prefix, and the editor's
     /// diagnostic (§FS-check.3.29.13).
     Located,
@@ -59,7 +59,7 @@ enum Placement {
 ///
 /// `config` is the project whose walk produced `walked_dirs` — the namespace the
 /// block is absorbed into, and the root both remedies are written from. `render`
-/// is the config every path renders against (§FS-errors.3.1): the workspace root in
+/// is the config every path renders against (§FS-errors.3): the workspace root in
 /// a workspace run, `config` itself otherwise. `alias` is the alias path this run
 /// spells that project with, so the message can be matched against what
 /// §FS-list printed.
@@ -80,7 +80,7 @@ pub(crate) fn unlisted_workspace_block_errors(
 /// surfaces that have no report to carry them — `list`, `refs`, `cover`, `fmt` and
 /// the ID read — one CLI-level `warning:` each, with the location **inside the
 /// text** because the CLI prints the sentence rather than placing it
-/// (§FS-errors.2.2.1).
+/// (§FS-errors.2.2).
 ///
 /// The channel is what the flip moved, not the anchor. `check` and the editor take
 /// this finding off the report, located and as an error; these five keep the
@@ -185,7 +185,7 @@ fn unlisted_workspace_block_message(
 ) -> String {
     // Both remedies are written from the enclosing project's root, so the entry is
     // spelled from there — while the two file paths render against the run's report
-    // base like every other path in a diagnostic (§FS-errors.3.1).
+    // base like every other path in a diagnostic (§FS-errors.3).
     let entry = members_entry(&config.root, dir);
     let enclosing_config = config
         .config_file

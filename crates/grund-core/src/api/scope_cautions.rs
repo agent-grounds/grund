@@ -53,7 +53,7 @@ fn nothing_recognized(findings: &Catalog) -> bool {
 /// are findings about the tree *outside* the scope, and a run that finds the
 /// citations out there is exactly the one where saying the configured scope is
 /// empty helps most. The §FS-check.1.3.6.3 unread-source caution is out for the
-/// same reason and is appended after this call (§FS-check.2.2.3.1): it names a
+/// same reason and is appended after this call (§FS-check.2.2.3): it names a
 /// file the *resolution* scope could not read, so letting it answer the question
 /// would delete the caution of the run that needs it most — a mistyped path in a
 /// tree that happens to hold one unreadable file elsewhere.
@@ -141,12 +141,12 @@ fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bo
 /// A root run no config applies to is asked next, before the root arms: when it
 /// holds a project config below, the include list those arms name is the
 /// defaults' and the scaffold they offer would compete with that project
-/// (§FS-check.2.2.2.5). A handed directory link out of the project is asked
+/// (§FS-check.2.2.2). A handed directory link out of the project is asked
 /// before the extensions and the exclude patterns, for the same reason as the
 /// hidden file: the walk refused it at the link gate before either was consulted
-/// (§FS-check.2.2.2.6). Last, ahead of the extensions alone, an exclude pattern that
+/// (§FS-check.2.2.2). Last, ahead of the extensions alone, an exclude pattern that
 /// pruned a file the walk would have read, and then an outward link the walk refused
-/// below the path: the one place under it the run never looked (§FS-check.2.2.2.6.1).
+/// below the path: the one place under it the run never looked (§FS-check.2.2.2).
 ///
 /// Every arm names `path` as `display` spells it (§FS-workspace.5.3), while
 /// which arm speaks is still asked of the real path.
@@ -167,7 +167,7 @@ pub(super) fn empty_scan_warning(
         || canonical_path(path)
             .map(|p| p == config.root)
             .unwrap_or(false);
-    // §FS-check.2.2.2.5: asked of the root run alone, which a handed hidden file
+    // §FS-check.2.2.2: asked of the root run alone, which a handed hidden file
     // never is; `below` walks nothing for a run that loaded a config.
     let unread = scoped_to_root
         .then(|| UnreadConfigs::below(config, display))
@@ -181,7 +181,7 @@ pub(super) fn empty_scan_warning(
             shown,
             remedies::empty_scan_hidden(version)
         ),
-        // §FS-check.2.2.2.5, §FS-check.2.2.2.5.1: the defaults' include list and the
+        // §FS-check.2.2.2: the defaults' include list and the
         // scaffold would both be false here, so name the configs the run did not read.
         (_, _, Some(unread)) => format!(
             "nothing to scan — no grund.toml applies here, so grund used its defaults and \
@@ -189,7 +189,7 @@ pub(super) fn empty_scan_warning(
             unread.names(),
             unread.check_routes()
         ),
-        // §FS-check.2.2.2.1: a project with no kinds has no starter file to
+        // §FS-check.2.2.2: a project with no kinds has no starter file to
         // scaffold, so the first remedy it is offered is its first kind.
         (Some(dirs), true, None) if kind_prefixes(&config.kinds).is_empty() => format!(
             "nothing to scan — grund looked under [scan] include = [{}] and found no files. This \
@@ -202,7 +202,7 @@ pub(super) fn empty_scan_warning(
             quoted_list(dirs),
             remedies::empty_scan_root(version)
         ),
-        // §FS-check.2.2.2.6: the walk refused the handed link before any extension or
+        // §FS-check.2.2.2: the walk refused the handed link before any extension or
         // pattern was asked, so name that gate, not them.
         _ if !scoped_to_root && handed_outward_link(config.schema(), config.frame(), path) => {
             format!(
@@ -212,14 +212,14 @@ pub(super) fn empty_scan_warning(
                 shown
             )
         }
-        // §FS-check.2.2.2.2: under v2 a pattern can prune what the extensions admit.
+        // §FS-check.2.2.2: under v2 a pattern can prune what the extensions admit.
         _ => match pruning_pattern(config.schema(), config.frame(), path, path_provided) {
             Some(pattern) => format!(
                 "nothing to scan — every file under `{}` that grund would read is excluded by \
                  the [schema.sources] exclude pattern `{pattern}`.",
                 shown
             ),
-            // §FS-check.2.2.2.6.1: then the one place under it the run never looked.
+            // §FS-check.2.2.2: then the one place under it the run never looked.
             None => match outward_link_shown(config, path, path_provided, display) {
                 Some(link) => format!(
                     "nothing to scan — nothing under `{}` was read: `{}` is a directory link out \
@@ -227,7 +227,7 @@ pub(super) fn empty_scan_warning(
                      or move the target inside the project).",
                     shown, link
                 ),
-                // §FS-check.2.2.2.2: no text language means there are no extensions to print.
+                // §FS-check.2.2.2: no text language means there are no extensions to print.
                 None if version == 2 && config.extensions.is_empty() => {
                     let model = config.schema().sources.model.as_ref().expect("v2 sources");
                     let remedy = match model.data_mapping_hiding_text() {
@@ -260,7 +260,7 @@ pub(super) fn empty_scan_warning(
     }
 }
 
-/// §FS-check.2.2.2.6.1: the directory link out of the project the walk refused below the run's
+/// §FS-check.2.2.2: the directory link out of the project the walk refused below the run's
 /// scope, as `display` spells a path: from the path as written, and from the project root for a
 /// run given no path, which walked the root wherever it started.
 fn outward_link_shown(
@@ -279,7 +279,7 @@ fn outward_link_shown(
 }
 
 /// `["a", "b"]`'s inside, as the empty-scan warning names `[scan] include` and
-/// the `members` of §FS-check.2.2.2.5.1.
+/// the `members` of §FS-check.2.2.2.
 pub(super) fn quoted_list(dirs: &[String]) -> String {
     dirs.iter()
         .map(|dir| format!("\"{dir}\""))

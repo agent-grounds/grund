@@ -339,7 +339,7 @@ fn explain_clause_by(by: ClauseBy) -> &'static str {
 
 /// §FS-config-explain.5: what a version that does not know a target says,
 /// naming the target, the version and the next step; a list of homes is the
-/// `hint:` line that may follow a bare query failure (§FS-errors.2.3.1).
+/// `hint:` line that may follow a bare query failure (§FS-errors.2.3).
 fn explain_unknown(version: u32, unknown: &ExplainUnknown) -> String {
     match unknown {
         ExplainUnknown::VersionOneTable { table, homes } => format!(
@@ -357,7 +357,7 @@ fn explain_unknown(version: u32, unknown: &ExplainUnknown) -> String {
             admitted.join(", ")
         ),
         // §FS-config-explain.5: the first reading on the line, each other on a
-        // `hint:` line of its own (§FS-errors.2.3.1).
+        // `hint:` line of its own (§FS-errors.2.3).
         ExplainUnknown::Readings { target, readings } => {
             let mut lines = readings.iter().map(|reading| {
                 let lead = match &reading.named {

@@ -85,7 +85,7 @@ fn pass_over_file(
 
 /// One file's pass outside any walk (§AR-scanner.2), its overlay first: the
 /// records of a file the walk did not reach, for a stub whose target lies
-/// outside scan scope and still reads as the scanned file would (§FS-show.2.3.7),
+/// outside scan scope and still reads as the scanned file would (§FS-show.2.3),
 /// its qualified citations recognized against the workspace's projects as the
 /// walk's are (§FS-declarations.stubs.target.5). Fetch asks it of the files its
 /// own walk of a home does not replace (§FS-fetch.5.2).

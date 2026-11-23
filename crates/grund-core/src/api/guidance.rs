@@ -1,11 +1,11 @@
-//! Query repair hints shared with process frontends (§FS-show.3.5.1).
+//! Query repair hints shared with process frontends (§FS-show.3.5).
 
 use super::unread_configs::UnreadConfigs;
 use crate::config::{Config, format_guidance};
 use crate::resolver::{WorkspaceContext, names_member_id_candidate};
 use crate::workspace::split_qualified_id_arg;
 
-/// §FS-show.3.5.1: the one hint a grammar-rejected `operand` earns, for every
+/// §FS-show.3.5: the one hint a grammar-rejected `operand` earns, for every
 /// query refusal adapter. It names the effective template of `selected`'s kind
 /// in `config`, unless the run loaded no config and a project config lies below
 /// its root: then the template is not the cause, so it names that config and
@@ -44,7 +44,7 @@ pub(crate) fn query_failure_hints(
     };
     let config: &Config = project.unwrap_or_else(|| context.render_config());
     if message.starts_with("invalid ID") {
-        // §FS-show.3.5.1: an alias that names no project leaves the run's own template.
+        // §FS-show.3.5: an alias that names no project leaves the run's own template.
         let selected = match &named {
             Some((Some(_), raw)) if project.is_some() => Some(*raw),
             Some((None, raw)) => Some(*raw),

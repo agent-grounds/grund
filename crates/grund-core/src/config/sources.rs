@@ -108,7 +108,7 @@ pub(crate) struct SourceModel {
 
 impl SourceModel {
     /// The first mapping to data whose removal restores an admitted text reader, in byte
-    /// order: the empty-scan caution names that edit (§FS-check.2.2.2.2).
+    /// order: the empty-scan caution names that edit (§FS-check.2.2.2).
     pub(crate) fn data_mapping_hiding_text(&self) -> Option<(&str, &str)> {
         self.extensions
             .iter()

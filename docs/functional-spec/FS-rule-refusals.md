@@ -28,7 +28,7 @@ elsewhere: *an offered sentence stays accepted as the language grows* is
 refused rather than half-parsed* is [§FS-rules.requirements.phase-one](FS-rules.md#requirementsphase-one-what-phase-1-leaves-out-is-owed-to-its-own-change--deferred); *a
 reason's wording moves only through a window that keeps the old text as a
 prefix*, as stage 2's wildcard reason does ([§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails)),
-is [§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change); and *a rule and a selector refused
+is [§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes); and *a rule and a selector refused
 for one subject give one reason* is [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree), save the case its
 differences list ([§REQ-one-answer.differences.identity](../requirements/REQ-one-answer.md#differencesidentity-identity)).
 
@@ -539,7 +539,7 @@ read again and offered as a conjunction's forms are
 accepted. Every other row offers none, because an offer never picks a field or
 a value for the author ([§FS-rule-refusals.requirements.typed](FS-rule-refusals.md#requirementstyped-an-offer-is-built-from-what-was-typed-and-what-is-configured-and-nothing-else--realized)), and a selector
 is offered none for any row. Since the kind was recognised, none of them adds
-a `known kinds:` line; the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) that kept one closed in `0.22.0`.
+a `known kinds:` line; the window that kept one closed in `0.22.0`.
 
 Three spellings put a whose clause where no clause belongs, and each keeps the
 reason it printed before clauses existed as a verbatim contiguous prefix
@@ -593,7 +593,7 @@ because the split looks for a lowercase ` must `, and a value with spaces, a
 value holding ` and ` or ` or `, and the `.` that ends the sentence after a
 value all leave the value whole. The last row of the table and the two
 appended rows printed the same bytes before, through and after the window; every
-other reason in the table is the one [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) moved to. The window was not
+other reason in the table is the one the window moved to. The window was not
 the table's alone: a sentence whose clause is accepted and which a later
 production of [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) refuses took it too, and now
 prints that production's reason alone, so `Each SWR whose verification is Test
@@ -825,7 +825,7 @@ spellings, rather than changing the shared kind reason on other surfaces.
 | a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | scope cannot be reconstructed, rebuilding it drops a typed component ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)), no configured kind is recovered, or the subject holds a clause; `known kinds:` follows only for the latter two |
 | the ID grammar for a subject `The` cut short at a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | — | always; `known kinds:` follows |
 | a path subject, `Each file in …` | — | always; `known kinds:` follows |
-| a whose clause in a version-1 config, with no ` is `, an empty `FIELD` or `VALUE`, a `FIELD` that is no field or no scalar of the kind, a `VALUE` with surrounding whitespace, or a `VALUE` outside `one_of` ([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)) | — | always; no `known kinds:` follows, since the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) closed |
+| a whose clause in a version-1 config, with no ` is `, an empty `FIELD` or `VALUE`, a `FIELD` that is no field or no scalar of the kind, a `VALUE` with surrounding whitespace, or a `VALUE` outside `one_of` ([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)) | — | always; no `known kinds:` follows, since the window of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) closed |
 | a `VALUE` joined by ` or ` | one form per value, as a conjunction's are | any form is refused, and always on a selector |
 | a `VALUE` cut by the modality split | — | always |
 | an exact ID followed by a whose clause | — | always; `known kinds:` follows on `list --selector`, as before |
@@ -1019,8 +1019,8 @@ fragment of a sentence as a kind.
 
 Stage 2's wildcard row is the one place this order differs from what a
 sentence was refused with before it was written down: a wildcard subject
-joined by `and` was refused as a conjunction. That reason moved through the
-window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration), which kept the conjunction refusal as a prefix until
+joined by `and` was refused as a conjunction. That reason moved through a
+window that kept the conjunction refusal as a prefix until
 `0.19.0`; since then the wildcard reason stands alone.
 
 ## selectors: A refused selector is answered with a selector
@@ -1049,7 +1049,7 @@ A subject with a whose clause gets the reason [§FS-rule-refusals.sentences.whos
 gives the same subject in a rule, and no accepted selector: the clause's field
 and value are the author's to choose, and a value joined by ` or ` has no one
 selector to offer. The `known kinds:` line that followed the legacy reason
-through the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) went with it, because the kind was recognised. An exact
+through the window of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) went with it, because the kind was recognised. An exact
 ID followed by a clause keeps its literal-subject reason and appends the
 clause's, and `KIND.NAME` followed by a clause keeps its section-grammar reason
 and accepted selector, both with the line they had before. In the repository
@@ -1107,7 +1107,7 @@ Where no configured kind can be recovered, nothing is guessed. The reason
 stands alone, and a second line lists the configured citable kinds exactly as
 an unknown `--kind` does ([§FS-list.1.1](FS-list.md#11---kind)). A kind that is configured but not citable is not a
 kind that cannot be recovered: its reason is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s, alone since
-the window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration) closed, and the line after it is the same
+the window of [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids) closed, and the line after it is the same
 `known kinds:` line.
 
 Which kinds a selector accepts, and whether `KIND.NAME` needs named sections,
@@ -1134,7 +1134,7 @@ be refused the refusal is the subject's own.
 
 The refusals whose reason names a numbered chapter, a section-component
 wildcard or a chapter quantifier add one stderr breadcrumb
-([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)), whether or not a kind was recovered. The units they reach for are
+([§FS-errors.1](FS-errors.md#1-streams)), whether or not a kind was recovered. The units they reach for are
 found by expanding the chapter the suggestion selects, or, where nothing is
 suggested, the units of a kind the `known kinds:` line names:
 

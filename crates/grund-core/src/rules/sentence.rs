@@ -248,7 +248,7 @@ impl RuleVocabulary {
         self.named_sections || self.named_kinds.contains(kind)
     }
 
-    /// §FS-errors.3.8.1: `legacy`, a refusal that names `kind`, or, where
+    /// §FS-errors.2.5.1: `legacy`, a refusal that names `kind`, or, where
     /// `kind` is configured but not citable here, §FS-errors.2.5.1's reason
     /// alone in its place.
     pub(crate) fn kind_refusal(&self, legacy: String, kind: &str) -> String {

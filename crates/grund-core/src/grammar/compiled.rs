@@ -442,7 +442,7 @@ impl Grammar {
         })
     }
 
-    /// §FS-show.3.5.1: recognize the configured ID before even a rejected section
+    /// §FS-show.3.5: recognize the configured ID before even a rejected section
     /// for advice only. Multiple matching kind grammars must not select an override.
     pub(crate) fn kind_for_guidance(&self, operand: &str) -> Option<&str> {
         let token = operand

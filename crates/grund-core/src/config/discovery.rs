@@ -318,7 +318,7 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
     };
     let cli_base = run_cli_base(start, &walk_start, &root);
     let mut run = Run::of(root, cli_base, invocation);
-    // §FS-check.2.2.2.5: the one place a run learns that no config applies to it.
+    // §FS-check.2.2.2: the one place a run learns that no config applies to it.
     run.found_no_config = true;
     let config = defaults_under(run, invocation);
     // §FS-check.6.1.3: zero-config still has effective roots and probes.

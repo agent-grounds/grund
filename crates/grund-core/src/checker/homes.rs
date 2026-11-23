@@ -31,7 +31,7 @@ impl DeclarationHome<'_> {
     }
 
     /// Whether `file` is a non-citable folder's entry `README.md`, which the folder's
-    /// grounding does not govern (§FS-check.3.6.1, §FS-check.2.2.1.1).
+    /// grounding does not govern (§FS-check.3.6.1, §FS-check.2.2.1).
     pub(super) fn is_entry_readme(&self, file: &Path, frame: Frame<'_>) -> bool {
         !self.citable
             && !self.exact

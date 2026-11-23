@@ -8,7 +8,7 @@ use crate::model::{Code, Finding, Report};
 /// `invalid-rule`, because a skipped rule is a check the run did not evaluate
 /// (§FS-rules.7.6), and `empty-citation-obligation`, because an obligation with
 /// no unit is one that judged nothing (§FS-check.1.4). The ninth is that line
-/// itself, which a `must` or `should` rule writes (§FS-check.2.2.1.4).
+/// itself, which a `must` or `should` rule writes (§FS-check.2.2.1).
 const RULE_PRODUCED_CODES: &[&str] = &[
     "chapter-cardinality",
     "citation-cardinality",

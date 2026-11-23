@@ -279,7 +279,7 @@ quantifier, object kind or predicate is refused, and `list --selector` follows
 one with `known kinds:` only where the kind is not configured. Through grund
 0.21.0 the reason carried the one grund printed before clauses existed as a
 prefix
-([the closed window](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-errors.md#310-the-whose-clause-wording-migration)):
+([the closed window](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)):
 
 ```text
 $ grund check --rule 'Each SWR whose verification is Tset must be cited by at least one TC.'

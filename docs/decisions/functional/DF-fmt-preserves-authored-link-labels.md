@@ -132,7 +132,7 @@ finding changes its rule and keeps its verdict.
 - **Lines an older `grund` nested.** Unchanged: their inner wrap is re-derived, they pass both
   `check` and `fmt --check`, and only a hand edit unwraps them.
 - **Nothing else.** `show` already printed the author's link as written and flattens only the
-  inner wrap of a nested line ([§FS-show.3.2.1](../../functional-spec/FS-show.md#321-the-wrap-shape-it-collapses)), the missing-entry message keeps its bytes,
+  inner wrap of a nested line ([§FS-show.3.2](../../functional-spec/FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)), the missing-entry message keeps its bytes,
   and the editor's hover is the later change's.
 
 ## 6. The correction route

@@ -408,9 +408,9 @@ A key's **title** is its value where that is a one-line scalar on the key's line
 
 | Surface | What it does with `ADR-x.front-matter` and `ADR-x.front-matter.status` |
 |---|---|
-| `grund show` of one of them | prints its slice, as a value-source member's slice is printed, with nothing added ([§FS-output-shapes.4.3](FS-output-shapes.md#43-value-source-declarations)). The default read, `--brief`, `--toc` and `--full` all print it, since a slice has no lead of its own. In JSON, `body` is the slice, `path` and `line` are its start, and `anchor` is `null` ([§FS-show.3.1.3.1](FS-show.md#3131-the-heading-anchor)) |
+| `grund show` of one of them | prints its slice, as a value-source member's slice is printed, with nothing added ([§FS-output-shapes.4.3](FS-output-shapes.md#43-value-source-declarations)). The default read, `--brief`, `--toc` and `--full` all print it, since a slice has no lead of its own. In JSON, `body` is the slice, `path` and `line` are its start, and `anchor` is `null` ([§FS-show.3.1.3](FS-show.md#313-json)) |
 | a read of the whole declaration, in any mode | unchanged: the block is above the body, so the read neither prints it nor lists its coordinates, and a whole-declaration `--toc` lists headings only |
-| `show --batch --all` | generates one query for each, among the declaration's section paths in their byte order ([§FS-show.2.6.2](FS-show.md#262-exhaustive-generation)) |
+| `show --batch --all` | generates one query for each, among the declaration's section paths in their byte order ([§FS-show.2.6](FS-show.md#26-batch-resolution)) |
 | `list --glob` | lists them as catalog coordinates ([§FS-coordinate-globs.matching.catalog](FS-coordinate-globs.md#matchingcatalog-a-glob-selects-catalog-coordinates)). `ADR-*.front-matter.*` lists the keys, with a key's title in the title column |
 | `list --size` | one row for each, where lead and full both measure the slice ([§FS-output-shapes.5.2](FS-output-shapes.md#52-list---size---formatjson)). The lead-size check measures the same rows, so an oversized slice is warned at its coordinate's line ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)) |
 | `grund complete ids --sections` | offers them as sections of their declaration ([§FS-completions.2.2](FS-completions.md#22-what-the-catalog-offers)) |

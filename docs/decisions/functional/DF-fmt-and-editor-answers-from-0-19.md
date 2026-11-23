@@ -29,7 +29,7 @@ one that announces it:
 |---|---|---|
 | `fmt --cross-refs`, a `[§<ID>](` that never closes before a later `)` | left as written | wrapped fresh, nothing deleted |
 | `fmt --cross-refs`, a wrap with balanced parentheses in its URL | re-derived up to the first `)`, the rest kept | its whole destination re-derived |
-| `show`'s flatten ([§FS-show.3.2.1](../../functional-spec/FS-show.md#321-the-wrap-shape-it-collapses)) | collapses up to the first `)` | collapses a closed wrap whole, and prints an unclosed one as written |
+| `show`'s flatten ([§FS-show.3.2](../../functional-spec/FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)) | collapses up to the first `)` | collapses a closed wrap whole, and prints an unclosed one as written |
 | `check`'s kind-index entry form ([§FS-check.3.17.4](../../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) | reads a wrap up to the first `)` | reads a closed wrap |
 | the editor's span for a declaration or section title ([§FS-lsp.1.3.4](../../functional-spec/FS-lsp.md#134-origin-span-and-result-shape)) | runs to the end of the line, a C-family `*/` included | ends where the `--toc` title ends |
 
@@ -72,7 +72,7 @@ ships this record, and it waits for the release #598 lands in.
 Every row of [§DF-fmt-and-editor-answers-from-0-19.2.1](DF-fmt-and-editor-answers-from-0-19.md#21-what-moves-in-0190) moves in grund 0.19.0, on the schedule it
 named (agent-grounds/grund#655). A wrap is `[§<ID>](…)` closed by the `)` that balances its `(`,
 and `fmt --cross-refs`, `show`'s flatten and `check`'s kind-index entry form read it through the
-one wrapper test ([§FS-citations.wrap.recognized](../../functional-spec/FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets), [§FS-show.3.2.1](../../functional-spec/FS-show.md#321-the-wrap-shape-it-collapses), [§FS-check.3.17.4](../../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)).
+one wrapper test ([§FS-citations.wrap.recognized](../../functional-spec/FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets), [§FS-show.3.2](../../functional-spec/FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json), [§FS-check.3.17.4](../../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)).
 The `unclosed-wrapper` warning of 2.2 is retired with its code and catalog row, so a selector naming
 it is refused as an unknown code ([§FS-citations.checks.unclosed-wrapper](../../functional-spec/FS-citations.md#checksunclosed-wrapper-unclosed-wrapper-read-differently-from-grund-0190)). The editor's span for a
 declaration or section title is the `--toc` title's ([§FS-lsp.1.3.4](../../functional-spec/FS-lsp.md#134-origin-span-and-result-shape)), and row P16 leaves

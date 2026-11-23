@@ -264,7 +264,7 @@ a name that is not hidden as well as a document reader
 If the whole v2 scan has no language read for declarations, its empty-scan caution
 names the key to change: admit a language such as `markdown` in `languages`, or
 drop the mapping, such as `rs = "json"`, that keeps a listed language from reading its suffix
-([§FS-check.2.2.2.2](../functional-spec/FS-check.md#2222-an-explicit-path)).
+([§FS-check.2.2.2](../functional-spec/FS-check.md#222-the-message-names-the-likely-cause)).
 
 `grund check --watch` checks immediately and updates the terminal after saves;
 Ctrl-C restores an owned alternate screen and returns the last completed status.
@@ -351,7 +351,7 @@ what lets you try a sentence out for the cost of its own findings
 ([§FS-check.1](../functional-spec/FS-check.md#1-inputs), [§FS-rules.8](../functional-spec/FS-rules.md#8-command-surfaces)).
 A check narrowed to a code rules produce still says when a rule behind it was
 skipped as invalid ([§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits)),
-or when one applies to nothing ([§FS-check.2.2.1.4](../functional-spec/FS-check.md#2214-a-rules-obligation)).
+or when one applies to nothing ([§FS-check.2.2.1](../functional-spec/FS-check.md#221-citation-direction-obligation-applies-to-nothing)).
 A selected code whose check this run leaves off judges nothing, so instead of a
 bare `success` the run says so and names what turns it on, spelled in the config
 version it read:

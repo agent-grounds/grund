@@ -346,7 +346,7 @@ fn refuse(path: &Path, line: Option<usize>, message: String) -> Result<()> {
 /// in the order they are judged: the citing tables by kind, each table's
 /// levels as [`KindCitationRules::lists`] gives them, and each level's targets
 /// as written. A run whose table holds no workspace cannot judge another
-/// project at all, and says so in §FS-errors.3.7.1's wording. `path` is the
+/// project at all, and says so in §FS-errors.3.7's wording. `path` is the
 /// config's report path and `table` its spelling of the section, as
 /// [`validate_citation_rules`] names them (§DF-one-grammar-lands-in-0-19).
 /// The line is the level key's where the file recorded one, as a v2 file does

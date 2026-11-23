@@ -88,7 +88,7 @@ fn check_declaration_homes(
             let primary = sites[0].clone();
             let others = sites[1..]
                 .iter()
-                // §FS-errors.3.1 / §FS-workspace.8.1: the report's display, not the
+                // §FS-errors.3 / §FS-workspace.8.1: the report's display, not the
                 // member's — the printer anchors this finding from the report root,
                 // so the sites named inside its message come from there too.
                 .map(|site| format!("{}:{}", frame.display_path(&site.path), site.line))
