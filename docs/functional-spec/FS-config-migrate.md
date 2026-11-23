@@ -1,21 +1,21 @@
 # FS-config-migrate: grund config migrate --to 2 shows the version-2 file that means what a version-1 config means, and writes it only when asked and only when it does
 
-`grund config migrate --to 2` reads a version-1 `grund.toml` and shows the version-2 file that means the same thing, without touching anything. It says, line by line, where each setting went, what it drops and why, and every comment it cannot carry. Where a v1 setting has no v2 spelling it refuses and names the v1 edit that gets to one, so every change of meaning is one the user made, checked with `grund check`, and committed. It writes only with `--write`, only after two comparisons show that the new file means what the old one did, and only by an atomic replace. That is the one exception to "the config is never overwritten" ([§REQ-no-data-loss.4](../requirements/REQ-no-data-loss.md#4-one-migration-may-replace-the-config)). The translation is held to [§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart) and [§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes); the full table of every v1 key is [§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default). It serves [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path): the way off version 1 is a reviewed path, not a hand rewrite nothing checks. Why it refuses rather than offers a flag, why there are two gates, and why `--to` is required are [§DF-config-migrate](../decisions/functional/DF-config-migrate.md#df-config-migrate-migration-refuses-what-version-2-cannot-spell-names-a-version-1-repair-and-writes-only-past-two-gates).
+`grund config migrate --to 2` reads a version-1 `grund.toml` and shows the version-2 file that means the same thing. A v1 setting version 2 cannot spell is refused with the v1 edit that gets to one, so every change of meaning is one the user made. It writes only with `--write`, only past two comparisons that show the new file means what the old one did, and only by an atomic replace: the one exception to "the config is never overwritten" ([§REQ-no-data-loss.4](../requirements/REQ-no-data-loss.md#4-one-migration-may-replace-the-config)). The translation is held to [§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart) and [§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes). Serves [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path); decided in [§DF-config-migrate](../decisions/functional/DF-config-migrate.md#df-config-migrate-migration-refuses-what-version-2-cannot-spell-names-a-version-1-repair-and-writes-only-past-two-gates).
 
 ## terms: Terms
 
 Leans on [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (config root, workspace, member), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding) and [§FS-config-v2.terms](FS-config-v2.md#terms-terms) (reader, place, complement). Defines:
 
-- **Candidate**: the version-2 file migration would write for the config as it stands, with the same flags. It exists only when nothing is refused.
-- **Preview**: a run without `--write`. It writes nothing. It prints the candidate and the complete report when its `--write` would write, and with `--full` when only listed comments block that write; otherwise it closes with what would block the write ([§FS-config-migrate.2.1](FS-config-migrate.md#21-stdout-is-the-candidate), [§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)).
-- **Refusal**: a v1 setting that version 2 cannot spell with the same meaning. It is never approximated.
-- **Repair**: the v1 edit a refusal names. The user makes it, checks it under version 1, and commits it before migrating.
-- **Notice**: a v1 setting that is dropped, or written differently, because version 1 gave it no force. It is reported and does not refuse.
+- **Candidate**: the version-2 file migration would write for the config as it stands, with the same flags; it exists only when nothing is refused.
+- **Preview**: a run without `--write`; it writes nothing.
+- **Refusal**: a v1 setting version 2 cannot spell with the same meaning.
+- **Repair**: the v1 edit a refusal names, which the user makes, checks under version 1 and commits before migrating.
+- **Notice**: a v1 setting dropped, or written differently, because version 1 gave it no force; it is reported and refuses nothing.
 - **Key map**: each authored v1 key with its line and the v2 key it became.
 - **Attached comment**: a run of comment lines directly above a key or table header, with no blank line between, or a trailing comment on that line.
 - **Header block**: the comment lines from line 1 to the first blank or non-comment line.
 - **Listed comment**: a comment migration cannot carry, named in the report with its lines.
-- **Gate**: one of the two comparisons a write must pass, the records gate and the report gate ([§FS-config-migrate.5](FS-config-migrate.md#5-equivalence-two-gates)).
+- **Gate**: one of the two comparisons a write must pass ([§FS-config-migrate.5](FS-config-migrate.md#5-equivalence-two-gates)).
 
 ## 1. The command
 
@@ -25,41 +25,53 @@ grund config migrate --to 2 [PATH] [--write] [--full] [--drop-comments] [--path-
 
 ### 1.1 Which file
 
-`PATH` works as it does for `config validate` and `config show` ([§FS-config.4.1](FS-config.md#41-grund-config-validate-path)). Discovery walks up from it, `.` when it is omitted, and migrates the config it finds where it is: the root `grund.toml`, or the deprecated `.agents/grund.toml` ([§FS-config.1](FS-config.md#1-file-location-and-discovery)). Where one directory carries both, it migrates the one that governs ([§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both)). A path inside a workspace member migrates that member's config ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)). Exactly one file is migrated per run.
+`PATH` works as it does for `config validate` and `config show` ([§FS-config.4.1](FS-config.md#41-grund-config-validate-path)): discovery walks up from it, `.` when omitted, to the config that governs there, the root `grund.toml` or the deprecated `.agents/grund.toml` ([§FS-config.1](FS-config.md#1-file-location-and-discovery), [§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both)), and migrates that one file where it is. Inside a workspace member that is the member's config ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)).
 
 ### 1.2 `--to` is required
 
-`--to 2` is the only accepted target. A run without it is a usage error, exit `2`: `` error: config migrate needs --to 2 (the version to migrate to) ``. `--to` with any other value, `1` included, is exit `2`: `` error: config migrate converts to version 2 only, not `<value>` ``. Both are answered before anything is loaded ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read--realized-directional-for-the-next-flag)).
+`--to 2` is the only accepted target ([§DF-config-migrate.2.3](../decisions/functional/DF-config-migrate.md#23---to-is-required)). A run without `--to` prints the first line below, and one with any other value, `1` included, the second, naming the value given. Both are usage errors, exit `2`, answered before anything is loaded ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read--realized-directional-for-the-next-flag)):
+
+```text
+error: config migrate needs --to 2 (the version to migrate to)
+error: config migrate converts to version 2 only, not `1`
+```
 
 ### 1.3 The other flags
 
-- `--write` replaces the config with the candidate, on the terms of [§FS-config-migrate.6](FS-config-migrate.md#6-the-write).
-- `--full` is migration-only. After a successful write it restores the candidate on stdout and the complete report on stderr; without it successful writes use the compact report of [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write). On a preview that only listed comments refuse it restores the candidate and the complete report, followed by the preview's closing line ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)). On every other preview, and on a refused write, it changes nothing. It accepts `PATH`, `--write`, `--drop-comments` and either `--path-base`; it does not relax `--to 2` or permit `--format`.
-- `--drop-comments` lets the write drop exactly the listed comments ([§FS-config-migrate.4.4](FS-config-migrate.md#44-listed-comments-and---drop-comments)). It is accepted without `--write`, so a preview can predict the write.
-- `--path-base` is accepted and spells the paths of the report ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)).
-- `--format` is refused as it is for every `config` command ([§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)), with `` error: unknown flag `--format` ``, exit `2`, as `config show` answers it.
+- `--write` replaces the config with the candidate ([§FS-config-migrate.6](FS-config-migrate.md#6-the-write)).
+- `--full`, which no other `config` command accepts, prints the candidate on stdout and the complete report on stderr in the two runs that otherwise leave them out: a successful write ([§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write)) and a preview that only listed comments refuse, which still closes with its refusal line ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)). Elsewhere it changes nothing. It combines with `PATH` and every other migrate flag, and neither relaxes `--to 2` nor admits `--format`.
+- `--drop-comments` lets the write drop exactly the listed comments ([§FS-config-migrate.4.4](FS-config-migrate.md#44-listed-comments-and---drop-comments)). A preview accepts it, to predict the write.
+- `--path-base` spells the report's paths ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)).
+- `--format` is refused as for every `config` command ([§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)): `` error: unknown flag `--format` ``, exit `2`.
 
 ## 2. Streams and exits
 
 ### 2.1 Stdout is the candidate
 
-On a preview whose `--write` would write, stdout carries exactly the bytes `--write` would write with the same flags, and nothing else ([§FS-errors.1](FS-errors.md#1-streams)); that preview, `--drop-comments` included, prints the same bytes on both streams whether or not `--full` is given. A refused preview has empty stdout by default. A successful write has empty stdout by default; with `--full` it prints exactly the candidate it wrote. The output choice never changes candidate bytes. When there is no candidate, because something is refused or the config is already version 2, stdout is empty, and so it is for a refused or failed write, with or without `--full`. So `grund config migrate --to 2 > new.toml` captures only the candidate, and captures one only when it exits `0`. The candidate is a version-2 file, so it prints its tables keyed by a row name in the order a version-2 file prints in ([§FS-config.4.2.4](FS-config.md#424-the-order-show-prints-in)): the rows' order, which is the order of the version-1 `[[kinds]]` entries. A preview that exits `1` only because a listed comment would be lost still has a candidate, without those comments, as `--drop-comments` would write it: the comments are what refuse, not the file. It prints that candidate only with `--full`, so `--full` and `--drop-comments` show the same candidate, and the `--full` run still exits `1`.
+Stdout carries the candidate and nothing else ([§FS-errors.1](FS-errors.md#1-streams)), in three runs: a preview whose `--write` would write prints exactly the bytes `--write` would write with the same flags, `--drop-comments` included, with or without `--full`; `--write --full` prints the candidate it wrote; and a `--full` preview that only listed comments refuse prints the candidate without those comments, as `--drop-comments` would write it, and still exits `1`. Every other run leaves stdout empty, so `grund config migrate --to 2 > new.toml` captures only a candidate, and one only when it exits `0`. The output choice never changes the candidate's bytes. Its tables keyed by a row name print in version 2's order ([§FS-config.4.2.4](FS-config.md#424-the-order-show-prints-in)), which is the order of the version-1 `[[kinds]]` entries.
 
 ### 2.2 Stderr is the report
 
-Every other line goes to stderr. Only an actual successful write without `--full` uses the compact report defined in [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write). Passing previews and `--write --full` use the complete report below; refused writes and refused previews retain that complete diagnostic report, without the lines item 5 leaves out, and close with item 6's line. Failures and already-version-2 runs retain their error or no-op messages and exits, without a refresh reminder. `<config>` is the config's path spelled from the report base ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), `grund.toml` by default.
+Every other line goes to stderr, unwrapped. A successful write without `--full` prints the compact report of [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write), and a failure or a config already on version 2 prints its error or no-op line alone ([§FS-config-migrate.6.6](FS-config-migrate.md#66-a-second-run-is-a-no-op), [§FS-config-migrate.7](FS-config-migrate.md#7-outcomes)). Every other run prints the complete report, in this order. `<config>` is the config's path from the report base ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), `grund.toml` by default; every path follows `--path-base` except the four commands to paste ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)).
 
-1. The heading: `<config>: version 1 → 2, preview, nothing written` for a preview, or `<config>: version 1 → 2, --write` with `--write`.
-2. One block per refusal, in file order: `refused: <config>:<line>: <what version 2 cannot spell>`, then any indented detail lines, then `  repair: <the v1 edit>`. A refusal for a key the file omits has no line: `refused: <config>: …`. Every refusal is listed in one run.
-3. The listed comments, when there are any: `comments with no single key to follow (--write refuses; --drop-comments drops exactly these):`, then one line each, `  <config>:<first>-<last>  <where>: <guidance>`, or `  <config>:<line>  <where>: <guidance>` for one line. `<where>` is `above <v1 key>`, `inside <v1 key>` or `standing alone`. Each entry explains why the comment cannot follow a single key. For a split or merged key or header, it names the actual v2 destinations of the authored settings in that entry, using the same mapping facts as the key map; a header does not suggest tables absent from that translation. For example, `[scan] include` containing `requirements.md`, `docs` and `src`, where `requirements.md` is already an FS place, names `[schema.kinds.code] folders` for `docs` and `src` and the existing `[schema.kinds.FS]` place. The entry tells the reader to retain the comment's prose, explicitly authorize the listed drops with `--write --drop-comments`, then re-add the comment at a named destination after a successful write. This advice remains subject to all other refusals and gates. When no unique destination can carry the comment (a dropped setting, a standalone comment, an omitted destination key or a trailing-comment collision), explain that reason and ask the reader to retain the prose and choose its placement manually; name a known shared destination for a collision. When refusals prevent a candidate, identify unresolved destinations as unavailable and direct the reader to repair and preview again, rather than claim a destination exists or promise that `--drop-comments` clears the refusal.
-4. One line per notice, in file order: `dropped: <config>:<line>: <v1 key>: <why>`, or `changed: <config>:<line>: <v1 key>: <why>`. A carried comment on a translated value also gets the explanatory warning of [§FS-config-migrate.4.1.1](FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes), identifying the original config location/key and its destination and asking the reader to check the comment.
-5. When there are no setting/file refusals: the key map, one `mapped: <config>:<line>: <v1 key> → <v2 spelling>` per authored key in file order, where a key version 2 needs no spelling for reads `→ nothing, version 2 always means it` and an `include` entry that is already a place reads `→ nothing, <entry> is a place of [schema.kinds.<ROW>] already`, then one `written: <v2 key> = <value>: version 1's default, written out` per default written out ([§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out)), then member commands ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)), then the gates' result ([§FS-config-migrate.5.4](FS-config-migrate.md#54-the-result-and-a-difference)) and any `note:` line. A refused run, preview or write, omits the `written:` defaults and the next-init Project map note unless its candidate is on stdout, which only a `--full` preview that only listed comments refuse prints; retain eligible mappings, members, notices and actual comparison diagnostics, including differing lines. A passing preview's output is unchanged.
-6. After a write, the lines of [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write). A `--write` that refuses ends with `not written: <causes>; <config> is unchanged`, and a preview that refuses, with or without `--full`, ends with `would not write: <causes>`. `<causes>` is one list, defined once and read by both lines, so the same tree and flags name the same causes in the same words. It lists every blocking cause, in this order, separated by `; `:
-   - Setting/file refusals: `1 refusal (follow the repairs above)` or `<n> refusals (follow the repairs above)`, counting the refusal blocks.
-   - Listed comments without `--drop-comments`: `1 comment has no single key to follow (follow the comment guidance above)` or `<n> comments have no single key to follow (follow the comment guidance above)`, counting listed ranges, not their lines. Do not invite an unqualified move: the nearest v1 header may itself split. Authorized comments are not a cause. With other causes, the comment remedy applies only to the comments; their authorization does not clear the other causes.
-   - A differing gate: `the records differ (inspect the comparison above)` or `grund check --suggestions differs (inspect the comparison above)`, naming the gate that differed. Gates not run because of an earlier refusal add no cause.
+1. The heading: `<config>: version 1 → 2, preview, nothing written`, or `<config>: version 1 → 2, --write`.
+2. One block per refusal, every refusal in one run, in file order: `refused: <config>:<line>: <what version 2 cannot spell>`, any indented detail lines, then `  repair: <the v1 edit>`. A refusal for a key the file omits has no line: `refused: <config>: …`.
+3. The listed comments: `comments with no single key to follow (--write refuses; --drop-comments drops exactly these):`, then one line each, `  <config>:<first>-<last>  <where>: <guidance>`, or `  <config>:<line>  <where>: <guidance>` for one line, where `<where>` is `above <v1 key>`, `inside <v1 key>` or `standing alone`. The guidance says why the comment cannot follow one key and where its prose can go. For a split or merged key or header it names the v2 destinations the entry's authored settings map to, from the key map's facts, and asks the reader to keep the prose, authorize the drops with `--write --drop-comments`, and re-add it at one of them after a successful write, subject to every other refusal and gate. Where no single destination can carry it, for a dropped setting, a standalone comment, an omitted destination key or a trailing-comment collision, whose shared destination it names, it asks that the prose be placed by hand. Where refusals leave no candidate, it names the destinations as unavailable until the repairs and a new preview, never promising that `--drop-comments` clears a refusal.
+4. The notices, in file order: `dropped: <config>:<line>: <v1 key>: <why>` or `changed: <config>:<line>: <v1 key>: <why>` ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)), and the warning of [§FS-config-migrate.4.1.1](FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes) for a comment carried onto a translated value.
+5. When no setting or file is refused: the key map, one `mapped: <config>:<line>: <v1 key> → <v2 spelling>` per authored key in file order, `→ nothing, version 2 always means it` for a key version 2 needs no spelling for and `→ nothing, <entry> is a place of [schema.kinds.<ROW>] already` for an `include` entry that is already a place; one `written: <v2 key> = <value>: version 1's default, written out` per default ([§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out)); the member lines ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)); the gates' result ([§FS-config-migrate.5.4](FS-config-migrate.md#54-the-result-and-a-difference)); and any `note:` line. A refused run leaves out the `written:` lines and the Project map note unless its candidate is on stdout ([§FS-config-migrate.2.1](FS-config-migrate.md#21-stdout-is-the-candidate)), and keeps the rest, every comparison it made with its differing lines included.
+6. After a write, the lines of [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write). A refused `--write` ends with `not written: <causes>; <config> is unchanged`, and a refused preview, with or without `--full`, with `would not write: <causes>`. Both read one list, so the same tree and flags name the same causes in the same words: every blocking cause, in this order, joined by `; `:
+   - `1 refusal (follow the repairs above)` or `<n> refusals (follow the repairs above)`, counting refusal blocks;
+   - without `--drop-comments`, `1 comment has no single key to follow (follow the comment guidance above)` or `<n> comments have no single key to follow (follow the comment guidance above)`, counting listed ranges, not lines;
+   - `the records differ (inspect the comparison above)` or `grund check --suggestions differs (inspect the comparison above)`, for the gate that differed. A gate not run because of an earlier refusal adds none.
 
-A line is never wrapped. Paths inside either report follow `--path-base`, except the commands for the user to paste: the undo and the re-preview after a write, and the directories the `[reference] strict = false` repair and a `member:` line's command name, all spelled from the working directory ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)). The output policy changes no gates, comment authorization, discovery, atomic config-only writing, or exit codes. The compatibility decision for the successful-write default is [§DF-config-migrate-output.3](../decisions/functional/DF-config-migrate-output.md#3-compatibility-and-alternatives); for refused-write wording it is [§DF-config-migrate-output.4](../decisions/functional/DF-config-migrate-output.md#4-refused-writes-close-with-their-causes-and-remedies); for refused previews it is [§DF-config-migrate-refused-preview](../decisions/functional/DF-config-migrate-refused-preview.md#df-config-migrate-refused-preview-a-refused-migration-preview-closes-with-its-causes-and-keeps-its-candidate-behind---full).
+Decided in [§DF-config-migrate-output](../decisions/functional/DF-config-migrate-output.md#df-config-migrate-output-successful-migration-writes-report-the-outcome-the-candidate-and-mapping-report-are-opt-in) and [§DF-config-migrate-refused-preview](../decisions/functional/DF-config-migrate-refused-preview.md#df-config-migrate-refused-preview-a-refused-migration-preview-closes-with-its-causes-and-keeps-its-candidate-behind---full).
+
+Item 3 lists an `include` comment whose entries go to places of two rows as:
+
+```text
+comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
+  grund.toml:14  above [scan] include: setting splits or merges into version-2 settings: [schema.kinds.code] folders, src; docs is a place of [schema.kinds.FS] already; retain the prose, authorize the listed drops with --write --drop-comments, then re-add it at one of these named destinations after a successful write (subject to all other refusals and gates)
+```
 
 ### 2.3 Exits
 
@@ -67,223 +79,171 @@ A line is never wrapped. Paths inside either report follow `--path-base`, except
 |---|---|
 | `0` | The preview's `--write` would write; or the write was made; or the config is already version 2. |
 | `1` | Refused: a v1 setting with no v2 spelling, a difference at either gate, a comment that would be lost without `--drop-comments`, or a config that is a symbolic link. A preview with the same flags exits `1` for the same cause. |
-| `2` | The command could not run: a usage error, no config, a config that does not load, an unsupported version, a version 1 scan that cannot walk the tree where a refusal asks what it reads ([§FS-config-migrate.3.1.4.1](FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads)), or an I/O failure or concurrent edit during the write. The original is untouched in every case. |
+| `2` | The command could not run: a usage error, no config, a config that does not load, an unsupported version, a version 1 scan that cannot walk the tree where a refusal asks what it reads ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry)), or an I/O failure or concurrent edit during the write. The original is untouched in every case. |
 
 ## 3. Refusals, notices and defaults
 
 ### 3.1 A refusal names a v1 repair
 
-A setting version 2 cannot spell is never approximated. The refusal names the v1 key and its line and gives a repair: a v1 edit the user makes, checks with `grund check` under version 1, and commits. That commit is the visible authorization, and `grund check` shows its effect before any v2 file exists. The full set is in [§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default); the ones most v1 files meet are below, each with its exact lines.
+A setting version 2 cannot spell is never approximated: its refusal names the v1 key, its line and a repair, which the user makes, checks with `grund check` and commits under version 1 as the visible authorization ([§DF-config-migrate.2.1](../decisions/functional/DF-config-migrate.md#21-a-refusal-names-a-v1-repair-not-a-flag)). [§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default) lists every refusal; the sections below give the lines most v1 files meet.
 
 #### 3.1.1 Named sections off
 
-`grund init` writes `named_sections = false`, and an omitted key means the same, so most v1 files carry it. Version 2 always reads named sections ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)).
+Version 2 always reads named sections ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)), so `[id] named_sections = false` is refused, and so is the key omitted, except on a block with `include_root = false` ([§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false)):
 
 ```text
-refused: grund.toml:7: [id] named_sections = false turns named sections off, and version 2 always reads them
+refused: grund.toml:6: [id] named_sections = false turns named sections off, and version 2 always reads them
   repair: set [id] named_sections = true under version 1; grund check shows its effect
+refused: grund.toml: [id] named_sections is not set, so version 1 reads no named sections, and version 2 always reads them
+  repair: add [id] named_sections = true under version 1; grund check shows its effect
 ```
-
-When the key is omitted the block reads ``refused: grund.toml: [id] named_sections is not set, so version 1 reads no named sections, and version 2 always reads them`` and ``  repair: add [id] named_sections = true under version 1; grund check shows its effect``. A block with `include_root = false` is not refused here ([§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false)).
 
 #### 3.1.2 Bare citations
 
 ```text
-refused: grund.toml:4: [reference] strict = false recognizes bare citations, and version 2 recognizes only marked ones
+refused: grund.toml:5: [reference] strict = false recognizes bare citations, and version 2 recognizes only marked ones
   repair: run grund fmt --marker --write, then set [reference] strict = true under version 1
 ```
 
-The repair is [§FS-fmt.2.2](FS-fmt.md#22-bare-to-marker-with---marker). It names the refused project's root after `--write`, spelled from the working directory and left out when it is the working directory ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)), so the run above is at the project root. Given a path, `fmt` narrows to it ([§FS-fmt.1](FS-fmt.md#1-inputs)), so the repair names the root rather than repeating `PATH`, and reaches every bare citation the project holds. Migrating `sub` or `sub/docs/ar` from `sub`'s parent therefore prints the same repair:
-
-```text
-  repair: run grund fmt --marker --write sub, then set [reference] strict = true under version 1
-```
+The repair is [§FS-fmt.2.2](FS-fmt.md#22-bare-to-marker-with---marker). Since `fmt` narrows to a path it is given ([§FS-fmt.1](FS-fmt.md#1-inputs)), the repair names the refused project's root, not `PATH`, so it reaches every bare citation the project holds; [§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory) spells that root.
 
 #### 3.1.3 An `include` entry that does not exist
 
-Version 2 puts a folder and a file under different keys, so migration reports a missing path instead of guessing its type. `grund init` writes `include = ["requirements.md", "docs", "e2e", "src"]`, so many repositories need this edit once. An entry that is itself a row's home is not refused, because that row already says whether it is a file or a folder.
+Version 2 puts a folder and a file under different keys, so a missing path is refused rather than guessed. An entry that is a row's home is not, since the row already says which it is.
 
 ```text
-refused: grund.toml:12: [scan] include names `src`, which does not exist, and version 2 must know whether it is a folder or a file
+refused: grund.toml:14: [scan] include names `src`, which does not exist, and version 2 must know whether it is a folder or a file
   repair: create src, or remove it from include; grund check under version 1 shows the effect
 ```
 
-A file that omits `[scan] include` reads that same default list, and a missing default entry is refused too, never dropped: a `src` created later would be scanned under version 1 and not under version 2. One block names every missing default entry, and its repair authors the list without them, unless the file is a block with `include_root = false` that migrates compactly ([§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false)):
+A file that omits `[scan] include` reads version 1's default list, and a missing default entry is refused too, never dropped, since a `src` created later would be scanned under version 1 and not under version 2. One block names every missing default entry, and its repair authors the list without them, except on a block with `include_root = false` that migrates compactly ([§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false)):
 
 ```text
-refused: grund.toml: [scan] include is not set, so version 1 reads its default, which names `e2e` and `src`, which do not exist, and version 2 must know whether each is a folder or a file
-  repair: add [scan] include = ["requirements.md", "docs"] under version 1; grund check shows its effect
+refused: grund.toml: [scan] include is not set, so version 1 reads its default, which names `requirements.md`, `e2e` and `src`, which do not exist, and version 2 must know whether each is a folder or a file
+  repair: add [scan] include = ["docs"] under version 1; grund check shows its effect
 ```
 
 #### 3.1.4 A path-shaped `[scan] exclude` entry
 
-The v1 reader refuses an entry containing `/`. Migration reads the file tolerantly, only to diagnose it ([§DF-scan-exclude-component-names.2.4](../decisions/functional/DF-scan-exclude-component-names.md#24-what-this-leaves-to-the-v2-migration)), and names each entry with the files on this tree the glob it resembles would stop reading. Removing the entry keeps what is scanned exactly as it was; a project that wants the glob adopts it in version 2 by hand.
+The v1 reader refuses an entry containing `/` ([§FS-config.3.5.16](FS-config.md#3516-an-exclude-entry-containing--is-refused)). Migration reads it tolerantly, only to diagnose it ([§DF-scan-exclude-component-names.2.4](../decisions/functional/DF-scan-exclude-component-names.md#24-what-this-leaves-to-the-v2-migration)), and refuses it with the files the glob it resembles would stop reading. Removing it keeps what is scanned as it is; a project that wants the glob adopts it in version 2 by hand.
 
 ```text
-refused: grund.toml:10: [scan] exclude entry `docs/drafts` contains `/`, so version 1 never matched it; as a version 2 glob it would stop reading 1 file
+refused: grund.toml:15: [scan] exclude entry `docs/drafts` contains `/`, so version 1 never matched it; as a version 2 glob it would stop reading 1 file
   would stop reading: docs/drafts/plan.md
   repair: remove `docs/drafts` from exclude under version 1, which keeps what is scanned exactly as it is
 ```
 
-##### 3.1.4.1 The files named are the ones version 1 reads
+A file is named and counted when the version 1 scan of this tree reads it ([§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads)) and the entry, read alone as one version 2 `[schema.sources] exclude` glob ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)), would stop it from the file's scan root: the deepest place version 1's homes and `include` entries become ([§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default)), and otherwise the config root. A scan root is read even where the entry names it ([§FS-config-v2.schema.sources.exclude.roots](FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters)), so an entry naming a place stops nothing there, while one below it, such as `docs/fs/*` under a home `docs/fs`, stops what lies below. Paths are compared and printed lexically, `.` and `..` resolved and symbolic links not, while the glob keeps its authored spelling. With no file named the refusal stands, counting `0 files` without the `would stop reading:` line, as it does for an entry that stops nothing as a glob: a `#` comment, a negation, which rescues nothing read alone, or a pattern the version 2 reader refuses, such as `docs/[a`, which fails nothing here.
 
-The files named and counted are the ones the version 1 scan of this tree reads ([§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads)) and the entry would stop, read as one version 2 `[schema.sources] exclude` glob ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)). Version 1 never matched the entry, so that scan is the one its removal keeps. A file it does not read has no reading for a glob to stop, so it is neither named nor counted. Such a file can lie outside `[scan] include` and every home, or have a hidden name or a hidden directory above it ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)). It can be a file the ignore files name while `respect_gitignore` holds ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)), or have an extension the list does not hold ([§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable)). An entry is not a scan root, so the same holds when it names one file. The refusal stands when no file is named, because version 2 would still read the entry as a glob. The count is then `0 files` and the `would stop reading:` line is absent:
-
-```text
-refused: grund.toml:16: [scan] exclude entry `docs/data.txt` contains `/`, so version 1 never matched it; as a version 2 glob it would stop reading 0 files
-  repair: remove `docs/data.txt` from exclude under version 1, which keeps what is scanned exactly as it is
-```
-
-The entry is read alone and as version 2 reads it, in the order the walk meets a path: down from the file's scan root, each directory before what lies under it and the file last. So `*` does not cross a `/`, and a directory the entry matches takes what lies below it: over `docs/a.md` and `docs/sub/b.md`, `docs/*.md` stops `docs/a.md` alone and `docs/*` stops both. A `/` only at the end anchors nothing, so `drafts/` stops `lib/drafts/x.md` with no `drafts` at the root. Glob syntax in a name on disk still reads as glob syntax, so `docs/[x]` stops `docs/x/b.md` and not `docs/[x]/a.md`. Nothing normalizes the entry's spelling, so `docs//x` and `./docs/x` stop nothing, and trailing spaces drop as they do from a `.gitignore` line, so `docs/x ` stops what `docs/x` stops.
-
-A file's scan root is the deepest place holding it among those version 1's homes and `[scan] include` entries become ([§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default)), and otherwise the config root. A scan root is read even where a pattern names it ([§FS-config-v2.schema.sources.exclude.roots](FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters)), so an entry naming a place stops nothing at that place: `docs/fs` over a home `docs/fs` counts `0 files`, as `docs/f*` does, while `docs/fs/*` stops what lies below it. An `include` entry inside a home becomes no place, so an entry naming it stops what it holds.
-
-For paths that stay inside the config root, spelling an include or home with `.` or `..` changes neither which scan root holds a read file nor which files the glob stops. These path comparisons and the printed config-relative names use lexical paths with those components resolved, without resolving symlinks; the authored glob keeps its spelling and semantics above. Over `docs/b.md` and `docs/x/a.md`, with FS home `docs` and exclude `docs/x`, include `docs/x/..` or `docs/../docs` therefore reports `would stop reading 1 file` and exactly `would stop reading: docs/x/a.md`. The same holds with include `other` and the FS home spelled `docs/x/..` or `docs/../docs`. A home spelled `docs/x/../x` or `docs/../docs/x` still protects `docs/x` itself as a scan root, so exclude `docs/x` counts `0 files` there.
-
-Some entries stop nothing as a glob: a `#` comment, a negation, because `!` only rescues what an earlier line matched and this entry is read alone, and a pattern the version 2 reader refuses ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)), such as `docs/[a`. Migration reads the version 1 file tolerantly, so such a pattern fails nothing here. Each counts `0 files`, and its refusal stands.
-
-On a block with `include_root = false`, nobody reads the block's own files, and the scan meant here and in [§FS-config-migrate.3.1.5.1](FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads) is the one [§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false) names: the block's settings read as a project's, which is the probe's reading.
-
-An entry that stops nothing, or whose glob can match only the path it spells, needs the scan only for a path on disk. That is an entry anchored by a leading or inner `/` and holding none of `*`, `?`, `[`, `{` or `\`, its path spelled without trailing spaces or a `/` at either end. A path that is not on disk is read by nobody ([§FS-check.4.10.2](FS-check.md#4102-what-counts)), so such an entry names nothing and counts `0 files` without the scan being asked. Any other entry can stop a file it does not spell, whatever stands at its spelling, so it always asks the scan: `docs/*.md` and `drafts/` are two. Where an entry asks the scan and the version 1 scan cannot walk this tree at all, nothing can say what it reads there. A `[workspace]` member glob that names no directory is one such tree, and `grund list` fails on it with exit `2`: with a path-shaped entry's error while the file holds one, and with that glob's error where it holds none. A migration that asks the scan what that entry reads fails with that glob's error and exit `2`, rather than print a count it could not take ([§FS-config-migrate.7](FS-config-migrate.md#7-outcomes)). Migration's tolerant read loads the config, and only a refusal that needs what the scan reads asks for the walk, so on that tree a run with no such refusal goes on as on any other. The same holds for the detail of [§FS-config-migrate.3.1.5.1](FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads): an inner home that is not on disk names nothing, and one that is fails the run where the scan cannot walk the tree. A path the scan cannot read inside a tree it walks is not read, so it is not named, and its error is not printed with the refusal.
+Only a refusal that needs what the scan reads walks the tree. An entry that stops nothing as a glob, or one that can match only the path it spells, anchored by a leading or inner `/`, holding none of `*`, `?`, `[`, `{` or `\`, and spelled without trailing spaces or a `/` at either end, asks the scan only when its spelled path is on disk, and otherwise counts `0 files`; every other entry asks. Where an entry asks and the version 1 scan cannot walk this tree at all, as under a `[workspace]` member glob that names no directory, the run fails with exit `2` and that glob's error, not the path-shaped entry's error an ordinary load of the file gives ([§FS-config-migrate.7](FS-config-migrate.md#7-outcomes)); a run with no such refusal goes on. A path the scan cannot read inside a tree it walks is not named, and its error is not printed.
 
 #### 3.1.5 Nested homes
 
-A v1 file inside two nested homes belongs to the complement; in version 2 the deepest place owns it ([§DF-v2-place-ownership](../decisions/functional/DF-v2-place-ownership.md#df-v2-place-ownership-in-v2-the-row-named-code-is-the-complement-and-a-file-belongs-to-its-listed-row-or-else-its-deepest-folder)). Migration refuses and names every file whose owner would change, even when no finding on this tree would differ.
+A v1 file inside two nested homes belongs to the complement, and in version 2 to the deepest place ([§DF-v2-place-ownership](../decisions/functional/DF-v2-place-ownership.md#df-v2-place-ownership-in-v2-the-row-named-code-is-the-complement-and-a-file-belongs-to-its-listed-row-or-else-its-deepest-folder)), so nesting is refused, naming every file whose owner would change, even when no finding on this tree would differ:
 
 ```text
-refused: grund.toml:15: [[kinds]] `AR` home `docs/arch` is inside `FS` home `docs`; version 1 gives the files in both to the complement, version 2 to the deepest place
+refused: grund.toml:16: [[kinds]] `AR` home `docs/arch` is inside `FS` home `docs`; version 1 gives the files in both to the complement, version 2 to the deepest place
   would change owner: docs/arch/store.md
   repair: un-nest the two homes under version 1
 ```
 
-##### 3.1.5.1 The files named are the ones version 1 reads
-
-The files named are the ones the version 1 scan of this tree reads in the inner home ([§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads)). A file it does not read has no owner to change, so it is not named. The home is a scan root, which outruns every rule about descent ([§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent)). A folder home is walked even when it is hidden, lies below a hidden directory or is named by the ignore files, and a `file` home the ignore files name is read. Below a folder home the scan's rules apply as usual. A file there is not named when it is hidden or below a hidden directory ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), named by the ignore files while `respect_gitignore` holds ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)), or of an extension the list does not hold. A `file` home whose name is hidden, or whose extension the list does not hold, is not read either, so it names nothing ([§FS-scan.scope.extensions.root](FS-scan.md#scopeextensionsroot-a-file-root-whose-extension-is-unlisted-is-not-read-and-check-says-so)). The refusal stands when no file is named, because the two homes still nest. The `would change owner:` line is then absent.
-
-The path comparisons and printed names follow the same lexical path rule as [§FS-config-migrate.3.1.4.1](FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads). With FS home `docs`, REQ home `docs/x`, and read files `docs/b.md` and `docs/x/a.md`, include `docs/x/..` or `docs/../docs` therefore reports exactly `would change owner: docs/x/a.md`: neither spelling puts `docs/b.md` in the inner home or leaves `docs/x/a.md` out of it.
+The files named are those the version 1 scan reads in the inner home ([§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads)), which is a scan root ([§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent)), compared, printed and asked of the scan as [§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry) says. With none named, as for an inner home not on disk, the refusal stands without the `would change owner:` line.
 
 #### 3.1.6 A renamed complement
 
 ```text
-refused: grund.toml:9: [[kinds]] `source` is a non-citable row with no home, which renames the complement; version 2 calls the complement `code`
+refused: grund.toml:18: [[kinds]] `source` is a non-citable row with no home, which renames the complement; version 2 calls the complement `code`
   repair: rename the row, and its [citations.source] table, to `code` under version 1
 ```
 
 #### 3.1.7 Settings this grund has no v2 spelling for yet
 
-A `value_chapter`, a lead budget counted in lines or bytes, and a non-default `[fmt.cross_refs]` each refuse with the line of the key:
+A `value_chapter`, a lead budget counted in lines or bytes, and a non-default `[fmt.cross_refs]` are refused at the key's line:
 
 ```text
-refused: grund.toml:11: [[kinds]] `FS` value_chapter would become a field, which adds a "Declaration shapes" section grund check compares
+refused: grund.toml:12: [[kinds]] `FS` value_chapter would become a field, which adds a "Declaration shapes" section grund check compares
   repair: removing value_chapter alone ends the comparison of every binding that quoted the chapter; to keep them compared, under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths
 refused: grund.toml:5: [reference] lead_size_warning counts lines, and version 2 counts a lead in words
   repair: restate it with unit = "words" under version 1
-refused: grund.toml:8: [fmt.cross_refs] enabled = false has no version 2 spelling in this grund
+refused: grund.toml:18: [fmt.cross_refs] enabled = false has no version 2 spelling in this grund
   repair: none yet; keep version 1, or set enabled = true under version 1 if fmt may write links
 ```
 
-The same `lead_size_warning` line reads `counts bytes` for a byte budget, and `anchor_format` other than `"github"` reads `` [fmt.cross_refs] anchor_format = "<value>" has no version 2 spelling in this grund ``. The `value_chapter` repair says what removal costs, for the reason [§FS-config-migrate.3.1.7.2](FS-config-migrate.md#3172-removing-a-value-key-alone-ends-the-comparison) gives.
-
-##### 3.1.7.1 A `value_chapter` on a fetched kind
-
-A row that sets `fetch` as well as `value_chapter` is refused at the same line, in words of its own:
+A byte budget reads `counts bytes`, and an `anchor_format` other than `"github"` reads `` [fmt.cross_refs] anchor_format = "<value>" has no version 2 spelling in this grund ``. A `value_chapter` on a row that sets `fetch` is refused in words of its own, since a fetched kind takes no fields ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)):
 
 ```text
 refused: grund.toml:9: [[kinds]] `AR` value_chapter has no version 2 spelling on a fetched kind, because a fetched kind takes no fields
   repair: none yet; keep version 1, or under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths
 ```
 
-The reason line of [§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet) stays for a row without `fetch`, and is true of it: version 2 loads that field. On this row it does not hold, so the row has words of its own.
-
-- **The obstacle is another one.** [§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts) gives a fetched kind no fields, so the key cannot become one and adds no "Declaration shapes" section. The refusal names what actually stops the row.
-- **Removing the key is not the way through**, for the reason [§FS-config-migrate.3.1.7.2](FS-config-migrate.md#3172-removing-a-value-key-alone-ends-the-comparison) gives of every such row. Here there is no field to keep the values compared either, so the repair offers the rewrite and version 1 alone.
-
-The rewrite holds on this row as [§FS-config-migrate.3.1.7.2](FS-config-migrate.md#3172-removing-a-value-key-alone-ends-the-comparison) says it holds on any.
-
-##### 3.1.7.2 Removing a value key alone ends the comparison
-
-Removed alone, a `value_chapter` or a `values = true` ends the value comparison for every binding that quoted its values, so a wrong literal goes from an error to exit `0`, whatever the row's `fetch`. The gates of [§FS-config-migrate.5](FS-config-migrate.md#5-equivalence-two-gates) cannot say so: they compare the tree with the key already gone, and truthfully report no difference. The repair is the only place left to say it, so the repair of a `value_chapter` row without `fetch` ([§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet)) and of every `values = true` row ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)) says what removal costs and names the rewrite that keeps the values compared. It weighs no generated section, because removal leaves that section out: the section comes with keeping the comparison under version 2, through a field for `value_chapter` and through `form = "value"` for `values = true`, which is what the reason line says.
-
-A root rewritten as a marked section ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) is judged the same under both versions, whatever the row's `fetch`: a wrong literal bound to it fails `grund check` before the migration and after it, with the key gone nothing here refuses the row, and `grund init` writes no "Declaration shapes" section for it. The repair speaks of the tree `grund check` and this command read; what `grund fetch` may write into a fetched row's home is [§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)'s to say.
+Removed alone, a `value_chapter` or a `values = true` ends the value comparison of every binding that quoted its values, whatever the row's `fetch`, so a wrong literal goes from an error to exit `0`, and the gates, comparing the tree with the key already gone, see no difference. A root rewritten as a marked section ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) is judged the same under both versions, whatever the row's `fetch`: a wrong literal bound to it fails `grund check` before the migration and after, and once the key is gone nothing here refuses the row. This holds of the tree `grund check` and migration read; what `grund fetch` writes into a fetched row's home is [§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)'s to say.
 
 #### 3.1.8 A string that closes early
 
-Version 1 reads a string from its opening quote to the last quote of its value or its element, every quote between kept, and keeps that reading for good ([§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)); version 2 ends a string at its first unescaped quote ([§FS-config-v2.reader.6](FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). Writing the value out would carry the same string into version 2 escaped, `"docs\" \"x"`, so a forgotten comma or a stray quote would become valid TOML that means what the typo meant. Migration refuses instead, at the key's line, naming the string as version 1 reads it, with the repair version 2's warning gave through grund 0.21.x ([§DF-v2-string-closes-at-its-quote.2.3](../decisions/functional/DF-v2-string-closes-at-its-quote.md#23-one-code-with-a-remedy-for-where-the-string-stands)), made under version 1: the first half alone for a scalar, and both halves for a list element.
+Version 1 reads a string from its opening quote to the last quote of its value or element, every quote between kept, for good ([§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)); version 2 ends it at its first unescaped quote ([§FS-config-v2.reader.6](FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). Migration refuses such a string at its key's line ([§DF-v2-string-closes-at-its-quote.2.5](../decisions/functional/DF-v2-string-closes-at-its-quote.md#25-version-1-keeps-its-reading-for-good)), one block per key, naming the first string in its value that closes early as version 1 reads it, with a repair under version 1; a list element's repair also offers a `,` between two strings:
 
 ```text
 refused: grund.toml:8: [[kinds]] folder reads the one string `docs" "x`, and version 2 ends a string at its first unescaped quote
   repair: end the string at its closing quote under version 1: write `\"` for a quote inside it; grund check shows its effect
-refused: grund.toml:12: [scan] include reads the one string `a"b`, and version 2 ends a string at its first unescaped quote
+refused: grund.toml:13: [scan] exclude reads the one string `a"b`, and version 2 ends a string at its first unescaped quote
   repair: end the string at its closing quote under version 1: write `\"` for a quote inside it, or a `,` between two strings; grund check shows its effect
 ```
 
-A key earns one block, naming the first string in its value that closes early, and the text in backticks is that string as written from its opening quote to the last quote, as version 1 reads it. The refusal stays after grund 0.22.0 refuses such a string in version 2 ([§FS-config-v2.reader.6](FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)): a version-1 file reads it for good, and only its migration meets the rule.
-
 #### 3.1.9 An empty string in `[scan] extensions`
 
-Version 1 reads each file with no extension through an empty string in `[scan] extensions`, for good ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)), and version 2 has no such entry ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)). Removing the entry is the repair, and it costs those reads, so this refusal says what the entry reads and what the repair costs.
+Version 1 reads each file with no extension through an empty string in `[scan] extensions`, for good ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)); version 2 has no such entry ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)). The refusal says what the entry reads and what removing it costs ([§DF-v1-empty-extension-reading.2.4](../decisions/functional/DF-v1-empty-extension-reading.md#24-migration-says-what-the-entry-reads-and-what-removing-it-costs)):
 
 ```text
 refused: grund.toml:4: [scan] extensions names ``, which is not a final extension version 2 can map; version 1 reads every file with no extension through it, and version 2 reads none
   repair: remove `` from extensions under version 1, and give any such file you want read an extension the list holds; grund check shows its effect
 ```
 
-The longer lines are for this entry alone, because their added clauses are true of no other. Every other entry a version 2 mapping cannot hold, `tar.gz` or `*.md` for example, keeps its two lines as they stand:
+Any other entry no version 2 mapping can hold, such as `tar.gz` or `*.md`, is refused without those clauses:
 
 ```text
 refused: grund.toml:4: [scan] extensions names `tar.gz`, which is not a final extension version 2 can map
   repair: remove `tar.gz` from extensions under version 1
 ```
 
-Under the entry, the files [§FS-config-migrate.3.1.4.1](FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads) and [§FS-config-migrate.3.1.5.1](FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads) name are still the ones version 1 reads. So they include each file with no extension that the scan reads through it ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)), `Makefile` for one, and leave out one it does not read, such as a hidden `.gitkeep`. Those details ask the scan itself, so a file whose extension is not UTF-8 is named exactly when the scan reads it. Under a list naming an extension spelled with U+FFFD it is not read, because the scan asks the path and not the printed name, so it is neither named nor counted.
-
 #### 3.1.10 A `fetch` that names no executable
 
-A version 1 row whose `fetch` names no executable loads for good ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable), [§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)), and version 2 refuses that value at load ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)). Writing the value out would carry the mistake across, and no command can know whether the author meant a program or no fetching at all. Migration refuses at the key's line, with the repair [§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable) prints, made under version 1:
+A version 1 `fetch` that names no executable loads for good ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable), [§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)), and version 2 refuses it at load ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)). Migration refuses it at the key's line with the repair [§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable) prints, made under version 1 ([§DF-fetch-names-an-executable.2.3](../decisions/functional/DF-fetch-names-an-executable.md#23-version-1-keeps-loading-the-key)), judging the string alone, so a whitespace-only value is refused whether or not a file of that name exists:
 
 ```text
 refused: grund.toml:6: [[kinds]] `AR` fetch names no executable
   repair: under version 1, name the program, or if this kind is not fetched remove the key and any `resolve`, and its missing IDs are then errors; grund check shows its effect
 ```
 
-The test is of the string alone ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)), so a whitespace-only value is refused whether or not a file of that name exists. A value with any other character is mapped as written.
-
-A row that also sets `value_chapter` earns two blocks, this one at the `fetch` line and that of [§FS-config-migrate.3.1.7.1](FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind) at the `value_chapter` line, one each, ordered by line as every refusal of [§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair) is. A person who removes the `fetch` key under the first block meets the words of [§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet) on the next run, because the row no longer sets `fetch`.
-
 ### 3.2 Notices
 
-Some settings are written with a notice rather than refused, because version 1 gave them no force ([§DISC-core-concerns.7.5](../discussions/proposals/2026-09-30-core-concerns.md#75-what-has-no-v2-spelling-and-how-migrate-reports-it)):
+Settings version 1 gave no force are written with a notice rather than refused ([§DISC-core-concerns.7.5](../discussions/proposals/2026-09-30-core-concerns.md#75-what-has-no-v2-spelling-and-how-migrate-reports-it)): a positive `[citations] default` is written as `may` ([§FS-config-v2.rules.citations.default](FS-config-v2.md#rulescitationsdefault-a-default-may-forbid-never-oblige)); `[output] format` and `relative_paths` are dropped, naming the flag that keeps a value other than the default; `[output] color` is dropped, since nothing reads it; and on a block with `include_root = false` each other key [§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false) lists as without force is dropped, a compact block adding one line with no line number, last, for the defaults it does not write.
 
-- A positive `[citations] default` creates no obligation in v1, and is written as `may` ([§FS-config-v2.rules.citations.default](FS-config-v2.md#rulescitationsdefault-a-default-may-forbid-never-oblige)): `` changed: grund.toml:20: [citations.FS] default = "must": version 1 gives a positive default no force, so it is written as may ``.
-- `[output] format` and `relative_paths` are dropped. At their defaults: `` dropped: grund.toml:22: [output] format = "text": the default of --format, nothing to add `` and `` dropped: grund.toml:24: [output] relative_paths = true: the default of --path-base, nothing to add ``. Otherwise the notice names the flag that keeps the behaviour: `` dropped: grund.toml:22: [output] format = "json": pass --format json to keep it `` and `` dropped: grund.toml:24: [output] relative_paths = false: pass --path-base=invocation to keep it ``.
-- `color` is dropped: `` dropped: grund.toml:23: [output] color: nothing reads it ``.
-- On a block with `include_root = false`, the keys [§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false) lists as without force are dropped, each with one line: `` dropped: grund.toml:2: [id] named_sections: include_root = false, so no project scans this block's own files ``. A block that migrates compactly also gets one line with no line number, after the others, for the defaults it does not write: `` dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults ``.
+```text
+changed: grund.toml:20: [citations.FS] default = "must": version 1 gives a positive default no force, so it is written as may
+dropped: grund.toml:22: [output] format = "text": the default of --format, nothing to add
+dropped: grund.toml:18: [output] format = "json": pass --format json to keep it
+dropped: grund.toml:24: [output] relative_paths = true: the default of --path-base, nothing to add
+dropped: grund.toml:24: [output] relative_paths = false: pass --path-base=invocation to keep it
+dropped: grund.toml:23: [output] color: nothing reads it
+dropped: grund.toml:5: [id] named_sections: include_root = false, so no project scans this block's own files
+dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
+```
 
 ### 3.3 Defaults are written out
 
-Every v1 default that differs from version 2's is written out explicitly, so the file keeps v1's meaning after later edits ([§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)): the slug pattern, the ID format, the default exclusions as globs, `declarations = "any-comment"`, the explicit language list with its definitions, a suggested note length as the `may` rung of `[schema.notes.lines]`, and `[presentation] rules = "root"` ([§DF-scoped-guidance](../decisions/functional/DF-scoped-guidance.md#df-scoped-guidance-a-version-2-rows-guidance-is-written-above-its-places-with-a-root-pointer-for-agents-that-do-not-load-nested-files)). A file with no `[[kinds]]` gets every built-in row written out. A block with `include_root = false` that migrates compactly writes none of them ([§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false)). Each one is a `written:` line of the complete report, in the candidate's order; compact success omits that narration, never the defaults in the candidate, and a refused run lists the defaults only beside its candidate on stdout ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)).
+Every v1 default that differs from version 2's is written out ([§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)): the slug pattern, the ID format, the default exclusions as globs, `declarations = "any-comment"`, the explicit language list with its definitions, a suggested note length as the `may` rung of `[schema.notes.lines]`, and `[presentation] rules = "root"` ([§DF-scoped-guidance](../decisions/functional/DF-scoped-guidance.md#df-scoped-guidance-a-version-2-rows-guidance-is-written-above-its-places-with-a-root-pointer-for-agents-that-do-not-load-nested-files)); a file with no `[[kinds]]` also gets every built-in row. Each is a `written:` line of the complete report, in the candidate's order. A compact block writes none ([§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false)).
 
 ## 4. Comments
 
-The owner's ruling on agent-grounds/grund#461: a comment attached to a key that maps one-to-one moves with that key, a leading header block stays at the top of the file, and every other comment is listed with its line.
+A comment follows a key only where it has one key to follow, and the header block stays at the top; every other comment is named, never moved by guess ([§DF-config-migrate.2.6](../decisions/functional/DF-config-migrate.md#26-no-text-rewrite)).
 
 ### 4.1 Attached comments move with a one-to-one key
 
-A key maps one-to-one when exactly one v2 key or header comes from it: `[[kinds]]` becomes `[schema.kinds.<NAME>]`, `[citations.<KIND>]` becomes `[rules.citations.<KIND>]`, `[id] format` becomes `id_format`, a row's `title` becomes `[presentation.kinds.<NAME>] title`, and `exclude` keeps its name, as does every key the mapping table moves without splitting. Its attached comment is written directly above the v2 key or header it became, and a trailing comment stays on that line. `include`, `extensions`, `comment_prefixes` and the `[scan]`, `[reference]` and `[id]` headers split or merge, so their comments are listed.
+A key maps one-to-one when exactly one v2 key or header comes from it: `[[kinds]]` to `[schema.kinds.<NAME>]`, `[citations.<KIND>]` to `[rules.citations.<KIND>]`, `[id] format` to `id_format`, a row's `title` to `[presentation.kinds.<NAME>] title`, `exclude` to `exclude`, and every key the mapping table moves without splitting. Its attached comment is written directly above the v2 key or header it became, and a trailing comment stays on that line. `include`, `extensions`, `comment_prefixes` and the `[scan]`, `[reference]` and `[id]` headers split or merge, so their comments are listed.
 
 #### 4.1.1 Check carried comments when the value vocabulary changes
 
-When an attached comment is carried onto a setting whose value vocabulary is
-translated, the stderr report warns that the value vocabulary changed and asks
-the reader to check the carried comment. It names the original config path,
-the v1 key's line and key, and the destination v2 key. This applies to comments
-directly above a key and to trailing comments, in preview and with `--write`,
-with or without `--drop-comments`. It does not judge the comment's prose: even
-a comment that does not list values needs the same warning.
-
-Vocabulary translation means changing the setting's accepted terms, type or
-value language, rather than merely renaming its key or changing TOML layout.
-The carryable cases are:
+A comment carried onto a setting whose value vocabulary is translated gets a warning to check it, naming the original config path, the v1 key's line and key, and the destination v2 key: a comment above the key or trailing it, in a preview and with `--write`, with or without `--drop-comments`, whatever its prose says. A vocabulary is translated where the accepted terms, type or value language change, not where only the key's name or TOML layout does:
 
 - `[reference] inline_style`: style names become `[schema.notes.text] must`'s boolean.
 - `[id] section_heading_levels`: depth modes become `[schema] heading_depth`'s strengths.
@@ -295,18 +255,7 @@ The carryable cases are:
 - `[reference] lead_size_warning`: the inline table with a `max` and `unit`
   becomes `[schema.leads.words] warn`'s integer word count.
 
-Classify the mapping's vocabulary, not raw byte inequality: a depth mode of
-`warn` still warrants the warning, since other modes in its old vocabulary are
-translated. Renames such as `anchor_format` to `anchors`, scalar paths wrapped
-in `files` or `folders` lists, and the config version marker do not warrant it.
-Citation defaults normalized to `may` keep their strength vocabulary and their
-existing changed notice ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)).
-
-Warn only when a comment is actually carried to the destination. A setting
-without a carried comment needs no such warning. The warning changes neither
-candidate bytes nor successful exits, gates, refusal or drop policy: the
-comment remains carried, including with `--drop-comments`, and is not added
-to the comments with no single key to follow ([§FS-config-migrate.4.4](FS-config-migrate.md#44-listed-comments-and---drop-comments)).
+The mapping's vocabulary decides, not byte inequality: a depth mode of `warn` still warns. Renames such as `anchor_format` to `anchors`, scalar paths wrapped in `files` or `folders` lists, and the config version marker do not warn, and a citation default normalized to `may` keeps its strength vocabulary and its `changed:` notice ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)). A warned comment stays carried, `--drop-comments` included, and is never listed.
 
 ### 4.2 The header block stays at the top
 
@@ -314,84 +263,58 @@ The header block is written as the first lines of the candidate, above `grund_co
 
 ### 4.3 Everything else is listed
 
-A comment inside a multi-line value, a comment standing on its own, and a comment attached to a key that is dropped, split or merged are listed ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)). The lines come from the v1 reader's own line pass, which records each key's line and its attached comments; migration does not parse the file a second time.
-
-Listing guidance follows [§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report), including for split headers and comments whose setting has no destination. It does not change which comments are carried under [§FS-config-migrate.4.1](FS-config-migrate.md#41-attached-comments-move-with-a-one-to-one-key).
-
-Migration explicitly requests these owned raw-line, key, value, header and
-comment records during that same read. An ordinary version-1 config load does
-not construct or retain them. This holds for every caller of the ordinary
-reader, including discovery, workspace members, `config show`, `config validate`
-and pending config text. It serves [§GOAL-fast-feedback.1](../goals.md#1-performance-targets): commands that do not
-migrate must not pay for migration's record of the file.
-
-Choosing whether to capture does not change the lowered project, accepted
-spellings, first error, error location or rendered output. Migration alone
-keeps its tolerant reading of path-shaped exclusions ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry));
-ordinary loads still refuse them ([§FS-config.3.5.16](FS-config.md#3516-an-exclude-entry-containing--is-refused)).
+A comment inside a multi-line value, a comment standing on its own, and a comment attached to a key that is dropped, split or merged are listed, with the guidance of [§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report).
 
 ### 4.4 Listed comments, and `--drop-comments`
 
-`--write` refuses while any listed comment would be lost: exit `1`, and the file is not written. `--drop-comments` lets it go ahead, drops exactly the listed comments, and names them again after the write ([§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write)). It is the only way migration loses a comment ([§REQ-no-data-loss.4](../requirements/REQ-no-data-loss.md#4-one-migration-may-replace-the-config)).
-
-The preservation advice in [§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report) describes a manual recovery after that explicit consent and a successful write. It does not carry a listed comment automatically, authorize its loss, or relax any other write condition.
+`--write` refuses while any listed comment would be lost: exit `1`, nothing written. `--drop-comments` lets it go ahead, drops exactly the listed comments, and names them after the write ([§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write)). It is the only way migration loses a comment ([§REQ-no-data-loss.4](../requirements/REQ-no-data-loss.md#4-one-migration-may-replace-the-config)).
 
 ## 5. Equivalence: two gates
 
-The mapping table "is what a migration audits against, and tests on the records hold it, not a comparison of one tree's reports" ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). So the records come first and the report on this tree second. Neither gate is skipped and neither is relaxed by a flag.
+A write must pass both gates in the same run, the records first and the report on this tree second ([§DF-config-migrate.2.2](../decisions/functional/DF-config-migrate.md#22-two-gates-records-first)). No flag skips or relaxes either.
 
 ### 5.1 The records gate
 
-The candidate is loaded through the v2 reader, the path a file on disk goes through, and its project records are compared with the v1 file's by one comparison that ignores only the following, or, for a block with `include_root = false`, what [§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false) says it ignores:
+The candidate is loaded through the v2 reader, the path a file on disk goes through, and its project records are compared with the v1 file's, ignoring only the following, or for a block with `include_root = false` what [§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false) says:
 
 - the version, and where the config was found;
-- the dropped `[output]` preferences ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices));
-- the source model, compared suffix by suffix: each suffix's reader class, comment prefixes, docstring reading, the multi-line string and quote reading ([§FS-languages.multi-line-string.suffix](FS-languages.md#multi-line-stringsuffix-which-row-and-which-quote-reading-a-file-reads)), note-measurement rule and declaration eligibility, rather than the language names that carry them. The multi-line string and quote reading is the one a file of that suffix reads, not the suffix that names it, so `.cc` read under version 1 and `.cc` mapped to the built-in `cpp` compare equal, while `.h` read under version 1 and `.h` mapped to the built-in `c` do not. A suffix that differs in any of these is a difference on the `sources` line ([§FS-config-migrate.5.4](FS-config-migrate.md#54-the-result-and-a-difference));
+- the dropped `[output]` preferences;
+- the source model, compared suffix by suffix: each suffix's reader class, comment prefixes, docstring reading, multi-line string and quote reading as a file of that suffix gets it ([§FS-languages.multi-line-string.suffix](FS-languages.md#multi-line-stringsuffix-which-row-and-which-quote-reading-a-file-reads)), note-measurement rule and declaration eligibility, rather than the language names that carry them, so `.cc` read under version 1 and `.cc` mapped to the built-in `cpp` compare equal, while `.h` read under version 1 and `.h` mapped to the built-in `c` do not ([§DF-defined-language-string-forms.2.2](../decisions/functional/DF-defined-language-string-forms.md#22-the-records-gate-compares-the-reading)); a suffix that differs shows on the `sources` line;
 - grounding, compared as the effective pair each row resolves to, rather than as v1's inherited keys or v2's whole ladders;
 - `include`, compared as the set of derived scan roots;
-- the nesting rule, when no two v1 homes nest, because the rule then decides nothing;
+- the nesting rule, when no two v1 homes nest;
 - a positive citation default, compared as `may`.
 
 ### 5.2 The report gate
 
-`grund check --suggestions` runs twice in the same process, on the same root, members and invocation: once with the file as read, once with the candidate. It compares every finding's code, channel, path, line, column and message, the run warnings, the projects checked, and the exit status. Each finding is one line in its run, as many times as `check` would print it: a run warning `check` prints once is compared once, however many places the run carries it, so a candidate that adds one finding adds one `+ ` line. It ignores only:
+`grund check --suggestions` runs twice in one process, on the same root, members and invocation: with the file as read and with the candidate. It compares each finding's code, channel, path, line, column and message, the run warnings, the projects checked and the exit status, each line as many times as `check` would print it, so a run warning printed once is compared once. It ignores only:
 
-- a finding located in the config itself, whose line is mapped through the key map before comparing, as is every `<config>:<line>` its message names; a finding with no mapped line is a difference ([§FS-config-migrate.5.2.1](FS-config-migrate.md#521-a-candidate-line-with-no-version-1-line));
+- the config's own lines: a finding located in the config, and every `<config>:<line>` its message names, is mapped through the key map first;
 - the config-table names inside messages, such as `[scan] exclude` against `[schema.sources] exclude`: both runs are spelled as v1;
-- the `config-version-1` caution ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)), which the run on the file as read carries and the candidate's run never does, so it is dropped from both before comparing;
-- an `agents-init` finding about a managed block's text outside the block version and the five generated sections: [§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance) passes that difference on purpose, and the candidate's run reports it because `check` compares the whole block ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). Kept, it would refuse every version-1 migration, whose citation scheme paragraph always changes.
-- an `agents-init` finding that the citation directions section is stale, where [§FS-config-migrate.5.3.1](FS-config-migrate.md#531-the-grounding-sentences-setting-is-compared-in-one-grammar) found that section equal once the grounding sentence's setting is spelled in one grammar: the guidance gate passes that difference on purpose, and the candidate's run reports it because the tree's block still spells the setting in version 1 and `check` compares bytes ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). Only that section of the root block is dropped, and only then; any other finding on a generated section is still compared, a scoped or nested block's included, which the root-only guidance gate never renders.
+- the `config-version-1` caution ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)), dropped from both runs, since only the first carries it;
+- an `agents-init` finding about a managed block's text outside the block version and the five generated sections, which [§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance) passes ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison), [§DF-check-compares-the-whole-block.2.4](../decisions/functional/DF-check-compares-the-whole-block.md#24-migrate-refuses-what-it-refused-before));
+- an `agents-init` finding that the root block's citation directions section is stale, where [§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance) found that section equal once the grounding sentence's setting is spelled in one grammar.
 
-#### 5.2.1 A candidate line with no version-1 line
-
-The key map holds the lines of the keys and headers the version-1 file authored. A candidate line it does not hold, such as a default written out ([§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out)) or a built-in row a file with no `[[kinds]]` gets, has no version-1 line to move to. The comparison prints such a line as the candidate's own line, the one `grund check` names once the candidate is written, marked as the candidate's: `the candidate's <config>:<line>`. The same spelling serves both places a config line appears, inside a message and as the location of a finding in the config, where the column follows it as it follows any line: `the candidate's <config>:<line>:<column>`. A finding in the config with no line keeps `-`, because there is no line to move.
-
-The mark is what keeps it a difference. It reads as no version-1 line and compares equal to none, even where version 1's run names the same number for the same finding. Nothing else is printed in its place: a line that neither file has, such as an unset sentinel, is never printed.
-
-A version-1 file with no `[[kinds]]` table, whose `src/A.java` cites the undeclared `FS-typo`, previews as:
-
-```text
-differs: grund check --suggestions on this tree
-- error error dangling src/A.java:1:4 unknown reference FS-typo
-+ error error dangling src/A.java:1:4 unknown reference FS-typo; no place of kind FS exists: docs/functional-spec (the candidate's grund.toml:159)
-```
-
-Line 159 is the `folders` line of the built-in `FS` row the candidate writes out ([§FS-check.3.1.4](FS-check.md#314-a-kind-none-of-whose-places-exists)), which version 1 never spelled.
+Every other finding on a generated section is compared, a scoped or nested block's included, which the root-only guidance gate never renders. A candidate line the key map does not hold, such as a default written out ([§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out)) or a built-in row, has no version-1 line: it prints as the candidate's own, the line `grund check` names once the candidate is written, marked `the candidate's <config>:<line>`, or `the candidate's <config>:<line>:<column>` as a finding's location. The mark equals no version-1 line, even one with the same number, so such a finding is a difference. A config finding with no line keeps `-`.
 
 ### 5.3 Guidance
 
-Migration also renders in memory what `grund init` would write into each `AGENTS.md`, for the file as read and for the candidate, whether or not an `AGENTS.md` exists yet. A difference in the block's version or in one of its five generated sections — `### Citation directions`, `### Clickable citations`, `### Declaration shapes`, `### Chapter rules` and `### Scoped guidance` — is a refusal, because those carry the rules the tree is held to, and a migration must not move them. Every other difference passes: the rest of the block describes the config, the citation scheme, the project map and the declaration forms among it, so it is expected to change under a migration, and `check` reports the block stale until `grund init` runs ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). One piece of config grammar inside a generated section is compared in one grammar rather than as bytes: the setting the Citation directions grounding sentence names ([§FS-config-migrate.5.3.1](FS-config-migrate.md#531-the-grounding-sentences-setting-is-compared-in-one-grammar)). A value row is the common case: version 2 gives it a declaration shape, which adds a section version 1 never wrote. For a `TERM` row whose `file` is `terms.md`:
+Migration renders in memory what `grund init` would write into each `AGENTS.md`, for the file as read and for the candidate, whether or not an `AGENTS.md` exists. A difference in the block's version or in one of its five generated sections, `### Citation directions`, `### Clickable citations`, `### Declaration shapes`, `### Chapter rules` and `### Scoped guidance`, is a refusal, because those carry the rules the tree is held to and a migration must not move them. Every other difference passes ([§DF-check-compares-the-whole-block.2.4](../decisions/functional/DF-check-compares-the-whole-block.md#24-migrate-refuses-what-it-refused-before)), and `check` reports the block stale until `grund init` runs ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)).
+
+In a grounding sentence for a home whose row grounds nothing ([§FS-init.2.3.5.2.2](FS-init.md#23522-a-home-whose-row-grounds-nothing-says-so)), the comparison spells the named setting in the candidate's grammar on both sides, though `grund init` and `grund check` spell it in the live config's version. What the sentence says is still compared: a row that grounds on one side only, or a different row or home, is refused with `repair: none`.
+
+A value row is the common refusal, since version 2 gives it a declaration shape. For a `TERM` row whose `file` is `terms.md`:
 
 ```text
-refused: grund.toml:11: [[kinds]] `TERM` values = true adds a "Declaration shapes" section to the AGENTS.md block in version 2, which grund check compares
+refused: grund.toml:16: [[kinds]] `TERM` values = true adds a "Declaration shapes" section to the AGENTS.md block in version 2, which grund check compares
   would write: - **TERM**
   would write:   - `# <ID>: <title>` with only `## 1. <number or word>`, `## 2. …` under it in `terms.md`: part 1 is `§<ID>.1`; a unit is a part of its own
   repair: removing values alone ends the comparison of every binding that quoted its values; to keep them compared, under version 1 rewrite its roots as marked sections, remove values and cite the new paths
 ```
 
-The repair says what removal costs, for the reason [§FS-config-migrate.3.1.7.2](FS-config-migrate.md#3172-removing-a-value-key-alone-ends-the-comparison) gives, on a row that sets `fetch` as on one that does not. The reason line holds on both rows too. `values = true` becomes `form = "value"` whatever the row's `fetch`, and that a fetched kind takes no fields ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)) does not stop it: a form is not a field, and `field <number>` is how [§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node) prints a value kind's numbered components. So version 2 writes this section for a fetched value kind as for any other, and `grund check` compares it. Its bullet names the file `grund fetch` writes rather than a form to write by hand ([§FS-schema.4.1.4](FS-schema.md#414-a-value-kinds-line-names-the-file-its-values-take)): ``  would write:   - written by `grund fetch` into `terms.md`: part 1 is `§<ID>.1` ``.
+A fetched value row is refused the same way, with the same repair, whose cost [§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet) states, because `form = "value"` is not a field ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)); its bullet names the file `grund fetch` writes ([§FS-schema.4.1.4](FS-schema.md#414-a-value-kinds-line-names-the-file-its-values-take)).
 
-Any other compared difference is one block per section, its lines prefixed `- ` for version 1 and `+ ` for the candidate, or a version alone when no section differs:
+Any other compared difference is one block per differing section, its lines prefixed `- ` for version 1 and `+ ` for the candidate, or the versions alone when no section differs:
 
 ```text
 refused: grund.toml: the AGENTS.md block grund init writes would change its citation directions section, which grund check compares
@@ -401,31 +324,11 @@ refused: grund.toml: the AGENTS.md block grund init writes would go from v19 to 
   repair: none keeps the generated guidance; keep version 1 until that block may change
 ```
 
-The Project map row the complement gains once its places are listed is a `note:` line rather than a refusal, because the Project map is not one of the generated sections ([§FS-init.2.3.7](FS-init.md#237-the-block-version)): `` note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then ``.
-
-#### 5.3.1 The grounding sentence's setting is compared in one grammar
-
-The Citation directions section renders one piece of config grammar: the setting the second sentence of a home whose row grounds nothing names, spelled in the live config's version ([§FS-init.2.3.5](FS-init.md#235-citation-directions)). Compared as bytes, that sentence differs between version 1 and the candidate on every such row however the rule stands, so the comparison renders the setting in the candidate's grammar on both sides, from the one place `grund init` spells it, and compares the section then. `grund init` and `grund check` still spell it in the live config's version; only the comparison sets the spelling aside.
-
-What the sentence says is still compared. A row that grounds on one side and not on the other changes the bullet's subject and whether the sentence is there at all, and a different row or home changes the subject and the row the setting names; each is a difference, refused as the rest of 5.3 refuses it, with `repair: none`. Setting the spelling aside moves no rule: on both sides a file there that cites anything is held to the row's rules, and one that cites nothing is not checked.
-
-So a version-1 config whose non-citable `e2e` row carries a rule and grounds nothing migrates with both gates equal:
-
-```toml
-[[kinds]]
-kind = "e2e"
-folder = "tests/e2e"
-citable = false
-
-[citations.e2e]
-must = ["FS"]
-```
-
-The block version 1 renders ends its bullet `` `require_grounding = true` on its `[[kinds]]` row makes it a finding. ``, the candidate's `` `[rules.citations.e2e.grounding] must = "file"` makes it a finding. ``, and the comparison reads both as the second. A single-file home, whose sentence opens `If it cites nothing, it is not checked;`, compares the same way, at whatever strength its rules carry. A several-file home is a version-2 row, so no version-1 config renders one, and the homeless kind's bullet names no setting.
+The Project map row the complement gains once its places are listed is not a generated section ([§FS-init.2.3.7.2](FS-init.md#2372-what-check-compares)), so it is a note, not a refusal: `` note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then ``.
 
 ### 5.4 The result, and a difference
 
-When both gates pass the complete report says `compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after`. Compact success omits that narration, but runs the same gates. A difference always prints `differs: the records` or `differs: grund check --suggestions on this tree`, then each differing line prefixed `- ` for version 1 and `+ ` for the candidate, and refuses with exit `1` and empty stdout, with or without `--full`. A config line on a `+ ` line is the version-1 line its key came from, or the candidate's own line marked as the candidate's where there is none ([§FS-config-migrate.5.2.1](FS-config-migrate.md#521-a-candidate-line-with-no-version-1-line)).
+When both gates pass, the complete report says `compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after`; compact success leaves the line out but runs the same gates. A difference prints `differs: the records` or `differs: grund check --suggestions on this tree`, then each differing line prefixed `- ` for version 1 and `+ ` for the candidate, config lines mapped as in [§FS-config-migrate.5.2](FS-config-migrate.md#52-the-report-gate), and refuses with exit `1` and empty stdout, with or without `--full`.
 
 ## 6. The write
 
@@ -435,119 +338,94 @@ It writes only with `--write`, and only after both gates pass in that same run a
 
 ### 6.2 Atomic
 
-It writes a temporary file in the config's own directory, keeps the original's permissions, syncs it to disk, and renames it over the original. Any failure leaves the original byte for byte, and no temporary file behind. A failure is exit `2`: `` error: <config>: could not write the migrated config (<reason>); the original is unchanged ``.
+It writes a temporary file in the config's own directory with the original's permissions, syncs it to disk, and renames it over the original. A failure leaves the original byte for byte and no temporary file, and exits `2`: `` error: <config>: could not write the migrated config (<reason>); the original is unchanged ``.
 
 ### 6.3 A concurrent edit
 
-Just before the rename it reads the config's bytes again. If they changed since the read that built the candidate it removes the temporary file and exits `2`: `` error: <config> changed while it was being migrated; the original is unchanged, run the migration again ``.
+Just before the rename it reads the config again. If its bytes changed since the read that built the candidate, it removes the temporary file and exits `2`: `` error: <config> changed while it was being migrated; the original is unchanged, run the migration again ``.
 
 ### 6.4 A symbolic link, and nothing else written
 
-A config that is a symbolic link is refused, exit `1` and empty stdout, because renaming over it would replace the link with a regular file:
+A config that is a symbolic link is refused:
 
 ```text
 refused: grund.toml is a symbolic link, and replacing it would replace the link with a regular file
   repair: replace the link with the file it points to, or migrate that file where it is the config
 ```
 
-Nothing but the config is ever written: no `AGENTS.md`, no lock, no backup.
+Nothing but the config is written: no `AGENTS.md`, no lock, no backup ([§DF-config-migrate.2.4](../decisions/functional/DF-config-migrate.md#24-no-backup-file)).
 
 ### 6.5 What it says after the write
 
-After an actual successful write without `--full`, stderr contains only these items, in order, omitting inapplicable items:
+After a successful write without `--full`, stderr holds only these, in order, each where it applies:
 
-1. The `wrote` outcome below.
-2. The exact dropped-comment ranges below, once, in original file order.
-3. Every notice of [§FS-config-migrate.3.2](FS-config-migrate.md#32-notices) and every carried-comment warning promised by [§FS-config-migrate.4.1.1](FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes), in file order. That warning still appears in compact output.
-4. Workspace member commands ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)).
-5. The distinct Project map note ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)), when applicable.
-6. The undo and re-preview advice below, spelled from the working directory ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)).
-7. The qualified managed-instructions refresh reminder below, exactly once and last.
+1. The `wrote` line.
+2. The dropped-comment ranges, once, in file order.
+3. Every notice of [§FS-config-migrate.3.2](FS-config-migrate.md#32-notices) and every carried-comment warning of [§FS-config-migrate.4.1.1](FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes), in file order.
+4. The member lines ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)).
+5. The Project map note ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)).
+6. The undo and the re-preview, spelled from the working directory ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)).
+7. The reminder to refresh managed instructions, exactly once and last.
 
-Compact success omits the heading, key mappings, defaults, passing-gate narration and pre-write comment listing. With `--full`, the complete report of [§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report) precedes the same outcome, dropped ranges, undo/re-preview advice and final reminder; notices, warnings, member commands and the Project map note stay in their complete-report positions and are not repeated.
+With `--full`, the complete report of [§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report) comes first, then the same `wrote` line, dropped ranges, undo, re-preview and reminder; notices, warnings, member lines and the Project map note keep their complete-report places and are not repeated.
 
 ```text
 wrote grund.toml: version 1 (24 lines) replaced by version 2
-dropped the comments at grund.toml:6-7 and grund.toml:12 (version 1 lines)
+dropped the comments at grund.toml:6-7, grund.toml:12 and grund.toml:22-23 (version 1 lines)
 to get version 1 back: it is in version control, e.g. git restore grund.toml
 to see this candidate again: restore version 1 and run grund config migrate --to 2 --drop-comments
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
 ```
 
-That run is at the project root, with no `PATH`. The undo and the re-preview are spelled from the directory the run was in ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)). So at a workspace root, the command the root's `member:` line prints for `apps/api` ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)), run there with `--write`, reports:
-
-```text
-wrote grund.toml: version 1 (13 lines) replaced by version 2
-note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then
-to get version 1 back: it is in version control, e.g. git restore apps/api/grund.toml
-to see this candidate again: restore version 1 and run grund config migrate --to 2 apps/api
-note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
-```
-
-The `dropped the comments` line appears only when `--drop-comments` dropped any, and names every range in file order, joined by `, ` and a final ` and `.
-
-The re-preview is the command that shows the written candidate again, so it ends in `--drop-comments` exactly when the `dropped the comments` line appears: a preview that only listed comments refuse withholds its candidate without that flag ([§FS-config-migrate.1.3](FS-config-migrate.md#13-the-other-flags)), and run without it after such a write it would show a refusal instead. `--full` and `--path-base` never follow, and a write given `--drop-comments` that dropped nothing keeps the plain line, whose preview already shows the candidate.
-
-The final `note:` line appears on stderr after every successful version-1-to-version-2 write, including when no `AGENTS.md` exists. It is a qualified reminder about existing managed instructions, not a claim that a file was inspected or found stale. Run `grund init` in the migrated project to refresh those instructions; migration itself still writes only the config ([§FS-config-migrate.6.4](FS-config-migrate.md#64-a-symbolic-link-and-nothing-else-written)). Migration neither inspects managed blocks for drift nor runs init. The reminder is absent from previews, refused or failed writes, and already-version-2 runs. It does not change exits or replace the distinct Project map note ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)).
+The `dropped the comments` line appears only when `--drop-comments` dropped any, naming every range in file order, joined by `, ` and a final ` and `. The re-preview ends in `--drop-comments` exactly when that line appears, and `--full` and `--path-base` never follow it. The reminder follows every successful write, whether or not an `AGENTS.md` exists, and no other run: migration neither inspects managed blocks for drift nor runs `grund init`.
 
 #### 6.5.1 The commands a migrate report prints are spelled from the working directory
 
-A migrate report prints four commands for the user to paste, and none of them is a report path ([§FS-errors.terms](FS-errors.md#terms-terms)): the undo and the re-preview after a write, the `[reference] strict = false` refusal's repair ([§FS-config-migrate.3.1.2](FS-config-migrate.md#312-bare-citations)), and the command on a `member:` line ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)). With a working directory, each is spelled for the directory `grund config migrate` was run in, whatever the report base, so pasted there it acts on what the report names: the undo and the re-preview on the config the run replaced, the repair on the refused project, and the `member:` command on that member. A path spelled from another root sends the reader to a file that is not there ([§FS-errors.3](FS-errors.md#3-message-text)), and here it can do worse, each time with exit `0`: from a workspace root, `git restore` restores the root's config instead of the member's; from a directory below the root, the `member:` command migrates the root's config instead of the member's; and from a project's parent, with `PATH` naming the project, the repair formats the directory the run was in instead and leaves the refused project's bare citations bare.
+A migrate report prints four commands to paste, none of them a report path ([§FS-errors.terms](FS-errors.md#terms-terms)): the undo and the re-preview after a write, the `[reference] strict = false` refusal's repair ([§FS-config-migrate.3.1.2](FS-config-migrate.md#312-bare-citations)), and the command on a `member:` line ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)). Each is spelled for the directory `grund config migrate` ran in, whatever the report base, and `--path-base` moves none of them ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), so pasted there each acts on what the report names: the undo and the re-preview on the config the run replaced, the repair on the refused project, the `member:` command on that member.
 
-1. The undo is `to get version 1 back: it is in version control, e.g. git restore <file>`. With a working directory, `<file>` is the config the run replaced as git names it: spelled with `/` from the working directory to the config, each with its directory links resolved, as canonical identity resolves them once discovery has selected the config ([§FS-config.1.5](FS-config.md#15-the-ancestor-search-keeps-the-path-through-directory-links)). So a link on either side adds no `..`, and a `PATH` through a link names the file where git tracks it: with `apps/api` a link to `services/api` in the same repository, the undo is `git restore services/api/grund.toml`, while `apps/api/grund.toml` is a path git does not track, since it tracks the link itself rather than the file through that link. It is `grund.toml`, or `.agents/grund.toml` for the deprecated location ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), when the config is in that directory; `apps/api/grund.toml` for one below it; `../grund.toml` for one above it. A command is not a report path, so the bound [§FS-errors.4](FS-errors.md#4-determinism) puts on `..` does not hold it. With a working directory but no relative spelling, as for a config on another drive on Windows, `<file>` is the absolute path. Without a working directory, `<file>` is the located config path as discovery reached it from `PATH`, formatted with `/`: absolute for an absolute `PATH`, but potentially still relative for a relative `PATH`. From a deleted directory, `../apps/api` can therefore print `git restore ../apps/api/grund.toml`. Git cannot restore from that deleted directory, and pasting this relative hint in another directory can name a different path; it is not a portable undo command. Run migration from a directory that exists, or pass an absolute `PATH` and run the absolute undo from an existing directory in the repository. If the relative hint was already printed, restore the member from the workspace root with `git restore apps/api/grund.toml`.
+1. The undo is `to get version 1 back: it is in version control, e.g. git restore <file>`. `<file>` is the replaced config as git names it: spelled with `/` from the working directory, with `..` where it climbs, and each side's directory links resolved as canonical identity resolves them once discovery has selected the config ([§FS-config.1.5](FS-config.md#15-the-ancestor-search-keeps-the-path-through-directory-links)), so a `PATH` through a link names the file where git tracks it. A command is not a report path, so the bound [§FS-errors.4](FS-errors.md#4-determinism) puts on `..` does not hold it. With a working directory but no relative spelling, as for a config on another drive on Windows, it is absolute.
+2. The re-preview is `to see this candidate again: restore version 1 and run grund config migrate --to 2`, then a space and `PATH` as it was given, when one was, then ` --drop-comments` where [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write) says, so the same discovery runs from the same directory.
+3. The repair names the refused project's root after `--write`, and the `member:` command the member's root after `--to 2`, each spelled as `<file>` is; for an `.agents/grund.toml` that root is the project root, not `.agents/`. Each is left out, with the space before it, when it is the working directory. From `docs` below a workspace root, the member `apps/api` is migrated with `grund config migrate --to 2 ../apps/api`.
+4. Each path is one word to a POSIX shell, on every platform. A path made only of ASCII letters, digits and `_ - . / , : @ % + =` is written as it is; any other, the empty one included, is written between single quotes, each `'` in it written `'\''`. An undo path that would start with `-` or `:` gets `./` before it, since `git` reads a leading `-` as an option and a leading `:` as pathspec magic; a repair or `member:` directory gets it only before a `-`, and `PATH` keeps the spelling it was given.
 
-   The repair and the `member:` command each name a directory, spelled the way `<file>` is: from the working directory to the directory, each with its links resolved, with `..` where it climbs, and absolute where there is no relative spelling. The repair's is the refused project's root, which follows `--write`; the `member:` command's is the member's root, which follows `--to 2`. For an `.agents/grund.toml` that root is the project root, not `.agents/`. Each is left out, with the space before it, when it is the working directory. So from `sub`'s parent the repair is `run grund fmt --marker --write sub, then …`, and from `docs` below the project root `run grund fmt --marker --write .., then …`; from `docs` below a workspace root, the member `apps/api` is migrated with `grund config migrate --to 2 ../apps/api`. Without a working directory, each follows the undo's `<file>`: the repair's directory is the project root as discovery reached it from `PATH`, and the `member:` command's is that root followed by the member's path below it, each formatted with `/`.
-2. The re-preview is `to see this candidate again: restore version 1 and run grund config migrate --to 2`, followed by a space and `PATH` as it was given, when one was, and then by ` --drop-comments` where [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write) says the line ends in it. So the same discovery runs from the same directory ([§FS-config-migrate.1.1](FS-config-migrate.md#11-which-file)). `./apps/api/` stays `./apps/api/`; no `PATH` follows `--to 2` when none was given.
-3. Each path in the four commands is one word to a POSIX shell, on every platform. A path made only of ASCII letters, digits and `_ - . / , : @ % + =` is written as it is. Any other path, the empty one included, is written between single quotes, with each `'` in it written `'\''`. So `grund config migrate --to 2 'my app' --write` prints `git restore 'my app/grund.toml'` and `grund config migrate --to 2 'my app'`. An undo path that would start with `-` or `:` is written with `./` before it, so `git` reads it as a path: a leading `-` is an option to `git`, and a leading `:` is pathspec magic, which would restore another file. `PATH` keeps the spelling it was given: grund reads no pathspec magic, and it takes no `PATH` that starts with `-`. For the same reason a directory the repair or a `member:` command names is written with `./` before it when it would start with `-`, and as it is when it starts with `:`. So from the parent of a project `my app` the repair is `run grund fmt --marker --write 'my app', then …`, and from the parent of a project `-x`, `run grund fmt --marker --write ./-x, then …`.
-4. `--path-base` moves none of the four commands ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)). The `wrote` outcome, the dropped ranges, the notices, a refusal's `<config>` and the file a `member:` line names are report paths and keep the report base ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)). After a `PATH` that names another directory, the `wrote` line and the undo can therefore name one file two ways: `wrote grund.toml` from the member's root, and `git restore apps/api/grund.toml` from where the run was. Likewise a `member:` line run from `docs` below a workspace root names `apps/api/grund.toml` from the root and migrates it with `--to 2 ../apps/api` from `docs`, and a refusal after `PATH` `sub` names its file `grund.toml` from `sub` and its repair `grund fmt --marker --write sub` from where the run was.
-5. `--write --full` prints the same undo and re-preview. At the project root with no `PATH`, all four commands are the lines this specification shows there, byte for byte: the undo and the re-preview are those of [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write), the repair names no directory, as [§FS-config-migrate.3.1.2](FS-config-migrate.md#312-bare-citations) shows it, and at a workspace root each `member:` command names the member's directory from the root, the bytes `grund check` there prints after `warning: ` ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)), unless item 3 quotes that directory or writes `./` before it.
+Without a working directory, as when the run's directory was deleted, `<file>` is the config as discovery reached it from `PATH`, the repair's directory is that project's root, and the `member:` command's is that root followed by the member's path below it, each written with `/`: absolute for an absolute `PATH`, and possibly relative for a relative one. Git cannot restore from the deleted directory, and a relative path pasted elsewhere can name another file. Run migration from a directory that exists, or pass an absolute `PATH`.
 
 ### 6.6 A second run is a no-op
 
-A config that is already version 2 is reported as `` <config> is already version 2; nothing to migrate ``, exit `0`, empty stdout, with or without `--write`. The file, its modification time included, is left alone. The line speaks of that one file: at a workspace root no `member:` line follows it ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)), and the configs below still on version 1 are named by `grund check` there ([§FS-check.4.11.3](FS-check.md#4113-once-per-config-not-once-per-scope)).
+A config already on version 2 prints `` <config> is already version 2; nothing to migrate ``, exit `0`, empty stdout, with or without `--write`, and is left alone, its modification time included. At a workspace root no `member:` line follows; `grund check` there names the configs below still on version 1 ([§FS-check.4.11.3](FS-check.md#4113-once-per-config-not-once-per-scope)).
 
 ## 7. Outcomes
 
 | Situation | Outcome |
 |---|---|
-| No config found | Exit `2`: `` error: no grund.toml at <path> or above it; grund init writes one ``. Creating a config is not migrating one. |
+| No config found | Exit `2`: `` error: no grund.toml at <path> or above it; grund init writes one ``. |
 | Unreadable, malformed, or failing v1 validation | Exit `2`, with the error `config validate` gives ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). |
-| A path-shaped `[scan] exclude` | Read tolerantly for diagnosis only; exit `1` with each entry's reach ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry)). Where an entry asks the scan what it reads and the version 1 scan cannot walk the tree, exit `2` with the scan's error instead ([§FS-config-migrate.3.1.4.1](FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads)). |
-| `grund_config_version` above 2 | Exit `2`, with today's unsupported-version error ([§FS-config.5](FS-config.md#5-schema-versioning)). |
-| Already version 2 | Exit `0`, nothing to migrate ([§FS-config-migrate.6.6](FS-config-migrate.md#66-a-second-run-is-a-no-op)). |
+| A path-shaped `[scan] exclude` | Exit `1` with each entry's reach, or exit `2` with the scan's error where an entry asks the scan and the version 1 scan cannot walk the tree ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry)). |
+| `grund_config_version` above 2 | Exit `2`, with the unsupported-version error ([§FS-config.5](FS-config.md#5-schema-versioning)). |
 | A symbolic link | Exit `1` ([§FS-config-migrate.6.4](FS-config-migrate.md#64-a-symbolic-link-and-nothing-else-written)). |
 
 ## 8. Workspaces
 
-Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](FS-config.md#5-schema-versioning)). At a workspace root whose own config is on version 1, the report names each member the root's own `[workspace]` lists that is still on version 1, and the command that migrates it, one line each: `` member: <file> is version 1; migrate it with grund config migrate --to 2 <dir> ``. `<file>` is the member's config as a report path, and `<dir>` is the member's root spelled from the working directory ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)), so the command pasted where migrate ran migrates that member and no other config. At the workspace root with no `PATH` the two name the member alike, `member: apps/api/grund.toml is version 1; migrate it with grund config migrate --to 2 apps/api`; run from `docs` below the root, the command reads `grund config migrate --to 2 ../apps/api`, and from the parent of a root `ws`, with `PATH` `ws`, `grund config migrate --to 2 ws/apps/api`. The complete report places these after the `written:` lines and before the gates' result; compact success retains them at the position defined in [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write), without requiring default narration before them. The report gate runs over the whole workspace as `check` would, each member read by its own reader. A member's config is migrated from the member's root, and the report gate runs from there. No member is written; there is no `--recursive`, because several files cannot be replaced atomically together. A config further down, a nested member's or an `include_root = false` block's below a listed one, earns no `member:` line; `grund check` at the root names it ([§FS-check.4.11.3](FS-check.md#4113-once-per-config-not-once-per-scope)).
+Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](FS-config.md#5-schema-versioning)). At a workspace root whose own config is on version 1, the report names, one line each, every member its own `[workspace]` lists that is still on version 1: `` member: <file> is version 1; migrate it with grund config migrate --to 2 <dir> ``, `<file>` the member's config as a report path, following `--path-base`, and `<dir>` the member's root spelled from the working directory ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)), so the command migrates that member and no other config. At the workspace root it is the sentence `grund check` prints there ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)):
 
-The file a `member:` line names is a report path and follows `--path-base` like the heading above it ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)): from a workspace's `docs` with `--path-base invocation`, the heading is `../grund.toml` and the line `member: ../apps/api/grund.toml is version 1; …`, the file `grund check --path-base invocation` names there ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)).
+```text
+member: api/grund.toml is version 1; migrate it with grund config migrate --to 2 api
+```
+
+The report gate runs over the whole workspace as `check` would, each member read by its own reader. A member's config is migrated, and its report gate run, from the member's root. No member is written, and there is no `--recursive` ([§DF-config-migrate.2.5](../decisions/functional/DF-config-migrate.md#25-no---recursive)). A config further down, a nested member's or an `include_root = false` block's below a listed one, earns no `member:` line; `grund check` at the root names it ([§FS-check.4.11.3](FS-check.md#4113-once-per-config-not-once-per-scope)).
 
 ### 8.1 A block with `include_root = false`
 
-A version-1 file whose `[workspace]` sets `include_root = false` is not a project: nobody reads its own files ([§FS-check.4.10.1](FS-check.md#4101-nobody-reads-the-blocks-own-files)). The settings version 1 gives a project have one reader there, the probe that asks whether the block would have read a file had it been a project ([§FS-check.4.10.2](FS-check.md#4102-what-counts)). This point is the whole rule for such a block. The points that refer here do not restate it, and an ordinary project, or a block with `include_root = true`, migrates exactly as the rest of this specification says. Why the block may be held by the report gate alone is [§DF-config-migrate-opted-out-block](../decisions/functional/DF-config-migrate-opted-out-block.md#df-config-migrate-opted-out-block-a-version-1-block-with-include_root--false-migrates-to-its-envelope-and-workspace-table-held-by-the-report-gate).
+A version-1 file whose `[workspace]` sets `include_root = false` is not a project: nobody reads its own files, and its project settings have one reader, the probe that asks whether the block would have read a file had it been a project ([§FS-check.4.10.2](FS-check.md#4102-what-counts)). This section is the whole rule for such a block; a project, or a block with `include_root = true`, migrates as the rest of this page says. Decided in [§DF-config-migrate-opted-out-block](../decisions/functional/DF-config-migrate-opted-out-block.md#df-config-migrate-opted-out-block-a-version-1-block-with-include_root--false-migrates-to-its-envelope-and-workspace-table-held-by-the-report-gate).
 
-#### 8.1.1 Named sections
+- `[id] named_sections` is never refused on such a block, whatever its value ([§FS-config-migrate.3.1.1](FS-config-migrate.md#311-named-sections-off)): an authored key is dropped with a notice ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)), and an omitted one adds nothing.
+- A refusal that names the files a scan reads ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry), [§FS-config-migrate.3.1.5](FS-config-migrate.md#315-nested-homes)) reads the block's settings as a project's, as the probe does.
+- The block migrates **compactly** when its default scope is empty, no root of its version-1 default scope existing on disk outside its expanded member roots, and it authors nothing a project would read. That scope is the probe's: the `[scan] include` entries and the scanned `[[kinds]]` homes, or the built-in rows' homes when it writes no `[[kinds]]`. Each authored key must then be `grund_config_version`, `project_name`, `project_description`, or a key of the `[workspace]` table or its imports, which have force on any block and map as [§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default) says; `[id] named_sections`, either value; `[scan] include` that is `[]` or exactly version 1's default list, `["requirements.md", "docs", "e2e", "src"]`; an `[output]` key; or any other key at version 1's default, which a `[[kinds]]` entry and a `[citations]` table never are, having none.
+- A block that fails either condition migrates as a project does, with every refusal of [§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair) but the named-sections one, its missing-`include` refusal in [§FS-config-migrate.3.1.3](FS-config-migrate.md#313-an-include-entry-that-does-not-exist)'s bytes, and every default of [§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out).
+- A compact block's candidate is the version line and what the keys with force on any block map to, nothing else: no `[schema]`, `[rules]` or `[presentation]` default, no built-in row, no `written:` line, so the block takes version 2's defaults. Every other authored key is dropped with a notice, an `[output]` key with its own, and one more notice names the defaults left unwritten ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)).
+- Both gates run. The records gate compares only what the candidate keeps, the workspace records (members, optional members, `include_root` and imports), the project name and the description; the report gate runs unchanged. So a block whose root holds a file version 1's default scope never read but version 2's whole-root scope does, usually a `README.md` or the `AGENTS.md` `grund init` writes, is refused in one run, its candidate's run reporting that nobody reads the block ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)), and stays on version 1 until the file moves into a member or the block becomes a project.
 
-`[id] named_sections` has no reader on such a block, whatever its value, so it is never refused there ([§FS-config-migrate.3.1.1](FS-config-migrate.md#311-named-sections-off)). An authored key is dropped with a notice ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)), and an omitted one adds nothing to the report.
-
-#### 8.1.2 When the block migrates compactly
-
-The block migrates **compactly** when both of these hold:
-
-1. **Its default scope is empty.** No root of its version-1 default scope exists on disk outside its expanded member roots. That scope is the one [§FS-check.4.10.2](FS-check.md#4102-what-counts) takes: the `[scan] include` entries and the scanned `[[kinds]]` homes, or the built-in rows' homes when it writes no `[[kinds]]`.
-2. **It authors nothing a project would read.** Each authored key is one of these:
-   - `grund_config_version`, `project_name`, `project_description`, or a key of the `[workspace]` table or its imports. These have force on any block, and they map as [§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default) says.
-   - `[id] named_sections`, either value.
-   - `[scan] include`, when it counts as omitted: it is `[]`, or exactly version 1's default list `["requirements.md", "docs", "e2e", "src"]`, as `grund init` writes it. Item 1 has already found each of those entries missing.
-   - An `[output]` key, a notice on every file ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)).
-   - Any other key whose value is version 1's default for that key. Its omission would mean the same. A `[[kinds]]` entry and a `[citations]` table have no default, so either one takes the block off the compact path.
-
-A block for which either item fails migrates as a project does, with every other refusal of [§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair) and every default of [§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out). Its missing-`include` refusal keeps the bytes [§FS-config-migrate.3.1.3](FS-config-migrate.md#313-an-include-entry-that-does-not-exist) gives it.
-
-#### 8.1.3 What a compact block's candidate holds
-
-The candidate is the version line, then what the keys of item 2's first bullet map to, and nothing else. No `[schema]`, `[rules]` or `[presentation]` default is written, no built-in row, and no `written:` line. The block takes version 2's defaults. Every other authored key is dropped with a notice, an `[output]` key with its own, and one more notice names the defaults left unwritten. Their lines are in [§FS-config-migrate.3.2](FS-config-migrate.md#32-notices). The reported block, `[workspace] include_root = false` and `members = ["a"]` on lines 2 and 3, becomes:
+A block with `[workspace] include_root = false` and `members = ["a"]` on lines 2 and 3, and nothing else, becomes:
 
 ```toml
 grund_config_version = 2
@@ -555,53 +433,6 @@ grund_config_version = 2
 [workspace]
 members = ["a"]
 include_root = false
-```
-
-#### 8.1.4 Both gates still run
-
-The records gate compares what the candidate keeps: the workspace records (members, optional members, `include_root` and imports), the project name and the description. Everything else that tells this version-1 file from its candidate is ignored there and left to the report gate ([§FS-config-migrate.5.1](FS-config-migrate.md#51-the-records-gate)). The report gate runs unchanged ([§FS-config-migrate.5.2](FS-config-migrate.md#52-the-report-gate)). A block whose root holds a file version 1's default scope never read, but version 2's whole-root scope does, therefore stops there, in one run. That file is usually a `README.md`, or the `AGENTS.md` `grund init` writes. Its candidate's run reports that nobody reads the block ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)). Such a block stays on version 1 until the file moves into a member or the block becomes a project.
-
-#### 8.1.5 The reports for the reported tree
-
-The reported tree is a version-2 root listing `group`, the block above at `group/grund.toml`, and a version-2 member at `group/a/grund.toml`. `grund config migrate --to 2 group` prints the candidate above on stdout, exits `0`, and reports:
-
-```text
-grund.toml: version 1 → 2, preview, nothing written
-dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
-mapped: grund.toml:2: [workspace] include_root → [workspace] include_root
-mapped: grund.toml:3: [workspace] members → [workspace] members
-compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
-```
-
-With `--write` it writes those bytes, exits `0`, and reports:
-
-```text
-wrote grund.toml: version 1 (3 lines) replaced by version 2
-dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
-to get version 1 back: it is in version control, e.g. git restore group/grund.toml
-to see this candidate again: restore version 1 and run grund config migrate --to 2 group
-note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
-```
-
-`wrote` and `dropped:` name the block from its own root, the report base. The undo and the re-preview are commands spelled from the workspace root the run was in ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)).
-
-The block that the two old repairs produced also adds `[id] named_sections = true` on line 2 and `[scan] include = []` on line 5. It writes the same candidate, with two more lines after `wrote`:
-
-```text
-dropped: grund.toml:2: [id] named_sections: include_root = false, so no project scans this block's own files
-dropped: grund.toml:5: [scan] include: include_root = false, so no project scans this block's own files
-```
-
-The same reported block with a `README.md` beside its config is refused by `--write` at the report gate, exit `1`. The `differs:` lines are the unread-block warning as this grund prints it:
-
-```text
-grund.toml: version 1 → 2, --write
-dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
-mapped: grund.toml:2: [workspace] include_root → [workspace] include_root
-mapped: grund.toml:3: [workspace] members → [workspace] members
-differs: grund check --suggestions on this tree
-+ run-warning warning unread-workspace-block grund.toml:2:- grund.toml:2: no project scans `.`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.
-not written: grund check --suggestions differs (inspect the comparison above); grund.toml is unchanged
 ```
 
 ## mapping: Every version-1 key and default
@@ -648,7 +479,7 @@ not written: grund check --suggestions differs (inspect the comparison above); g
 | `[[kinds]] rules` | `form = "rule"` | mapped |
 | `[[kinds]] scan` | `scan = false` | mapped |
 | `[[kinds]] title` | `[presentation.kinds.<NAME>] title` | mapped |
-| `[[kinds]] value_chapter` | a field, which would add a section `check` compares; on a row that sets `fetch`, none ([§FS-config-migrate.3.1.7.1](FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)) | refused ([§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet)) |
+| `[[kinds]] value_chapter` | a field, which would add a section `check` compares; on a row that sets `fetch`, none | refused ([§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet)) |
 | `[[kinds]] values` | `form = "value"` | refused by the guidance comparison ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)): version 2 gives every value row a declaration shape |
 | `[scan] comment_prefixes` | each definition's `comment_prefixes`, the whole list | mapped |
 | `[scan] docstring_python` | `.py`'s definition, `docstrings` python or off | mapped |
