@@ -1,6 +1,6 @@
 # FS-inline-citation-style: configurable shape of inline code-comment citations
 
-An inline citation in a code comment can carry a short rationale next to the `§<ID>` token — the project explains *why* this clause is grounded in that declaration. This spec defines a project-level house style for that rationale: whether it is allowed at all, how long it may run, and where the citation sits inside it. The same configuration drives `grund check` enforcement and the agent-facing copy in `AGENTS.md` / `CLAUDE.md` so the LLM that authors citations and the linter that validates them agree on the rules. Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable) and [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+An inline citation in a code comment may carry a short note beside its `§<ID>` token, saying why the clause it sits beside is grounded in that declaration. A project sets a house style for that note: whether it may exist, how long and how wide it may run, and where its citations sit inside it. The same keys decide what `grund check` reports and what the managed agent block tells the agent who writes the note, so the author and the linter agree on the rules. Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable) and [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 
 ## terms: Terms
 
@@ -18,108 +18,72 @@ severity), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (di
 
 ## requirements: What the note budgets hold to
 
-Three requirements on the budgets, and the layout beside them, as a whole, each carrying a
-mark of [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). Two properties are left out because a requirement already
-states them: that two installs measure a note alike, with no per-file, per-kind or
-per-editor reshaping of the measure, is [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree) and [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes); and
-that a default changes nothing a conformant tree sees is [§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree) and
-[§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered).
+Two properties of the budgets and the layout are left out here because a requirement states them: two installs measure a note alike, with no per-file, per-kind or per-editor reshaping of the measure ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree), [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)), and a default changes nothing a conformant tree sees ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree), [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered)).
 
-### requirements.actionable: A budget finding is acted on as printed — realized, directional for the next budget
+### requirements.actionable: A budget finding is acted on as printed
 
-A budget finding lands once per note, at its first line ([§FS-inline-citation-style.4](FS-inline-citation-style.md#4-enforcement-grund-check)), and
-once per cap the note breaks, so one pass shows every reason ([§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps)).
-It prints the measured size beside the cap ([§FS-inline-citation-style.4.1.1](FS-inline-citation-style.md#411-the-measured-size)), the note's
-lines and every citation in it ([§FS-inline-citation-style.4.1.2](FS-inline-citation-style.md#412-the-site-clause)), and, for a line count, the
-boundary a split has to cross ([§FS-inline-citation-style.4.1.3](FS-inline-citation-style.md#413-the-splitting-clause)); the soft-cap warning carries
-the same clauses ([§FS-inline-citation-style.4.2](FS-inline-citation-style.md#42-warnings--opt-in-soft-cap)). A layout deviation lands at the line to
-edit and names the shape to write ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line),
-[§FS-inline-citation-style.4.4.2](FS-inline-citation-style.md#442-one-message-at-both-severities)). Nothing has to be measured again or looked up to act on
-one. A budget added from here on is reported the same way. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+A budget finding lands once per note, at its first line, and once per cap the note breaks, so one pass shows every reason. It prints the measured size beside the cap, the note's lines and every citation in it, and, for a line count, the boundary a split has to cross ([§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps)); the soft-cap warning carries the same clauses ([§FS-inline-citation-style.4.2](FS-inline-citation-style.md#42-warnings--opt-in-soft-cap)). A layout deviation lands at the line to edit and names the shape to write ([§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)). Nothing has to be measured again or looked up to act on one, and a budget added from here on is reported the same way. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 
-### requirements.shape-only: A note's size and layout never reach its citations — realized
+### requirements.shape-only: A note's size and layout never reach its citations
 
-Whether a block is a note, how large it is and how it is laid out decide only what `check`
-measures and reports. Its citations resolve, count toward the grounding floor and the
-citation directions, and are linked by `fmt` as anywhere else ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)),
-so a block recognized the wrong way changes what is measured and never what a citation means
-([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)). No command rewrites a note to fit
-([§FS-inline-citation-style.4.3](FS-inline-citation-style.md#43-grund-fmt), [§FS-inline-citation-style.6.1](FS-inline-citation-style.md#61-no-rewrite-in-grund-fmt)), and every command but
-`check` — `fmt`, `refs`, `cover`, `show` — reads its citations whatever its measurements.
-Serves [§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess) and [§REQ-no-data-loss](../requirements/REQ-no-data-loss.md#req-no-data-loss-grund-never-eats-user-content).
+Whether a block is a note, how large it is and how it is laid out decide only what `check` measures and reports. Its citations resolve, count toward the grounding floor and the citation directions, and are linked by `fmt` as anywhere else ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)), so a block recognized the wrong way changes what is measured and never what a citation means ([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)). No command rewrites a note to fit ([§FS-inline-citation-style.6.1](FS-inline-citation-style.md#61-no-rewrite-in-grund-fmt)), and every command but `check` — `fmt`, `refs`, `cover`, `show` — reads its citations whatever its measurements. Serves [§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess) and [§REQ-no-data-loss](../requirements/REQ-no-data-loss.md#req-no-data-loss-grund-never-eats-user-content).
 
-### requirements.agent-copy: The agent is told what the gate holds, as of the last render — realized, directional for the next check
+### requirements.agent-copy: The agent is told what the gate holds, as of the last render
 
-The copy in the managed block is rendered from the keys `check` reads
-([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)): the caps, the block a cap finding says to split
-([§FS-inline-citation-style.5.2](FS-inline-citation-style.md#52-the-block-sentence)), the layout where one is set ([§FS-inline-citation-style.5.3](FS-inline-citation-style.md#53-the-layout-sentence)),
-and where the gate stops ([§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence)). It says what to write, never which
-channel a deviation reaches, so moving a layout check between `warn` and `error`, or setting
-`warn_on_suggested`, changes nothing the agent reads ([§FS-inline-citation-style.5.3.2](FS-inline-citation-style.md#532-the-same-at-every-check-setting)). It is
-a snapshot: once a key that decides what is judged is changed, it teaches the previous house
-style until `grund init` renders it again, which `grund init --check` reports as
-`would-update` and `check` does not ([§FS-inline-citation-style.5.5](FS-inline-citation-style.md#55-rendered-not-live), [§FS-init.1](FS-init.md#1-inputs)). A check
-added to the note gate from here on adds its sentence in the same change, and a key that only
-picks a channel adds none. Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
+The copy in the managed block is rendered from the keys `check` reads ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)): the caps, the block a cap finding says to split ([§FS-inline-citation-style.5.2](FS-inline-citation-style.md#52-the-block-sentence)), the layout where one is set ([§FS-inline-citation-style.5.3](FS-inline-citation-style.md#53-the-layout-sentence)), and where the gate stops ([§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence)). It says what to write, never which channel a deviation reaches, so moving a layout check between `warn` and `error`, or setting `warn_on_suggested`, changes nothing the agent reads. It is a snapshot: once a key that decides what is judged is changed, it teaches the previous house style until `grund init` renders it again, which `grund init --check` reports as `would-update` and `check` does not ([§FS-inline-citation-style.5.5](FS-inline-citation-style.md#55-rendered-not-live), [§FS-init.1](FS-init.md#1-inputs)). A check added to the note gate from here on adds its sentence in the same change, and a key that only picks a channel adds none. Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
 
 ## 1. Scope
 
-A **note** is an *inline comment* block — a maximal run of adjacent comment/docstring lines, as [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) bounds a comment block — that contains at least one citation token recognized by [§FS-check.1.1](FS-check.md#11-recognized-citations). A note never spans more than one block: a code line, a blank line, or a different comment style ends a block, and an empty comment line does not ([§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)). A **doc-comment** block is not one, whatever it carries: [§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites) draws that line and every rule below stops at it. What this spec does not govern is listed in [§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site), and what inside a note counts as its *note text* is defined in [§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes).
+A **note** is an inline comment block — a maximal run of adjacent comment or docstring lines, as [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) bounds a comment block — that holds at least one citation token recognized by [§FS-citations.recognized](FS-citations.md#recognized-recognized-citations). A doc-comment block is never a note, whatever it carries.
 
 ### 1.1 Doc-comments are not sites
 
-A **doc-comment** documents the definition that follows it, or the file it opens. An **inline comment** is every other comment — one among statements, a detached block, a note beside the clause it grounds. Only an inline comment is a note. Nothing in this spec reaches a citation written inside a doc-comment: not `citation-only` ([§FS-inline-citation-style.3.1](FS-inline-citation-style.md#31-citation-only)), not the line and column budgets ([§FS-inline-citation-style.2.3](FS-inline-citation-style.md#23-counting-lines-and-columns), [§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps), [§FS-inline-citation-style.4.2](FS-inline-citation-style.md#42-warnings--opt-in-soft-cap)), not the layout ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit), [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)). Everything else still does: the citation resolves and is dangling when it does not ([§FS-check.3.1](FS-check.md#31-dangling-citation)), counts toward the grounding floor ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)) and the citation directions ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)), is judged by the target project's shorthand policy when it is a persisted shorthand ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)), and is linkified by `grund fmt` ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)).
-
-This generalizes the exemption a doc-comment that *declares* an ID already has ([§FS-inline-citation-style.3.3.6](FS-inline-citation-style.md#336-same-scope-as-the-rest-of-this-spec), [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)): a class Javadoc or a module doc that names the declaration it implements, in the sentence that needs it, is the language's own documentation and renders into generated docs, not a note that ran long ([§DF-doc-comments-are-not-notes.2.1](../decisions/functional/DF-doc-comments-are-not-notes.md#21-the-site-is-an-inline-comment-a-doc-comment-is-not-a-site)).
-
-#### 1.1.1 Recognizers
-
-Which kind a block is, is read from the file's extension and one test on the block itself — never by parsing the host language ([§FS-inline-citation-style.6](FS-inline-citation-style.md#6-non-goals)). Two recognizers and a default:
-
-1. **Prefix languages** spell a doc-comment with a comment prefix of their own, so the prefix *is* the language's own answer. The block is a doc-comment when its line-comment prefix — or, for a block comment, its opening line — is the doc form.
-2. **Position languages** spell a doc-comment exactly like every other comment (Go `//`, Ruby `#`, shell `#`, SQL `--`, Lisp `;`), so position answers instead. The block is a doc-comment when the line immediately below it, with no blank line between, is a **definition-starter** for that language, or when the block is the file's **leading comment**: every line above it is blank, or is line 1 and a `#!` shebang. A leading comment is how these languages spell a module doc — a header at the top of a Go, Ruby, shell, SQL, or Lisp file (the `;;; foo.el --- summary` line) documents the file, the way `//!` and a module docstring do where a doc prefix exists.
-3. **Any other extension** has no doc-comment notion, so every comment block in it is inline. That is the behavior of every release before this rule, so nothing a conformant tree already passes changes on its account.
+Only an inline comment is a note, and an inline comment is every comment that is not a doc-comment ([§FS-terms.terms.3](FS-terms.md#terms3-source-forms)): one among statements, a detached block, a note beside the clause it grounds ([§DF-doc-comments-are-not-notes.2.1](../decisions/functional/DF-doc-comments-are-not-notes.md#21-the-site-is-an-inline-comment-a-doc-comment-is-not-a-site)). No rule of this spec reaches a citation inside a doc-comment: not `citation-only` ([§FS-inline-citation-style.3.1](FS-inline-citation-style.md#31-citation-only)), not the line and column budgets ([§FS-inline-citation-style.2.3](FS-inline-citation-style.md#23-counting-lines-and-columns), [§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps), [§FS-inline-citation-style.4.2](FS-inline-citation-style.md#42-warnings--opt-in-soft-cap)), not the layout ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit), [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)). Everything else still does: the citation resolves and is dangling when it does not ([§FS-check.3.1](FS-check.md#31-dangling-citation)), counts toward the grounding floor ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)) and the citation directions ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)), is judged by the target project's shorthand policy when it is a persisted shorthand ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)), and is linkified by `grund fmt` ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)).
 
 #### 1.1.2 Languages
 
-Each extension belongs to one recognizer of [§FS-inline-citation-style.1.1.1](FS-inline-citation-style.md#111-recognizers), which tests for the doc form this table gives:
+Which kind a block is, is read from the file's extension and one test on the block itself, never by parsing the host language ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing), [§DF-doc-comments-are-not-notes.2.2](../decisions/functional/DF-doc-comments-are-not-notes.md#22-two-recognizers-chosen-by-file-type-never-by-parsing)). Each extension belongs to one recognizer:
+
+- A **prefix** language spells a doc-comment with a comment prefix of its own: the block is a doc-comment when its line-comment prefix, or for a block comment its opening line, is the doc form the table gives.
+- A **position** language spells a doc-comment like every other comment: the block is a doc-comment when the line immediately below it, with no blank line between, is a definition-starter for that language, or when it is the file's leading comment: every line above it is blank, or is line 1 holding a `#!` shebang ([§DF-doc-comments-are-not-notes.2.3](../decisions/functional/DF-doc-comments-are-not-notes.md#23-a-leading-comment-block-is-a-module-doc)).
+- **Any other extension** has no doc-comment notion, so every comment block in it is inline.
 
 | extensions | recognizer | doc-comment when |
 |---|---|---|
-| `rs` `c` `h` `cpp` `cc` `cxx` `hpp` `hh` `hxx` `m` `mm` `java` `cs` `kt` `kts` `scala` `swift` `js` `jsx` `mjs` `cjs` `ts` `tsx` `php` `dart` | prefix (C family) | a line run whose prefix is exactly `///` (`////` is a rule line, not a doc-comment; JDK 23 Markdown documentation comments are `///` too) or `//!`; a block comment opening `/**` — not the empty `/**/` — or `/*!`. A plain `//`, `/* … */`, or PHP `#` block is inline wherever it sits, a `//` block directly above a `fn` included: by the language's own rules that is not documentation. |
-| `py` | prefix (docstring) | a `"""` or `'''` docstring block. A `#` block is inline, including one directly above a `def` — by PEP 257 only a docstring is documentation. |
-| `lua` | prefix (LDoc) | a `--` run whose first line starts with `---`, exactly three dashes; `----` is a rule line. Continuation lines are plain `--` lines and already belong to the same block. |
+| `rs` `c` `h` `cpp` `cc` `cxx` `hpp` `hh` `hxx` `m` `mm` `java` `cs` `kt` `kts` `scala` `swift` `js` `jsx` `mjs` `cjs` `ts` `tsx` `php` `dart` | prefix (C family) | a line run whose prefix is exactly `///` or `//!` (`////` is not); a block comment opening `/**` or `/*!`, but not the empty `/**/`. A plain `//`, `/* … */` or PHP `#` block is inline wherever it sits, directly above a `fn` included. |
+| `py` | prefix (docstring) | a `"""` or `'''` docstring block. A `#` block is inline, directly above a `def` included. |
+| `lua` | prefix (LDoc) | a `--` run whose first line starts with exactly `---` (`----` does not); its continuation lines are plain `--` lines of the same block. |
 | `hs` `lhs` | prefix (Haddock) | a `--` run whose first line's content after the `--` starts, after optional spaces, with `\|` or `^`. |
 | `r` `R` | prefix (roxygen2) | a `#` run whose first line starts with `#'`. |
 | `go` | position | definition-starters `func`, `type`, `var`, `const`, `package`. |
 | `rb` | position | definition-starters `class`, `module`, `def`. |
 | `sh` `bash` `zsh` | position | `function <name>`, or `<name>()` / `<name> ()`, with `<name>` matching `[A-Za-z_][A-Za-z0-9_]*`. |
 | `sql` | position | the definition-starter `create`, matched case-insensitively, so `CREATE OR REPLACE FUNCTION …` counts. |
-| `lisp` `cl` `el` `scm` `ss` `rkt` `clj` `cljs` `cljc` | position | a form whose head symbol starts with `def` or `cl-def`, or is `ns`: the next line, with leading whitespace removed, opens `(` and then that symbol, so `(defun`, `(defn-`, `(defmacro`, `(define`, `(defvar`, `(cl-defun` and `(ns app.core)` match and `(let` does not. Lisp, Scheme, Clojure and Emacs Lisp write `;;` both above a definition and inside a body, so the run of semicolons cannot say "documentation" the way Lua's `---` does; a `;;` block inside a function body stays a note, measured by the caps. |
+| `lisp` `cl` `el` `scm` `ss` `rkt` `clj` `cljs` `cljc` | position | the next line, with leading whitespace removed, opens `(` and a head symbol that starts with `def` or `cl-def`, or is `ns`, so `(defun` and `(ns app.core)` match and `(let` does not. The number of semicolons decides nothing, so a `;;` block inside a function body stays a note. |
 
-Every extension this table names is read by the default configuration, which follows the table rather than a list of its own ([§FS-scan.scope.extensions.default](FS-scan.md#scopeextensionsdefault-the-extensions-default-follows-the-language-table)): a doc form this table claims is never one a project that wrote no `extensions` cannot reach.
+A definition-starter matches when the next line, with leading whitespace removed, begins with the keyword followed by a non-identifier character or the end of the line, so `functional` is no `func`. A Lisp head symbol is the run after the `(` up to whitespace, a parenthesis or the end of the line; `ns` must be the whole symbol, while `def` and `cl-def` need only begin it ([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)).
 
-A **definition-starter** matches when the next line, with leading whitespace removed, begins with the keyword followed by a non-identifier character or the end of the line: `func(` and `func main` match, `functional` does not, and an indented Ruby `def` inside a `class` still counts. A Lisp head symbol is the run after the `(` up to whitespace, a parenthesis or the end of the line; `ns` must be the whole symbol, so `(nsx-route)` does not match, while `def` and `cl-def` need only begin it, so `(default-value` matches as an accepted corner ([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)).
+Every extension the table names is read by default ([§FS-scan.scope.extensions.default](FS-scan.md#scopeextensionsdefault-the-extensions-default-follows-the-language-table)).
 
 #### 1.1.3 Accepted corners
 
-Four corners are known and accepted rather than repaired ([§DF-doc-comments-are-not-notes.2.6](../decisions/functional/DF-doc-comments-are-not-notes.md#26-the-corners-it-accepts)):
+Four corners are accepted rather than repaired ([§DF-doc-comments-are-not-notes.2.6](../decisions/functional/DF-doc-comments-are-not-notes.md#26-the-corners-it-accepts)):
 
-- A **dangling doc-comment** — a `/** … */` or `///` inside a method body, which `javac`'s `-Xlint:dangling-doc-comments` and `rustc`'s `unused_doc_comments` already warn about — is a doc-comment by its prefix and is not measured. The language's own lint is the tool for a doc-comment in the wrong place.
-- **Position recognition is recognition, not parsing.** A Go `var` inside a function body and a Ruby `private def` are classified by the same one-line test: the first reads as a doc-comment, the second does not. So is a Lisp call whose head merely starts with `def`, such as `(default-value 'fill-column)`: a `;;` block above it reads as a doc-comment. A miss in either direction only changes whether a block is *measured*; it never changes what a citation resolves to, or whether it resolves at all. The starter sets can widen later without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
-- A comment **trailing code** on the same line (`foo(); // §<ID>: note`) is what it already was: not a site ([§FS-inline-citation-style.3.3.6](FS-inline-citation-style.md#336-same-scope-as-the-rest-of-this-spec)).
-- **Blank-line adjacency is adjacency.** A `#` block, a blank line, then a `def` is an inline comment — the blank line broke the block off the definition, the same way it breaks one block into two ([§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)).
+- A **dangling doc-comment**, a `/** … */` or `///` inside a method body, is a doc-comment by its prefix and is not measured.
+- **Position recognition is recognition, not parsing.** A Go `var` inside a function body reads as a doc-comment and a Ruby `private def` does not, and a `;;` block above a Lisp call whose head merely starts with `def`, such as `(default-value 'fill-column)`, reads as a doc-comment. A miss in either direction changes only whether a block is measured, never what a citation resolves to or whether it resolves at all.
+- A comment **trailing code** on the same line (`foo(); // §<ID>: note`) is not a note.
+- **Blank-line adjacency is adjacency.** A `#` block, a blank line, then a `def` is an inline comment ([§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages)).
 
 #### 1.1.4 Declaration applicability
 
-Under v2's `declarations = "doc-comments"`, the recognizers of [§FS-inline-citation-style.1.1.1](FS-inline-citation-style.md#111-recognizers) also decide which comments may declare an ID ([§FS-config-v2.schema.sources.declarations](FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare)), through the doc profile a v2 language names ([§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch)). The same classifier answers both questions, so the two cannot disagree about what documentation is; but a measurement and a declaration differ in what a miss costs, so for declarations each profile is frozen as it stood at the v2 epoch, with the corners of [§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners) as stated rules rather than accepted misses:
+Under v2's `declarations = "doc-comments"`, the recognizers of [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages) also decide which comments may declare an ID ([§FS-config-v2.schema.sources.declarations](FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare)), through the doc profile a v2 language names ([§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch)), so measurement and declaration cannot disagree about what documentation is. A miss costs more in a declaration than in a measurement, so for declarations each profile is frozen as it stood at the v2 epoch, and the corners of [§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners) are its stated rules rather than accepted misses:
 
 - `c-family`: a `///` or `//!` run and a `/**` or `/*!` block qualify, dangling inside a body or not; a plain `//` or `/* … */` block, a PHP `#` block and a comment trailing code do not; nor do the lookalikes `////` and `/**/`.
-- `python`: a docstring qualifies, read lexically, with the assigned-data exclusion of [§FS-check.1.1.3.1](FS-check.md#1131-assigned-python-triple-quoted-data); a `#` block does not.
+- `python`: a docstring qualifies, read lexically, with the assigned-data exclusion of [§FS-citations.recognized.string-literals.assigned-data](FS-citations.md#recognizedstring-literalsassigned-data-assigned-python-triple-quoted-data); a `#` block does not.
 - `ldoc`: a `--` run whose first line opens with exactly `---`; `----` does not qualify. `haddock`: a `--` run whose first content is `|` or `^` after optional spaces. `roxygen`: a `#` run opening `#'`.
 - `go`, `ruby`, `shell`, `sql`: a block whose next line, with no blank line between, is a definition-starter of [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages) — Go's `func`, `type`, `var`, `const` and `package`, a local `var` included; Ruby's `class`, `module` and `def`, and not `private def` — or the file's leading block, after blank lines or a line-1 shebang. A detached block, and a block separated from its definition by a blank line, do not qualify.
 
-These are recognition limits, not a claim about what a comment documents: no host language is parsed ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)). The starter sets [§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners) lets widen do widen for measurement; for declarations a change to a profile's membership or block boundary is a new profile, a new opt-in language, or a new config version ([§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch)). Decided in [§DF-declarations-in-doc-comments](../decisions/functional/DF-declarations-in-doc-comments.md#df-declarations-in-doc-comments-a-v2-source-declares-in-documentation-not-in-a-note).
+The starter sets may widen for measurement without a profile changing ([§FS-inline-citation-style.6.4](FS-inline-citation-style.md#64-no-per-project-reshaping-of-the-rule)). Decided in [§DF-declarations-in-doc-comments](../decisions/functional/DF-declarations-in-doc-comments.md#df-declarations-in-doc-comments-a-v2-source-declares-in-documentation-not-in-a-note).
 
 ### 1.2 Comment blocks
 
@@ -129,108 +93,59 @@ The block forms say where a block begins and ends, and are [§FS-languages.comme
 
 This spec governs notes only. It does **not** govern:
 
-- Citations inside Markdown declaration bodies (prose in `docs/`, `tests/e2e/`, or any other file read as Markdown, [§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)). Spec text governs itself.
-- Declarations themselves — `# FS-foo: …` and `/// FS-foo: …` are declaration headings ([AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection)), and the scanner already excludes a declaration's own heading from the citations it records ([AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection)). A doc-comment whose first line is a declaration heading and whose remaining lines are its body is a declaration, not a citation site.
-- Inline-spec stubs (`# <ID>: [<text>](<path>)`) — a `docs/` shape, not a code-comment shape.
-- Bare ID-shaped tokens that the scanner already excludes from citations: tokens inside string literals in source files ([AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection)), and any bare token at all under `[reference] strict = true` ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). If the scanner doesn't see a citation, no site exists.
+- Citations inside Markdown declaration bodies (prose in `docs/`, `tests/e2e/`, or any other file read as Markdown). Spec text governs itself.
+- Declarations themselves. `# FS-foo: …` and `/// FS-foo: …` are declaration headings, and a declaration's own heading is not one of the citations a scan records; a doc-comment whose first line is a declaration heading and whose remaining lines are its body is a declaration, not a note.
+- Inline-spec stubs (`# <ID>: [<text>](<path>)`), a `docs/` shape, not a code-comment shape.
+- Bare ID-shaped tokens the scanner does not record as citations: one inside a string literal in a source file ([§FS-citations.recognized.string-literals](FS-citations.md#recognizedstring-literals-string-literals-in-source-files)), and any bare token at all under `[reference] strict = true` ([§FS-config.3.1](FS-config.md#31-reference--citation-form)).
 - Doc-comments ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)).
 
 ### 1.4 Notes
 
-A note's *note text* is any non-whitespace text inside it that is not a comment-prefix character and not part of a `§<ID>[.<section>]` token (workspace-qualified `§<alias>/<ID>` tokens, [§FS-workspace.1](FS-workspace.md#1-citation-syntax), are citation tokens, not note text). What separates two citation tokens of one chain on one line is not note text either: whitespace, or a single comma with optional whitespace around it. So `// §FS-check.3.1  §FS-config.3.1` and `// §FS-check.3.1, §FS-config.3.1` are both pure citation comments — the second spells the chain the way [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit) requires a note's citation run to be spelled, and writing it must not turn a pointer into prose. Anything else between two tokens is note text: a second comma, a ` + `, a ` / `, an `and`. The exemption is bounded by the line because the separator is read between two tokens the same line holds: a chain wrapped across two comment lines — `// §FS-check.3.1,` and then `// §FS-config.3.1` on the next line — leaves the trailing comma with no following token to join, so that note carries note text, and under a configured layout ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit)) its citation-bearing lines are judged like any other.
+A note's *note text* is any non-whitespace character left on any of its lines once three things are stripped from that line: its comment-prefix tokens (`//`, `*`, the opening `/**`, the docstring `"""`, and so on, the stripping [§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper) does for a declaration's body), every citation token [§FS-citations.recognized](FS-citations.md#recognized-recognized-citations) recognizes, workspace-qualified `§<alias>/<ID>` tokens included ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)), and each separator between two consecutive citation tokens on that line. A separator is whitespace, or a single comma with optional whitespace around it, so `// §FS-check.3.1  §FS-config.3.1` and `// §FS-check.3.1, §FS-config.3.1` are both pure citation comments: the second spells the chain the way [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit) requires a citation run to be spelled. Anything else between two tokens is note text: a second comma, a ` + `, a ` / `, an `and`. A note *carries note text* when any is left. The stripping is per line, so a chain wrapped across two comment lines, `// §FS-check.3.1,` above `// §FS-config.3.1`, leaves a comma with no following token to join, and that note carries note text.
 
 ## 2. Configuration
 
-The keys live in `[reference]`, and their values and defaults are stated there ([§FS-config.3.1](FS-config.md#31-reference--citation-form)): `inline_style`; the three budgets `inline_note_suggested_lines`, `inline_note_max_lines`, and `inline_note_max_columns`, the last a hard cap on the longest line of the note; the layout pair `inline_note_layout` ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit)) and `inline_note_layout_check`; and `warn_on_suggested`. The budgets and the layout apply only when `inline_style = "citation-with-note"`.
+The keys live in `[reference]`, and their values, defaults and load-time rules are [§FS-config.3.1](FS-config.md#31-reference--citation-form)'s: `inline_style`; the three budgets `inline_note_suggested_lines`, `inline_note_max_lines` and `inline_note_max_columns`, the last a hard cap on the longest line of the note; the layout pair `inline_note_layout` ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit)) and `inline_note_layout_check` ([§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)); and `warn_on_suggested` ([§FS-inline-citation-style.4.2](FS-inline-citation-style.md#42-warnings--opt-in-soft-cap)). The budgets and the layout apply only when `inline_style = "citation-with-note"`.
 
-Under v2 the budgets are measure tables, `[schema.notes.lines]`, `[schema.notes.columns]`, `[schema.notes.text]` and `[schema.notes.layout]`, whose keys are strengths and whose values are the thresholds below ([§FS-config-v2.schema.measures](FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys)). The v1 keys keep the meanings this chapter gives them.
-
-
-### 2.1 Defaults
-
-The zero-config defaults ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)) are the ones [§FS-config.3.1](FS-config.md#31-reference--citation-form) gives. They preserve the convention this project already follows — a one-line note next to each `§<ID>` citation — and never reject notes that an existing conformant tree was already writing. `inline_note_layout = "any"` is that promise for the layout axis in particular: it imposes no shape at all, so a tree that never had a house style gains no findings and pays no classification work. `inline_note_layout_check = "off"` extends the second half of that promise to a tree that *has* adopted a house style but not the gate: with no channel for a verdict to reach, no line is classified either ([§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)).
-
-### 2.2 Load-time invariants
-
-The load-time rules for these keys are stated with their schema in [§FS-config.3.1](FS-config.md#31-reference--citation-form): the invariant `inline_note_suggested_lines ≤ inline_note_max_lines` — a soft cap above the hard cap is meaningless — the two closed layout enums, and which keys are inert, still parsed and printed, under which settings. A violation fails on load with the standard config-error shape ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), the same way an unknown `inline_style` does. The two layout keys are independent of each other and of the budgets, so `inline_note_layout_check` is legal at every layout.
+Under v2 the budgets are measure tables, `[schema.notes.lines]`, `[schema.notes.columns]`, `[schema.notes.text]` and `[schema.notes.layout]`, whose keys are strengths and whose values are thresholds, measured as [§FS-inline-citation-style.2.3](FS-inline-citation-style.md#23-counting-lines-and-columns) counts ([§FS-config-v2.schema.measures](FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys)).
 
 ### 2.3 Counting lines and columns
 
-A site is measured three ways, each over the comment block [§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks) bounds: its physical lines ([§FS-inline-citation-style.2.3.1](FS-inline-citation-style.md#231-lines)), the characters on its longest line ([§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns)), and whether it carries a note ([§FS-inline-citation-style.2.3.3](FS-inline-citation-style.md#233-note-presence)).
+A note is measured over its comment block ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)), by its physical lines and by the characters on its longest line.
 
 #### 2.3.1 Lines
 
-A site's line count is the physical extent of its comment block — `last_line - first_line + 1`. A single `// …` line counts as 1; a three-line `//` run or `/* … */` block counts as 3. Blank intra-block lines (a ` * ` filler inside `/* … */`, an empty `//` line) count toward the total: the rule measures the comment's physical size.
+A note's line count is the physical extent of its block, `last_line - first_line + 1`: a single `// …` line counts as 1, and a three-line `//` run or `/* … */` block counts as 3. Blank intra-block lines (a ` * ` filler inside `/* … */`, an empty `//` line) count toward the total.
 
 #### 2.3.2 Columns
 
-A site's column width is the number of **characters** on its longest constituent line, counted from column 1: one column per Unicode scalar value, whatever UTF-8 spends encoding it. `é`, `—`, `×`, and the `§` marker itself are one column each and not the two or three bytes they occupy, so a note in accented or non-Latin prose gets the same budget as the same note in ASCII, and a project that configures `100` gets 100 columns in every language it writes ([§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible)).
-
-The width is not the **byte** length: that is the start column the scanner records on each citation ([AR-scanner.3](../architecture/AR-scanner.md#3-output)), which addresses a position for an editor to jump to rather than bounding a length, and the two agree only on a line of pure ASCII. Nor is it the **display width**: a tab is one column and so is a double-width glyph, so the cap moves with neither a tabstop setting nor the font a reader renders the file in. Why the character is the unit, and why reading it as bytes was a defect rather than a policy, is decided in [§DF-note-columns-are-characters](../decisions/functional/DF-note-columns-are-characters.md#df-note-columns-are-characters-a-note-column-is-one-character-not-one-byte-and-not-one-display-cell).
-
-#### 2.3.3 Note presence
-
-After stripping a line's comment-prefix tokens (`//`, `*`, the opening `/**`, the docstring `"""`, etc.), every citation token, and each separator between two consecutive citation tokens on that line that [§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes) excludes from note text — whitespace with at most one comma — any non-whitespace character remaining on any line of the note is note text. The stripping is per line, so a comma that a wrapped chain leaves at the end of a line joins nothing and stays note text ([§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes)). This is the same prefix stripping [§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper) does for a declaration's body — applied to every line of the note.
+A note's width is the number of **characters** on its longest line, counted from column 1, indentation and comment delimiters included: one column per Unicode scalar value, whatever UTF-8 spends encoding it, so `é`, `—`, `×` and the `§` marker are one column each. It is not the byte length, which is the start column the scanner records on each citation for an editor to jump to, and the two agree only on a line of pure ASCII. Nor is it the display width: a tab is one column and so is a double-width glyph, so the cap moves with neither a tabstop setting nor a font. Decided in [§DF-note-columns-are-characters](../decisions/functional/DF-note-columns-are-characters.md#df-note-columns-are-characters-a-note-column-is-one-character-not-one-byte-and-not-one-display-cell).
 
 ## 3. Styles
 
 ### 3.1 `citation-only`
 
-A note may contain only its comment prefix(es) and one or more `§<ID>[.<section>]` tokens, separated by whitespace or by a single comma ([§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes)). Note text anywhere in it ([§FS-inline-citation-style.2.3.3](FS-inline-citation-style.md#233-note-presence)) is an error. The intended use is repositories that prefer to keep all rationale in the spec, so a citing code comment becomes a pure pointer. Under this style the `inline_note_*` keys have no effect ([§FS-inline-citation-style.2](FS-inline-citation-style.md#2-configuration)).
+A note may contain only its comment prefixes and one or more citation tokens joined by separators ([§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes)), so a citing comment is a pure pointer, for a project that keeps its rationale in the spec. A note that carries note text is an error ([§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps)). Under this style the `inline_note_*` keys have no effect ([§FS-config.3.1](FS-config.md#31-reference--citation-form)).
 
 ### 3.2 `citation-with-note`
 
-A citation site may contain one or more citation tokens **plus** a note, bounded by `inline_note_max_lines` and `inline_note_max_columns` ([§FS-inline-citation-style.2.3](FS-inline-citation-style.md#23-counting-lines-and-columns)). The note may appear before, after, or between citation tokens — the budgets are this style's only constraint. A project that also wants one canonical arrangement of citation and note sets `inline_note_layout` ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit)); at its default `any` the style is exactly as permissive as it reads here.
+A note may carry note text beside one or more citation tokens, before, after or between them, bounded by `inline_note_max_lines` and `inline_note_max_columns` ([§FS-inline-citation-style.2.3](FS-inline-citation-style.md#23-counting-lines-and-columns)). The budgets are this style's only constraint unless `inline_note_layout` sets an arrangement ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit)).
 
 ### 3.3 `inline_note_layout` — where the citations sit
 
-`inline_style` says whether a note may exist and the budgets say how big it may be; neither says where the `§<ID>` tokens sit inside it. `inline_note_layout` is that third axis, orthogonal to the other two: it constrains arrangement only, never presence and never size. `"any"`, the default, imposes nothing — [§FS-inline-citation-style.3.2](FS-inline-citation-style.md#32-citation-with-note) as written ([§FS-inline-citation-style.3.3.10](FS-inline-citation-style.md#3310-why-any-is-the-default)). `"citation-first-colon"` requires the canonical form `<cite>[, <cite>]*: <note>`. Precisely: let `L` be a run of one or more recognized citation tokens joined by exactly `, ` (comma, one space), `W` one or more spaces, `T` any non-empty text, and `ε` the end of the content. A line **conforms** when its content ([§FS-inline-citation-style.3.3.8](FS-inline-citation-style.md#338-reading-a-lines-content)) matches
+`inline_note_layout` constrains where the citation tokens sit in a note, never whether a note may exist and never how large it is; layout and size are judged independently, so one line may earn a layout finding, a column finding, or both. `any`, the default, imposes nothing ([§DF-inline-note-layout.2.6](../decisions/functional/DF-inline-note-layout.md#26-default-off-and-no-version-bumps)). `citation-first-colon` requires the form `<cite>[, <cite>]*: <note>`. Precisely: let `L` be a run of one or more recognized citation tokens joined by exactly `, ` (comma, one space), `W` one or more space characters, `T` any non-empty text, and `ε` the end of the content. A line **conforms** when its content matches
 
 ```
 L ":" ( W T | ε )
 ```
 
-Seven rules complete the definition, rule *n* at [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit).*n*; [§FS-inline-citation-style.3.3.9](FS-inline-citation-style.md#339-examples) shows lines that conform and lines that do not.
+**Which lines are judged.** Only a note that carries note text ([§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes)) is judged; a pure citation comment is exempt in either spelling of a chain. In a judged note, a line is judged when its content holds at least one citation token **and** either it is the first such line of the block or its content opens with a citation token. Every other line is free, and so is every citation after the run that opens a judged line. A `// §<ID>` line followed by a prose-only line in the same block is one note that carries note text, so the citation line is judged and fails ([§DF-inline-note-layout.2.2](../decisions/functional/DF-inline-note-layout.md#22-per-line-not-per-site)).
 
-#### 3.3.1 Per line, not per site — and only where a note opens
+**A line's content.** The form is read on the line's content: what is left once the comment prefix (`//`, `///`, `//!`, `#`, `;`, `--`, ` * `, `/**`, a docstring quote, …), any block closer (`*/`, a closing docstring quote) and the whitespace that indents the content past the prefix have been stripped, the same prefix stripping [§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes) applies. One leading Markdown list marker, `-`, `*`, `+`, or an ordered `1.` / `1)`, followed by at least one space, is skipped the same way, so `// - §<ID>: note` opens with its citation run. The skip is this rule's alone: [§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes) still reads the marker as note text, so `inline_style = "citation-only"` judges a bulleted pointer as carrying note text.
 
-A line of a note is judged when it carries at least one recognized citation token inside its content **and** either it is the first such line of that block, or its content opens with a citation token. Every other line is unconstrained. So a line with no citation says nothing about layout, and a `//` block may open with a summary line and carry its `// §<ID>: …` lines below it. And a citation-bearing line further down that opens with *prose* is the continuation of a note that already opened correctly, so a note that wraps within its line budget ([§FS-inline-citation-style.2.3.1](FS-inline-citation-style.md#231-lines)) may name a second declaration on its continuation line — the freedom [§FS-inline-citation-style.3.3.3](FS-inline-citation-style.md#333-one-edge-only) grants on one line, not taken back the moment the same note needs two.
+**Exact.** Inside the content the form is exact, so a near miss such as a space where `, ` belongs, a space before the colon or a tab as `W` is a deviation ([§DF-inline-note-layout.2.3](../decisions/functional/DF-inline-note-layout.md#23-one-exact-canonical-form)).
 
-The first citation-bearing line is judged unconditionally because it is the line that opens the note: that is what keeps `// note. §<ID>`, and a summary line followed by `// prose then §<ID>`, deviations. A continuation line that *opens* with a citation token is judged too, because it is indistinguishable from a note opening — `// §<ID> and continues` reads as a malformed opener whether or not the line above it ended mid-sentence.
-
-#### 3.3.2 Only sites that carry a note
-
-A note whose note presence is false ([§FS-inline-citation-style.2.3.3](FS-inline-citation-style.md#233-note-presence)) is exempt: a layout is a relation between a citation and its note text, and a pure citation comment has none. Both spellings of a chain ([§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes)) qualify, the comma-joined one included — it is the very run this layout mandates in front of a colon, and a project that adopts the layout must not be told its noteless pointers are now malformed for lacking one.
-
-The consequence is deliberate: a `// §<ID>` line followed by a prose-only line **in the same block** is one note *with* note text, so the citation line is judged and fails. A bulleted pointer inside such a block is the same fact wearing a list marker: skipping the marker ([§FS-inline-citation-style.3.3.8](FS-inline-citation-style.md#338-reading-a-lines-content)) lets `// - §<ID>` open with its run, and the run still has to reach the delimiter, so a bulleted line that names an ID and says nothing is a deviation wherever the block says something elsewhere.
-
-#### 3.3.3 One edge only
-
-The rule constrains what *opens* the line. Citations later on the line are free, so a note may name a second declaration in passing (`// §<ID>: note (see also §<other>)`) and still conform.
-
-#### 3.3.4 Exact
-
-Inside the content, whitespace and punctuation deviations are deviations. A space instead of `, ` between two citations, a comma with no space, a space before the colon, a missing colon, a citation written last inside the prose, and a dash used where the colon belongs all fail. A citation run followed by a colon and nothing else conforms — the colon may end the line. The `W` that separates the colon from the note is one or more space characters, never a tab. Exactness governs the separators inside the run and the delimiter that ends it; the indentation before the content is not part of the content ([§FS-inline-citation-style.3.3.8](FS-inline-citation-style.md#338-reading-a-lines-content)).
-
-#### 3.3.5 Recognized tokens only
-
-"Citation token" means exactly what the scanner already recognizes on that line ([§FS-check.1.1](FS-check.md#11-recognized-citations)). Under `strict = false` a bare `// FS-x: note` line is claimed by the *declaration* recognizer before it reaches this rule ([AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection)) — a source declaration heading is not a note at all ([§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site)) — which is precisely the ambiguity the canonical form removes: with the marker written, `// <§>FS-x: note` reads as a citation carrying a rationale and can never be mistaken for a declaration of the same ID.
-
-#### 3.3.6 Same scope as the rest of this spec
-
-Markdown bodies have no notes and are untouched ([§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site)), and a comment trailing code on the same line (`foo(); // §<ID>: note`) is not a note today and does not become one here. A doc-comment block is not a note at all ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)), so no line of one is judged here. A doc-comment whose first line is a declaration heading is a declaration and not a note ([§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site)), so the `§<ID>` lines in its body are outside this rule exactly as they are outside the budgets — in a repository that declares IDs inline, that is often the densest citation block in a file, and the layout governs comments that *cite* rather than spec text that happens to live in code. [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering) says the same thing to the agent.
-
-#### 3.3.7 The budgets still apply
-
-Layout and size are judged independently; a line may deviate from the layout, exceed the column cap, or both, and each is its own finding.
-
-#### 3.3.8 Reading a line's content
-
-The form is read on the line's content **after** the comment prefix (`//`, `///`, `//!`, `#`, `;`, `--`, ` * `, `/**`, a docstring quote, …) and any block closer (`*/`, a closing docstring quote) have been stripped — the same prefix stripping [§FS-inline-citation-style.2.3.3](FS-inline-citation-style.md#233-note-presence) applies to decide note presence. Whatever indents the content past the prefix is stripped with it: a wrapped list continuation (`//   §<ID>: …`), an aligned ` *   ` filler, a tab after `#`. Indentation is comment formatting, not layout, so the citation run is read from the first byte of content that says anything.
-
-A leading Markdown **list marker** is skipped the same way: `-`, `*`, or `+`, or an ordered `1.` / `1)`, followed by at least one space. A bulleted block of grounded points is a common shape in a plain comment too, so a bullet is item structure rather than note text, and `// - §<ID>: note` opens with its citation run. The skip is for this rule only: [§FS-inline-citation-style.2.3.3](FS-inline-citation-style.md#233-note-presence) still reads the marker as note text when it decides whether a note carries note text at all, so no bulleted pointer is silently reclassified and `inline_style = "citation-only"` judges one exactly as before. One marker is skipped, not a chain of them, and only where a space follows — `// -§<ID>: note` opens with a `-`.
-
-#### 3.3.9 Examples
+Under `strict = false` a bare `// FS-x: note` line is a source declaration heading, not a note, so it is never judged ([§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site)); with the marker written, `// §<ID>: note` is a citation carrying a note.
 
 Conforming:
 
@@ -261,92 +176,57 @@ Nonconforming:
    §FS-config.3.1 opens the continuation */
 ```
 
-#### 3.3.10 Why `any` is the default
-
-The default is `any` because a layout is a house style, not a correctness property: two projects may reasonably disagree, and a tree that adopts `grund` mid-life should not be told its comments are wrong on the day it upgrades ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)). Choosing a value, and why the enforcement severity is a second key, is decided in [§DF-inline-note-layout](../decisions/functional/DF-inline-note-layout.md#df-inline-note-layout-inline-note-layout-is-a-configured-house-style-checked-per-line-and-never-normalized).
-
 ## 4. Enforcement (`grund check`)
 
-Findings are reported using the located-finding shape of [§FS-errors.2.1](FS-errors.md#21-located-finding), located at the **first line** of the offending note (so a multi-line block with a budget violation lands one finding at its opener, not at every constituent line). The one exception is the layout rule of [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations), which judges a single line and is therefore located at it ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line)).
-
-Under v2 each threshold reports on its strength's channel: `must` is the hard cap of [§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps), `warn` the warning of [§FS-inline-citation-style.4.2](FS-inline-citation-style.md#42-warnings--opt-in-soft-cap), `should` a suggestion, and `may` the silent guidance budget that agent-facing rendering states ([§FS-config-v2.rules.strengths](FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)). The measurements are unchanged.
-
+`check` reports a note that breaks the configured style as `inline-citation-style` ([§FS-check.3.10](FS-check.md#310-inline-citation-style-violation), [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), located, rendered, selected and counted toward the exit code as every finding is ([§FS-check.2.1](FS-check.md#21-report-format)). Under v2 the strength of the threshold a note breaks picks the channel ([§FS-config-v2.rules.strengths](FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)).
 
 ### 4.1 Errors — hard caps
 
-Each of the following is an error and contributes to a non-zero exit code, per [§FS-check.2](FS-check.md#2-outputs):
+Each of these is an error: a note that carries note text under `inline_style = "citation-only"`, a note longer than `inline_note_max_lines`, and a note whose longest line is wider than `inline_note_max_columns`. Each is located at the note's first line, and a note that breaks more than one cap gets one finding per cap:
 
-| condition                                               | result                                                                                                             |
-|---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| `inline_style = "citation-only"` and a note is present  | error: `inline citation must carry no prose; move the prose into a comment block of its own`                                                                        |
-| `lines > inline_note_max_lines`                         | error: `inline note is M lines, over the N-line maximum: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment` |
-| `max(columns) > inline_note_max_columns`                | error: `inline note is M columns, over the N-column maximum: line(s) A[-B] cite(s) <citations>; over-limit lines: <line widths>; shorten or rewrap its widest line`                     |
+```text
+src/lib.rs:1: error: inline citation must carry no prose; move the prose into a comment block of its own
+src/auth.rs:1: error: inline note is 5 lines, over the 3-line maximum: lines 1-5 cite §FS-001-auth.1, §FS-001-auth.2; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment
+src/lib.rs:7: error: inline note is 47 columns, over the 40-column maximum: line 7 cites §FS-001-alpha; over-limit lines: line 7: 47 columns; shorten or rewrap its widest line
+```
 
-A single note that violates more than one cap produces one finding per violated cap (so the author sees every reason in a single pass). [§FS-inline-citation-style.4.1.1](FS-inline-citation-style.md#411-the-measured-size)–[§FS-inline-citation-style.4.1.3](FS-inline-citation-style.md#413-the-splitting-clause) define `M` and `N`, the site clause, and the splitting clause.
+The line and column findings put the measured size, physical lines ([§FS-inline-citation-style.2.3.1](FS-inline-citation-style.md#231-lines)) or the characters of the note's longest line ([§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns)), beside the cap; the size pluralises by its own value (`1 line`, `2 lines`, `1 column`, `2 columns`), and the cap, `3-line` or `40-column`, never does. Each names the note by the span of its whole block, `lines <first>-<last>`, or `line <first>` alone when the two coincide (only possible for the column cap), and by every citation token of the block as written — marker, qualifier, section — in source order, deduplicated after the first occurrence, joined by `, ` as [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit) joins a citation run. The line-count finding then adds the block rule of [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks), the boundary a split has to cross.
 
-#### 4.1.1 The measured size
-
-`M` is the measured size — physical lines ([§FS-inline-citation-style.2.3.1](FS-inline-citation-style.md#231-lines)), or characters ([§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns)) of the note's longest line — placed next to the cap `N` so the finding is actionable without re-measuring, in keeping with [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible). `M` pluralises by its own value (`1 line`, `2 lines`, `1 column`, `2 columns`); `N-line` and `N-column` are adjectival and never pluralise.
-
-##### 4.1.1.1 Every over-limit line
-
-Every column-budget finding appends `; over-limit lines: <line widths>` after its complete existing message, including the site clause of [§FS-inline-citation-style.4.1.2](FS-inline-citation-style.md#412-the-site-clause), and before the remedy its catalog row words ([§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read)), which stays last. `<line widths>` lists **every** constituent line whose width is strictly greater than that finding's selected threshold `N`, in ascending source order, separated by `, `. Each entry is `line L: W columns`: `L` is the 1-based physical source line and `W` uses the character measurement of [§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns), including indentation and comment delimiters. A line exactly at the threshold is omitted. The label is always `over-limit lines`, even for one entry; each entry uses `column` only when `W = 1`, otherwise `columns`.
-
-This suffix applies to hard caps and v2 softer column budgets alike ([§FS-config-v2.schema.measures](FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys)), using the threshold selected for the emitted finding. It changes only the message suffix: one finding per existing budget, code, first-line location, channel, gating, exit verdict, and JSON fields remain unchanged. Text and JSON carry the same complete message. The old message remains a verbatim contiguous prefix ([§FS-errors.3](FS-errors.md#3-message-text)); the whole-block span still describes the note, not just its over-limit lines. A hard column-cap finding continues to suppress softer column findings for that note.
-
-#### 4.1.2 The site clause
-
-Both cap findings name the note: `A-B` is the block's `first_line`–`last_line`, or `line A` alone when the two coincide (only possible for the column cap); `<citations>` is every citation token of the block as written — marker, qualifier, section — in source order, deduplicated after the first occurrence, chain-spelled with `, ` the way [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit) already joins a citation run.
-
-#### 4.1.3 The splitting clause
-
-The line-count finding carries a further clause, `a blank line splits a note, an empty comment line does not`, restating [§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)'s block rule at the point it fixes the finding: the citations name what has to move, and the clause names the boundary that moving them has to cross. The column cap carries no such clause — a wide line is fixed by wrapping, not by splitting.
+The column finding adds `; over-limit lines: <line widths>` after its site clause and before its fix. `<line widths>` lists every line of the block strictly wider than that finding's threshold, in ascending source order, separated by `, `, each as `line L: W columns`, where `L` is the 1-based physical line and `W` its width as [§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns) measures it, with `column` only when `W = 1`. A line exactly at the threshold is left out, and the label is `over-limit lines` even for one entry. A v2 column threshold of any strength carries the same suffix, measured against its own threshold ([§FS-config-v2.schema.measures](FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys)), and a hard column finding suppresses the softer column findings of the same note. The fix closes every message, as its catalog row words it ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)).
 
 ### 4.2 Warnings — opt-in soft cap
 
-`warn_on_suggested = false` (default): soft-cap overruns are **silent** at `check` time. The soft cap is purely guidance for the agent-facing surface ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)); humans get the same guidance through the same rendered copy.
+At `warn_on_suggested = false`, the default, a soft-cap overrun is silent at `check` time: the soft cap is guidance the agent-facing copy states ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)).
 
-`warn_on_suggested = true`: a note whose line count exceeds `inline_note_suggested_lines` but stays within `inline_note_max_lines` is reported as a **warning**: `inline note is M lines, over the N-line preferred limit: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment`, with `M`, `N`, the site clause, and the splitting clause following the same rules as [§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps)'s line-count finding ([§FS-inline-citation-style.4.1.1](FS-inline-citation-style.md#411-the-measured-size)–[§FS-inline-citation-style.4.1.3](FS-inline-citation-style.md#413-the-splitting-clause)). Warnings never affect the exit code, per [§FS-check.4](FS-check.md#4-warnings).
+At `warn_on_suggested = true`, a note whose line count exceeds `inline_note_suggested_lines` but stays within `inline_note_max_lines` is a warning. It is located, measured and worded as the line-count finding of [§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps) is, with `preferred limit` in place of `maximum`:
 
-The soft cap counts lines only: there is no `suggested_columns` knob, and column width is a single hard cap ([§FS-inline-citation-style.6.3](FS-inline-citation-style.md#63-no-second-column-measure)).
+```text
+src/lib.rs:1: warning: inline note is 2 lines, over the 1-line preferred limit: lines 1-2 cite §FS-001-alpha; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment
+```
 
-### 4.3 `grund fmt`
-
-`grund fmt` does **not** auto-fix style violations under this spec — budgets and layout alike; an inline citation that violates `inline_style` rules is `check`'s problem, not `fmt`'s. Prose cannot be safely rewritten or truncated, and moving a citation across the prose that surrounds it is a prose edit, not a token rewrite: the formatter would have to decide where a sentence ends, whether a trailing `(§<ID>)` was parenthetical, and what punctuation the remainder now needs. The fix for a layout deviation is one token in the author's own editing loop, and migrating a tree is served by `inline_note_layout_check = "warn"` ([§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)), which produces the worklist without touching a byte. Its token rewrites ([§FS-fmt.2](FS-fmt.md#2-behavior)) and cross-reference emission ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)) still run, and an expansion can lengthen a note past its cap ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)).
+The soft cap counts lines only ([§FS-inline-citation-style.6.3](FS-inline-citation-style.md#63-no-second-column-measure)).
 
 ### 4.4 Warnings and errors — opt-in layout deviations
 
-Off by default, twice over: `inline_note_layout = "any"` means there is no layout to deviate from, and `inline_note_layout_check = "off"` means a layout that *is* configured stays documentation. A project that sets only `inline_note_layout` has told its agents the house style through [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering) and asked `check` for nothing — the same standing the soft cap has under `warn_on_suggested = false`. At `off` no line is classified at all: the per-line layout verdicts ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line)) have no consumer, so a project that documents a layout without gating it scans exactly as fast as one that has none.
+Layout checking is off by default, twice over: `inline_note_layout = "any"` leaves no layout to deviate from, and `inline_note_layout_check = "off"` keeps a configured layout as agent-facing guidance only ([§FS-inline-citation-style.5.3](FS-inline-citation-style.md#53-the-layout-sentence)), and no line is classified at all. With `inline_note_layout = "citation-first-colon"`, `inline_note_layout_check` picks the channel ([§DF-inline-note-layout.2.1](../decisions/functional/DF-inline-note-layout.md#21-two-keys-the-style-and-the-level-it-is-enforced-at), [§DF-require-grounding.2.4](../decisions/functional/DF-require-grounding.md#24-off-by-default)):
 
-With `inline_note_layout = "citation-first-colon"`:
+| `inline_note_layout_check` | result |
+|---|---|
+| `off` (default) | silent |
+| `warn` | one **warning** per nonconforming line |
+| `error` | one **error** per nonconforming line |
 
-| `inline_note_layout_check` | result                                                                     |
-|----------------------------|----------------------------------------------------------------------------|
-| `off` (default)            | silent; the layout is agent-facing guidance only ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering))                       |
-| `warn`                     | one **warning** per nonconforming line; the exit code is untouched ([§FS-inline-citation-style.4.2](FS-inline-citation-style.md#42-warnings--opt-in-soft-cap))   |
-| `error`                    | one **error** per nonconforming line; the exit code becomes 1               |
+Each finding is located at its nonconforming line, not at the note's opener, because that is the line the author edits ([§DF-inline-note-layout.2.2](../decisions/functional/DF-inline-note-layout.md#22-per-line-not-per-site)). The message is the same at both severities, so moving a project from `warn` to `error` changes the exit code and nothing a reader has to re-learn; it names the canonical shape with the configured marker:
 
-Three properties are fixed at both severities ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line)–[§FS-inline-citation-style.4.4.3](FS-inline-citation-style.md#443-report-order)); [§FS-inline-citation-style.4.4.4](FS-inline-citation-style.md#444-why-two-severities) says why there are two.
+```text
+src/lib.rs:4: error: inline note must open with its citations and a colon (§<ID>: note); rewrite the line in that form
+```
 
-#### 4.4.1 One finding per nonconforming line
-
-Each finding is located at its nonconforming line, not at the note's opener. A layout deviation is a property of the line the author has to edit, and a five-line comment with two bad lines is two edits. This is the exception [§FS-inline-citation-style.4](FS-inline-citation-style.md#4-enforcement-grund-check) names: the budgets measure the note as a whole and keep their opener anchor.
-
-#### 4.4.2 One message at both severities
-
-The message is the same at `warn` and at `error`, so moving a project from `warn` to `error` changes the exit code and nothing a reader has to re-learn. It names the canonical shape with the configured marker, e.g. ``inline note must open with its citations and a colon (§<ID>: note); rewrite the line in that form``.
-
-#### 4.4.3 Report order
-
-Report order is the existing deterministic order ([§FS-errors.4](FS-errors.md#4-determinism)) — the severity chooses the channel, and in a text report the channel chooses the group, errors ahead of warnings; the JSON order ignores the channel.
-
-#### 4.4.4 Why two severities
-
-The two severities exist so a repository can adopt the style in the order adoption actually happens: turn on `warn`, migrate the tree with the report as the worklist, then turn on `error` to keep it migrated. That is the same ladder [§DF-require-grounding.2.4](../decisions/functional/DF-require-grounding.md#24-off-by-default) describes for the grounding floor. Choosing which channel a rule speaks through is a per-project configuration choice, not a redefinition of what a warning or an error *means* — those stay fixed by [§FS-check.2](FS-check.md#2-outputs).
+Report order is the deterministic order of [§FS-errors.4](FS-errors.md#4-determinism): the severity chooses the channel, a text report puts errors ahead of warnings, and the JSON order ignores the channel.
 
 ## 5. Agent-facing rendering
 
-The `init` machinery that writes versioned managed blocks into `AGENTS.md` / `CLAUDE.md` / sibling agent entrypoints ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) reads the active values and emits the sentences describing the project's house style: the budgets line ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)), the block sentence ([§FS-inline-citation-style.5.2](FS-inline-citation-style.md#52-the-block-sentence)), the layout sentence ([§FS-inline-citation-style.5.3](FS-inline-citation-style.md#53-the-layout-sentence)) and the doc-comment sentence ([§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence)), each under the conditions its section states. They are rendered, not live, and `check` compares them like every other line of the block ([§FS-inline-citation-style.5.5](FS-inline-citation-style.md#55-rendered-not-live)); a change in grund to their wording moves the managed-block version like any other ([§FS-inline-citation-style.5.6](FS-inline-citation-style.md#56-no-managed-block-version)); and `grund config show` is the machine-readable form of the same keys ([§FS-inline-citation-style.5.7](FS-inline-citation-style.md#57-grund-config-show-is-the-machine-readable-form)).
+`grund init` renders the house style into the managed block it writes into `AGENTS.md`, `CLAUDE.md` and the sibling agent entrypoints ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), as sentences read from the active values, each under the conditions its section states.
 
 ### 5.1 The budgets line
 
@@ -356,35 +236,27 @@ The copy opens with one budgets line:
 - `inline_style = "citation-with-note"`, `suggested_lines == max_lines` → e.g. `Inline notes: ≤ 1 line, ≤ 100 columns.`
 - `inline_style = "citation-with-note"`, `suggested_lines < max_lines` → e.g. `Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns.`
 
-The collapse rule is "if soft and hard are the same number, only mention the number" — the soft/hard distinction is a property of the *config*, not always a useful distinction in the agent prose.
+When the soft and the hard cap are the same number, only the number is said.
 
 ### 5.2 The block sentence
 
-Under `citation-with-note` only, one further sentence follows the budgets line and precedes the layout and doc-comment sentences ([§FS-inline-citation-style.5.3](FS-inline-citation-style.md#53-the-layout-sentence), [§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence)): `A note is one comment block: a blank line splits it, an empty comment line does not.` — restating [§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)'s block rule where the agent will need it to act on a cap finding. No sentence is added under `citation-only`: a note with no note text has no block to split.
+Under `citation-with-note` only, one further sentence follows the budgets line and precedes the layout and doc-comment sentences ([§FS-inline-citation-style.5.3](FS-inline-citation-style.md#53-the-layout-sentence), [§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence)): `A note is one comment block: a blank line splits it, an empty comment line does not.`, the block rule of [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) where the agent needs it to act on a cap finding.
 
 ### 5.3 The layout sentence
 
-Under `citation-with-note` only, when `inline_note_layout = "citation-first-colon"` is set, one further sentence follows the block sentence ([§FS-inline-citation-style.5.2](FS-inline-citation-style.md#52-the-block-sentence)), naming the canonical form with the configured marker and placeholder IDs — e.g. ``Lay each note out citation-first: `// §<ID>: <note>` (several citations: `// §<ID>, §<ID>: <note>`).`` No sentence is added under `citation-only`, where the layout is inert ([§FS-inline-citation-style.2](FS-inline-citation-style.md#2-configuration)). Under `inline_note_layout = "any"` nothing is appended and the rendered text is byte-identical to what a `grund` without this key produced, so no repository's managed block drifts on upgrade: its re-render ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) is unchanged, and `grund init --check` reports no `would-update` for it ([§FS-init.1](FS-init.md#1-inputs)).
+Under `citation-with-note` only, when `inline_note_layout = "citation-first-colon"` is set, one further sentence follows the block sentence ([§FS-inline-citation-style.5.2](FS-inline-citation-style.md#52-the-block-sentence)), naming the canonical form with the configured marker and placeholder IDs — e.g. ``Lay each note out citation-first: `// §<ID>: <note>` (several citations: `// §<ID>, §<ID>: <note>`).`` `inline_note_layout_check` does not change the sentence: it says what to write, never how the gate reports a deviation ([§DF-inline-note-layout.2.1](../decisions/functional/DF-inline-note-layout.md#21-two-keys-the-style-and-the-level-it-is-enforced-at)).
 
-#### 5.3.1 Wider than the gate
-
-The sentence names a house style for the comments an agent writes, and it is deliberately wider than the gate: `check` judges *notes*, so neither a doc-comment ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)) nor a doc-comment that declares an ID ([§FS-inline-citation-style.3.3.6](FS-inline-citation-style.md#336-same-scope-as-the-rest-of-this-spec)) is measured against the form at all. Both readings are the intended ones — an agent should lay out every note it writes the same way, and documentation, whether it is a declaration body or the Javadoc next to it, is text whose shape this spec does not govern. The practical consequence belongs to whoever migrates a tree: under `warn`, the worklist covers the citing inline comments and never the doc-comments, so "the report is empty" means the notes are clean, not that every `§<ID>` line in the repository is citation-first.
-
-#### 5.3.2 The same at every check setting
-
-`inline_note_layout_check` does **not** change the sentence. The house style is what the agent is asked to write; whether `check` reports a deviation as a warning, as an error, or not at all is a fact about the project's gate, not about the form. An agent told the form and then told it is only advisory would have been given a reason to ignore it.
+The sentence is wider than the gate: it asks the agent to lay out every citing comment it writes this way, while `check` judges notes only, never a doc-comment ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)) or one that declares an ID ([§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site)), so under `warn` an empty report means the notes are clean, not that every `§<ID>` line in the repository is citation-first.
 
 ### 5.4 The doc-comment sentence
 
-One last sentence closes the rendered copy at **every** `inline_style`, after whatever the keys above produced, because where the gate stops is part of the house style an agent needs:
+One last sentence closes the rendered copy at **every** `inline_style`, after whatever the keys above produced, because where the gate stops is part of the house style an agent needs ([§DF-doc-comments-are-not-notes.2.5](../decisions/functional/DF-doc-comments-are-not-notes.md#25-one-rendered-sentence-and-no-version-bump)):
 
 ``Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell, SQL or Lisp comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.``
 
-Without it the author and the linter disagree in the expensive direction: the agent reads a budget, sees a Javadoc that cites, and moves the citation to a detached `//` line above the block — out of the generated documentation and away from the sentence it supported — to satisfy a rule that never applied ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)).
-
 ### 5.5 Rendered, not live
 
-Like every other line [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) substitutes into the block, the sentences of [§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)–[§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence) are *rendered*, not live: they are written into the managed block when `grund init` runs. `check` compares them against the active config as it compares the rest of the block ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). A project that adopts `inline_note_layout`, changes its value, drops back to `any`, or edits `[schema.notes]` therefore sees `check` report the block's `rules` section stale ([§FS-check.3.5.3](FS-check.md#353-code-and-message)) until it re-runs `grund init` to refresh it.
+The sentences of [§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)–[§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence) are *rendered*, not live: `grund init` writes them into the managed block, and `check` compares them with the active config as it compares the rest of the block ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). A project that adopts `inline_note_layout`, changes its value, drops back to `any`, or edits `[schema.notes]` therefore sees `check` report the block's `rules` section stale ([§FS-check.3.5.3](FS-check.md#353-code-and-message)) until it re-runs `grund init`.
 
 ### 5.6 No managed-block version
 
@@ -392,29 +264,29 @@ Retired: these sentences once moved no managed-block version, because `check` di
 
 ### 5.7 `grund config show` is the machine-readable form
 
-`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) is the canonical machine-readable form: each inline-style setting in effect is printed, in the config file's own version, at its value with no collapse ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)), so a human or downstream tool diffing config sees the raw shape. In a version-2 file one that is off, such as `[schema.notes.layout]` while no layout is required, prints nothing, and `grund config explain` answers for it ([§FS-config.4.2.3.1](FS-config.md#4231-what-sends-a-reader-to-show-names-explain)).
+`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) prints each inline-style setting in effect, in the config file's own version, at its value with no collapse ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)). In a version-2 file a setting that is off, such as `[schema.notes.layout]` while no layout is required, prints nothing, and `grund config explain` answers for it ([§FS-config.4.2.3.1](FS-config.md#4231-what-sends-a-reader-to-show-names-explain)).
 
 ## 6. Non-goals
 
-Deliberately out of scope, in four groups ([§FS-inline-citation-style.6.1](FS-inline-citation-style.md#61-no-rewrite-in-grund-fmt)–[§FS-inline-citation-style.6.4](FS-inline-citation-style.md#64-no-per-project-reshaping-of-the-rule)).
+Deliberately out of scope.
 
 ### 6.1 No rewrite in `grund fmt`
 
-No auto-rewrite of a note and no normalization of layout, in `--check` or in `--write` ([§FS-inline-citation-style.4.3](FS-inline-citation-style.md#43-grund-fmt)): prose changes need human judgment, and layout is check-only.
+`grund fmt` rewrites no note to fit its budget and normalizes no layout, in `--check` or in `--write`: a budget or layout violation is `check`'s alone, because prose cannot be safely shortened, and moving a citation across the prose around it is a prose edit that needs judgment no formatter has ([§DF-inline-note-layout.2.5](../decisions/functional/DF-inline-note-layout.md#25-check-only-grund-fmt-is-not-involved)). Its token rewrites ([§FS-fmt.2](FS-fmt.md#2-behavior)) and cross-reference emission ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)) still run on a note, and an expansion can lengthen a note past its cap ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)).
 
 ### 6.2 No scope beyond notes
 
-- No scope growth. Spec text in Markdown bodies is not capped, and layout is judged on notes only — never in Markdown bodies, never on a comment trailing code, never on the code line below the comment ([§FS-inline-citation-style.3.3.6](FS-inline-citation-style.md#336-same-scope-as-the-rest-of-this-spec)).
-- No host-language parsing to find definitions. Whether a block is a doc-comment is one prefix test or one next-line test ([§FS-inline-citation-style.1.1.1](FS-inline-citation-style.md#111-recognizers)). A miss in a position language is never fixed by acquiring a parser ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): a false negative, such as a Ruby `private def`, is fixed by widening a starter set, and a false positive, such as a Go `var` in a function body, is accepted ([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)).
+- No scope growth. Spec text in Markdown bodies is not capped ([§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site)), and layout is judged on notes only ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit)) — never in Markdown bodies, never on a comment trailing code ([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)), never on the code line below the comment.
+- No host-language parsing to find definitions ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): a block's kind is the one test of [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages), and a miss is accepted ([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)) or fixed by widening a starter set ([§FS-inline-citation-style.6.4](FS-inline-citation-style.md#64-no-per-project-reshaping-of-the-rule)).
 
 ### 6.3 No second column measure
 
-- No `suggested_columns` knob. Column width is a single hard cap, a binary "too long" in symmetry with how editors and formatters already treat line length rather than a layered preference; in most repositories editor or formatter rules already govern it.
-- No display-width awareness. Tabs count as one column; widening tabstops in an editor does not change whether a comment passes the cap.
+- No `suggested_columns` knob. Column width is a single hard cap, a binary "too long", as editors and formatters treat line length.
+- No display-width awareness: a column is what [§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns) counts.
 
 ### 6.4 No per-project reshaping of the rule
 
-- No per-kind or per-file overrides. The style is repo-wide, matching [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree) — two correctly-configured `grund` installs must agree on whether a tree is well-formed.
-- No "warning for hard-cap miss." A hard-cap miss is always an error; if a project wants the soft cap to nag, it sets `warn_on_suggested = true`.
+- No per-kind or per-file overrides. The style is repo-wide, so two correctly configured `grund` installs agree on whether a tree is well-formed ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
+- No warning for a hard-cap miss: a hard cap is always an error ([§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps)).
 - No per-rule severity remap. `inline_note_layout_check` selects which channel *this* rule speaks through, from a fixed set; it does not let a project re-level any other rule, and it does not change what an error or a warning means ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization), [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
-- No configuration of the language table. The recognizers and the extensions they claim are built in ([§FS-inline-citation-style.1.1.1](FS-inline-citation-style.md#111-recognizers), [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages)): what a note *is* must not differ between two installs ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). The table is widenable later without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
+- No configuration of the language table. The recognizers and the extensions they claim are built in ([§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages)), so what a note *is* cannot differ between two installs ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree), [§DF-doc-comments-are-not-notes.2.4](../decisions/functional/DF-doc-comments-are-not-notes.md#24-no-knob)). The table and its starter sets may widen without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
