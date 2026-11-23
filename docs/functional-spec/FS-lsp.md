@@ -1,8 +1,6 @@
 # FS-lsp: grund ships an optional LSP server
 
-`grund` ships an optional Language Server Protocol server, `grund-lsp`, as a separate binary that any LSP-aware editor can talk to: VSCode, Neovim, Emacs (eglot or lsp-mode), Helix, Zed, Sublime Text, and the IntelliJ family via LSP4IJ. Users who want editor integration install `grund-lsp` and configure their editor once; users who do not — CI pipelines, pre-commit hooks, contributors who only run `grund check` — install nothing extra and pay no dependency cost. The architectural choice (separate binary rather than a Cargo feature or a bundled library) is decided in [§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary). Where it is published is the target table of [§FS-distribution.1](FS-distribution.md#1-targets); npm and PyPI packaging rides with [§RM-distribution](../roadmap.md#rm-distribution-cargo--npm--pypi-from-one-engine).
-
-`grund` does not ship per-editor wrappers ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)): the first-party executable editor surface is the LSP server, and per-editor configuration is one-time work the user does, with example snippets and importable configuration data in the user-facing LSP setup guide.
+`grund-lsp` is a Language Server Protocol server, a binary separate from `grund`, that gives any LSP-aware editor the answers `grund` gives on the command line: diagnostics, hover, navigation, completion and the live trigger transform. It is optional: a user who wants editor integration installs it and configures the editor once, and CI pipelines, pre-commit hooks and contributors who only run `grund check` install nothing extra and pay no dependency cost ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)).
 
 ## terms: Terms
 
@@ -30,444 +28,190 @@ fetcher, snapshot).
 
 ## requirements: What the editor surface holds to
 
-Five requirements on the server as a whole, each carrying a mark as [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to) defines them. What an answer may cost is not restated: [§FS-lsp.responsiveness](FS-lsp.md#responsiveness-what-an-answer-may-cost) already binds it as points of its own. There is no sixth for what the tool states once for every surface: opening files read-only and performing no network I/O on any request are [§REQ-no-data-loss.1](../requirements/REQ-no-data-loss.md#1-the-query-surface-never-writes) and [§REQ-runs-offline.1](../requirements/REQ-runs-offline.md#1-read-and-verification-paths-execute-nothing), which name LSP requests; an edit touching only what it owns in the user's buffer is [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own), which names the live transform but not yet completion edits ([§FS-lsp.1.6.3](FS-lsp.md#163-whole-token-replacement)); and shipping no per-editor plugin is [§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins).
+Five promises bind the server as a whole, and what an answer may cost is [§FS-lsp.responsiveness](FS-lsp.md#responsiveness-what-an-answer-may-cost). Every surface also holds to three shared ones: the server writes no file and reaches no network on any request ([§REQ-no-data-loss.1](../requirements/REQ-no-data-loss.md#1-the-query-surface-never-writes), [§REQ-runs-offline.1](../requirements/REQ-runs-offline.md#1-read-and-verification-paths-execute-nothing)); an edit it returns touches only what it owns in the user's buffer, the live transform's by [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) and a completion's by [§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion); and it ships no per-editor plugin ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)).
 
-### requirements.inputs: An answer is a function of three named inputs — directional
+### requirements.inputs: An answer is a function of three named inputs
 
-The server answers from the scanned tree with each open document's notified text in place of its file, the text a save would write ([§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write), [§FS-lsp.1.1](FS-lsp.md#11-diagnostics), [§FS-lsp.1.6.4](FS-lsp.md#164-snapshot-and-live-transform-interaction)), from the effective config of the project that owns the document ([§FS-lsp.1.4.6](FS-lsp.md#146-which-configuration-drives-it), [§FS-lsp.3](FS-lsp.md#3-configuration)), and from the workspace folders the session holds, which decide that owner as the invocation decides scope for the command line ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document), [§FS-lsp.2.2.5](FS-lsp.md#225-folder-changes)). For a config that declares imports, the tree includes each tree an import names, whether or not a folder holds it ([§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)). These are the tree, config and invocation of [§REQ-deterministic-output.2](../requirements/REQ-deterministic-output.md#2-input-is-the-tree-the-config-and-the-invocation), with the buffer read as [§REQ-one-answer.contract](../requirements/REQ-one-answer.md#contract-one-question-one-tree-one-answer) reads it. A client capability changes an answer's shape, never its content ([§FS-lsp.1.3.4](FS-lsp.md#134-origin-span-and-result-shape)), and what initialization advertises decides when a client asks, never what it is told ([§FS-lsp.1.6.1](FS-lsp.md#161-eligibility-exclusions-and-triggering)). This binds every answer from here on: further state is named here in the change that introduces it, or the dependence is a defect. The one such dependence today, the last good scan a config that will not load leaves in place, is named to the editor by [§FS-lsp.requirements.config-errors](FS-lsp.md#requirementsconfig-errors-a-config-mistake-reaches-the-editor-as-loudly-as-the-command-line--realized).
+The server answers from three inputs: the scanned tree, which takes each open document's notified text, the text a save would write, in place of its file ([§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)) and includes every tree an import names whether or not a folder holds it ([§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)); the effective config of the project that owns the document ([§FS-lsp.3](FS-lsp.md#3-configuration)); and the workspace folders the session holds, which decide that owner as the invocation decides scope on the command line ([§FS-lsp.2.2.1](FS-lsp.md#221-workspace-folders-anchor-discovery), [§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)). These are the tree, config and invocation of [§REQ-deterministic-output.2](../requirements/REQ-deterministic-output.md#2-input-is-the-tree-the-config-and-the-invocation), the buffer read as [§REQ-one-answer.contract](../requirements/REQ-one-answer.md#contract-one-question-one-tree-one-answer) reads it. A client capability changes an answer's shape, never its content ([§FS-lsp.1.3.4](FS-lsp.md#134-origin-span-and-result-shape)), and what initialization advertises decides when a client asks, never what it is told ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion)). The point is directional: a dependence on further state is named here by the change that introduces it, or it is a defect. The one named is the last good scan a config that will not load leaves in place ([§FS-lsp.requirements.config-errors](FS-lsp.md#requirementsconfig-errors-a-config-mistake-reaches-the-editor-as-loudly-as-the-command-line)).
 
-### requirements.parity: Every answer is one the command line gives — realized, listed differences deferred
+### requirements.parity: Every answer is one the command line gives
 
-A diagnostic is the located `grund check` finding ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics), [§FS-lsp.1.1.3](FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel)); a citation hover is the bytes of `grund <ID> --toc` ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)); a title's count and its citation list are the set `grund refs` lists, with the clause `--total` prints ([§FS-lsp.1.2.5](FS-lsp.md#125-what-a-whole-id-title-counts), [§FS-lsp.1.2.6](FS-lsp.md#126-what-a-section-heading-counts), [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)); the shorthand expansion previews `grund fmt --write` ([§FS-lsp.1.4.3](FS-lsp.md#143-where-the-expansion-refuses)); and the server recognizes nothing the command line does not ([§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli), [§FS-lsp.4.3](FS-lsp.md#43-off-grammar-declarations)). This carries [§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does), which names diagnostics, hover and definition, to every answer. Comparison proves it for diagnostics on a saved tree, by path, line, code, severity and message, for the title count against `refs --total`, and for an open buffer's diagnostics and hover against the same file saved ([§FS-lsp.4.1](FS-lsp.md#41-how-parity-is-held), [§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)); column ranges are held by focused tests, not by comparison. Deferred: each editor row of [§REQ-one-answer.differences](../requirements/REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed), owed to that ledger. A project whose config will not load answers with the command line's error ([§FS-lsp.requirements.config-errors](FS-lsp.md#requirementsconfig-errors-a-config-mistake-reaches-the-editor-as-loudly-as-the-command-line--realized)). Serves [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree).
+A diagnostic is the located `grund check` finding ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)); a citation hover is the bytes of `grund <ID> --toc` ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)); a title's count and its citation list are the set `grund refs` lists, with the clause `--total` prints ([§FS-lsp.1.2.3](FS-lsp.md#123-title-hover), [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)); the number-only shorthand's expansion previews `grund fmt --write` ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)); and the server recognizes nothing the command line does not ([§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli)). This carries [§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does), which names diagnostics, hover and definition, to every answer. A project whose config will not load answers with the command line's error ([§FS-lsp.requirements.config-errors](FS-lsp.md#requirementsconfig-errors-a-config-mistake-reaches-the-editor-as-loudly-as-the-command-line)). Each editor row of [§REQ-one-answer.differences](../requirements/REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed) is deferred, owed to that ledger. Serves [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree).
 
-### requirements.no-guess: No answer is a guess — realized
+### requirements.no-guess: No answer is a guess
 
-Where an answer is not unique the server gives none. A document is answered by at most one project, independent projects are never merged, and a document two projects reach only through their scans is nobody's ([§FS-lsp.2.2.1](FS-lsp.md#221-workspace-folders-anchor-discovery), [§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document), [§FS-lsp.2.2.3](FS-lsp.md#223-a-document-no-project-answers)); a missing, ownerless or ambiguous token has no definition, link, hover or highlight ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)); a shorthand expands only when it names exactly one declaration ([§FS-lsp.1.4.2](FS-lsp.md#142-what-the-expansion-resolves-against)); and completion offers only uniquely resolving spellings, withholding edits while discovery is incomplete ([§FS-lsp.1.6.2](FS-lsp.md#162-candidates-resolution-and-ordering)). Serves [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), against the one source of ambiguity no command-line run has: several projects in one session.
+Where an answer is not unique the server gives none. A document is answered by at most one project, independent projects are never merged, and a document two projects reach only through their scans is nobody's ([§FS-lsp.2.2.1](FS-lsp.md#221-workspace-folders-anchor-discovery), [§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)); a missing, ownerless or ambiguous token has no definition, link, hover or highlight ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)); a shorthand expands only when it names exactly one declaration ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)); and completion offers only uniquely resolving spellings, withholding edits while discovery is incomplete ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion)). Serves [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), against the one source of ambiguity no command-line run has: several projects in one session.
 
-### requirements.degrades: A session degrades and never ends — realized
+### requirements.degrades: A session degrades and never ends
 
-Nothing the editor sends ends the session. A failing request returns an LSP error and a notification that does not parse is skipped ([§FS-lsp.1](FS-lsp.md#1-capabilities)); a folder with a non-`file:` URI or a config that will not load is passed over while every other folder stays current, a folder change applies whatever of it is usable, and a session with no usable folder starts and answers nothing ([§FS-lsp.2.2.4](FS-lsp.md#224-an-unusable-folder-is-skipped), [§FS-lsp.2.2.5](FS-lsp.md#225-folder-changes)); and an argument never enters the protocol loop, so a batch mistake cannot reach a session's stdout ([§FS-lsp.2.4.4](FS-lsp.md#244-help-failures-and-the-protocol-boundary)). Serves [§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out), in the form a process with no exit code to report can take.
+Nothing the editor sends ends the session. A failing request returns an LSP error and a notification that does not parse is skipped ([§FS-lsp.1](FS-lsp.md#1-capabilities)); a folder with a non-`file:` URI or a config that will not load is passed over while every other folder stays current, a folder change applies whatever of it is usable, and a session with no usable folder starts and answers nothing ([§FS-lsp.2.2.1](FS-lsp.md#221-workspace-folders-anchor-discovery), [§FS-lsp.2.2.4](FS-lsp.md#224-an-unusable-folder-is-skipped)); and an argument never enters the protocol loop, so a batch mistake cannot reach a session's stdout ([§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations)). Serves [§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out), in the form a process with no exit code to report can take.
 
-### requirements.config-errors: A config mistake reaches the editor as loudly as the command line — realized
+### requirements.config-errors: A config mistake reaches the editor as loudly as the command line
 
-The command line refuses a config that will not load, naming its line, and exits `2` ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), as [§FS-config.requirements.5](FS-config.md#requirements5-a-mistake-in-the-config-fails-loudly--realized-one-case-deferred) requires. The server keeps that project on its last good scan ([§FS-lsp.2.2.4](FS-lsp.md#224-an-unusable-folder-is-skipped)) and publishes the same error as a diagnostic on the config file, at the line the command line names, saying that the other diagnostics are from that last good scan, and clears it once the config loads again ([§FS-lsp.2.2.4.1](FS-lsp.md#2241-a-config-that-will-not-load-is-a-diagnostic-on-that-config)); so the error never rests only on the server's stderr, which most clients hide in a log pane.
+The command line refuses a config that will not load, naming its line, and exits `2` ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), as [§FS-config.requirements.5](FS-config.md#requirements5-a-mistake-in-the-config-fails-loudly--realized-one-case-deferred) requires. The server keeps that project on its last good scan and publishes the same error as a diagnostic on the config file at the line the command line names, saying that the other diagnostics are from that last good scan, and clears it once the config loads again ([§FS-lsp.2.2.4](FS-lsp.md#224-an-unusable-folder-is-skipped)); so the error never rests only on the server's stderr, which most clients hide in a log pane.
 
 ## 1. Capabilities
 
-The minimum viable set — everything the server speaks at version 1.0. Diagnostics ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), hover ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)), and go-to-definition ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)) are illustrated in the project README; each illustration is captured for both light and dark editor themes (paired `<name>-light.png` and `<name>.png` `prefers-color-scheme` sources), so a screenshot refresh updates both variants together.
-
-A single malformed or failing message is not fatal to the session: a request that fails returns an LSP error response, a notification whose params do not parse is logged and skipped, and the server keeps serving subsequent messages rather than dropping the connection.
+A single malformed or failing message is not fatal: a request that fails returns an LSP error response, a notification whose params do not parse is logged and skipped, and the server goes on serving the messages after it.
 
 ### 1.1 Diagnostics
 
-The server publishes every declaration-local numeric citation verdict from
-[§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) through the ordinary core
-report: the same code, severity, message, and complete authored-token range as `check`. A missing
-owned path also publishes the independent missing-section finding. Ownerless and unsupported
-forms receive no guessed target.
+`textDocument/publishDiagnostics` pushes `grund check`'s located findings as the user edits: each is one diagnostic with the path, line, code, severity and message of the shared core report ([§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)), a scan failure as well as a content finding. The server derives no finding of its own, and publishing never runs a fetcher: a missing snapshot is the report's `dangling` error or `missing-snapshot` warning ([§FS-check.4.12](FS-check.md#412-missing-snapshot)). The advisory suggestions channel ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) is not published, and severity is the engine's, not configurable ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)).
 
-`textDocument/publishDiagnostics` pushes `grund check` results as the user edits. Each unknown reference, missing section, duplicate declaration, broken stub, citation-direction violation, hard chapter-rule violation, and `invalid-rule` becomes a diagnostic with the same path, line, code, severity, message, and title/citation range as the CLI's shared core report ([§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)). The advisory `should` / `should-not` suggestions channel ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) is opt-in on the CLI and is not pushed as diagnostics. Severity follows the engine's severity model ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) — not configurable).
+A diagnostic spans the whole written token of the citation its finding concerns, never merely the first citation on its line, so each of several citations in one comment carries its own and a resolving one beside them stays unmarked. A finding about a declaration, section or stub spans its title ([§FS-lsp.1.3.4](FS-lsp.md#134-origin-span-and-result-shape)), a named heading's whole title included. A line-anchored finding, such as the ungrounded-file check of [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in), borrows no citation's range from its line, so an editor that shows diagnostics in a hover never stacks a line's message onto a citation's own error.
 
-When edits arrive faster than the server rechecks, it checks the latest text rather than every
-keystroke's, so a version merged into a later recheck publishes nothing of its own. Each publish for
-an open document carries the document version it was checked at, and a publish for an older version
-never follows one for a newer.
+A diagnostic names its file as the shared report does: by its in-tree link name, relative to the root of the project or workspace member that owns it, with every site the report gives a file of several names ([§FS-scan.identity.link-path](FS-scan.md#identitylink-path-a-finding-names-the-in-tree-link-path), [§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name), [§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling)). The URI it is published under resolves a linked project root but keeps that in-project spelling below it. A scan failure is named by the whole run's spelling ([§FS-check.2.4.2](FS-check.md#242-one-failure-one-line)), while whether it is one of the project's errors is judged as `grund check <root>` judges it, under every name the walk met it by ([§FS-check.1.3.6.3](FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud)).
 
-Where each diagnostic anchors is [§FS-lsp.1.1.1](FS-lsp.md#111-where-a-diagnostic-anchors). Value, named-section, and missing-snapshot findings are transported from the core report rather than derived by the server ([§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)), and the `[workspace]` warnings on the run's warning channel are published too ([§FS-lsp.1.1.3](FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel)).
+When edits arrive faster than the server rechecks, it checks the latest text rather than every keystroke's, so a version merged into a later recheck publishes nothing of its own. Each publish for an open document carries the document version it was checked at, and a publish for an older version never follows one for a newer.
 
-Diagnostic paths preserve the shared report's chosen in-project spelling, including when a
-file's only name in the project is a file link or lies below a directory link: the actionable
-name is the link name defined by [§FS-scan.identity.link-path](FS-scan.md#identitylink-path-a-finding-names-the-in-tree-link-path). File-link targets may be excluded
-or outside the project; directory traversal remains bounded by [§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed).
-This applies to scan failures as well as content findings. An anchored
-editor snapshot names a scan failure by the whole run's name, as [§FS-check.2.4.2](FS-check.md#242-one-failure-one-line) requires;
-membership and severity still consider every name by which the anchor holds the failure.
-Absolute diagnostic paths resolve the owning project's root without resolving away that
-chosen descendant spelling. A linked project root and a workspace member follow the same
-rule, using the member's owning root for its findings. Findings on a file with several names
-retain the sites required by [§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name) and
-[§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling).
-
-#### 1.1.1 Where a diagnostic anchors
-
-The diagnostic position is the start column of the citation the finding concerns — the offending token, not merely the first citation on the line. A single comment can carry several citations, so each finding anchors to its own token, and a resolving citation beside it stays unmarked. Diagnostics that are line-anchored rather than citation-anchored, such as the opt-in ungrounded-file check ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)), do not borrow a citation range from the same line; otherwise VSCode-style diagnostic hovers would stack unrelated line-level messages onto the citation's own error. Declaration-side findings may still use the declaration, section, or stub title span on that line. Precise column information is computed once per scan and reused across the open editor session.
-
-#### 1.1.2 Findings the core report shapes
-
-The shared core report includes all three value errors for whole declarations and marked roots with the same primary and declaration/component spans as CLI text/NDJSON, so editor diagnostics neither rescan nor reinterpret bindings ([§FS-values.5](FS-values.md#5-resolution-findings-and-exit-status)).
-
-Named-section diagnostics are not a parallel editor rule. In an opted-in repository, missing named coordinates, duplicate named coordinates, orphan name-bearing paths, and named heading-depth mismatches are transported from the core report with the same message, severity, line, and range as the CLI. A citation-side finding selects the complete written citation token; an orphan or depth finding selects the complete named heading title. Independent core findings remain independent diagnostics.
-
-A missing fetch-backed snapshot is not a separate editor rule either. The LSP transports the engine's `dangling` error or `missing-snapshot` warning with the same message, code, severity, and range as the CLI ([§FS-check.4.12](FS-check.md#412-missing-snapshot)), and never executes the configured fetcher while publishing diagnostics.
-
-#### 1.1.3 Workspace warnings on the run's warning channel
-
-A block whose opted-out tree nobody reads ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)) and an ancestor claim left undecidable ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)) reach the server in the same warning channel as every other finding. Two, not four. A block that swallows its own scan is a config error ([§FS-check.3.30](FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan)), so its folder is one whose config will not load ([§FS-lsp.2.2.4](FS-lsp.md#224-an-unusable-folder-is-skipped)). And a `[workspace]` block no enclosing workspace lists is an **error** in `check` ([§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)), so the server takes it from `check`'s report like any other located finding and publishes it as an error at the same anchor — the block's `[workspace]` line — rather than off this channel ([§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)). Each is published on the `grund.toml` it is located at — at the anchored line, or at that file's first line for the undecidable claim, which names no line because the line is what it could not read. The message is the CLI's, byte for byte, and the server neither re-derives the location nor reads it back out of the message text. A configuration that leaves part of the tree unread, or spells its projects two ways, is what a reader of that `grund.toml` needs told ([§DA-engine-renders-nothing.2](../decisions/architectural/DA-engine-renders-nothing.md#2-decision)).
+Two run-level warnings that `check` prints on stderr are published too, each on the `grund.toml` it is located at with the CLI's message byte for byte ([§DA-engine-renders-nothing.2](../decisions/architectural/DA-engine-renders-nothing.md#2-decision)): the unread opted-out block of [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread) at its line, and the ancestor claim [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces) leaves undecidable at the file's first line, because the line is what it could not read. A block that swallows its own scan is not one of them: it is a config that will not load ([§FS-check.3.30](FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan), [§FS-lsp.2.2.4](FS-lsp.md#224-an-unusable-folder-is-skipped)).
 
 ### 1.2 Hover preview
 
-`textDocument/hover` answers on both sides of a citation. On a citation that resolves, it previews the body the CLI prints for it ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)); on a citation that carries a diagnostic, it returns nothing ([§FS-lsp.1.2.2](FS-lsp.md#122-no-preview-for-a-citation-with-a-diagnostic)). On a declaration-side title — a Markdown declaration heading, the same declaration written inline in a doc-comment, a numbered section heading (`<ID>.<section>`, [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)), or an inline-spec stub title — it returns the title token and how much of the tree leans on it ([§FS-lsp.1.2.3](FS-lsp.md#123-title-hover) to [§FS-lsp.1.2.7](FS-lsp.md#127-a-count-never-a-finding)).
-
-A committed fetched snapshot is an ordinary declaration on this path: hover, definition, citation lookups, document links, and highlights use its scanner spans without contacting or executing the integration. A missing snapshot has no hover or navigation target.
+`textDocument/hover` answers on both sides of a citation: on a citation that resolves it previews the body the command line prints for it, and on a declaration-side title it shows how much of the tree cites that title.
 
 #### 1.2.1 Citation preview
 
-`textDocument/hover` on a citation returns the body `grund <ID> --toc` would print ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), or the `--toc` body of the requested section if the citation includes one ([§FS-show.2.2](FS-show.md#22-section)); a named citation previews the exact named section slice that `grund <ID>.<path> --toc` returns. When the declaration's home is in source code (a stub points at `src/bus.rs`), the hover body is the comment-stripped prose per [§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes) — the same content the CLI returns. Hovering a Markdown, source-comment, or value-source binding likewise uses the exact `show --toc` slice; no rendered or interpolated value surface is invented ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). The unadorned preview and the `show --toc` query produce the same bytes before editor linkification; the full hover may also carry the separate kind-metadata paragraph ([§FS-lsp.1.2.8](FS-lsp.md#128-target-kind-metadata)).
+A hover on a resolving citation returns, before linkification, the bytes `grund <coordinate> --toc` prints for the coordinate it names ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), a section's or named slice's included ([§FS-show.2.2](FS-show.md#22-section)), and where a stub points at a source declaration the comment-stripped prose of [§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes). A Markdown, source-comment or value-source binding previews the same `--toc` slice; no rendered or interpolated value is invented ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). The full hover may add the kind paragraph of [§FS-lsp.1.2.8](FS-lsp.md#128-target-kind-metadata) after those bytes.
 
-The citation hover content is Markdown. Any resolving `§<ID>` citation inside it that the one reading of [§FS-citations.wrap](FS-citations.md#wrap-the-wrap) reads as unwrapped is emitted as a normal link to its declaration target, so users can keep following the grounding graph without closing the hover. A wrap, a citation in a link its author wrote in any form ([§FS-citations.wrap.enclosing.scope](FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in)), a citation-only image and every never-rewrite zone ([§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten)) are left as written, so the hover never shows a link inside a link; the linkification asks the core reading and keeps no bracket test of its own.
+The preview is Markdown. Each resolving citation in it that the one reading of [§FS-citations.wrap](FS-citations.md#wrap-the-wrap) reads as unwrapped becomes a link to its declaration target, so a reader follows the grounding graph without closing the hover. A wrap, a citation in a link its author wrote in any form ([§FS-citations.wrap.enclosing.scope](FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in)), a citation-only image and every never-rewrite zone ([§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten)) stay as written, so the hover never shows a link inside a link.
 
-#### 1.2.2 No preview for a citation with a diagnostic
-
-If a citation has a diagnostic instead (for example an unknown reference with a nearest-ID hint), hover returns nothing: the diagnostic already carries the actionable text through `publishDiagnostics`, and an editor that renders diagnostics inside the hover popup (VSCode among them) would otherwise show that text twice. The diagnostic is the single source of the error message; hover stays reserved for previewing citations that resolve.
+A citation that does not resolve, and so carries a diagnostic such as an unknown reference with its nearest-ID hint, has no hover: the diagnostic is the one place its message appears, and an editor that draws diagnostics inside the hover popup would otherwise show it twice.
 
 #### 1.2.3 Title hover
 
-On a declaration-side title, hover returns the title token and its usage count, with the hover range set to the whole title span. The cursor is already inside the declaration body, so a body preview would only repeat what is on screen; the *usage* is the one fact about a declaration that is visible nowhere on that screen. The whole-title range also gives editors such as Codium the hover affordance. The citation sites themselves are reached on demand through go-to-definition ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)) and citations ([§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)): the hover is the count, not the list.
+On a declaration-side title — a Markdown declaration heading, its doc-comment form, a numbered or named section heading, or an inline-spec stub title — hover returns one line of Markdown, before any kind paragraph ([§FS-lsp.1.2.8](FS-lsp.md#128-target-kind-metadata)): the title token as inline code, ` — `, and a usage clause, over the whole title span ([§FS-lsp.1.3.4](FS-lsp.md#134-origin-span-and-result-shape)). It is a count rather than a body preview because the cursor is already in that body; the sites themselves are the list of [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations).
 
-An explicit named heading is a declaration-side title just like a numbered heading: its hover range covers the complete rendered heading title, including the name and colon, and its usage count covers citations of that path and its descendants. A declaration-side marked root retains the ordinary section-title hover and usage count: its semantic title and UTF-16 hover range exclude the separating space and tag, while a raw preview of that section includes the tag on its heading ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
-
-#### 1.2.4 The title hover's text
-
-The original title-and-usage content is one line of Markdown — the title token as inline code, then ` — `, then the usage clause:
-
-```
-`FS-user-login: Users sign in` — cited at 12 sites across 5 files
+```text
+`FS-001-alpha: Alpha` — cited at 3 sites across 2 files
 ```
 
-The token is the title exactly as the document writes it, which on a numbered section heading is the heading text alone — `1. Capabilities`, not a composed `FS-lsp.1: Capabilities` — because the popup is drawn over that very heading, and a string written nowhere in the file would be one more place for file and editor to disagree. A relative heading ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)) is the one exception: its token is the canonical path with the title kept, `` `format.1: Username` `` for `### .1: Username`, because the coordinate is the one thing the screen does not show and the hover is where a reader looks it up. The written heading, its range and go-to-definition stay the `### .1: Username` line. A title that itself contains backticks is fenced with a backtick run one longer than the longest run inside it, padded with a single space at each end when the title starts or ends with a backtick, because a backslash does not escape a backtick inside a code span.
+The token is the title as the document writes it, on a numbered section heading the heading text alone (`1. Capabilities`, not a composed `FS-lsp.1: Capabilities`). A relative heading ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)) is the exception: its token is the canonical path with the title kept, `` `format.1: Username` `` for `### .1: Username`, while its range and definition stay on the written line ([§DF-relative-section-headings](../decisions/functional/DF-relative-section-headings.md#df-relative-section-headings-a-heading-may-write-only-the-component-it-adds)). A named heading's token and range cover its whole rendered title, name and colon included; a marked root's leave out the separating space and tag ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). A title containing backticks is fenced with a backtick run one longer than its longest, padded with one space at each end when the title starts or ends with a backtick.
 
-The clause is `cited at <n> site(s) across <m> file(s)`, where `site` and `file` take a plural `s` at every count except one, so a lone citation reads `cited at 1 site across 1 file`. Nothing else varies with the numbers — `across` at every count, no separate one-citation phrasing — so only the digits need reading. A title with no citations reads `not cited` in place of the entire clause.
+The clause is the line `grund refs --total` prints, `cited at <n> site(s) across <m> file(s)`, in which only `site` and `file` vary, taking a plural `s` at every count but one; a title with no citations reads `not cited` in place of the whole clause, beside the unused-declaration warning where that is published ([§FS-check.4.1](FS-check.md#41-unused-declaration)). It counts exactly the set [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations) returns for the same title, the one `grund refs` lists from the root of the project that answers the document ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)), so the count and the list never disagree:
 
-#### 1.2.5 What a whole-ID title counts
-
-`<n>` counts citation **sites** and `<m>` the distinct files those sites live in, over exactly the set [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations) returns for that same title, so the number a reader sees and the citation list they open next from the same token can never disagree. For a whole-ID title — a Markdown declaration heading, its doc-comment form, or the stub that points at it — that set is *by definition* the one `grund refs` reports **from the root of the project that answers the document** ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document), [§FS-refs.2](FS-refs.md#2-behaviour)): citations inside scanned source comments included, `[reference] strict` honoured. In a workspace the two roots ask different questions: where the workspace root's project answers the document, the count is what `grund refs <alias>/<ID>` reports from there — a member's own `§<ID>` and a sibling's `§<alias>/<ID>` together ([§FS-workspace.8.2](FS-workspace.md#82-grund-refs)) — while where the member answers for its own files, because it is open as a folder of its own, the count is what `grund refs <ID>` reports from inside the member, where the sibling's qualified citation lies outside the tree. These are the CLI's numbers rendered in an editor, not a second tally kept beside them ([§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli)), and the size of that set is `grund refs <ID> --total` ([§FS-refs.3.4](FS-refs.md#34---total)) — so the clause a reader sees in an editor is a command they can run, in the same words.
-
-#### 1.2.6 What a section heading counts
-
-On a numbered section heading the set is the section-scoped one [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations) defines: `§<ID>.<section>` and its deeper subsections — the subtree `grund <ID>.<section> --full` prints ([§FS-show.2.2](FS-show.md#22-section)), and the set that heading's own definition and citations return — so the count totals what the reader can navigate to from the token they are hovering. That is deliberately wider than `grund refs <ID> --section <s>`, which keeps only citations whose section coordinate is *exactly* `<s>` ([§FS-refs.1](FS-refs.md#1-inputs)): the flag answers "who cites this section itself", a declaration-side title answers "who leans on this". `grund refs <ID> --section <s> --descendants` is the CLI spelling of the wider set ([§FS-refs.2](FS-refs.md#2-behaviour)), and adding `--total` to it prints the count itself ([§FS-refs.3.4](FS-refs.md#34---total)), so a section heading's count is the count of a `refs` invocation the reader can run from the same root, as a whole-ID title's already was — one relation, two transports ([§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli)), with a bare `--section` left as the narrow question. Where the two readings conflict, the one that keeps a title's hover and its citation list in agreement wins — those are one gesture apart in the same editor, while the terminal comparison is one the user has to go looking for.
-
-#### 1.2.7 A count, never a finding
-
-The clause is a count, never a finding. An uncited declaration already earns the unused-declaration warning through `publishDiagnostics` ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics), [§FS-check.4.1](FS-check.md#41-unused-declaration)), and hover does not restate it: `not cited` is the count at zero, worded as a count, so a popup that draws both over an uncited title carries the warning naming the ID and the count answering the hover — one statement each. Nor is the zero case suppressed in favour of the warning, because the warning does not cover every title that can reach zero — `E2E` declarations are exempt from it ([§FS-check.4.1](FS-check.md#41-unused-declaration)) and section headings never carry one — so a hover that fell silent at zero would go quiet exactly where nothing else speaks, indistinguishable from a server that shows no counts.
-
-The counts are read from the scan of the project that owns the document ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)), the one diagnostics and navigation answer from, so the same tree and config produce the same bytes ([§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli)) and no hover re-scans to answer.
+- On a whole-ID title, a declaration heading, its doc-comment form or a stub pointing at it, the ID's citations, those in scanned source comments included and `[reference] strict` honoured: `grund refs <ID> --total` ([§FS-refs.3.4](FS-refs.md#34---total)). Where the workspace root's project answers, that is `grund refs <alias>/<ID>` from the root, a member's own `§<ID>` and a sibling's `§<alias>/<ID>` together ([§FS-workspace.8.2](FS-workspace.md#82-grund-refs)); where a member opened as its own folder answers, `grund refs <ID>` inside the member.
+- On a section heading, numbered or named, the citations of that section and every section below it: `grund refs <ID> --section <s> --descendants --total` ([§FS-refs.2](FS-refs.md#2-behaviour)).
 
 #### 1.2.8 Target-kind metadata
 
-When the resolved target kind has an effective title, append `"\n\nKind: "`
-and that title as a CommonMark code span to the existing successful hover,
-without trimming or rewriting its content. Use the title-token backtick fencing
-and padding convention of [§FS-lsp.1.2.4](FS-lsp.md#124-the-title-hovers-text). This applies to citation and value-binding
-previews, declarations, sections, inline-source titles and stubs. No title
-returns the existing hover unchanged; an empty configured title still adds
-the paragraph. Metadata is literal: do not interpret Markdown or linkify
-citations inside it. Only the existing preview is linkified. Resolve metadata
-from the same target context or snapshot, with no extra per-hover scan, fetch
-or network execution. Usage counts, ranges, navigation and missing-target or
-diagnostic suppression remain unchanged
-([§FS-config.3.4.3](FS-config.md#343-title)).
+When the resolved target's kind has an effective title ([§FS-config.3.4.3](FS-config.md#343-title)), a successful hover ends with `"\n\nKind: "` and that title as a CommonMark code span, fenced and padded as a title token is ([§FS-lsp.1.2.3](FS-lsp.md#123-title-hover)), after the otherwise unchanged hover. Citation, value-binding, declaration, section, inline-source title and stub hovers carry it. A kind with no title adds nothing, an empty configured title still adds the paragraph, and the title is literal, never read as Markdown or linkified ([§DF-configured-title-metadata](../decisions/functional/DF-configured-title-metadata.md#df-configured-title-metadata-kind-titles-are-separate-target-metadata)).
 
 ### 1.3 Go-to-definition
 
-Definition uses the shared recognized citation set, including configured word-character
-markers ([§FS-check.1.1.10](FS-check.md#1110-the-configured-marker-establishes-the-citation-start)).
-With marker `_` and format `{kind}_{slug}`, a cursor on the marker or inside the ID in
-`//! 😀 _FS_login` resolves to the `FS_login` declaration. The non-ASCII prefix does not
-shift the origin span: protocol positions and ranges use UTF-16 code units.
+`textDocument/definition` on a citation jumps to the declaration or section it names, a named citation to its named heading. A citation of a stubbed declaration, and the stub's own ID or title, lands on the source declaration the stub points at ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)). A value binding lands on its component's heading or exact value-source key or element, and a root-aimed binding ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)) on its root: the whole declaration's heading or value-source key, or the marked or chapter root's own heading. Over a Markdown declaration heading's title span, definition answers the other way and returns the ID's citations, as [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations) does; on a numbered or named section heading, the citations of that section and every section below it.
 
-An owned declaration-local numeric citation has the same definition target as its canonical full
-citation: the exact numeric section heading. It participates in declaration and exact-section
-citation lookups and in document highlights while retaining its local origin range. A missing,
-ownerless, ambiguous, or unsupported local token has no definition, citation identity, document
-link, hover target, or highlights. This adds no `$$2` on-type expansion and no quick-fix;
-[§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform) continues to transform only the existing
-trigger and number-only ID shorthand forms.
+Recognition is the shared one, configured word-character markers included ([§FS-citations.recognized.marker-start](FS-citations.md#recognizedmarker-start-the-configured-marker-establishes-the-citation-start)): with marker `_` and format `{kind}_{slug}`, a cursor on the marker or inside the ID in `//! 😀 _FS_login` resolves to the `FS_login` declaration. Positions and ranges count UTF-16 code units, so the non-ASCII prefix does not shift the origin span.
 
-`textDocument/definition` on a citation jumps to the declaration's `path:line`. For a stub-and-inline-source pair ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)), the server follows the stub's link and lands on the source declaration line directly — the user does not stop at the stub — and the same is true anywhere on the stub heading's ID or title text, which is one navigable title span. A normal Markdown declaration heading uses the same whole-title span for declaration-side requests: definition-as-usages and `textDocument/references` return the citations of that ID. A numbered section heading inside a declaration body — `## 1. …`, addressable as `<ID>.<section>` — is itself a declaration-side title with the same behaviour, scoped to the section: definition and `textDocument/references` on it return the citations of that section (`§<ID>.<section>` and any deeper subsection) rather than of the whole ID.
-
-The result's shape is [§FS-lsp.1.3.4](FS-lsp.md#134-origin-span-and-result-shape); how values and named sections navigate is [§FS-lsp.1.3.5](FS-lsp.md#135-values-and-named-sections).
+A declaration-local numeric citation its declaration owns ([§FS-citations.recognized.local-sections](FS-citations.md#recognizedlocal-sections-declaration-local-numeric-section-candidates)) answers as its canonical full citation, landing on the exact numeric section heading and taking part in that declaration's and section's lookups and highlights, with its own written range. A missing, ownerless, ambiguous or unsupported one has no definition, citation identity, document link, hover target or highlight.
 
 #### 1.3.1 Citations from declarations
 
-`textDocument/references` on a declaration ID or anywhere in its Markdown title returns every citation of that ID, including citations in scanned source-code comments, the same set `grund refs <ID>` reports ([§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id)). On a numbered section heading it returns the citations of that section ID (`§<ID>.<section>` and deeper), the section-scoped counterpart of the whole-ID title. The same request on a citation returns that citation's target ID usages too, so editors can show "find usages" from either side of the relationship.
-
-On a named section heading, `textDocument/references` returns citations of that exact path and all descendant paths, matching the section-title usage count. The same request on a named citation resolves to that same set.
+`textDocument/references` on a declaration ID or anywhere in its title returns every citation of that ID, those in scanned source-code comments included: the set `grund refs <ID>` reports ([§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id)). On a numbered or named section heading it returns the citations of that section and every section below it. The same request on a citation returns the citations of its target, a named citation's being that same section-scoped set, so an editor finds usages from either side.
 
 #### 1.3.2 Document links
 
-`textDocument/documentLink` marks each resolving citation token as a link to its declaration target — a resolving named citation is one whole link range whose target is the named heading line — and each inline-spec stub title as a link to the source doc-comment declaration it points at. Editors that render LSP document links therefore show `§<ID>` citations and stub titles as single navigable units even in source files where Markdown cross-reference emission cannot run ([§FS-fmt.6.1](FS-fmt.md#61-scope)).
+`textDocument/documentLink` marks each resolving citation token as a link to its declaration target, a named citation as one whole range to its named heading line, and each inline-spec stub title as a link to the source declaration it points at, so they are single navigable units even in source files, where cross-reference emission cannot run ([§FS-fmt.6.1](FS-fmt.md#61-scope)). The target is a file URI with a `#L<n>` line fragment; an editor that ignores the fragment opens the file without moving to the line, and definition remains the exact fallback.
 
-Ordinary Markdown declaration titles are deliberately **not** document links: a self-pointing link covers the same span the editor's Ctrl-click would otherwise resolve to go-to-definition, so it would shadow that gesture and navigate the title onto its own line instead of showing the declaration's usages. Numbered section headings and explicit named headings are likewise declaration-side titles, not self-links. All of them stay navigable through go-to-definition and citations, which return the citation sites ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition), [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)).
-
-The link target is a file URI with a line fragment (`#L<n>`) for the resolved declaration or source line. An editor that ignores file-URI fragments may open the file without moving the cursor to the line; `textDocument/definition` remains its exact-position fallback.
+A Markdown declaration title, a numbered section heading and an explicit named heading are not links: a link there would shadow the editor's link gesture, which on a title is go-to-definition and returns its citations ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)).
 
 #### 1.3.3 Occurrence highlight
 
-`textDocument/documentHighlight` marks the whole `§<ID>` citation — or declaration, section, or stub title — under the cursor as one span, plus every other occurrence of the same ID in the open document. Without it, an editor with no highlight provider falls back to its language word pattern, which splits a citation such as `§FS-lsp.1.3` on `§`, `-`, and `.` and boxes only the bare word at the cursor (`lsp`). Highlights are scoped to the document the request names: the citing token plus same-document declarations, section headings, stub titles, and sibling citations of the same ID; usages in other files are reached through citations ([§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)).
+`textDocument/documentHighlight` marks the whole token under the cursor, a citation or a declaration, section or stub title, as one span, and every other occurrence of the same ID in that document: its declarations, section headings, stub titles and sibling citations. Usages in other files are [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)'s. One span per token keeps an editor from falling back to its word pattern, which splits a citation on `§`, `-` and `.` and boxes one word.
 
-For a named coordinate, the complete `§<ID>.<path>` token and the complete named heading title are occurrence units. A mixed coordinate ([§FS-config.3.3.1](FS-config.md#331-named-components)), `<§>FS-x.1.goals`, is one such unit, and hover and definition answer it as the section it names. Highlights never shorten a missing or mixed letter-bearing tail to the bare ID or numeric prefix.
+A complete named citation and a complete named heading title are each one unit, and so is a mixed coordinate ([§FS-config.3.3.1](FS-config.md#331-named-components)) such as `<§>FS-x.1.goals`, which hover and definition answer as the section it names. A highlight never shortens a missing or mixed letter-bearing tail to the bare ID or its numeric prefix.
 
 #### 1.3.4 Origin span and result shape
 
-Definition results report the whole originating token as their origin span — the entire `§<ID>` citation or declaration, section, or stub title — so the editor underlines that span as one navigable unit on the link gesture rather than only the word under the cursor. The server sends `LocationLink` results unless a client explicitly sets `textDocument.definition.linkSupport = false`; clients that omit the flag still get the richer range-carrying shape because plain `Location` results cannot express the origin span.
+A definition result's origin span is the whole token it started from, a citation or a declaration, section or stub title, so the editor underlines it as one unit on the link gesture. The server sends `LocationLink` results unless a client explicitly sets `textDocument.definition.linkSupport = false`; a client that omits the flag still gets them, because a plain `Location` cannot carry the origin span.
 
-A declaration or section title's span runs from the ID or the section's number to where the `grund <ID> --toc` title ends, and is taken from the heading the scan records rather than read off the line a second time: on a C-family heading line such as ` * ## 1. One */` it ends before the `*/`, which is comment envelope, as [§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line) says, and a Markdown heading's closing hashes are left out wherever the `--toc` title leaves them out ([§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them)).
-
-#### 1.3.5 Values and named sections
-
-A value binding navigates through the shared resolver to its existing Markdown/source component heading or exact value-source key/element span ([§FS-values.terms](FS-values.md#terms-terms)). A marked root and component keep their ordinary dotted identities; no synthetic definition or value badge is exposed ([§FS-values.7](FS-values.md#7-workspaces-and-editor-consumers)). A root-aimed binding ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)) navigates to its root: the whole declaration's heading or value-source key, or the marked or chapter root's own heading.
-
-For a named coordinate, definition navigates from the whole citation token to the exact named heading, and declaration-side definition on that heading returns its section-scoped usages. Named and numeric headings use the same scanned ranges and result shapes.
+A declaration or section title's span runs from the ID or the section's number to where the `grund <ID> --toc` title ends: on a C-family heading line such as ` * ## 1. One */` it ends before the `*/`, which is comment envelope ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)), and a Markdown heading's closing hashes are left out wherever the `--toc` title leaves them out ([§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them)).
 
 ### 1.4 Live trigger transform
 
-`textDocument/onTypeFormatting` watches the configured trigger sequence (default `$$`, per [§DF-reference-marker.2.2](../decisions/functional/DF-reference-marker.md#22-trigger)) and replaces it with the marker (default `§`) the moment the trigger is followed by a token matching its kind's effective format ([§FS-config.3.2](FS-config.md#32-id--id-grammar) — `FS-007` under a numbered format, `FS-login` under the slug-only form). This is the live counterpart to `grund fmt`'s bulk trigger pass ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)) and is what makes the marker practical to type without leaving the keyboard. It writes nothing in a zone no pass rewrites, a link destination, a reference key and an HTML tag included ([§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten)).
+`textDocument/onTypeFormatting` replaces the configured trigger (default `$$`, [§DF-reference-marker.2.2](../decisions/functional/DF-reference-marker.md#22-trigger)) with the marker (default `§`) the moment the text after it reads as an ID in its kind's effective format ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): `FS-007` under a numbered format, `FS-login` under the slug-only form. It is the live counterpart of `grund fmt`'s trigger pass ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)). Where the typed token is a number-only shorthand ([§FS-citations.shorthand](FS-citations.md#shorthand-the-number-only-shorthand)) that resolves to exactly one declaration, the server also expands it under either `[reference] shorthand` policy, as [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical) would: typing `$$FS-042` leaves `<§>FS-042-user-login`, not a `<§>FS-042` that under the default `canonical` policy earns a finding ([§DF-number-only-citation-shorthand.2.2](../decisions/functional/DF-number-only-citation-shorthand.md#22-where-the-shorthand-is-accepted-and-where-it-is-an-error)).
 
-Where the typed token is a number-only shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) that resolves to exactly one declaration, the server also **expands it**, under either `[reference] shorthand` policy: typing `$$FS-042` leaves `<§>FS-042-user-login` behind, not a `<§>FS-042` followed — under the default `canonical` policy — by a finding telling the author to finish the job ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)). This is the live counterpart to [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical), and the authoring surface is where the shorthand, as authoring sugar, pays ([§DF-number-only-citation-shorthand.2.2](../decisions/functional/DF-number-only-citation-shorthand.md#22-where-the-shorthand-is-accepted-and-where-it-is-an-error)).
+The two rewrites fire on different keystrokes. The trigger converts on the first keystroke after which the text reads as an ID, under the default format the first digit, and replaces only the `$$`. The expansion waits for the keystroke that ends the token, a character that cannot continue an ID by the one-character boundary of [§FS-citations.shorthand](FS-citations.md#shorthand-the-number-only-shorthand), in which a `format` literal just typed continues the token; so `$$FS-12` is never expanded as `FS-1` with a digit left behind. A period ends the token and is kept: `$$FS-042.1` lands on `<§>FS-042-user-login.1`.
 
-#### 1.4.1 When each rewrite fires
+The expansion reads the declarations of the scan the server already holds for the document's own project ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)), never a fresh scan, and in a workspace never a sibling member's: `<§>FS-042` typed in one member means that member's `FS-042-…` ([§FS-workspace.4](FS-workspace.md#4-resolution)). A shorthand that matches no declaration or several only has its trigger converted, and `check` reports it ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)). A shorthand already in the document, whatever finding its policy earns, answers hover, definition, citation lookups, document links and highlights as the declaration it resolves to, over its written token.
 
-The two rewrites fire on **different keystrokes**, and that separation is what makes the expansion correct rather than merely eager. The trigger becomes rewritable the moment the text after `$$` first reads as an ID — under the default format that is the *first digit*, because `FS-0` is already a well-formed shorthand — and converting there is harmless, since it replaces only the `$$` and the author types straight through it. Expanding there is not: the number is unfinished, so `$$FS-12` would be rewritten to whatever `FS-1` happens to name with the remaining digits left trailing behind it. The expansion therefore waits for the keystroke that **ends** the token — a character that cannot continue an ID, judged by the one-character form of the boundary [§FS-check.1.2](FS-check.md#12-the-number-only-shorthand) uses, in which any `format` literal continues the token because a separator just typed has no component after it yet — at which point the typed number is known to be complete. A period is such a character, and the expansion preserves it, so `$$FS-042.1` still lands on `<§>FS-042-user-login.1`.
+Only the number-only shorthand expands as it is typed: a declaration-local numeric citation ([§FS-citations.recognized.local-sections](FS-citations.md#recognizedlocal-sections-declaration-local-numeric-section-candidates)), which `grund fmt --write` expands to its declaration's full ID ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), is never expanded here, so typing `$$2` expands nothing.
 
-#### 1.4.2 What the expansion resolves against
+The expansion previews `grund fmt --write` and rewrites nothing it would not: it refuses in every context [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) and [§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes) name, a fenced code block whose citations `[schema.sources] fenced` makes live included ([§FS-languages.fence.language](FS-languages.md#fencelanguage-a-fences-tag-and-the-fences-fenced-selects)). The server hands the core the whole document, not the edited line, so a context one line cannot show, such as whether the line is inside a Python docstring ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)), is judged as `fmt` judges it.
 
-The expansion reads the declaration set from the scan the server already holds for the document's owner ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)), never a fresh scan, so the per-keystroke path stays within [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible). In a workspace that scan holds every member's declarations, and only the edited file's own project is consulted: `<§>FS-042` typed in one member means that member's `FS-042-…` and never a sibling's ([§FS-workspace.4](FS-workspace.md#4-resolution)). A shorthand that matches no declaration, or more than one, converts the trigger and nothing more: typing never stalls, and the resulting `<§>FS-042` earns the [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) finding that names the problem. The same is true of a token the author never terminates — `grund check` and `grund fmt` are the backstop, and they agree with the editor about what resolves — except under `[reference] shorthand = "accepted"`, where one that resolves to exactly one declaration is a valid persisted shorthand that neither reports nor rewrites ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation), [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)).
+The trigger conversion replaces only the two characters just typed and leaves the ID token byte-identical, so it stays eager in a fenced code block, selected by `[schema.sources] fenced` or not, on a declaration heading and inside a suppressed scope. It refuses only where the marker may not be typed at all: an ordinary string literal in a source file, which a Python docstring's content is not, and, in Markdown, every zone [§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten) names, a link destination, a reference key and an HTML tag among them.
 
-#### 1.4.3 Where the expansion refuses
-
-Because the expansion can rewrite a citation the author did not just type, it honours every context `grund fmt` refuses ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten)) — including a file outside the default scope and an external file-symlink target ([§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)), the whole-line skips a single line cannot reveal, a fenced code block, one whose citations `[schema.sources] fenced` makes live included ([§FS-languages.fence.language](FS-languages.md#fencelanguage-a-fences-tag-and-the-fences-fenced-selects)), and a declaration heading, and, in a Python file, whether the edited line is inside a docstring, which is what decides the never-rewrite question there ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)). A **suppressed scope** ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)) is one of those contexts and is honoured the same way: no expansion in a file the `[fmt] exclude` list names, and none inside a region a `grund:fmt off` above the cursor has opened, since the editor is where a protected region is actually edited.
-
-The server therefore hands the core the document, not just the edited line, so the editor neither expands where `grund fmt --write` would not — an illustration inside a fence, a diagram a region protects — nor refuses where it would, such as `$$FS-042` on a docstring's opening line: it previews that tool and may not disagree with it.
-
-#### 1.4.4 Where the trigger conversion refuses
-
-The trigger conversion, which replaces only the two characters just typed and leaves the ID token byte-identical, stays eager in a fenced code block, selected by `[schema.sources] fenced` or not, on a declaration heading, and inside a suppressed scope. It refuses only where the marker may not be typed at all: an ordinary string literal in a source file — a Python docstring's content is not one, which is what [§FS-lsp.1.4.3](FS-lsp.md#143-where-the-expansion-refuses) decides — and, in Markdown, every zone [§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten) names.
-
-#### 1.4.5 A shorthand already in the document
-
-A shorthand citation already in the document is a citation like any other for every other capability — hover ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)), go-to-definition ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)), citation lookups ([§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)), document links ([§FS-lsp.1.3.2](FS-lsp.md#132-document-links)), and occurrence highlight ([§FS-lsp.1.3.3](FS-lsp.md#133-occurrence-highlight)) all treat `<§>FS-042` as the declaration it resolves to, and the range they return is the written token, not the canonical one it stands for.
-
-#### 1.4.6 Which configuration drives it
-
-The trigger, marker, and recognized `KIND` set are read from the discovered `grund.toml` so the editor experience matches the project's choices. In a workspace, the replacement uses the config resolved for the edited document, so member-local trigger and marker overrides behave the same as `grund fmt` ([§FS-workspace.5](FS-workspace.md#5-command-scope)). If no config is present, the defaults from [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger) and [§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up) apply.
-
-### 1.5 Capabilities reserved for later
-
-These are out of scope for the first version but compatible with the architecture:
-
-- `textDocument/codeAction` — quick fixes for "unknown reference" (suggest similarly-named IDs) and "section not found" (suggest sibling sections).
-- `workspace/symbol` — fuzzy-find IDs across the project.
-
-Each addition is a separate roadmap item if and when it is taken on.
-
-Fetching a missing snapshot is reserved with code actions: this version
-advertises neither a “Fetch <ID>” action nor `workspace/executeCommand` and
-never runs `grund fetch` from the server.
+The trigger, marker and recognized kinds are those of the edited document's own project, a member's own overrides included, as `grund fmt` reads them ([§FS-workspace.5](FS-workspace.md#5-command-scope)), and the defaults of [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger) and [§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up) where no config applies.
 
 ### 1.6 Declared-ID completion
 
-`textDocument/completion` offers declared IDs while an author writes a citation.
-Acceptance inserts one resolving citation through an ordinary plain-text edit.
-This capability discovers declarations, not sections or value-specific choices.
+`textDocument/completion` offers declared IDs, never sections or value-specific choices, while an author writes a citation, and accepting one inserts one resolving citation through a plain-text edit.
 
-#### 1.6.1 Eligibility, exclusions and triggering
+A request is eligible after a complete introducer, the document owner's effective marker or trigger, followed by an empty or partial ID: the longest complete introducer counts, one is required even with `strict = false`, and an empty marker disables marker entry while a nonempty trigger stays usable. A manual request right after the trigger offers choices but converts nothing, so a `$$` in money or prose stays as written unless an item is accepted. Completion is offered nowhere `grund fmt` refuses a whole token ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten), [§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)), while comments and real Python docstrings stay eligible; these are not the trigger conversion's exclusions ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)).
 
-Recognition uses the document owner's effective marker, trigger and ID grammar.
-A complete introducer followed by an empty or partial ID is eligible; take the
-longest matching complete introducer. Require an introducer even with
-`strict = false`. An empty marker disables marker entry while a nonempty trigger
-remains usable. A manual request immediately after the trigger offers choices
-without automatically converting money or prose.
+Initialization advertises as trigger characters the deduplicated final single characters of the nonempty markers and triggers of the projects and members loaded at start, never a multi-character string. A trigger character that a later config or workspace-folder change introduces triggers automatically only after a client restart; a manual request always uses the current configuration.
 
-Completion honours the full-token formatter refusals ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten), [§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)):
-escaped illustrations, ordinary source strings, Markdown inline code, link
-destinations, fences, declaration headings, suppressed scopes, out-of-scope files
-and outward file symlinks. Comments and real Python docstrings remain eligible.
-The different eager-conversion exclusions ([§FS-lsp.1.4.4](FS-lsp.md#144-where-the-trigger-conversion-refuses)) remain unchanged.
+Candidates come from the owner's cached catalog. A complete known alias and `/` select the loaded target project's catalog and grammar through the qualified resolver ([§FS-workspace.4.1](FS-workspace.md#41-each-lookup-stays-in-its-project)), and an unknown or unavailable alias yields no items. Each alias an import reached, the import's own and every alias reached through it, is offered with its `/` wherever it continues past the typed token, by the rule `complete ids` offers an alias path by ([§FS-workspace.8.4.1](FS-workspace.md#841-a-prefix-containing-), [§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)). An unqualified sibling declaration is never offered. Only uniquely resolving declaration spellings are offered, an off-grammar declaration's exact spelling included ([§FS-config.3.2.5](FS-config.md#325-off-grammar-declarations-stay-readable)), and incomplete declaration discovery withholds edits. Each item carries its ID, declaration title and project-relative source path. Matching is case-sensitive prefix matching with no fuzzy fallback; exact-prefix matches come first, then configured kind order, then bytewise ID, as explicit `sortText` encodes, and `filterText` holds the original introducer and the candidate ID with any written qualification.
 
-Initialization advertises completion with the deduplicated final single
-characters of nonempty markers and triggers from initially loaded projects and
-members, never multi-character strings. Manual requests and client identifier
-continuation cover longer prefixes. A configuration or workspace-folder change
-introducing a new trigger character requires a client restart for automatic
-triggering; manual requests always use current effective configuration.
+An item's edit is one minimal, single-line plain-text edit replacing the whole active citation token, the old suffix right of the cursor and any existing section suffix included, with the effective marker and the chosen full ID; a request within a section yields no candidates. Token boundaries respect the configured grammar's punctuation and citation delimiters.
 
-#### 1.6.2 Candidates, resolution and ordering
-
-Candidates come from the cached owner catalog. A complete known alias plus `/`
-selects the loaded target project's catalog and grammar through the existing
-qualified resolver ([§FS-workspace.4.1](FS-workspace.md#41-each-lookup-stays-in-its-project)). Unknown or unavailable aliases yield no
-items. Each alias an import reached, the import's own and every alias beneath it, is a candidate of its own with its `/` wherever it continues past the typed token, as `complete ids` offers it ([§FS-workspace.8.4.1](FS-workspace.md#841-a-prefix-containing-), [§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)). Never
-offer an unqualified sibling declaration. Offer only uniquely
-resolving declaration spellings, including retained legacy spellings; incomplete
-declaration discovery withholds edits.
-
-Each item carries its ID, declaration title and project-relative source path.
-Matching is case-sensitive prefix matching with no fuzzy fallback. Exact-prefix
-matches come first, then configured kind order and bytewise ID. Explicit
-`sortText` encodes that order; `filterText` includes the original introducer and
-candidate ID, including any written qualification.
-
-#### 1.6.3 Whole-token replacement
-
-Each item returns one minimal, single-line plain-text edit replacing the whole
-active citation token with the effective marker and chosen full ID. Include the
-old suffix right of the cursor and any existing section suffix; requests within
-a section yield no candidates. Boundaries respect configured grammar punctuation
-and citation delimiters. Protocol ranges are UTF-16-correct, including non-BMP
-characters before the edit. Preserve surrounding prose, adjacent citations,
-Markdown destinations and text after the token. No snippet or additional edit
-is needed.
-
-#### 1.6.4 Snapshot and live-transform interaction
-
-Core owns semantic recognition, candidate selection, byte edits and cached
-context; LSP owns request/response mapping and UTF-16 conversion. Read the
-existing owner snapshot and overlays ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)), never a shell-completion
-rescan per request. Preserve public struct constructors. Requests observe
-preceding notified document changes. A request always reads the document's live
-text, the text of the last notification before it. It reads the catalog either
-through the comparison of [§FS-lsp.responsiveness.4](FS-lsp.md#responsiveness4-a-typing-request-waits-for-no-rebuild-while-the-declarations-stand), when the edits before it
-left the declarations unchanged, or by waiting for the rebuild that covers them.
-Either way its answer is the one the server would give had it rebuilt after
-every notification: only when the answer is sent moves. Declaration edits and
-close notifications refresh or restore the catalog used for navigation.
-Completion lists have `isIncomplete = true`, so further typing refreshes choices.
-
-Preserve live-transform timing ([§FS-lsp.1.4.1](FS-lsp.md#141-when-each-rewrite-fires)) and its distinct exclusions
-([§FS-lsp.1.4.3](FS-lsp.md#143-where-the-expansion-refuses), [§FS-lsp.1.4.4](FS-lsp.md#144-where-the-trigger-conversion-refuses)). Before/after-conversion requests, immediate
-trigger acceptance, continuous typing and typing after acceptance leave one
-canonical citation. On-type replay on the resulting unchanged document is a
-no-op. Ordinary rewritable fixtures resolve and require no further citation
-normalization by `grund fmt --check`; intentional eager-conversion exceptions
-remain separate.
-
-After applying either edit, clients discard competing obsolete completion or
-on-type responses and re-request against the notified document. Ordinary LSP
-text edits cannot prevent arbitrary client application of stale responses.
-Acceptance keys, including Tab, belong to the client ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor)), with no
-server interception.
+A request reads the document's live text, that of the last notification before it, and answers as a full rebuild would ([§FS-lsp.responsiveness.4](FS-lsp.md#responsiveness4-a-typing-request-waits-for-no-rebuild-while-the-declarations-stand)). Completion lists have `isIncomplete = true`, so further typing refreshes the choices. However completion and the live transform interleave, they leave one canonical citation, which `grund fmt --check` accepts wherever `fmt` may rewrite, and replaying the on-type request on the result changes nothing. A plain text edit cannot stop a client from applying a stale response, so after applying either edit a client discards competing obsolete responses and asks again. Acceptance keys, Tab among them, are the client's ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor)); the server intercepts none.
 
 ## 2. Installation and lifecycle
 
 ### 2.1 Install
 
-`grund-lsp` is a separate Cargo package per [§FS-distribution](FS-distribution.md#fs-distribution-grund-distribution-targets): after a release, users install it with `cargo install grund-lsp`; from a checkout, contributors install it with `cargo install --path crates/grund-lsp`. The package embeds the editor-configuration artifacts [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations) exposes, so an installed binary does not need this repository's `editor/` tree. It is not pulled in by `cargo install grund`. The npm and PyPI `grund-lsp` packages are assembled as a local candidate ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)) and are not published, so `npm install -g grund-lsp` and `pipx install grund-lsp` are documented only against a candidate's own files — a tarball, a wheel or a loopback registry serving them — and never as registry availability. Each installs the server alone, with no CLI and no Rust toolchain, and puts `grund-lsp` on `PATH`, which is the command an editor launches whichever way it was installed ([§FS-distribution-candidate.5.2](FS-distribution-candidate.md#52-every-registry-row-installs-fresh-and-without-rust)). A user with no editor integration installs the CLI alone; a user who wants only the editor integration installs `grund-lsp` alone, and nothing about one install requires the other.
+`grund-lsp` is a Cargo package of its own, published where the target table of [§FS-distribution.1](FS-distribution.md#1-targets) says: `cargo install grund-lsp` installs a release and `cargo install --path crates/grund-lsp` a checkout. `cargo install grund` does not pull it in, and neither install requires the other. The package embeds the editor configuration of [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations), so an installed binary needs no `editor/` tree from this repository. Its npm and PyPI packages exist only as a local candidate ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published)), so `npm install -g grund-lsp` and `pipx install grund-lsp` are documented against a candidate's own files, never as registry availability; each installs the server alone, with no CLI and no Rust toolchain, and puts `grund-lsp` on `PATH`, the command an editor launches however it was installed ([§FS-distribution-candidate.5.2](FS-distribution-candidate.md#52-every-registry-row-installs-fresh-and-without-rust)).
 
 ### 2.2 Lifecycle
 
-Users do not run `grund-lsp` directly. The editor's LSP client spawns it as a child process when a relevant file (markdown or any extension in the configured `[scan] extensions`) is opened in a workspace containing a `grund.toml` (in either discovery location) or `AGENTS.md`, and kills it when the workspace closes. The server speaks LSP over stdio; there is no daemon, no socket, no background service. CI pipelines that happen to have `grund-lsp` installed never invoke it — the only entry point in batch contexts is the CLI.
+Users do not run `grund-lsp` directly: the editor's LSP client starts it as a child process when a Markdown file or a file of a scanned extension is opened in a workspace holding a `grund.toml`, in either discovery location, or an `AGENTS.md`, and ends it when the workspace closes. It speaks LSP over stdio, with no daemon, socket or background service, and a batch context never invokes it: there the CLI is the only entry point.
 
 #### 2.2.1 Workspace folders anchor discovery
 
-The folders in an LSP `initialize` request are config-discovery starts, not scan boundaries. For every `workspaceFolders` entry, the server walks upward with the same discovery rules as the CLI ([§FS-lsp.3](FS-lsp.md#3-configuration)); when it finds a Grund config, it scans that config's project root so configured `[scan] include` paths and sibling source trees remain visible even when the editor opened only a nested directory. If `workspaceFolders` is absent or empty, the deprecated `rootUri` is the discovery start, then the server process's current directory as the final fallback. With no discovered config under either name, the discovery start itself remains the zero-config scan root, with the canonical defaults ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)).
+The folders of the `initialize` request are where config discovery starts, not scan boundaries: from each `workspaceFolders` entry the server walks upward by the CLI's discovery rules ([§FS-lsp.3](FS-lsp.md#3-configuration)) and scans the found config's project root, so its `[scan] include` paths and sibling source trees stay visible when the editor opened only a nested directory. With `workspaceFolders` absent or empty it starts from the deprecated `rootUri`, then its current directory; with no config found, the start is the zero-config scan root with the canonical defaults ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)). Folders that reach the same project root share one scan; different roots get scans of their own and are never merged, because identical local IDs in two folders belong to unrelated projects ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
 
-Entries that discover the same project root share one scan. Entries that discover different roots each get their own scan, and independent projects are never merged: identical local IDs in two editor folders belong to unrelated projects, and a lookup answered from the wrong one would be a wrong citation ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
+The server advertises workspace-folder support with change notifications. On `workspace/didChangeWorkspaceFolders` it discovers added folders by the same rules, drops what removed ones contributed and republishes diagnostics from the resulting scans; an unusable entry is skipped ([§FS-lsp.2.2.4](FS-lsp.md#224-an-unusable-folder-is-skipped)) and the rest of the event applies, and a project stays active while any folder still resolves to it.
 
 #### 2.2.2 One project answers each document
 
-Each document is answered by at most one of those projects. A project whose root contains the document claims it — the deepest such root when project trees nest, so a member opened as its own folder answers for its own files. A project that merely *scans* the document claims it when no root contains it: `[scan] include` is a scan scope, not a fence ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)), so a parent-relative include root may reach outside the project directory, and a document there is checked by the CLI and must stay answerable in the editor.
+Each document is answered by at most one project: one whose root contains it, the deepest when project trees nest, so a member opened as its own folder answers for its own files. Where no root contains it, a project that scans it answers, since `[scan] include` is a scan scope, not a fence ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)), and may reach outside the project directory. Where nested projects both read a file, the owner's verdict is published alone, so a file never collects one finding twice or two projects' readings of one citation.
 
-One owner per document is also what keeps diagnostics honest: where nested projects both read a file, the containing owner's verdict is published alone rather than merged with the other's, so a file cannot collect the same finding twice or two projects' disagreeing readings of one citation side by side.
-
-#### 2.2.3 A document no project answers
-
-A document reachable only below a directory symlink whose canonical target is outside the project root is pruned by [§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed), so that project publishes no diagnostics for it and hover and navigation return no result. If multiple projects only reach the same external document through their scans, none owns it: choosing by folder order or root shape would guess between independent projects, so requests return no result and neither project's diagnostics are published for that file ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)). A document under an import's root is not such a document: the import's own project answers it, read-only and with no diagnostics, loaded once and shared by every consumer that imports it, so two consumers are not two claims ([§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)).
+A document reachable only below a directory symlink out of the project root is pruned ([§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)) and has neither diagnostics nor answers. A document two projects reach only through their scans is nobody's: requests about it return no result and neither project publishes its diagnostics, because choosing by folder order or root shape would guess between independent projects ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)). A document under an import's root is not nobody's, however many consumers import it: the import's own project answers it, read-only ([§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)).
 
 #### 2.2.4 An unusable folder is skipped
 
-A folder the server cannot turn into a project is skipped, never fatal ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)). A folder URI with a non-`file:` scheme — editors mix virtual and remote folders into one window — is passed over with a note on stderr. So is a folder whose config will not load: a half-typed `grund.toml` in one folder reports itself to the editor ([§FS-lsp.2.2.4.1](FS-lsp.md#2241-a-config-that-will-not-load-is-a-diagnostic-on-that-config)) and leaves that project on its last good scan, while every other folder in the session keeps its diagnostics current. A session with no usable folder left still starts and answers nothing, rather than exiting.
+A folder the server cannot turn into a project is skipped, never fatal ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)): a folder URI with a non-`file:` scheme is passed over with a note on stderr, and so is a folder whose config will not load, whose project keeps its last good scan while every other folder keeps its diagnostics current. A session with no usable folder left starts and answers nothing rather than exiting.
 
-##### 2.2.4.1 A config that will not load is a diagnostic on that config
-
-A configuration mistake fails loudly ([§FS-config.requirements.5](FS-config.md#requirements5-a-mistake-in-the-config-fails-loudly--realized-one-case-deferred)), and in an editor loudly means the LSP channel: most clients hide the server's stderr, so a note there alone would leave the user reading the last good scan's diagnostics as if they were current while the real failure is the config. So a folder whose config will not load publishes one diagnostic on the config file the load error names — `grund.toml` at the root or under `.agents/` — with severity `error` and source `grund`, at the line that error names, or at the file's first line when it names none. Its message is the error `grund check` reports for the same file, so a reader sees in the editor what the CLI would print ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), followed, when the project has a last good scan, by a sentence saying its other diagnostics are from that last good scan. The retained diagnostics themselves are not withdrawn: [§FS-lsp.2.2.4](FS-lsp.md#224-an-unusable-folder-is-skipped) keeps the project on that scan.
-
-The named-line rule includes semantic config-load refusals, such as a value home that is absent, is not the required file or folder, or resolves outside the project root. If the rendered error names `grund.toml:8:`, the diagnostic starts at zero-based line 7, even when the refusal originates after parsing; the first-line fallback applies only when the error names no line. This locates the existing refusal without changing its message or which configurations load.
-
-The same holds when the server starts on a config that is already broken: there is no last good scan to keep, but the config diagnostic is still published, carrying the error alone, so a session that answers nothing for that folder says why. The next load of that folder that succeeds clears the diagnostic with an empty publish for the config file. The stderr note may stay beside it; it is no longer the only place the error appears.
-
-#### 2.2.5 Folder changes
-
-The server advertises workspace-folder support with change notifications. On `workspace/didChangeWorkspaceFolders`, added folders are discovered and included by the same rules, removed folders stop contributing, and diagnostics are republished from the resulting set of scans. Unusable entries are skipped as [§FS-lsp.2.2.4](FS-lsp.md#224-an-unusable-folder-is-skipped) says, so the rest of a mixed event still applies. Keeping a nested folder that still resolves to a project keeps that project active even when another folder for the same project is removed. Thus the initial folder order and later add/remove order cannot silently narrow citations or diagnostics.
+A config that will not load is also one diagnostic, severity `error` and source `grund`, on the config file its load error names, `grund.toml` at the root or under `.agents/`, at the line that error names, a semantic refusal after parsing included: an error naming `grund.toml:8:` sits at zero-based line 7, and one naming no line at the file's first line. Its message is the error `grund check` reports for the same file, followed, when the project has a last good scan, by a sentence saying that its other diagnostics, which are not withdrawn, are from that scan. The next successful load of that folder clears it with an empty publish for the config file.
 
 ### 2.3 Editor configuration (one-time, per editor)
 
-The user-facing LSP setup guide ships example LSP-client snippets for the editors most contributors use:
+The user-facing LSP setup guide ships a client configuration for Helix (three lines in `languages.toml`), Neovim (a built-in LSP snippet, compatible with `nvim-lspconfig` setups), Zed, Emacs (`eglot-server-programs` or `lsp-mode`), Sublime Text (the LSP package, for Markdown and scanned source syntaxes), VSCode and VSCodium (a generic LSP client extension pointed at `grund-lsp`), and the IntelliJ family (LSP4IJ's import of the directory [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations) generates, through **Settings | Languages & Frameworks | Language Servers**, **+ | New Language Server**, **Import from custom template...**).
 
-- **Helix** — three lines in `languages.toml`.
-- **Neovim** — a built-in LSP snippet, compatible with `nvim-lspconfig`-based setups.
-- **Zed** — central LSP registry entry; one config block locally if not yet upstreamed.
-- **Emacs** — `eglot-server-programs` or `lsp-mode` registration (~5 lines).
-- **VSCode / VSCodium** — install a generic LSP client extension and point it at `grund-lsp`. Under default Workspace Trust handling, Simple LSP Client 0.1.22 and `zsol.vscode-glspc` 0.2.1 require a trusted folder because they do not declare untrusted-workspace support. The guide explains Restricted Mode's disabled-client symptoms (status-bar badge, no hover or diagnostics, no `grund-lsp` process), **Workspaces: Manage Workspace Trust**, and optional trust of a parent covering descendant folders, including sibling checkouts beneath that parent; user settings register the server once but do not grant trust. No first-party VSCode extension duplicates the LSP server or is published to a marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)); the terminal-link extension the binary carries is not an LSP client ([§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)).
-- **Sublime Text** — LSP package client configuration for Markdown and scanned source syntaxes.
-- **IntelliJ family** — generate the import directory with [§FS-lsp.2.4.1](FS-lsp.md#241-preview-and-write), then explicitly import it through LSP4IJ's **Settings | Languages & Frameworks | Language Servers**, **+ | New Language Server**, **Import from custom template...** flow. The IntelliJ guide teaches the live-transform client configuration from [§FS-lsp.2.4.1.1](FS-lsp.md#2411-live-transform-client-configuration) and demonstrates typing a citation in a mapped Markdown or Java file.
-
-This repository keeps IntelliJ's `.idea/` settings local: no files beneath it
-are tracked, and the repository's `.gitignore` ignores the directory and its
-nested contents. The LSP4IJ installation hint remains in the user-facing setup
-guide rather than in repository-owned editor settings. This does not change
-the generated import template or editor protocol.
-
-Adding a new editor's snippet to the user-facing guide is a small contribution; it does not require a release.
-
-The guide documents declared-ID authoring ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion)), exclusions, restart and
-manual-request fallback, and obsolete-response handling. Acceptance, including
-Tab, is client-owned: verify guidance against official Helix, Neovim, Zed,
-VSCode and eglot/lsp-mode documentation and supply a minimal mapping only where
-needed. The server supplies plain-text edits, never a Tab interceptor or editor
-extension.
+For VSCode the guide says that under default Workspace Trust handling Simple LSP Client 0.1.22 and `zsol.vscode-glspc` 0.2.1 need a trusted folder, how Restricted Mode shows (a status-bar badge, no hover or diagnostics, no `grund-lsp` process), and that trusting a parent folder through **Workspaces: Manage Workspace Trust** covers the checkouts beneath it, while user settings register the server but grant no trust. For IntelliJ it teaches the client configuration of [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations). It teaches completion ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion)): its exclusions, the restart and manual-request fallback, obsolete responses, and that acceptance, Tab included, is the client's, with a minimal mapping only where an editor needs one. This repository tracks no file under IntelliJ's `.idea/`, which `.gitignore` ignores, so the LSP4IJ hint lives in the guide, never in editor settings the repository owns.
 
 ### 2.4 Installed editor integrations
 
-`grund-lsp integrations` is the batch surface for editor-client configuration carried by the installed `grund-lsp` version. It is distinct from `grund integrations`, which configures clickable-citation rendering clients ([§FS-integrations](FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations)). The initial catalog contains one entry, `lsp4ij`, with a one-line description. Listing prints the catalog on stdout, writes nothing, leaves stderr empty, and exits `0`.
+`grund-lsp integrations` lists on stdout the editor-client configurations the installed `grund-lsp` carries: one entry, `lsp4ij`, with a one-line description. It writes nothing, leaves stderr empty and exits `0`. It is not `grund integrations`, which configures clickable-citation rendering clients ([§FS-integrations](FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations)).
 
-#### 2.4.1 Preview and write
+`grund-lsp integrations lsp4ij` is a read-only preview: it prints the complete generated `template.json` object and then the IntelliJ import steps of [§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor) on stdout, writes nothing, leaves stderr empty and exits `0`. `grund-lsp integrations lsp4ij --write <directory>` makes `<directory>` an LSP4IJ import root holding exactly `template.json` and `README.md`, the README holding the same steps, prints `created <directory>` and the steps on stdout, and exits `0`; repeating it against those two byte-identical files succeeds and prints `unchanged <directory>` and the steps on stdout. A root that exists with a missing, extra or byte-different entry is a conflict: every existing byte stays, stdout is empty, one `error:` message on stderr says to move or remove the root before retrying ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)), and there is no force option.
 
-`grund-lsp integrations lsp4ij` is a read-only preview. It prints the complete generated `template.json` object followed by the exact explicit IntelliJ import steps from [§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor) on stdout, writes no file or directory, leaves stderr empty, and exits `0`. `grund-lsp integrations lsp4ij --write <directory>` treats `<directory>` as the LSP4IJ import root and creates exactly `template.json` and `README.md`; success prints `created <directory>` and the import steps on stdout and exits `0`; the written README contains the same explicit import steps as preview. Repeating the write against those two byte-identical files is an idempotent success that prints `unchanged <directory>` and the same steps.
-
-A pre-existing root with a missing, extra, or byte-different entry is a conflict: every existing byte remains untouched, stdout is empty, and one `error:` message on stderr tells the user to move or remove the root before retrying ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)). There is no force option.
-
-##### 2.4.1.1 Live-transform client configuration
-
-The embedded README supplies one set of setup instructions to the preview,
-generated `README.md`, and successful write output, including an unchanged
-repeat. After the existing numbered import sequence, these instructions tell
-the user to select the imported **grund LSP** server under **Settings |
-Languages & Frameworks | Language Servers** and set or merge the following
-JSON in its **Client configuration**, preserving other client settings and
-other entries within `format`:
+After the numbered import steps, the steps, wherever they are printed or written, tell the user to select the imported **grund LSP** server under **Settings | Languages & Frameworks | Language Servers** and set or merge this JSON into its **Client configuration**, keeping other client settings and other entries within `format`:
 
 ```json
 {"format":{"existingFormatterOverrideable":true}}
 ```
 
-The guidance explains that when IntelliJ has a formatter for a language,
-LSP4IJ otherwise withholds on-type formatting requests from grund-lsp. This
-includes Java, and Markdown when a formatter is installed. The setting lets
-those requests reach the existing live trigger transform ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)), so
-the default `$$` becomes `§` while typing a citation. The user-facing IntelliJ
-guide gives the same actionable guidance and a typing example with its expected
-transformed text. Configuration is entered through LSP4IJ's settings, without
-adding a file to the generated import directory; the two-file output and
-conflict rules of [§FS-lsp.2.4.1](FS-lsp.md#241-preview-and-write) remain in force.
+They say why: where IntelliJ has a formatter for a language, Java among them and Markdown once a formatter is installed, LSP4IJ otherwise withholds on-type formatting requests from `grund-lsp`, so the default `$$` would never become `§` ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)).
 
-#### 2.4.2 Language mappings
+`template.json` maps languages from the effective `[scan] extensions` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)) of the config discovered upward from the process's current directory ([§FS-lsp.3](FS-lsp.md#3-configuration)), or the canonical defaults where there is none: each extension is one `*.ext` pattern with its conventional language ID, `md` → `markdown`, `rs` → `rust`, `ts` → `typescript` and every canonical default among them, and an unknown extension is its own non-empty language ID. The mapping is fixed at generation; a later config change needs regeneration. Its `programArgs.default`, for a POSIX shell, and `programArgs.windows`, for Windows `cmd`, each change to `$PROJECT_DIR$` and launch the quoted absolute path of the running `grund-lsp`, never through Cargo or a shell `PATH` lookup, and the one selected on the generating host is executable there. No space, non-ASCII character or JSON or command metacharacter in a path can change the command or corrupt the JSON.
 
-Generation starts at the process current working directory, uses the same upward configuration discovery as [§FS-lsp.3](FS-lsp.md#3-configuration), and reads the resulting effective `[scan].extensions` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)). With no config it therefore uses the canonical default extensions. Each extension becomes one `*.ext` file pattern. Conventional language IDs are used for known extensions — including `md` → `markdown`, `rs` → `rust`, `ts` → `typescript`, and every canonical default — while an unknown extension uses the extension itself as its non-empty language ID. Mappings are a deterministic snapshot of the effective config at generation time; a later config change requires regeneration.
-
-#### 2.4.3 The launch command
-
-The embedded LSP4IJ template contains both `programArgs.default` and `programArgs.windows`. Both change to `$PROJECT_DIR$` before launch and quote the absolute path returned for the running `grund-lsp` executable, the former for a POSIX shell and the latter for Windows `cmd`; the command selected on the generating host must be executable there. Spaces, non-ASCII characters, and JSON or command metacharacters in paths cannot change the command or corrupt the JSON. Neither command invokes Cargo or relies on shell `PATH` lookup.
-
-#### 2.4.4 Help, failures, and the protocol boundary
-
-The generator does not install LSP4IJ, edit JetBrains-owned files, or add editor-specific protocol behavior ([§FS-lsp.5](FS-lsp.md#5-out-of-scope)). Top-level help and `integrations` help explain this boundary, show list, preview, and write forms, and document exits `0` and `2`. `--version` retains its existing output. An unknown template, malformed arguments, invalid discovered config, render failure, path failure, or write conflict leaves stdout empty, prints one `error:` message on stderr, and exits `2`. Any argument is handled or rejected as batch input and never enters the protocol loop; exactly no arguments retains the stdio lifecycle of [§FS-lsp.2.2](FS-lsp.md#22-lifecycle) with protocol stdout pristine.
+An unknown template, malformed arguments, an invalid discovered config, or a render, path or write failure or conflict leaves stdout empty, prints one `error:` message on stderr and exits `2`; top-level and `integrations` help show the list, preview and write forms and both exits. Any argument is handled or refused as batch input and never enters the protocol loop; with no arguments, `grund-lsp` is the stdio session of [§FS-lsp.2.2](FS-lsp.md#22-lifecycle), with protocol stdout pristine.
 
 ## 3. Configuration
 
-The server reads the `grund.toml` via the same discovery logic as `grund check` ([§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)), walking up from every workspace folder supplied by the editor's LSP `initialize` request, with the fallbacks of [§FS-lsp.2.2.1](FS-lsp.md#221-workspace-folders-anchor-discovery). Batch integration generation instead walks upward from the process current working directory ([§FS-lsp.2.4.2](FS-lsp.md#242-language-mappings)). Both consume the same effective core configuration; there is no separate LSP config or second parser.
-
-Editor-side LSP configuration (server arguments, workspace folders) is the user's responsibility per [§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor) and is not part of `grund.toml`.
+The server reads `grund.toml` by the discovery `grund check` uses ([§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)), walking up from every workspace folder the editor supplies, with the fallbacks of [§FS-lsp.2.2.1](FS-lsp.md#221-workspace-folders-anchor-discovery), while `grund-lsp integrations` walks up from the process's current directory ([§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations)). Both consume the same effective core configuration; there is no separate LSP config and no second parser. The editor's own LSP configuration, its server arguments and workspace folders, is the user's ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor)) and no part of `grund.toml`.
 
 ## 4. Determinism and parity with the CLI
 
@@ -479,126 +223,36 @@ definition navigation has no editor-only recognition fallback
 Same input, same answer: the parity is [§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does).
 
 Completion candidates, metadata, ordering and edit ranges obey the same promise
-([§FS-lsp.1.6.2](FS-lsp.md#162-candidates-resolution-and-ordering), [§FS-lsp.1.6.3](FS-lsp.md#163-whole-token-replacement)).
+([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion)).
 
 The LSP server does not have an "interactive" mode or a confirmation prompt ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It is the same engine with a different transport.
 
-### 4.1 How parity is held
-
-Parity is held by comparing the server with the command line, and by focused LSP tests for linkification, configured trigger handling, workspace member marker resolution, UTF-16 ranges, and document-link targets where no comparison runs. The full child-process sweep over `tests/e2e/cases/*` ships as `tests/integration/lsp_cli_parity.rs`: for every plain-`check` case, the diagnostics the server publishes are the located findings the CLI prints, or the build is red. The two workspace warnings of [§FS-lsp.1.1.3](FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel) are held the same way against that case's stderr golden, so neither surface may carry one the other does not. The unlisted `[workspace]` block is not among them and is not held that way: it is a located finding on both surfaces now ([§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)), so the sweep compares it like any other — same path, line, `error` severity, code and message — which is what would catch the terminal and the editor drifting apart on the one finding whose location has two places to come from.
-
-Parity is held between a buffer and the same file saved as well: the editor judges what a save would write ([§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)). `tests/integration/lsp_unsaved_files.rs` drives the server as an editor does, opening a stub and an unsaved new target, and a target behind a symlink edited under either spelling, and requires the diagnostics and the hover the saved tree gives ([§FS-scan.text.buffer-only](FS-scan.md#textbuffer-only-a-buffer-with-no-file-behind-it-is-a-file), [§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)). `crates/grund-cli/tests/command_agreement.rs` asks the editor snapshot and `show` the same question of each tree twice, once with the edit held as a buffer and once saved, and requires the two answers to be one.
-
-The sweep includes the plain-check rules fixture. Rule parsing and evaluation
-remain core behavior: the server transports hard findings and `invalid-rule`
-and contains no parallel rule implementation
-([§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)).
-
-Completion acceptance tests apply a source-comment edit, require resolution
-through the shared resolver, and require clean `grund fmt --check`. They cover
-owner isolation, qualified targets, notified overlays, UTF-16 ranges and the
-completion/on-type sequences of [§FS-lsp.1.6.4](FS-lsp.md#164-snapshot-and-live-transform-interaction) alongside preserved trigger tests.
-
-### 4.2 Embedded values
-
-For an embedded value, this parity covers the CLI's marked-root shape and comparison findings, raw `show --toc` hover slice, tag-free semantic title range, component definition target, and existing dotted-token citation lookups, highlights, and document links. Shell completion remains the core catalog's ordinary section completion; LSP completion offers ordinary declared IDs ([§FS-lsp.1.6.2](FS-lsp.md#162-candidates-resolution-and-ordering)). Neither surface adds a value-specific candidate.
-
-### 4.3 Off-grammar declarations
-
-This parity includes exact off-grammar declarations and their declaration-backed marked citations ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): the LSP publishes the same located `declaration-near-miss` as `check`, while hover, definition, citation lookups, highlights, and document links navigate the declaration and its sections from the shared scan. No editor-only fallback recognition is permitted.
-
 ## responsiveness: What an answer may cost
 
-[§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli) fixes what the server answers. This chapter fixes what answering it may cost, because a
-correct answer nobody waits for is not a working editor integration: the server that takes minutes
-over a workspace the CLI clears in a moment shows no error and no partial result, only a window in
-which nothing arrives.
-
-The budget is [§GOAL-fast-feedback.1](../goals.md#1-performance-targets): the one the scan itself is held to, and the editor target it
-sets for citation completion. Holding it is not only a property of the scan: a snapshot built inside
-the budget and then read quadratically is outside it again, so the work the server does *after* a
-snapshot exists is bound here as well, and so is what a request waits for before it is answered.
-
-Each bound is a complexity, and instruction counts gate it. This project measures cost by counting
-work rather than by timing it: a cost that grows faster than its input is wrong on every machine,
-and one that does not is still right on a slow one.
-
-One answer also carries a deadline, because the author waits for it on every key: the completion of
-[§FS-lsp.responsiveness.4](FS-lsp.md#responsiveness4-a-typing-request-waits-for-no-rebuild-while-the-declarations-stand). A figure in milliseconds is a promise about one machine, so the deadline
-names its reference: the GraalVM workspace and the machine recorded in `docs/benchmarks.md`, where the
-figure is measured, with the build and the commit it was taken at. That record holds the deadline;
-CI does not, because a wall-clock figure on a shared runner cannot gate anything.
+[§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli) fixes what the server answers; this chapter fixes what answering may cost. The budget is [§GOAL-fast-feedback.1](../goals.md#1-performance-targets)'s, the one the scan itself is held to, and it binds the work the server does after a snapshot exists and what a request waits for. Each bound is a complexity, and instruction counts gate it ([§DA-benchmark-instruction-counting](../decisions/architectural/DA-benchmark-instruction-counting.md#da-benchmark-instruction-counting-the-performance-harness-counts-instructions-not-wall-clock-seconds)). The one deadline in milliseconds, that of [§FS-lsp.responsiveness.4](FS-lsp.md#responsiveness4-a-typing-request-waits-for-no-rebuild-while-the-declarations-stand), names its reference: the GraalVM workspace and the machine recorded in `docs/benchmarks.md`, with the build and commit it was measured at. That record holds the deadline; CI does not.
 
 ### responsiveness.1: Publishing a diagnostic set is linear in the findings
 
-For a project whose check reports `F` findings over a snapshot holding `E` records, publishing the
-diagnostics of [§FS-lsp.1.1](FS-lsp.md#11-diagnostics) costs on the order of `F + E`, never `F × E`. Anchoring one finding
-([§FS-lsp.1.1.1](FS-lsp.md#111-where-a-diagnostic-anchors)) does an amount of work that does not grow with how many records the snapshot
-holds, so a workspace whose findings and records both double costs twice as much to publish rather
-than four times.
-
-The shape matters most to the workspace that needs grounding most: one part-way through adoption,
-where `F` is large precisely because the tree is not conformant yet. A set of findings the CLI
-reports in well under a second is published in about that time, not minutes later.
+For a project whose check reports `F` findings over a snapshot holding `E` records, publishing the diagnostics of [§FS-lsp.1.1](FS-lsp.md#11-diagnostics) costs on the order of `F + E`, never `F × E`: anchoring one finding does an amount of work that does not grow with how many records the snapshot holds. A workspace part-way through adoption, where `F` is large because the tree is not conformant yet, is published in about the time the CLI reports it in.
 
 ### responsiveness.2: A path is resolved once per answer, never once per comparison
 
-Resolving a path to the one spelling a scan gave it reads the filesystem once for every component
-of the path. A resolution performed inside a lookup is therefore what turns
-[§FS-lsp.responsiveness.1](FS-lsp.md#responsiveness1-publishing-a-diagnostic-set-is-linear-in-the-findings) quadratic, and it costs more the deeper the tree is.
-
-The records in a snapshot already carry their paths in that spelling. So matching a document
-against them resolves the incoming path once and compares the resolved values; no comparison
-resolves either side a second time.
-
-This binds every answer, not only a published diagnostic. A hover ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)), a definition
-([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)), an occurrence highlight ([§FS-lsp.1.3.3](FS-lsp.md#133-occurrence-highlight)), a document link ([§FS-lsp.1.3.2](FS-lsp.md#132-document-links)) and a
-references reply each find their document by one resolution of the request's own path.
+Resolving a path to the one spelling a scan gave it reads the filesystem once for every component of the path, so a resolution inside a lookup is what would make [§FS-lsp.responsiveness.1](FS-lsp.md#responsiveness1-publishing-a-diagnostic-set-is-linear-in-the-findings) quadratic. The records in a snapshot already carry their paths in that spelling, so every answer, a published diagnostic, a hover, a definition, an occurrence highlight, a document link or a references reply, finds its document by resolving the request's own path once and comparing resolved values; no comparison resolves either side a second time.
 
 ### responsiveness.3: A citation hover reads nothing the snapshot did not
 
-Once a snapshot exists, a citation hover ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)) answers from it: the hover loads no
-workspace, and reads no file and observes no checking input that the snapshot's own build did not
-already read. Its cost therefore grows with the answer, the cited body, and not with the tree the
-snapshot was built over. A hover, highlight or link sent after an edit waits for the rebuild that
-covers that edit, never for a backlog of rebuilds behind it: each is a snapshot request, answered
-from a snapshot built from exactly the text it was sent against. That promise holds for a client
-that cancels the requests it no longer needs, because a snapshot request left uncancelled seals the
-rebuild of its own version; one the client cancels is answered `RequestCancelled`.
-
-What the hover answers does not move: its body stays byte for byte what `grund <ID> --toc` prints
-over the same input ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview), [§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)), stubs, named sections, value
-bindings and cross-project aliases included, and an open document's unsaved text is the input it
-reads, as it is for every other answer ([§FS-lsp.4.1](FS-lsp.md#41-how-parity-is-held)).
+Once a snapshot exists, a citation hover ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)) answers from it: it loads no workspace, and reads no file and observes no checking input that the snapshot's own build did not already read, so its cost grows with the cited body and not with the tree. A hover, highlight or link sent after an edit is a snapshot request, answered from a snapshot built from exactly the text it was sent against: it waits for the rebuild that covers its edit, never for a backlog of rebuilds behind it. That holds for a client that cancels the requests it no longer needs, because a snapshot request left uncancelled seals the rebuild of its own version; one the client cancels is answered `RequestCancelled`.
 
 ### responsiveness.4: A typing request waits for no rebuild while the declarations stand
 
-A typing request — a completion ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion)) or the live transform's on-type request
-([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)) — is answered from its own text and the project's declarations, without waiting
-for the snapshot to be rebuilt, whenever the edits before it left those declarations unchanged. Its
-cost is the edited document plus the catalog it filters, never the tree: between reading an edit and
-answering the typing request after it, the server reads no input except the edited document. On the
-reference [§FS-lsp.responsiveness](FS-lsp.md#responsiveness-what-an-answer-may-cost) names, grund's share of that answer is under 10 ms, which leaves
-the rest of [§GOAL-fast-feedback.1](../goals.md#1-performance-targets)'s 100 ms to the editor.
+A typing request, a completion ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion)) or the live transform's on-type request ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)), is answered from its own text and the project's declarations, without waiting for the snapshot to be rebuilt, whenever the edits before it left those declarations unchanged. Between reading an edit and answering the typing request after it the server reads no input but the edited document, so the cost is that document plus the catalog it filters, never the tree; on the reference [§FS-lsp.responsiveness](FS-lsp.md#responsiveness-what-an-answer-may-cost) names, `grund`'s share of such an answer is under 10 ms, which leaves the rest of [§GOAL-fast-feedback.1](../goals.md#1-performance-targets)'s 100 ms to the editor.
 
-"Unchanged" is judged by reading the edited document again as the scan reads it, under its
-project's config, and comparing the declarations that reading gives with the ones the installed
-catalog holds for that file. It is judged again each time a rebuild is installed, against the
-catalog installed at that moment, so a rebuild of an older text never stands in for a later one: a
-heading renamed, and renamed back before the rebuild of the rename lands, never offers the name it
-held in between. A document the one-file reading cannot judge exactly counts as changed: a config or
-ignore file, a stub or a stub's target, a file no project scanned.
-
-After an edit that did change the declarations, a typing request waits for the rebuild of every
-project that rebuild covers, not only the project that owns the document, because each of them may
-offer the IDs that changed — *deferred*: answering it from a catalog patched by the one-file reading,
-so that it too meets the deadline, is the follow-up. Either way its answer is the one a full rebuild
-gives, never an ID that has gone and never one short of an ID that is new
-([§FS-lsp.requirements.no-guess](FS-lsp.md#requirementsno-guess-no-answer-is-a-guess--realized)).
+"Unchanged" is judged by reading the edited document again as the scan reads it, under its project's config, and comparing the declarations that reading gives with the ones the installed catalog holds for that file. It is judged again each time a rebuild is installed, against the catalog installed at that moment, so a rebuild of an older text never stands in for a later one: a heading renamed, and renamed back before the rebuild of the rename lands, never offers the name it held in between. A document the one-file reading cannot judge exactly counts as changed: a config or ignore file, a stub or a stub's target, a file no project scanned. After an edit that did change the declarations, a typing request waits for the rebuild of every project that rebuild covers, not only the document's owner, because each may offer the IDs that changed. Either way its answer is the one a full rebuild gives, never an ID that has gone and never one short of an ID that is new ([§FS-lsp.requirements.no-guess](FS-lsp.md#requirementsno-guess-no-answer-is-a-guess)).
 
 ## 5. Out of scope
 
-- **Per-editor wrappers**: no first-party VSCode/IntelliJ/Vim/Emacs plugin duplicates the LSP server or is published to a marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)). The LSP server is the executable surface; [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations) ships importable configuration data but the user installs the generic client and performs the import.
+- **Per-editor wrappers**: no first-party VSCode, IntelliJ, Vim or Emacs plugin duplicates the LSP server or is published to a marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)). The LSP server is the executable surface; [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations) ships importable configuration data, and the user installs the generic client and performs the import. The terminal-link extension the `grund` binary carries is not an LSP client ([§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)).
+- **Code actions, symbols and commands**: the server advertises no `textDocument/codeAction`, no `workspace/symbol` and no `workspace/executeCommand`, so a missing snapshot has no "Fetch" action and the server never runs `grund fetch`.
 - **Refactoring (rename ID)**: `grund` does not rename IDs ([§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming)).
-- **Inline editing of declaration bodies from the hover popup**: editors already do this well; `grund-lsp` does not implement it.
+- **Inline editing of declaration bodies from the hover popup**: `grund-lsp` does not implement it.
 - **Network access**: the server performs no network I/O ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)). All scanning is local.
