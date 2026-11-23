@@ -82,7 +82,7 @@ must = ["FS"]
     );
 }
 
-/// §FS-check.2.2.1.1: entry-only folders, file homes, prohibition-only tables,
+/// §FS-check.2.2.1: entry-only folders, file homes, prohibition-only tables,
 /// the homeless kind, and unwalked kinds stay silent even when a full walk
 /// makes the unwalked home visible.
 #[test]
@@ -212,7 +212,7 @@ must = ["FS"]
     assert!(report.errors.iter().any(|error| error.code == "dangling"));
 }
 
-/// §FS-check.2.2.1.3 / §FS-workspace.5: empty-obligation warnings are evaluated
+/// §FS-check.2.2.1 / §FS-workspace.5: empty-obligation warnings are evaluated
 /// per workspace member, so an entry-only member does not inherit a sibling's
 /// warning.
 #[test]

@@ -1,4 +1,4 @@
-//! Port of grund.298's explicit/bare reads and controls (§FS-show.1.4.1).
+//! Port of grund.298's explicit/bare reads and controls (§FS-show.3.5).
 //! Whole-project resolution must survive validating an existing path (§FS-scan.path.show).
 
 use std::path::{Path, PathBuf};
@@ -152,7 +152,7 @@ fn existing_paths_keep_project_wide_resolution() {
     expect(root, &["show", "api/FS-001-api"], 0, "Api lead.\n", "");
 }
 
-/// Retain the original check/list/member/single controls (§FS-show.1.4.1).
+/// Retain the original check/list/member/single controls (§FS-show.3.5).
 #[test]
 fn other_routes_still_refuse_missing_paths() {
     let workspace = Workspace::new();

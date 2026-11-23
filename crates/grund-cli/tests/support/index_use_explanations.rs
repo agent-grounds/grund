@@ -224,7 +224,7 @@ fn warning_accounts_for_multiple_index_sites() {
     );
 }
 
-/// §FS-check.4.1.2 / §FS-errors.3.1: paths within the explanation use the
+/// §FS-check.4.1.2 / §FS-errors.3: paths within the explanation use the
 /// same output base as the declaration path, including invocation-relative output.
 #[test]
 fn warning_uses_the_invocation_report_base() {

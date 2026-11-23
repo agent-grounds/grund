@@ -42,7 +42,7 @@ fn whole_value_bindings_navigate_to_the_declaration_and_match_the_cli() {
         .find(|error| error.code == "value-mismatch")
         .expect("CLI mismatch");
     // The root and the literal whole, alone, at the one component site
-    // (§FS-values.5.2.2, §FS-errors.3.9.1).
+    // (§FS-values.5.2.2).
     let sites = cli_mismatch
         .sites
         .iter()

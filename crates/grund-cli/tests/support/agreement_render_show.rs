@@ -96,7 +96,7 @@ impl View<'_> {
     }
 
     /// What a show answer carries beside its object: the body, line and
-    /// section map, a case's being its manifest at line 1 (§FS-show.2.4.1).
+    /// section map, a case's being its manifest at line 1 (§FS-show.2.4).
     fn beside(&self, (d, _): Row, object: &Value) -> (Value, Value, Vec<Value>) {
         let decl = &self.m.decls[d];
         let sections = object["sections"].as_array().into_iter().flatten();

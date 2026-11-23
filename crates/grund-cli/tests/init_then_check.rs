@@ -209,10 +209,10 @@ should = ["AR"]
 should = ["FS|AR"]
 "#;
 
-/// §FS-check.2.2.1.1, §FS-init.2.3.5.15: the scoped `AGENTS.md` files `init` writes
+/// §FS-check.2.2.1, §FS-init.2.3.5.15: the scoped `AGENTS.md` files `init` writes
 /// into the starter's empty kind folders are no content of those folders, so a
 /// starter that adopts the recommended ruleset earns no `applies to nothing` line,
-/// from the table or from a rule about the same kind (§FS-check.2.2.1.4).
+/// from the table or from a rule about the same kind (§FS-check.2.2.1).
 #[test]
 fn scaffold_with_the_guide_ruleset_then_init_has_no_empty_obligation() {
     let repo =

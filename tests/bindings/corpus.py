@@ -24,7 +24,7 @@ READ_CASES = (
     ("json-report", "show", ("FS-999-missing",), {}),
     ("show-ambiguous-id-json", "show", ("FS-001-login",), {}),
     ("show-ambiguous-section-json", "show", ("FS-001-login",), {"section": "1"}),
-    # §FS-show.3.1.3.1: the JSON form carries the heading anchor, per TOC entry
+    # §FS-show.3.1.3: the JSON form carries the heading anchor, per TOC entry
     # too, under the target project's profile, or null where there is none.
     ("show-anchor-toc-json", "show", ("FS-001-alpha",), {"mode": "toc", "format": "json"}),
     ("show-anchor-workspace-profile-json", "show", ("api/FS-login.1",), {"format": "json"}),

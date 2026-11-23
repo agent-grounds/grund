@@ -1,6 +1,6 @@
 //! Black-box: a declaration record whose location is the report base reads `.` (§FS-cli.3.4). An
 //! E2E case is the record that gets there, because its location is its directory, and the
-//! ambiguity refusal naming one carries `.` in its message and its `sites` (§FS-errors.5.2.1).
+//! ambiguity refusal naming one carries `.` in its message and its `sites` (§FS-errors.5.2).
 
 use std::fs;
 use std::path::{Path, PathBuf};

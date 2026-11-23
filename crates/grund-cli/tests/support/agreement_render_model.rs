@@ -3,7 +3,7 @@
 //! measurements are read from the input bytes alone, importing nothing that
 //! answers (§REQ-one-answer.proof.evidence.closed). Bodies follow
 //! §FS-list.3.4.1 and §FS-show.2.1.2, units §FS-list.3.4.2, and the flattened
-//! cross-reference wrapper §FS-show.3.2.1.
+//! cross-reference wrapper §FS-show.3.2.
 
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
@@ -135,7 +135,7 @@ fn span(text: &str, first: usize, last: usize, strip: &str) -> String {
     }
 }
 
-/// §FS-show.3.2.1: `[§…](…)` collapses to its citation outside a Markdown fence.
+/// §FS-show.3.2: `[§…](…)` collapses to its citation outside a Markdown fence.
 pub fn flatten(body: &str, marker: &str, markdown: bool) -> String {
     let mut fenced = false;
     let mut out = String::new();

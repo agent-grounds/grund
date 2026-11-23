@@ -1,7 +1,7 @@
 //! Test module: each gate records the switch it found set (§FS-check.1.4.1) —
 //! one fixture per switch with it off, which arms none of its codes, and one
 //! with it on, which arms all of them — and a rule's empty subject reuses the
-//! obligation's conditions (§FS-check.2.2.1.4).
+//! obligation's conditions (§FS-check.2.2.1).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::api::{CheckOpts, check_with_run_warnings};
@@ -270,7 +270,7 @@ fn an_import_arms_both_import_checks() {
 
 /// The rule twin of the e2e `check-rule-applies-to-nothing-declared` project:
 /// a `RULE-e2e` whose subject kind is homed by `e2e_home`, holding `files`
-/// (§FS-check.2.2.1.4).
+/// (§FS-check.2.2.1).
 pub(super) fn rule_project(
     name: &str,
     e2e_home: &str,
@@ -301,7 +301,7 @@ fn applies_to_nothing(warnings: &[Finding]) -> Vec<&str> {
         .collect()
 }
 
-/// §FS-check.2.2.1.4: a rule whose subject kind declares nothing in a home that
+/// §FS-check.2.2.1: a rule whose subject kind declares nothing in a home that
 /// holds files says so once, authored by the rule, with no `citable` tail.
 #[test]
 fn a_rule_with_an_empty_subject_says_it_applies_to_nothing() {
@@ -322,7 +322,7 @@ fn a_rule_with_an_empty_subject_says_it_applies_to_nothing() {
     assert_eq!(line.authority, ["RULE-e2e"]);
 }
 
-/// §FS-check.2.2.1.4: the obligation's conditions hold for a rule — a folder
+/// §FS-check.2.2.1: the obligation's conditions hold for a rule — a folder
 /// whose only file is its entry file, and a file home, stay silent. A citable
 /// kind cannot be `scan = false`, so condition 2 reaches a rule as the file home.
 #[test]

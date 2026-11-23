@@ -1,7 +1,7 @@
 //! Test module: which numbered headings are a declaration's **own** sections
 //! (§FS-declarations.checks.duplicate-section.2's body scope, §FS-show.2.5, §FS-show.2.3.1), and the agreement
 //! that rests on the answer — `grund <ID>.<path>` refuses exactly the coordinates
-//! `grund check` reports as `duplicate-section` (§FS-show.2.2.2.2). The cases here
+//! `grund check` reports as `duplicate-section` (§FS-show.2.2.2). The cases here
 //! are the shapes that made the two disagree: a heading inside a fenced example, a
 //! heading in the next item's doc-comment, and a stub whose prose repeats one.
 //!
@@ -164,7 +164,7 @@ fn a_heading_in_a_later_doc_comment_is_not_this_declarations_section() {
 }
 
 /// The same collision written *inside* one doc-comment is the real thing, in
-/// Rust `///` and in a Python docstring alike (§FS-show.2.3.5) — the rule is about
+/// Rust `///` and in a Python docstring alike (§FS-show.2.3) — the rule is about
 /// the declaration's body, not about Markdown files.
 #[test]
 fn a_collision_inside_one_doc_comment_is_reported() {
@@ -269,7 +269,7 @@ fn a_stubs_own_prose_declares_no_sections() {
 
 /// And the other half of the stub case: a collision in the *inline home* is
 /// refused for the stubbed ID too — `show` resolves the sections through the
-/// stub rather than reading the stub's own record (§FS-show.2.2.2.2).
+/// stub rather than reading the stub's own record (§FS-show.2.2.2).
 #[test]
 fn a_collision_in_the_inline_home_refuses_through_the_stub() {
     let root = test_root("duplicate_sections_stub_to_colliding_home");

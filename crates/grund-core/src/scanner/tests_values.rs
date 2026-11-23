@@ -332,7 +332,7 @@ const REMEDY: &str =
 /// only: an agreeing literal is silent, a one-part disagreement names the root
 /// and its component apart, with none of the `.1` spelling's bytes in front, and
 /// a two-part literal names the root because its part count differs
-/// (§FS-values.3.1.2, §FS-values.5.2.2, §FS-errors.3.9.1).
+/// (§FS-values.3.1.2, §FS-values.5.2.2).
 #[test]
 fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling_in_verdict() {
     let agrees = check_run(

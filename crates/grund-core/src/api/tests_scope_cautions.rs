@@ -1,5 +1,5 @@
 //! The empty-scan caution's hidden-file branch (§FS-check.2.2.2, §AR-scanner.1.13), the
-//! outward link it names below a handed directory (§FS-check.2.2.2.6.1), and how it names
+//! outward link it names below a handed directory (§FS-check.2.2.2), and how it names
 //! the scope it read (§FS-workspace.5.3, §FS-config.3.6).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
@@ -100,9 +100,9 @@ fn link_below_project(name: &str) -> crate::testing::Rooted<Config> {
     root.hold(config)
 }
 
-/// §FS-check.2.2.2.6.1: a handed directory whose walk refused an outward link below it names
+/// §FS-check.2.2.2: a handed directory whose walk refused an outward link below it names
 /// that link, spelled from the path, rather than the extensions; one whose only link stays
-/// inside the project is walked and keeps §FS-check.2.2.2.2's extensions wording.
+/// inside the project is walked and keeps §FS-check.2.2.2's extensions wording.
 #[cfg(unix)]
 #[test]
 fn the_empty_scan_caution_names_an_outward_link_below_the_path() {

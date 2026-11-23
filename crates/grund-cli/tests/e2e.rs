@@ -304,7 +304,7 @@ fn v2_kind_fields_contract() {
     assert_every_case_passed("v2 kind fields", &outcomes);
 }
 
-/// §FS-show.3.5.2: the check breadcrumb belongs only to the existing-path
+/// §FS-show.3.5: the check breadcrumb belongs only to the existing-path
 /// migration case. Port grund.33's clean-check and resolving-ID controls before
 /// comparing the malformed coordinate and both non-path alias refusals.
 #[test]
@@ -335,7 +335,7 @@ fn refused_queries_recommend_check_only_for_existing_paths() {
         "",
     );
 
-    // §FS-show.3.5.1: explicit show retains its format/list advice.
+    // §FS-show.3.5: explicit show retains its format/list advice.
     assert_output(
         &["show", "FS-widget.1.nope"],
         1,
@@ -548,7 +548,7 @@ fn the_values_example_shows_what_it_is_the_example_of() {
 
     // And the caught mismatch beside the version 1 caution its config earns
     // (§FS-check.checks.config-version-1). The prose binds the root, so the line
-    // names the root and the literal whole (§FS-values.5.2.2, §FS-errors.3.9.1).
+    // names the root and the literal whole (§FS-values.5.2.2).
     assert_eq!(read("expected.exit").trim(), "1");
     assert_eq!(read("expected.stderr"), VERSION_1_CAUTION);
     assert_eq!(

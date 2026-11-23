@@ -148,7 +148,7 @@ mod tests {
         assert!(clause.ends_with("a.md:12 (X-a)"));
     }
 
-    /// The display spells the path and nothing else (§FS-errors.3.1).
+    /// The display spells the path and nothing else (§FS-errors.3).
     #[test]
     fn the_path_is_named_by_the_display() {
         let (clause, _) = counted_clause(vec![entry("docs/a.md", 2, 1, "X-a")], |path| {

@@ -218,7 +218,7 @@ fn one_init_per_project_in_either_order_leaves_the_root_check_green() {
     assert!(stale.is_empty(), "{stale:#?}");
 }
 
-/// §FS-check.3.5.5, §FS-errors.3.6.1: a new member turns three blocks stale, each
+/// §FS-check.3.5.5, §FS-errors.3.6: a new member turns three blocks stale, each
 /// finding names where to run `grund init`, and running it there clears them all.
 #[test]
 fn new_member_blocks_clear_after_init_in_each_named_directory() {

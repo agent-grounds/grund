@@ -185,7 +185,7 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-list.5", reason: "catalog-query rationale" },
     Exception { id: "FS-lsp.5", reason: "LSP non-goals" },
     Exception { id: "FS-refs.5", reason: "reference-query rationale" },
-    Exception { id: "FS-show.4.1", reason: "show-query rationale" },
+    Exception { id: "FS-show.4", reason: "show-query rationale" },
     Exception { id: "FS-workspace.2.2.1.2", reason: "rationale that leaves the empty-directory case undecided" },
     Exception { id: "FS-workspace.2.2.3", reason: "rationale for why the key exists" },
     Exception { id: "FS-workspace.2.2.10.1", reason: "rationale contrasting the glob and absent-member rules" },

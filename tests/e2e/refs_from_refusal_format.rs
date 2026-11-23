@@ -28,7 +28,7 @@ const MEMBER_DOC: &str = "# FS-api: Api\n\nApi lead, see \u{a7}FS-api.\n";
 const NOT_FOUND_HINT: &str = "hint: run `grund list` to see every declared ID, or \
                               `grund id <KIND> \"<title>\"` to propose a new one\n";
 
-/// The invalid-ID hint naming the canonical defaults' template, the member's (§FS-show.3.5.1).
+/// The invalid-ID hint naming the canonical defaults' template, the member's (§FS-show.3.5).
 const MEMBER_FORMAT_HINT: &str = "hint: this repo's [id] format is `{kind}-{number}-{slug}` \
                                   (run `grund config show`); `grund list` shows the IDs that exist\n";
 

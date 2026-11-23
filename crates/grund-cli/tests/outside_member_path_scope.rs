@@ -203,7 +203,7 @@ fn list_below_the_root_outside_every_member_prints_nothing_where_no_member_is() 
 }
 
 /// §FS-scan.path.show: `--batch --all` generates its queries from the entries
-/// `list <path>` prints, and `--glob` filters that set (§FS-show.2.6.2), so from
+/// `list <path>` prints, and `--glob` filters that set (§FS-show.2.6), so from
 /// `tools/sub/` both generate nothing. Today they read every body in the workspace.
 #[test]
 fn show_batch_below_the_root_outside_every_member_generates_nothing_where_no_member_is() {

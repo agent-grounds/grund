@@ -1,7 +1,7 @@
 //! Test module: `check` holds the whole managed block (§FS-check.3.5.4) — the
 //! render it compares is `init`'s on either conversation surface, the parts a
 //! stale finding names, the directory a finding about another project's block
-//! names (§FS-errors.3.6.1), and the runs that leave the two workspace sections
+//! names (§FS-errors.3.6), and the runs that leave the two workspace sections
 //! out (§FS-check.3.5.5, §FS-check.4.9.1).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
@@ -205,7 +205,7 @@ fn block_sections_name_the_directions_a_declared_rule_renders() {
 /// root's run renders the members' bullets as `init` did; a member joining
 /// turns every block red, and each finding about another project's block —
 /// a companion under `.claude/` included — names that project's root
-/// (§FS-errors.3.6.1). Inside the member the workspace sections are left out.
+/// (§FS-errors.3.6). Inside the member the workspace sections are left out.
 /// §FS-check.3.5.3.1: each detail compares the first unequal body lines positionally.
 #[test]
 fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {

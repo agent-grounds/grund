@@ -149,7 +149,7 @@ fn show_batch_mixed_md() {
 }
 
 /// Mirrors `show-batch-all-text`: `--all --brief` with no `--format`, every generated
-/// coordinate under its header, a member's qualified (§FS-show.2.6.2, §FS-show.3.3.1).
+/// coordinate under its header, a member's qualified (§FS-show.2.6, §FS-show.3.3.1).
 #[test]
 fn show_batch_all_text() {
     let repo = case_repo("show-batch-all-json");
@@ -216,7 +216,7 @@ fn second_coordinate(first: &str, tail: &str) -> String {
 
 /// Mirrors the rewritten `show-second-coordinate-hint`: after a `text` read, the default,
 /// the batch command it offers takes no `--format`, since the batch answers in `text`
-/// (§FS-show.1.4.1).
+/// (§FS-show.3.5).
 #[test]
 fn show_second_coordinate_hint() {
     let repo = PathBuf::from(case_repo("show-second-coordinate-hint"));
@@ -226,7 +226,7 @@ fn show_second_coordinate_hint() {
 }
 
 /// Mirrors the rewritten `show-second-coordinate-hint-section-flag`: the `--section` object
-/// keeps its place, and the command again takes no `--format` (§FS-show.1.4.1).
+/// keeps its place, and the command again takes no `--format` (§FS-show.3.5).
 #[test]
 fn show_second_coordinate_hint_section_flag() {
     let repo = PathBuf::from(case_repo("show-second-coordinate-hint-section-flag"));
@@ -241,7 +241,7 @@ fn show_second_coordinate_hint_section_flag() {
 
 /// The command follows the read's format however it was spelled: an explicit `--format text`
 /// is the default's tail and `md` asks for `md`, while `json` keeps the tail the golden
-/// `show-second-coordinate-hint-json` pins (§FS-show.1.4.1).
+/// `show-second-coordinate-hint-json` pins (§FS-show.3.5).
 #[test]
 fn show_second_coordinate_hint_follows_the_format() {
     let repo = crate_dir().join(case_repo("show-second-coordinate-hint"));

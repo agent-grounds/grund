@@ -526,7 +526,7 @@ fn a_wrapped_image_description_keeps_its_credit() {
     );
 }
 
-/// §FS-show.3.2.1: `show` collapses only a wrap, so a reference, a collapsed
+/// §FS-show.3.2: `show` collapses only a wrap, so a reference, a collapsed
 /// reference and a citation-only image in a body print as written.
 #[test]
 fn show_prints_authored_markup_as_written() {

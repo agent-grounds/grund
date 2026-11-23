@@ -1,5 +1,5 @@
 //! Regression coverage for exact persisted spellings, promoted inline citation
-//! sites, and formatter-wrapper reads (§FS-config.3.2.5, §FS-show.3.2.1,
+//! sites, and formatter-wrapper reads (§FS-config.3.2.5, §FS-show.3.2,
 //! §FS-inline-citation-style.3.1, §FS-workspace.8).
 
 #[path = "support/temporary_root.rs"]

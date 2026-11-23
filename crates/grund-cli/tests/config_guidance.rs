@@ -1,6 +1,6 @@
-//! Loaded-version repair vocabulary: §FS-show.3.5.1,
+//! Loaded-version repair vocabulary: §FS-show.3.5,
 //! §FS-declarations.checks.declaration-near-miss.4, §FS-check.4.5.2,
-//! §FS-check.2.2.2.1 and §FS-cli.2.3. These black-box runs port #817's
+//! §FS-check.2.2.2 and §FS-cli.2.3. These black-box runs port #817's
 //! near-miss, nothing-recognized and help reproducer, then cover each hint adapter.
 
 use std::fs;
@@ -243,7 +243,7 @@ fn v1_global_positive_controls() {
     nothing_recognized(1);
 }
 
-/// §FS-show.3.5.1: selecting repair wording must preserve valid override queries.
+/// §FS-show.3.5: selecting repair wording must preserve valid override queries.
 #[test]
 fn kind_override_resolution_controls() {
     for version in [1, 2] {

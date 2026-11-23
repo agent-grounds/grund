@@ -60,7 +60,7 @@ fn the_order_table_names_the_documented_stages() {
 }
 
 /// §FS-rule-refusals.sentences.order: each example fails its own stage and a
-/// later one, and is refused for its own. Since §FS-errors.3.8's window closed
+/// later one, and is refused for its own. Since §FS-rule-refusals.sentences.order's window closed
 /// in `0.19.0`, a moved reason opens the line with no legacy reason before it.
 #[test]
 fn a_sentence_is_refused_for_the_first_stage_it_fails() {
@@ -94,7 +94,7 @@ fn a_sentence_is_refused_for_the_first_stage_it_fails() {
 /// split off a whole sentence (§FS-rules.3.6). A modality the first clause does
 /// not accept leaves no subject, and the sentence is refused as before. A
 /// subject rebuilt from the wildcard leaves a conjunction, so no form is offered
-/// (§FS-errors.3.8.1).
+/// (§FS-rule-refusals.sentences.rewrite.reparsed).
 #[test]
 fn a_wildcard_is_read_from_the_subject_of_the_first_clause() {
     let root = case_repo("check-rule-conjunction-one-kind");

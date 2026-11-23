@@ -1,5 +1,5 @@
 //! Test module: a path baked *into* a message is spelled from the report root,
-//! not from the project the finding came out of (§FS-errors.3.1,
+//! not from the project the finding came out of (§FS-errors.3,
 //! §FS-workspace.8.1, §FS-config.3.6). The three cases below are that leaf's
 //! three named examples: a duplicate declaration's other home, an ambiguous
 //! ID's competing sites, and the stub a broken-stub refusal names — with the

@@ -167,7 +167,7 @@ fn reported_repository_gets_a_labelled_heading_beside_an_unchanged_refusal() {
          [rules.citations.e2e.grounding] must = \"file\", without which a file there \
          that cites nothing is not checked\n\
          known kinds: FS\n",
-        "the refusal's bytes are §FS-errors.3.8.1's since the one-grammar window closed"
+        "the refusal's bytes are §FS-errors.2.5.1's since the one-grammar window closed"
     );
 }
 

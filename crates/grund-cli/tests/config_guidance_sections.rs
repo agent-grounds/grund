@@ -1,4 +1,4 @@
-//! §FS-show.3.5.1: rejected sections retain the configured kind's format advice
+//! §FS-show.3.5: rejected sections retain the configured kind's format advice
 //! across query adapters without changing resolution or refusal data.
 
 use std::fs;

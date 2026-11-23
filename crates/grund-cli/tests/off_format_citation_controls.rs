@@ -125,7 +125,7 @@ fn a_backed_token_cites_its_declaration() {
     assert_eq!(refs.stdout, "docs/FS/FS-a.md:3: \u{a7}REQ-999\n");
 }
 
-/// `show` and `refs` still refuse an off-format token as an invalid ID (§FS-show.3.5.1).
+/// `show` and `refs` still refuse an off-format token as an invalid ID (§FS-show.3.5).
 #[test]
 fn show_and_refs_still_refuse_an_off_format_token() {
     let fx = Fixture::issue();

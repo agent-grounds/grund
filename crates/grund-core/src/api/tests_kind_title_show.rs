@@ -1,6 +1,6 @@
 //! Target-kind metadata on every successful show form (§FS-config.3.4.3,
 //! §FS-output-shapes.4, §FS-output-shapes.4.1, §FS-show.2.4), beside the heading anchor
-//! that always precedes the closing location pair (§FS-show.3.1.3.1).
+//! that always precedes the closing location pair (§FS-show.3.1.3).
 
 use super::*;
 use crate::model::json_escape;
