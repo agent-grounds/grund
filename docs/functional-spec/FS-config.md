@@ -397,13 +397,11 @@ The default `section_separator` is `.`. Projects that prefer `:` (`<§>FS-check:
 
 One `[[kinds]]` table per kind. `kind` is its name — mandatory, and what everything else keys on: `[citations.<kind>]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)), `grund list --kind`, and, for a kind that declares IDs, the literal prefix of every ID in it.
 
-A kind is either *multi-file* (`folder = "<dir>"`) — each declaration is the H1 of its own file under `<dir>` — or *single-file* (`file = "<path>"`) — every declaration of the kind is a heading inside that one document. Setting both `folder` and `file` on the same kind is invalid; setting neither leaves the kind with no configured home. What a home means to `grund id` and to the checker is [§FS-config.3.4.11](FS-config.md#3411-what-a-home-is-used-for).
-
-Every configured home is also **in the scan scope by construction**, whether or not `[scan] include` names it ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)), except one marked `scan = false`, which is listed and not scanned ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)).
+A kind is either *multi-file* (`folder = "<dir>"`) — each declaration is the H1 of its own file under `<dir>` — or *single-file* (`file = "<path>"`) — every declaration of the kind is a heading inside that one document. Setting both `folder` and `file` on the same kind is invalid; setting neither leaves the kind with no configured home. Every configured home is scanned whether or not `[scan] include` names it ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)), except one marked `scan = false` ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)).
 
 #### 3.4.1 `citable` — kinds that declare no IDs
 
-A kind has two independent properties: it *has a home*, and it *declares IDs*. `citable = false` (default `true`) is the second one turned off — a kind that is a **place** and nothing more.
+A kind has two independent properties: it has a home, and it declares IDs. `citable = false` (default `true`) turns the second off, so a non-citable kind with a home is a **place** and nothing more. It is for directories that hold agent-facing content rather than specification — skills, prompt libraries, runbooks, test suites — whose citations are checked and directed like citations anywhere else ([§DF-non-citable-kinds.2.1](../decisions/functional/DF-non-citable-kinds.md#21-citable--false-on-the-existing-kinds-table)).
 
 ```toml
 [[kinds]]
@@ -417,27 +415,25 @@ must = ["FS"]
 must-not = ["AR"]
 ```
 
-Some directories hold agent-facing content rather than specification — skills, prompt libraries, runbooks, test suites. An agent has to be told they exist and what they are for, and the citations inside them should be checked and directed like citations anywhere else; but their files are not declarations and carry no IDs. *Citable* is already this spec's word for "can be the target of a `§` citation" — citable sections, citable IDs — and this key says it of a whole kind.
+A non-citable kind keeps:
 
-`citable` is additive and does not move `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)). A non-citable kind whose files are not this repository's to read — content that ships verbatim — sets `scan = false` as well ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)).
+- **A home**, `folder` or `file`. An entry that leaves both out is the homeless kind instead ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)).
+- **A row in the generated Project map and in the generated citation directions**, named by its place, never by its name ([§FS-init.2.3.4.4](FS-init.md#2344-project-map), [§FS-init.2.3.5](FS-init.md#235-citation-directions)).
+- **Citation-direction rules.** A citation inside its home counts as that kind when exactly one home contains its file, even where no declaration encloses it ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)), and an obligation is asked per file ([§FS-check.3.11.2](FS-check.md#3112-a-non-citable-kind)).
+- **Grounding** of the files of its home, Markdown included ([§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs)), asked by the row's grounding keys ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
 
-##### 3.4.1.1 What a non-citable kind keeps
+It loses:
 
-- **A home** — `folder` or `file` — wherever the kind is a *place*. Leaving both out is not an omission but a different thing: the entry becomes the **homeless kind**, the complement of every home, whose default name is `code` ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)). Everything below is written about a non-citable kind with a home; [§FS-config.3.9.2](FS-config.md#392-the-homeless-kind) says where the homeless one differs.
-- **A row in the generated Project map and in the generated citation directions** ([§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections), [§FS-init.2.3.5](FS-init.md#235-citation-directions)) — rendered by **place**, never by name, because the name is a config key and the place is the thing a reader can open.
-- **Citation-direction rules.** The citing-side classification already reaches it: a citation inside a kind's home, when exactly one home contains its file, is classified as that kind even where no declaration encloses it ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)). Obligations attach per file rather than per declaration ([§FS-check.3.11](FS-check.md#311-missing-required-citation)), since there is no declaration to attach them to.
-- **Grounding**, over the files of its home that [§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs) names, Markdown included — asked of this home alone with `require_grounding` on the row, or of every place at once with the `[reference]` default the row inherits ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
-
-##### 3.4.1.2 What it loses
-
-- **The ID grammar.** Its name is not a recognized prefix, so `<name>-<slug>` is not an ID and never tokenizes as a citation. It is left out of the `KIND ∈ {…}` vocabulary line, out of `grund list --kind`, and out of `grund id` — both selectors refuse it by name, saying that it declares no IDs rather than that it is unknown ([§FS-list.1](FS-list.md#1-inputs), [§FS-id.1](FS-id.md#1-inputs)).
+- **The ID grammar.** `<name>-<slug>` is not an ID and never tokenizes as a citation. The name is left out of the `KIND ∈ {…}` vocabulary line, and `grund list --kind` and `grund id` refuse it as a kind that declares no IDs rather than as an unknown one ([§FS-list.1](FS-list.md#1-inputs), [§FS-id.1](FS-id.md#1-inputs), [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)).
 - **Declarations.** Its home admits none: a declaration inside it, where it is the file's only home, is a misplaced declaration ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)).
-- **An index.** `index` lists a folder's declarations ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) and this kind has none, so setting both keys is a config error rather than a no-op — a statement about a set that can never be non-empty.
-- **Being cited.** A `[citations.<kind>]` rule may not *name it as a target*; there is no ID to point at ([§FS-config.3.9.5](FS-config.md#395-validation)).
+- **An index.** Setting `index` on it is a config error ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)).
+- **Being cited.** A `[citations.<kind>]` rule may not name it as a target ([§FS-config.3.9.5](FS-config.md#395-validation)).
+
+A non-citable kind whose files ship verbatim elsewhere sets `scan = false` as well ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)).
 
 #### 3.4.2 `index` — the kind's index file
 
-`index` names the kind's **index file** — the document under `folder` that must list every declaration in it ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)). It is resolved relative to `folder`, defaults to `README.md`, and takes either a file name or `false`:
+`index` names the kind's **index file** — the document under `folder` that must list every declaration in it ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)). It is resolved relative to `folder` and takes a file name or `false`, which is for a folder whose declarations are exercised rather than navigated, such as a corpus of e2e cases:
 
 ```toml
 [[kinds]]
@@ -448,46 +444,21 @@ folder = "docs/decisions/functional"
 # index = "INDEX.md"    # or name a different file
 ```
 
-The key is additive and does not move `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)).
+The default is keyed on the kind's name, for a built-in kind and a declared one alike: `E2E` defaults to `index = false`, and every other citable folder kind to `README.md` ([§DF-index-compatibility-ramp.3](../decisions/functional/DF-index-compatibility-ramp.md#3-consequences)), the file a reader arriving at the folder opens and `grund init --scaffold` writes ([§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)).
 
-##### 3.4.2.1 The default follows `folder`
+`index` requires `folder` and a citable kind. On a single-file kind, on a kind with no configured home, or on a `citable = false` kind it is a config error ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), and so is `index = true`, which names no file.
 
-The default follows from `folder` rather than from a second key restating it: a kind whose declarations live in a directory has a directory a reader arrives at, and `grund init --scaffold` already scaffolds that README and writes the convention into it ([§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)). `index = false` is for a kind whose declarations are *exercised* rather than navigated — the canonical case is a repository's own `E2E` kind, whose home holds case directories and no README, and whose `e2e/README.md` one level up documents the case layout in English instead of naming `E2E-` IDs. That is why the opt-out spells a file name or `false` rather than being inferred from a README's absence: "any folder README is an index" is not true of every tree.
-
-##### 3.4.2.2 Where `index` is valid
-
-`index` requires `folder`, and requires a citable kind. On a single-file kind (`file = "<path>"`), on a kind with no configured home, or on a `citable = false` kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) there is nothing to index, and the key is a config error reported per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior). `index = true` is an error for the same reason a bare `true` names no file — write the name, or leave the key out for the default.
-
-##### 3.4.2.3 A named index is a file inside `folder` that is read as Markdown
-
-A named `index` must be **a relative path inside `folder`, naming a file the configuration reads as Markdown** ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)). Both halves close a state the rules built on the key cannot describe. The value is joined onto `folder`, so an absolute path or one that climbs out with `..` does not name a file *in* the folder — it silently replaces the folder, and `grund check` would read a file outside the tree the config describes — the same boundary [§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through) holds a rewrite to, for the reason [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) gives; `.` is refused with them, because it names the same file by a path no message should have to print. Those are config errors per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) in both versions. And an entry has to be a Markdown link that `grund fmt --write` can write ([§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link)), while the cross-reference pass runs only on files read as Markdown ([§FS-fmt.6.1](FS-fmt.md#61-scope)) — so an index the configuration reads otherwise would carry an error class whose one documented fix declines to act on it. Whether the file is read as Markdown is asked of its reading, never of its name. Version 1 reads a file as Markdown when its final extension is `md`, so a named `index` not named `.md` is a config error, as it always was. Version 2 asks the language the name resolves to. `index = "index.txt"` under `txt = "markdown"` is an index, and its rules judge it. A named `index` that is not read as Markdown — `index.md` under `languages = ["rust"]`, or `index = "x.rs"` — is refused at load at the key, `` `[schema.kinds.FS] index` must name a Markdown file ``, from grund 1.0.0 ([§FS-config-v2.checks.config-index-not-markdown](FS-config-v2.md#checksconfig-index-not-markdown-a-named-index-is-not-read-as-markdown)); grund 0.23.0 loaded it with a warning and judged every folder of the row as under `index = false` ([§DF-one-reading-answer](../decisions/functional/DF-one-reading-answer.md#df-one-reading-answer-whether-a-file-is-read-as-markdown-or-has-its-docstrings-read-is-the-configurations-one-answer-never-its-name-and-every-home-of-a-row-is-judged-by-it), [§DF-markdown-homes-refused-in-1-0](../decisions/functional/DF-markdown-homes-refused-in-1-0.md#df-markdown-homes-refused-in-1-0-an-md-mapped-away-from-markdown-a-named-index-or-rule-home-not-read-as-markdown-and-a-later-value-home-that-is-absent-or-does-not-hold-are-refused-at-load-from-100)). The default, `README.md` where the row writes no `index`, is judged the same way and draws no warning: where it is not read as Markdown the folder is judged as under `index = false`, because the author named nothing.
-
-##### 3.4.2.4 The default is per kind name
-
-It is the same default for a declared kind and a built-in one. `E2E` defaults to `index = false` and every other citable folder kind to `README.md`, whether the name comes from the built-in list or from a `[[kinds]]` block that omits the key. A `[[kinds]]` block replaces the built-in list rather than merging into it ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), so without this the generated config would mean one thing when it spells `index = false` out and another when it does not — and every config written before this key existed, which is every config on disk, would inherit an obligation the built-in default deliberately declines. `E2E` keeps its entry in that table after leaving the default kind set ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)) for exactly the same reason: the configs that name it are the ones written before it left. A project that names its cases folder `E2E` *and* wants an index writes `index = "README.md"`, which is the ordinary way to override a default.
-
-The name-keyed default is additive like the key ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)) — it can only *remove* an obligation that no released `grund` has ever imposed.
+A named `index` must be **a relative path inside `folder`, naming a file the configuration reads as Markdown** ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)). An absolute path, one that climbs out with `..`, and `.` are config errors in both versions: the value is joined onto `folder` and must name a file inside it, the boundary [§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through) holds a rewrite to, for the reason [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) gives. Whether the file is read as Markdown is asked of its reading, never of its name ([§DF-one-reading-answer](../decisions/functional/DF-one-reading-answer.md#df-one-reading-answer-whether-a-file-is-read-as-markdown-or-has-its-docstrings-read-is-the-configurations-one-answer-never-its-name-and-every-home-of-a-row-is-judged-by-it)). Version 1 reads a file as Markdown when its final extension is `md`, so a named `index` not named `.md` is a config error. Version 2 asks the language the name resolves to: `index = "index.txt"` under `txt = "markdown"` is an index, and a named `index` that is not read as Markdown — `index.md` under `languages = ["rust"]`, or `index = "x.rs"` — is refused at load at the key ([§FS-config-v2.checks.config-index-not-markdown](FS-config-v2.md#checksconfig-index-not-markdown-a-named-index-is-not-read-as-markdown)). The default, `README.md` where the row writes no `index`, is judged the same way and draws no warning: where it is not read as Markdown the folder is judged as under `index = false`, because the author named nothing ([§DF-markdown-homes-refused-in-1-0.2.5](../decisions/functional/DF-markdown-homes-refused-in-1-0.md#25-only-a-named-index-is-refused)).
 
 #### 3.4.3 `title`
 
-`title` is human-readable metadata: it surfaces in `grund list --summary --format json` ([§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)), in show and refs JSON as `kind_title`, and in IDE hover previews, and `md` does not inject it ([§FS-show.3.1.2](FS-show.md#312-md)). It is also the text of the kind's Project map row ([§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections)), which for a non-citable kind is the only thing that says what the place is for.
+`title` is human-readable metadata. It is the text of the kind's Project map row ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), which for a non-citable kind is the only thing that says what the place is for, and it surfaces in `grund list --summary --format json` ([§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)), in show and refs JSON as `kind_title`, and in IDE hover previews; `md` does not inject it ([§FS-show.3.1.2](FS-show.md#312-md)).
 
-The resolved target kind owns this metadata, including ordinary configuration defaults,
-qualified workspace queries and each batch query's selection. For declaration and
-section show objects, a present title, even an empty string, adds `kind_title`
-immediately before the terminal `path`, `line` pair. The distinct E2E manifest keeps
-its `id`, `kind`, `path` prefix and appends `kind_title` as its final field. Detailed
-refs citation objects also append it as their final field. An absent effective title
-omits the field; it is neither `null` nor a fallback kind name. Refs summaries keep
-their aggregate shape. Hover appends a separate literal Kind paragraph as specified
-by [§FS-lsp.1.2](FS-lsp.md#12-hover-preview); authored preview content and CLI Markdown
-remain unchanged. The bounded compatibility choice and its installed-resolver ordering
-correction are recorded in
-[§DF-configured-title-metadata](../decisions/functional/DF-configured-title-metadata.md#df-configured-title-metadata-kind-titles-are-separate-target-metadata).
+`kind_title` is the `title` of the kind the queried target resolves to, in the project that target is in: a default kind's built-in title counts, a qualified workspace query reads the target project's kinds, and each query of a batch reads its own target's. For declaration and section show objects, a present title, even an empty string, adds `kind_title` immediately before the terminal `path`, `line` pair. An absent effective title omits the field; it is neither `null` nor a fallback kind name. Where each other object carries the field, and which carry none, is [§FS-output-shapes.4](FS-output-shapes.md#4-show---formatjson), [§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json) and [§FS-refs.3.2](FS-refs.md#32---format-json)'s. Hover appends it as a separate literal Kind paragraph ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)). Decided in [§DF-configured-title-metadata](../decisions/functional/DF-configured-title-metadata.md#df-configured-title-metadata-kind-titles-are-separate-target-metadata).
 
 #### 3.4.4 The default kinds
 
-The defaults declare these nine, in this order, for a project with no config and for a `grund.toml` that omits `[[kinds]]` alike (one that writes `kinds = []` gets none, [§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)):
+The defaults declare these nine, in this order, for a project with no config and for a `grund.toml` that omits `[[kinds]]` alike:
 
 ```toml
 [[kinds]]
@@ -538,69 +509,39 @@ file   = "docs/roadmap.md"
 title  = "Planned milestones and sequencing"
 ```
 
-A project that overrides this list replaces the defaults entirely — there is no merge. To extend rather than replace, copy the defaults and add to them. The list has no `REQ`: the `software-development` template declares one, with no built-in default behind it ([§FS-init.2.4.3](FS-init.md#243-every-written-key-differs-from-its-default)).
+`GRUND` is the H1 of the single file `docs/grund.md`, `GOAL` and `RM` declarations are H2 headings inside their single files, and `FS`, `AR`, `DF` and `DA` declarations are each the H1 of a file in their `folder`.
 
-The `FS` row is the home grund 0.19.0 moved it to from `file = "requirements.md"`, after 0.18.0 warned every project the move touched ([§DF-fs-home-lands-in-0-19](../decisions/functional/DF-fs-home-lands-in-0-19.md#df-fs-home-lands-in-0-19-the-built-in-fs-home-is-docsfunctional-spec-from-0190)); the `software-development` template's `FS` row names the same folder ([§FS-init.2.4.3](FS-init.md#243-every-written-key-differs-from-its-default)).
+A project that writes `[[kinds]]` replaces this list entirely — there is no merge ([§FS-config.principle.unit](FS-config.md#principleunit-one-leaf-key-overrides-and-one-value-is-whole)). The list has no `REQ`: the `software-development` template declares one, with no built-in default behind it ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)). The two test kinds are non-citable, because a test cites the claim it proves and is never cited back, and lowercase, because their names never appear in an ID ([§DF-non-citable-kinds.3](../decisions/functional/DF-non-citable-kinds.md#3-consequences)).
 
-##### 3.4.4.1 Where each citable default declares
+`E2E` is not a default and is fully supported: a repository whose e2e suite is a corpus of case directories declares it (`kind = "E2E"`, `folder = "e2e/cases"`, `index = false`) and gets the case-declaration machinery of [§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares) — `E2E-<case>` IDs, `grund <ID>` over the case manifest, per-case obligations, and the fixture-tree pruning that keeps a nested case repo out of the host scan. That machinery follows the configured `E2E` home, so a config that wants it names it ([§DF-non-citable-kinds.3](../decisions/functional/DF-non-citable-kinds.md#3-consequences)).
 
-`GRUND` is the H1 of the single file `docs/grund.md` (the project's reason for being — one declaration, all of it inline); `GOAL` declarations are H2 headings inside the single file `docs/goals.md` (one file, all goals inline); `RM` declarations are likewise H2 headings inside the single file `docs/roadmap.md` (one file, all milestones inline) — those three are single-file kinds (`file = "<path>"`); `FS`, `AR`, `DF`, and `DA` declarations are the H1 of a file in their `folder` (an `AR` declaration may instead live inline in a source doc-comment with an optional stub in `folder` — [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)). A single-file kind can always be broken up later by swapping `file = "<path>"` for `folder = "<dir>"` and moving the document into that folder — this specification models the transition as exchanging one key for the other, not setting both.
-
-##### 3.4.4.2 The two test kinds are non-citable, and lowercase
-
-A test cites the document whose claim it proves, and is never cited back: an `e2e` scenario proves the What as a user sees it (`must` cite `FS`, and `should-not` cite `AR` — a black-box scenario that reads the design is not black-box), an `integration` test proves the How — that the parts fit as designed (`should` cite `AR`). Unit tests live with the code and follow `code`'s rule, so there is no third kind for them. Lowercase because these names never appear in an ID, so a reader should not mistake one for a prefix; the `KIND ∈ {…}` vocabulary line lists the citable seven.
-
-##### 3.4.4.3 `E2E` is configured, not a default
-
-`E2E` is **not** in this list, and is still a fully supported kind: a repository whose e2e suite is a corpus of case directories declares it (`kind = "E2E"`, `folder = "e2e/cases"`, `index = false`) and gets the case-declaration machinery of [§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares) — `E2E-<case>` IDs, `grund <ID>` over the case manifest, per-case obligations, and the fixture-tree pruning that keeps a nested case repo out of the host scan. That machinery follows the configured `E2E` home, so a config that wants it names it. Decided in [§DF-non-citable-kinds.3](../decisions/functional/DF-non-citable-kinds.md#3-consequences), which also records what a default-config repository with an `e2e/cases` tree sees on upgrade.
-
-##### 3.4.4.4 A config that omits `[[kinds]]` keeps the older `FS` home
-
-Retired in grund 0.19.0: a `grund.toml` that omits `[[kinds]]` kept `folder = "docs/functional-spec"` as its `FS` home while a project with no config took `file = "requirements.md"`. The built-in `FS` row is now that folder ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), so both get the same rows and there is no special case left ([§DF-fs-home-lands-in-0-19](../decisions/functional/DF-fs-home-lands-in-0-19.md#df-fs-home-lands-in-0-19-the-built-in-fs-home-is-docsfunctional-spec-from-0190)). This address is kept so citations written before the change still resolve.
-
-##### 3.4.4.5 `kinds = []` declares no kinds
-
-A v1 config that writes the top-level key `kinds = []` declares an empty kind set: no row, no ID namespace, no home, and none of the defaults above, where omitting `[[kinds]]` keeps them ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)). It is how a repository that declares its own kinds starts ([§FS-init.1.6](FS-init.md#16-templates)), and the one kind set with no citable kind that v1 loads: a `[[kinds]]` table whose every row sets `citable = false` is still refused. Only the empty array is accepted. A non-empty one is refused at its line with the instruction to write `[[kinds]]` tables, and a `[[kinds]]` table after `kinds = []` is refused at its header, as TOML refuses a table appended to a static array. A version-2 file needs no key for this: one with no `[schema.kinds]` row already has no kinds ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). What follows is each command's to say: the scan reads `[scan] include` and nothing else, because there is no home to add to it ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)); no marked token is a citation, so `check` reports none ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)); `grund id` has no kind to allocate in ([§FS-list.1.1.1](FS-list.md#111-a-scope-with-no-citable-kind)); and the managed block teaches the first kind rather than listing none ([§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections)).
+A v1 config that writes the top-level key `kinds = []` declares an empty kind set: no row, no ID namespace, no home, and none of the defaults above, where omitting `[[kinds]]` keeps them. It is how a repository that declares its own kinds starts ([§FS-init.1.6.2](FS-init.md#162-none)), and the one kind set with no citable kind that v1 loads: a `[[kinds]]` table whose every row sets `citable = false` is refused. Only the empty array is accepted. A non-empty one is refused at its line with the instruction to write `[[kinds]]` tables, and a `[[kinds]]` table after `kinds = []` is refused at its header, as TOML refuses a table appended to a static array. A version-2 file needs no key for this: one with no `[schema.kinds]` row has no kinds ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). What each command does with no kinds is its own point's: the scan ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)), citations ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)), `grund id` ([§FS-list.1.1.1](FS-list.md#111-a-scope-with-no-citable-kind)) and the managed block ([§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)).
 
 #### 3.4.5 Name rules
 
-**Names are unique across the whole table.** `[citations.<kind>]` and `grund list --kind` key on a name, so two rows wearing one name is a config with no answer to "which".
+**Names are unique across the whole table**, citable and non-citable rows alike: `[citations.<kind>]` and `grund list --kind` key on a name. Validation then considers every pair of citable kinds in this order:
 
-##### 3.4.5.1 Citable names and formats must distinguish their tokens
-
-After rejecting duplicate names, validation considers every pair of citable kinds in this order:
-
-1. If neither name is a proper prefix of the other, this pair passes. A non-leading `{kind}` format does not newly refuse such a pair.
+1. If neither name is a proper prefix of the other, this pair passes, under any format, a non-leading `{kind}` included.
 2. For a proper-prefix pair, the character immediately after the shorter name in the longer name must be an ASCII letter or digit. Otherwise the pair is refused: malformed-token attribution could name both kinds. `DA` beside `DA-X` is invalid even with different format separators; rename a kind.
 3. Both effective heads ([§FS-config.3.2.9](FS-config.md#329-kind-head)) must be known, and neither head may prefix the other. Otherwise the pair is refused. Choose unambiguous formats; an arbitrary separator is not necessarily enough.
 
-Thus `DA` beside `DAT` loads under `{kind}-{slug}`, as do `GR` tickets with `{kind}-{number}` beside `GRUND` with `{kind}-{slug}`. Separator-free shorter `GR` beside `GRUND` stays refused because head `GR` prefixes `GRUND-`. Non-citable kinds remain exempt: `skill` beside citable `SKI` loads. Names remain unique across citable and non-citable rows.
+Thus `DA` beside `DAT` loads under `{kind}-{slug}`, as do `GR` tickets with `{kind}-{number}` beside `GRUND` with `{kind}-{slug}`. Separator-free shorter `GR` beside `GRUND` is refused because head `GR` prefixes `GRUND-`. Non-citable kinds are exempt: `skill` beside citable `SKI` loads. Decided in [§DF-format-aware-kind-collisions](../decisions/functional/DF-format-aware-kind-collisions.md#df-format-aware-kind-collisions-admit-prefix-related-kinds-when-their-formats-distinguish-them).
 
-The single load error names the offending pair ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). It preserves the entire existing message as a prefix, including `(one is a prefix of the other)`, then appends a reason distinguishing a name-boundary collision requiring renaming from unknown or overlapping heads requiring unambiguous formats ([§FS-errors.3](FS-errors.md#3-message-text)).
+A refused pair is one load error ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) that names the pair, says `(one is a prefix of the other)`, and ends in a reason that asks for a rename after a name-boundary collision, or for unambiguous formats after an unknown or overlapping head ([§FS-errors.3](FS-errors.md#3-message-text)).
 
-##### 3.4.5.2 `code` is reserved to the homeless kind
+`code` is reserved to the homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)): a row may take it only by *being* that kind — `citable = false`, no `folder`, no `file` — because any other row wearing it would collide with the kind every citation outside a home resolves to.
 
-`code` is the homeless kind's ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)): it is the default name of the complement of every configured home, so a row may take it only by *being* that complement — `citable = false`, no `folder`, no `file`. Any other row wearing it would collide with the kind every citation outside a home resolves to.
+#### 3.4.6 `prefix` — refused, in favor of `kind`
 
-#### 3.4.6 `prefix`, the former spelling of `kind` *(removed in 0.13.0)*
-
-`prefix` was this key's name while every kind declared IDs and its name really was one. It stopped loading in grund **0.13.0**, at the end of the deprecation window [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) asks of a renamed config key: 0.12.0 shipped `kind` beside it and warned every config that still spelled it, naming this release. A config that still spells it is **refused**, not read with the key ignored — an ignored name leaves a `[[kinds]]` row with no kind, which changes what the configuration means without saying so. The refusal is an ordinary config error ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) that names `kind` as the key to write instead, located at the line `prefix` is written on. An entry that sets both `kind` and `prefix` earns that same error at that same line: with one of the two names gone there is nothing left to disambiguate, so the pair is no longer a rule of its own.
+A `[[kinds]]` entry that writes `prefix`, with or without `kind` beside it, is refused with an ordinary config error ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) located at the line `prefix` is written on, naming `kind` as the key to write instead ([§DF-non-citable-kinds.2.4](../decisions/functional/DF-non-citable-kinds.md#24-the-field-is-a-kind-not-a-prefix)):
 
 ```text
 error: grund.toml:4: [[kinds]] `prefix` was removed in grund 0.13.0 — rename it to `kind`
 ```
 
-##### 3.4.6.1 The migration
-
-The migration is that rename, and the error names the line to make it on. A grund before 0.13.0 did it in one command — `config show` printed every entry under the canonical spelling whichever the file used, so `grund config show > grund.toml` rewrote the file — but from 0.13.0 nothing that has to load the config can help.
-
-##### 3.4.6.2 Why the key was renamed
-
-The rename is what `citable = false` forces. `prefix` was accurate for every row of the table and stopped being accurate for half of it; *kind* is what the rest of grund already calls this value — the `{kind}` placeholder of `[id] format` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)), the `--kind <KIND>` selector of [§FS-list.1](FS-list.md#1-inputs), and the `[citations.<kind>]` table key ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)). Under the new name, prefix-ness is a *derived* property of citable kinds ([§FS-config.3.4.5](FS-config.md#345-name-rules)) rather than this specification's word for the whole concept. Decided in [§DF-non-citable-kinds.2.4](../decisions/functional/DF-non-citable-kinds.md#24-the-field-is-a-kind-not-a-prefix).
-
 #### 3.4.7 `scan` — a place that is listed, not scanned
 
-`scan = false` (default `true`) keeps a non-citable kind's home out of the scan. The kind is still a **place**: it gets its Project map row ([§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections)) with its title, so an agent is told the directory exists and what it is for — and nothing in it is read, so nothing in it is checked.
+`scan = false` (default `true`) keeps a non-citable kind's home out of the scan. The kind is still a **place**: it gets its Project map row with its title ([§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places)), so an agent is told the directory exists and what it is for — and nothing in it is read, so nothing in it is checked, and the managed block gives it no directions bullet and leaves it out of the grounding sentence ([§FS-init.2.3.5.1](FS-init.md#2351-layout), [§FS-init.2.3.5.7.1](FS-init.md#23571-citing-not-declaring)). It is for content that ships verbatim somewhere else, such as scaffold templates, embedded assets and example configs, where a `§` citation would dangle in every tree it is copied into. Decided in [§DF-unwalked-kind-home](../decisions/functional/DF-unwalked-kind-home.md#df-unwalked-kind-home-a-kind-may-be-a-place-that-is-listed-but-not-walked).
 
 ```toml
 [[kinds]]
@@ -611,39 +552,19 @@ scan = false
 title = "Init scaffold templates: what grund init writes, verbatim"
 ```
 
-`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) prints `scan = false` where it is set and nothing where it is not, as it does for `citable`. The key is additive and does not move `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)). Decided in [§DF-unwalked-kind-home](../decisions/functional/DF-unwalked-kind-home.md#df-unwalked-kind-home-a-kind-may-be-a-place-that-is-listed-but-not-walked).
+`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) prints `scan = false` where it is set and nothing where it is not.
 
-##### 3.4.7.1 What it is for
+The home is left out of the scan roots, *and* pruned when a scan meets it on the way down — under the config root, or under an `include` entry it sits inside, as `docs/templates` sits inside `docs`. An `include` entry that names the home itself does not scan it either: where the two disagree, the narrower key, the one written on the kind, wins. A `file` home is unscanned on the same terms as a `folder` one. The key describes the default scope: an explicit path argument reads the home anyway, as `grund check docs/templates` does ([§FS-scan.path.check](FS-scan.md#pathcheck-check-reads-more-than-it-reports)), and `grund check --full` reads it as territory nobody configured, outside the default scope even where a scan root encloses it ([§FS-scan.scope.not-a-fence](FS-scan.md#scopenot-a-fence-include-is-a-scan-scope-not-a-fence), [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)).
 
-The case it exists for is content that ships verbatim somewhere else: scaffold templates, embedded assets, example configs. Such files cannot be grounded — a `§` citation in one lands in every tree it is copied into as a dangling citation to a declaration that tree does not have — and leaving the kind unconfigured would leave the directory out of the map. [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)'s rule that a home is a scan root `exclude` cannot prune is about a config that says both "this directory matters" and "skip its descendants"; this key is the config saying one thing: listed, not scanned.
+Three combinations are config errors ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior), [§DF-unwalked-kind-home.2.2](../decisions/functional/DF-unwalked-kind-home.md#22-only-on-a-non-citable-kind-with-a-home), [§DF-unwalked-kind-home.2.3](../decisions/functional/DF-unwalked-kind-home.md#23-no-citation-rules-on-it)):
 
-##### 3.4.7.2 Not scanned, however the scan arrives
-
-The home is left out of the scan roots of [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned), *and* pruned when a scan meets it on the way down — under the config root, or under an `include` entry it sits inside, as `docs/templates` sits inside `docs`. An `include` entry that names the home itself does not scan it either: the narrower key, the one written on the kind, is the config's answer where the two disagree. A `file` home ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)) is unscanned on the same terms as a `folder` one, and it is the case that shows why the rule cannot be a rule about directories: `docs/template.md` is never a directory to skip, and skipping its parent is not on offer, `docs` being an ordinary scanned home. Anything less would make `scan = false` a silent no-op for every repository that keeps such a file or directory under a scanned one, which is where a scaffold usually is.
-
-##### 3.4.7.3 An explicit path argument still reads it
-
-An explicit path argument still reads it — `grund check docs/templates` scans the directory it names, the same way it reads past `[scan] include` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)). The key describes the *default* scope, which is what a run with no argument reads and what [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) reports against; a path a user typed is that user narrowing the run to a directory they are asking about.
-
-##### 3.4.7.4 What an unscanned kind keeps and loses
-
-What an unscanned kind keeps: its home, its title, and its Project map row. What it loses, beyond what `citable = false` already takes ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)), is every rule that reaches a file — citation checking, the directions bullet and `[citations.<kind>]` rules, and the grounding clause of [§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids) — because no file in it is scanned. That is why `require_grounding = true` on this row is a config error rather than a no-op ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
-
-##### 3.4.7.5 Under `--full`
-
-Under `grund check --full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)) the whole config root is scanned and its files are reached like any directory nobody configured: the five-finding tier of [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only), admitted by the test of [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only), never a convention it did not adopt. They are reached from *outside* the default scope even when a scan root encloses them ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)), because the scope is what a run without the flag reads, and that run does not read them.
-
-##### 3.4.7.6 Three config errors
-
-Three combinations are config errors, reported per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior), each closing a state the key cannot describe:
-
-- `scan = false` on a **citable** kind. Its declarations would be invisible rather than declared — the trap [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned) closes — so a kind that declares IDs is always scanned. Set `citable = false`, or drop the key.
-- `scan = false` with **no home**. The homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) is the complement of every home, and what of that complement is scanned is `[scan] include`'s to say.
-- a `[citations.<kind>]` table naming an unscanned kind as the **citing** kind. No file in the home is scanned, so the rule could never fire — the vacuous pass [§DF-non-citable-kinds.2.5](../decisions/functional/DF-non-citable-kinds.md#25-obligations-get-a-per-file-unit-and-grounding-follows-the-home) refused for a kind with no declarations, one level up.
+- `scan = false` on a **citable** kind, whose declarations would be invisible rather than declared;
+- `scan = false` with **no home**, since what of the homeless kind is scanned is `[scan] include`'s to say;
+- a `[citations.<kind>]` table naming an unscanned kind as the **citing** kind, a rule that could never fire.
 
 #### 3.4.8 `require_grounding` and `grounding_level` — grounding per place and per level
 
-Two keys say, per kind, **whether** the files of a place must cite a declared ID and **how finely** that is asked. Each has a `[reference]` twin ([§FS-config.3.1.7](FS-config.md#317-require_grounding-and-grounding_level--defaults-for-kinds)) that is the default for every row not setting it — the shape `index` already has, though its default is built in per kind name rather than configured ([§FS-config.3.4.2.4](FS-config.md#3424-the-default-is-per-kind-name)): a default, the row wins.
+Two keys say, per kind, **whether** the files of a place must cite a declared ID and **how finely** that is asked. Each has a `[reference]` twin ([§FS-config.3.1.7](FS-config.md#317-require_grounding-and-grounding_level--defaults-for-kinds)) that is the default for every row not setting it, and the row wins; `grund config show` prints a row's key only where it differs from the effective global ([§FS-config.4.2.1](FS-config.md#421-kinds-rows-print-what-they-do-not-inherit)). Which files a row governs is [§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs)'s predicate, and the units and their findings are [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)'s. Decided in [§DF-require-grounding.4](../decisions/functional/DF-require-grounding.md#4-grounding-per-place-and-per-level).
 
 ```toml
 [reference]
@@ -663,51 +584,23 @@ citable = false
 require_grounding = true       # …must cite one, or declare one inline
 ```
 
-**Which files a row governs** is [§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs)'s own predicate, asked per row. Both keys are additive and do not move `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)). Decided in [§DF-require-grounding.4](../decisions/functional/DF-require-grounding.md#4-grounding-per-place-and-per-level).
+`grounding_level` is an integer in Markdown heading levels, `1..=6`: `1` is the whole file, text before its first heading included; `2` adds every `##` subtree, `3` every `###` as well, and `6` every heading Markdown can have. A source file has no headings, so it gets the two ranks grund can see by indentation ([§FS-check.3.6.2](FS-check.md#362-the-unit)). `[citations]` obligations are asked of the same unit ([§FS-check.3.11.3](FS-check.md#3113-the-unit-follows-grounding_level)).
 
-##### 3.4.8.1 Why grounding is asked per place
+`grund check --require-grounding` ([§FS-check.1](FS-check.md#1-inputs)) is the run-level spelling of the global boolean and sets the same default, so an explicit `require_grounding = false` on a row wins over the flag. The flag moves findings only; the managed block reads the key ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). The level comes from config only — there is no flag for it. The homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) takes both keys as any row does: written on its row they govern the complement alone, which is how a project grounds its source tree and nothing else, and a config that never declared it writes the row to set them.
 
-The keys exist because *whether* a file must cite is already reasoned about per place. Direction rules constrain how you ground and never whether ([§DISC-citation-directions](../discussions/proposals/2026-06-13-citation-directions.md#disc-citation-directions-encode-citation-directions-as-checked-config)), and for a non-citable kind grounding follows the home rather than the file extension ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)). One global boolean cannot say "every skill must cite" without also saying it of every workflow and build script in the scan, so the repository that wants the first declines the second and leaves the hole open ([§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) can then only warn about it).
+Five combinations are config errors, reported per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) at the offending line ([§DF-require-grounding.4.3](../decisions/functional/DF-require-grounding.md#43-consequences)):
 
-##### 3.4.8.2 `grounding_level` picks the unit inside each governed file
-
-It is an integer in Markdown heading levels, `1..=6`: `1` is the whole file, text before its first heading included, so one citation anywhere in it, which is exactly the unit every config had before this key existed — `2` adds every `##` subtree, `3` every `###` as well, and `6` every heading Markdown can have. Authors already think in `##`, and `[id] section_heading_levels` uses *level* for the same count, so there is no second numbering to learn. A source file has no headings, so it gets the two ranks grund can see without parsing code ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): by indentation, not by syntax. The units and the findings they produce are specified in [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in); the same unit is what `[citations]` obligations are asked of ([§FS-check.3.11](FS-check.md#311-missing-required-citation)), so *whether* and *what* are asked of the same thing.
-
-##### 3.4.8.3 Precedence is row over global
-
-For both keys, the row wins over `[reference]`. `grund check --require-grounding` ([§FS-check.1](FS-check.md#1-inputs)) is the run-level spelling of the global boolean and sets the same default, so an explicit `require_grounding = false` on a row still wins over the flag: the row's word is the more specific one. The flag moves findings only; the managed block reads the key ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). The level comes from config only — there is no flag for it.
-
-##### 3.4.8.4 The homeless kind takes both keys like any row
-
-The homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) takes `require_grounding` and `grounding_level` as any row does. A config that never declared it writes the row to set them, the same way it writes one to take a `title`.
-
-##### 3.4.8.5 Five config errors
-
-Five combinations are config errors, reported per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) at the offending line, each closing a state the keys cannot describe:
-
-- `require_grounding = true` on a `scan = false` row ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)). No file in the home is read, so the rule could never fire — the reasoning [§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned) already gives for a `[citations.<kind>]` rule on an unscanned kind.
-- Either key on a **citable** `file = "<path>"` row. Such a kind's document is where its declarations live, and [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) leaves Markdown alone outside a non-citable home, so there is nothing the key could mean — as `index` means nothing on a file kind ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)). A **non-citable** `file` row is not rejected: its document is governed like every other file of a non-citable home ([§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs)), so the row is exactly where that one document's grounding is said, and `grounding_level` cuts it into heading subtrees like any other Markdown file ([§FS-check.3.6.2](FS-check.md#362-the-unit)).
-- `grounding_level` outside `1..=6`, on a row or in `[reference]`. There is no heading it could name.
-- `grounding_level` on a row whose **effective** `require_grounding` is off — written `false` on the row, or inherited off from `[reference]`. The level could never fire, and a level nothing reads would still switch on the scanner's per-file structure pass ([AR-scanner.2.7](../architecture/AR-scanner.md#27-grounding-units-per-file)) for a tree that grounds nothing.
-- `[reference] grounding_level` where the global boolean is off and no row turns grounding on. The same reason, one scope up.
-
-##### 3.4.8.6 `config show`, and why the globals stay
-
-`grund config show` prints each key on a row only where it differs from the effective global ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)), as it does for `citable` and `scan`, so the printed config loads back as itself. The global keys are kept rather than deprecated — every existing config keeps its exact meaning with no edit, and `--require-grounding` needs a global meaning regardless.
+- `require_grounding = true` on a `scan = false` row ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)).
+- Either key on a **citable** `file = "<path>"` row. A **non-citable** `file` row takes both: its one document is governed like every other file of a non-citable home and cut into heading subtrees like any Markdown file ([§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs), [§FS-check.3.6.2](FS-check.md#362-the-unit)).
+- `grounding_level` outside `1..=6`, on a row or in `[reference]`.
+- `grounding_level` on a row whose **effective** `require_grounding` is off — written `false` on the row, or inherited off from `[reference]`.
+- `[reference] grounding_level` where the global boolean is off and no row turns grounding on.
 
 #### 3.4.9 `values` — first-class value declarations
 
-`values = true` opts whole declarations in this row's home into [§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value). It is absent and false by default. It is one of the two value-related config keys: `values` opts whole declarations in, while `value_chapter` ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)) makes the named children of one chapter into roots inside declarations. The two are refused on one row, and there is still no `value_sources` key. An enabled row must be citable and normalize its homes inside the project root, every one of them. In version 1 it has exactly one existing `file` or `folder`. In version 2 its homes sit under one key, `files` or `folders`, as many as it lists, and every one must exist, each judged on its own rather than only the first: a row that lists both keys is refused in version 1's words, ``kind `<KIND>` sets `values = true` without exactly one `file` or `folder` home``; an absent first entry is refused as version 1's one home is; and an absent later entry, or one in the wrong shape, outside the root, or that cannot be looked up, is refused at the key that lists it, in one line ending `or drop the entry`. grund 0.23.0 loaded each of those two with a warning, and both are refused from grund 1.0.0 ([§FS-config-v2.checks.config-value-home-absent](FS-config-v2.md#checksconfig-value-home-absent-a-value-rows-later-home-does-not-exist), [§FS-config-v2.checks.config-value-home-invalid](FS-config-v2.md#checksconfig-value-home-invalid-a-value-rows-later-home-is-the-wrong-shape-outside-the-root-or-not-looked-up), [§DF-markdown-homes-warn-before-1-0](../decisions/functional/DF-markdown-homes-warn-before-1-0.md#df-markdown-homes-warn-before-1-0-an-md-mapped-away-from-markdown-a-named-index-or-rule-home-not-read-as-markdown-and-a-later-value-home-that-is-absent-or-does-not-hold-warn-from-0230-and-are-refused-from-100)). Each violation is a located config error. Validation checks these structural relationships without parsing declaration content.
+`values = true` opts whole declarations in this row's home into [§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value); it is absent and false by default, `grund config show` prints it only where enabled ([§FS-config.4.2.3](FS-config.md#423-named_sections-and-values-print-only-when-enabled)), and it is refused on a row that also sets `value_chapter` ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)). An enabled row must be citable and normalize its homes inside the project root, every one of them. In version 1 it has exactly one existing `file` or `folder`. In version 2 its homes sit under one key, `files` or `folders`, as many as it lists, and every one must exist, each judged on its own: a row that lists both keys is refused with version 1's message for a row without exactly one home; an absent first entry is refused as version 1's one home is; and an absent later entry, or one in the wrong shape, outside the root, or that cannot be looked up, is refused at the key that lists it, in one line ending `or drop the entry` ([§FS-config-v2.checks.config-value-home-absent](FS-config-v2.md#checksconfig-value-home-absent-a-value-rows-later-home-does-not-exist), [§FS-config-v2.checks.config-value-home-invalid](FS-config-v2.md#checksconfig-value-home-invalid-a-value-rows-later-home-is-the-wrong-shape-outside-the-root-or-not-looked-up), [§DF-markdown-homes-refused-in-1-0.2.4](../decisions/functional/DF-markdown-homes-refused-in-1-0.md#24-a-later-value-home-keeps-its-own-message)). Each violation is a located config error, checked without parsing declaration content. Version 2 spells the key `form = "value"`, with the same meaning and prerequisites ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)).
 
-`grund config show` prints `values = true` only for an enabled row; a false or absent value prints no key. The key is additive and does not change `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)). Its version-2 spelling is `form = "value"`, with the same meaning and prerequisites ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)).
-
-##### 3.4.9.1 The value suffix is a separate authority
-
-The exact `<!-- grund:value -->` section suffix is a separate in-document authority ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). It works in any supported scanned declaration independently of this key and its home, and it neither opts the enclosing declaration in nor changes value-source discovery. No new config key, scan input, or migration accompanies it. Chapter authority is the third and last one, taken per kind rather than per document: `value_chapter` makes every named child of one named chapter a root without any mark ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)).
-
-##### 3.4.9.2 The home is the boundary of its value sources
-
-The home is also the complete boundary of its value sources ([§FS-values.terms](FS-values.md#terms-terms)): a `file` home is the one source when its extension is `.json`, `.yaml` or `.yml`, while a `folder` contributes its normalized, bytewise-ordered direct children with those extensions. Nested or outside files are never value sources. Generic scan extensions and filters, explicit path narrowing, and `--full` neither add nor suppress those home inputs ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)).
+The home is the complete boundary of its value sources ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)). The `<!-- grund:value -->` section suffix is a separate authority: it makes a section a value root in any supported scanned declaration, independently of this key and its home, and neither opts the enclosing declaration in nor changes value-source discovery ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). `value_chapter` is the third, taken per kind ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)).
 
 #### 3.4.10 `format`, `resolve`, and `fetch` — external snapshot kinds
 
@@ -724,67 +617,25 @@ resolve = "should"
 fetch = "scripts/fetch-ticket"
 ```
 
-All three keys are optional and additive: a row that omits them retains the
-previous grammar, dangling output, and scan cost, and `grund_config_version`
-remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
+`format` is [§FS-config.3.2](FS-config.md#32-id--id-grammar)'s `format` written at the kind scope, with the same template placeholders and the repository's `number_pattern` and `slug_pattern` validation: it overrides only this kind, and `[id].format` remains the default for every other kind ([§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list)). It is valid without `resolve` or `fetch`, but invalid on a non-citable kind. Numeric spelling follows [§FS-config.3.2.8](FS-config.md#328-numeric-spelling-survives-reading-and-reporting): this override sets a grammar, not a report width.
 
-##### 3.4.10.1 `format`
+`fetch` names the integration executable of [§FS-fetch.2](FS-fetch.md#2-integration-invocation). A value that names no executable ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)) loads ([§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)) and counts as `fetch` being present. `grund fetch`, `config migrate` ([§FS-config-migrate.3.1.10](FS-config-migrate.md#3110-a-fetch-that-names-no-executable)) and `grund check` ([§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for)) each print the key's one repair, `grund check` as the tail of a missing ID's message for the kind. `resolve` is the target-side obligation used when that kind's citation has no declaration: the closed enum is `must | should`, with no `may`. It selects one of two fixed finding classes rather than remapping severity — `must` the `dangling` error ([§FS-check.3.1](FS-check.md#31-dangling-citation)), `should` the `missing-snapshot` warning ([§FS-check.4.12](FS-check.md#412-missing-snapshot)) — independently of the citing-side `[citations]` rules ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)). `fetch` without `resolve` has the effective value `must`, and an explicit `resolve` is valid only beside `fetch`. Both keys require exactly one `file` or `folder` home, and are invalid on a non-citable kind.
 
-`format` uses exactly the template placeholders and the repository's `number_pattern` and `slug_pattern` validation from [§FS-config.3.2](FS-config.md#32-id--id-grammar). It is [§FS-config.3.2](FS-config.md#32-id--id-grammar)'s `format` written at the kind scope, and resolves like any setting admitted at two scopes ([§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list)): it overrides only this kind, and `[id].format` remains the default for every other kind. It is valid without `resolve` or `fetch`, but invalid on a non-citable kind. Numeric spelling follows [§FS-config.3.2.8](FS-config.md#328-numeric-spelling-survives-reading-and-reporting), just as it does under the repository default; this override sets a grammar, not a report width.
-
-##### 3.4.10.2 `fetch` and `resolve`
-
-`fetch` names the direct integration executable specified by [§FS-fetch.2](FS-fetch.md#2-integration-invocation). A value that names no executable ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)) still loads, for good ([§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)), and counts as `fetch` being present; it meets the rule at `grund fetch`, at `grund check` ([§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for)) and at `config migrate` ([§FS-config-migrate.3.1.10](FS-config-migrate.md#3110-a-fetch-that-names-no-executable)). It requires exactly one `file` or `folder`
-home. `resolve` is the target-side obligation used when that kind's citation
-has no declaration: the closed enum is `must | should`, with no `may`.
-Explicit `resolve` is valid only when `fetch` is also present; `fetch` without
-`resolve` is valid and has the effective value `must`. Both keys are invalid on
-a non-citable kind, a row with neither home, or a row with both homes.
-
-##### 3.4.10.3 `resolve` selects a finding class
-
-This obligation is independent of the citing-side `[citations]` rules ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)).
-It selects one of two fixed finding classes rather than remapping severity:
-`must` selects the `dangling` error and `should` selects the
-`missing-snapshot` warning ([§FS-check.3.1](FS-check.md#31-dangling-citation),
-[§FS-check.4.12](FS-check.md#412-missing-snapshot)).
-
-##### 3.4.10.4 `config show`
-
-`config show` prints an explicit `format` and `fetch`, and prints the effective
-`resolve` for a fetch-enabled kind, including the defaulted `must`. The shown
-TOML loads back to the same effective values.
+`config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) prints an explicit `format` and `fetch`, and the effective `resolve` of a fetch-enabled kind, including the defaulted `must`, so the shown TOML loads back to the same effective values.
 
 #### 3.4.11 What a home is used for
 
-`folder` is used by `grund id` ([§FS-id.2.2](FS-id.md#22---format-json) emits it as the `folder` field; a kind with no configured home prints none) and by editor "create new declaration" / "go to home folder" actions. A home is also a declaration-home boundary: a declaration inside exactly one configured `folder` home must declare that folder's kind ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)). `file` is stricter: declarations of a single-file kind found outside the configured path are reported under [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home), and a different-kind declaration inside that exact file is likewise a misplaced declaration.
-
-Declarations are still recognized outside configured homes — including inline source declarations — and declarations in files covered by zero or multiple configured homes are not rejected by the home-kind rule because there is no single expected kind. So a kind with no configured home meets [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) only when one of its declarations sits inside some other kind's unique configured home.
+A `folder` is what `grund id` reports as the kind's `folder` field, and a kind with no configured home reports none ([§FS-id.2.2](FS-id.md#22---format-json)); editors use it for their "create new declaration" and "go to home folder" actions. Every configured `folder` and `file` is also a declaration-home boundary, and a file that zero or several homes cover has no expected kind, so the boundary says nothing about it ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)). Declarations are recognized outside configured homes too, inline source declarations included.
 
 #### 3.4.12 `rules` — rule declaration kinds
 
-`rules = true` opts every declaration of a citable Markdown kind into the rule
-contract of [§FS-rules](FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules): the declaration title is one executable controlled-English
-sentence and its body is a non-empty rationale. The Boolean is absent and false
-by default, and `config show` prints it only when enabled. Multiple local kinds
-may enable it.
+`rules = true` opts every declaration of a citable Markdown kind into the rule contract of [§FS-rules](FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules): the declaration title is one executable controlled-English sentence and its body is a non-empty rationale. It is absent and false by default, `config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) prints it only when enabled, and several local kinds may enable it.
 
-The key requires a citable kind and `file` or `folder` homes whose declarations are Markdown: each home, not only the first, is asked whether it is read as Markdown ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)), never what it is named. Version 1's `.md` name test is that question; version 2's verdicts for a home read otherwise, each a refusal at load, are [§FS-config-v2.schema.sources.rules](FS-config-v2.md#schemasourcesrules-every-home-of-a-rule-kind-is-judged-by-its-reading).
-It is invalid on a non-citable, homeless, unscanned, external-
-snapshot, or value-source kind: each either declares no IDs, supplies no scanned
-rule catalog, or gives its title another source contract. These relationships
-are config validation; sentence titles are scanned declaration data and are
-validated later as located findings ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
-
-The key is optional and additive, so `grund_config_version` remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
-An older binary rejects the unknown key loudly rather than silently ignoring a
-rule-enabled repository. Its version-2 spelling is `form = "rule"`, with the same
-meaning and prerequisites ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)).
+The key requires a citable kind and `file` or `folder` homes whose declarations are Markdown: each home, not only the first, is asked whether it is read as Markdown ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)), never what it is named. Version 1's `.md` name test is that question; version 2's refusals of a home read otherwise are [§FS-config-v2.schema.sources.rules](FS-config-v2.md#schemasourcesrules-every-home-of-a-rule-kind-is-judged-by-its-reading). It is invalid on a non-citable, homeless, unscanned, external-snapshot or value-source kind, each of which declares no IDs, supplies no scanned rule catalog, or gives its title another source contract. These relationships are config validation; sentence titles are scanned declaration data, validated later as located findings ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). Version 2 spells it `form = "rule"`, with the same meaning and prerequisites ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)).
 
 #### 3.4.13 `value_chapter` — the chapter whose named children are values
 
-`value_chapter` names, for one `[[kinds]]` row, the chapter whose named direct
-children are value roots in every declaration of that kind ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)):
+`value_chapter` names, for one `[[kinds]]` row, the chapter whose named direct children are value roots in every declaration of that kind ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)):
 
 ```toml
 [[kinds]]
@@ -793,35 +644,9 @@ folder = "docs/architecture"
 value_chapter = "values"
 ```
 
-The value is a section name: a string matching the fixed named-component
-grammar `[a-z][a-z0-9-]*` of [§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names), never a displayed heading title
-and never a `slug_pattern` match. The key is absent by default, absent and set
-to nothing mean the same, and `grund config show` prints it only on a row that
-sets it. It is optional and additive, so `grund_config_version` remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)),
-and an older binary rejects the unknown key loudly rather than silently reading
-a chapter-enabled repository as if it declared no values.
+The value is a section name: a string matching the fixed named-component grammar `[a-z][a-z0-9-]*` of [§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names), never a displayed heading title and never a `slug_pattern` match. The key is absent by default, absent and set to nothing mean the same, and `config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) prints it only on a row that sets it.
 
-An enabled row must be citable, must have exactly one existing `file` or
-`folder` home normalizing inside the project root, and must not set `scan =
-false`: a non-citable row declares no IDs so no coordinate could exist, a
-homeless row has no declarations of its own, and a listed-but-unscanned place is
-never read, so its chapter could never be seen. The row must not also set
-`values = true`: a whole-declaration value's immediate children must be a
-contiguous numeric run ([§FS-values.2.1](FS-values.md#21-markdown-declarations)), so a named chapter cannot legally
-exist inside one, and the pair is refused rather than merged. Setting the key
-twice on one row is an error, as `values` and `rules` already are.
-
-`[id] named_sections = true` is a prerequisite of the key rather than a
-consequence of it: a project that sets `value_chapter` while `named_sections` is
-absent or false is a located config error naming the missing gate, not a silent
-no-op, and the `named_sections` default does not change ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names)). Each
-violation above is a located config error. Validation checks these structural
-relationships without parsing declaration content; a chapter that a declaration
-fills wrongly is scanned data and is reported later as a located finding ([§FS-check.3.20](FS-check.md#320-invalid-value-declaration)).
-Its version-2 spelling is a field with `content = "values"`, which means the
-same and lowers to the same record ([§FS-fields.content.values](FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)). A row that also
-sets `fetch` has no version-2 spelling, because a fetched kind takes no fields
-([§FS-config-migrate.3.1.7.1](FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)).
+An enabled row must be citable, must have exactly one existing `file` or `folder` home normalizing inside the project root, and must not set `scan = false` or `values = true`: no coordinate, declaration or read file could hold the chapter otherwise, and a whole-declaration value admits no named chapter ([§FS-values.2.1](FS-values.md#21-markdown-declarations)). `[id] named_sections = true` is a prerequisite: a project that sets `value_chapter` without it is a located config error naming the missing gate, not a silent no-op ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names)). Each violation is a located config error, checked without parsing declaration content; a chapter a declaration fills wrongly is reported later as a located finding ([§FS-check.3.20](FS-check.md#320-invalid-value-declaration)). Version 2 spells it as a field with `content = "values"`, which lowers to the same record ([§FS-fields.content.values](FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)); a row that also sets `fetch` has no version-2 spelling, because a fetched kind takes no fields ([§FS-config-migrate.3.1.7.1](FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)).
 
 ### 3.5 `[scan]` — what gets scanned
 
@@ -970,7 +795,7 @@ include_root     = true
 ### 3.9 `[citations]` — citation direction rules
 
 ```toml
-[citations]               # absent section = no direction checks (backward compatible)
+[citations]               # absent section = no direction checks
 default = "may"           # global default level for unlisted (citing → cited) pairs
 
 [citations.FS]
@@ -984,7 +809,7 @@ must = ["FS"]             # every E2E case must cite the FS it tests
 should = ["FS|AR"]
 ```
 
-Each `[citations.<kind>]` subsection names the **citing** kind, by the `kind` name of [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds); its arrays name the **cited** kinds. The citing side may be any configured kind — citable or not ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)), but never an unscanned one ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) — or the homeless kind, `code` unless the project named it otherwise ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)); the cited side must be a **citable** kind, because a kind with no IDs has nothing a citation could point at. The section is decided in [§DF-citation-directions](../decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels) and proposed in [§DISC-citation-directions](../discussions/proposals/2026-06-13-citation-directions.md#disc-citation-directions-encode-citation-directions-as-checked-config). It is optional; without it no direction check runs and `grund check` behaves exactly as before. Its complete user-facing explanation is [Citation directions](../user-facing/citation-directions.md); the skill carries that page as a checked copy, while the generated entrypoint carries a checked render of configured rules.
+Each `[citations.<kind>]` subsection names the **citing** kind, by the `kind` name of [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds); its arrays name the **cited** kinds. The citing side may be any configured kind — citable or not ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)), but never an unscanned one ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) — or the homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)); the cited side must be a **citable** kind, because a kind with no IDs has nothing a citation could point at. The section is optional, and without it no direction check runs. Decided in [§DF-citation-directions](../decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels); its user-facing explanation is [Citation directions](../user-facing/citation-directions.md).
 
 #### 3.9.1 Levels
 
@@ -998,28 +823,17 @@ Five keys form an RFC-2119 ladder, split into two rule classes and two enforceme
 | `should-not` | prohibition | citation site | suggestion — `discouraged-citation` ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) |
 | `must-not` | prohibition | citation site | `grund check` error — `forbidden-citation` ([§FS-check.3.12](FS-check.md#312-forbidden-citation)) |
 
-##### 3.9.1.1 Obligations and prohibitions
+An **obligation** asks whether each top-level declaration of the citing kind contains at least one citation to the target kind, anywhere in its body. Multiple array entries are **conjunctive** — `must = ["GOAL", "GRUND"]` requires a citation to each — while a `|` disjunction inside one entry is satisfied by any one alternative. A **prohibition** fires once per offending citation site, located at its exact `file:line`.
 
-An **obligation** asks: does each top-level declaration of the citing kind contain at least one citation to the target kind, anywhere in its body? Multiple array entries are **conjunctive** — `must = ["GOAL", "GRUND"]` requires a citation to each — while a `|` disjunction inside one entry is satisfied by any one alternative — `must = ["GOAL|GRUND"]` requires a citation to either. A **prohibition** fires once per offending citation site, located at its exact `file:line`.
+`E2E` obligations are per case declaration ([§FS-check.3.11.6](FS-check.md#3116-an-e2e-case)): they evaluate the case's scanned files plus the case manifest's `spec.refs` entries, and an otherwise empty evidence set fails a `must` entry rather than satisfying it vacuously. A `spec.refs` entry is kind-shaped evidence: it may name an idealized ID that does not resolve locally, so the dangling check that governs ordinary citations does not apply to it.
 
-##### 3.9.1.2 `E2E` obligations are per case
+The table's level→surface mapping is fixed, never a project knob, so two installs reading one config agree on what gates and what is suggested ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization), [§DF-citation-directions.2.2](../decisions/functional/DF-citation-directions.md#22-errors-gate-suggestions-report--a-fixed-split-not-a-knob)).
 
-`E2E` obligations are per case declaration: they evaluate the case's scanned files plus the case manifest's `spec.refs` entries, but an otherwise empty evidence set still fails a `must` entry rather than satisfying it vacuously. A `spec.refs` entry is kind-shaped evidence — it may name an idealized ID that does not resolve locally, so it is not subject to the dangling check that governs ordinary citations.
-
-##### 3.9.1.3 The level→surface mapping is fixed
-
-`must` and `must-not` gate (`grund check` errors); `should` and `should-not` are machine-checked suggestions that never appear in `grund check`'s standing output and are surfaced only at write time (the generated entrypoint, [§FS-init.2.3.5](FS-init.md#235-citation-directions)) and on demand (`grund check --suggestions`, [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). The level→surface mapping is fixed, never a project knob, so two installs reading one config agree on what gates and what is suggested ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)).
-
-
-##### 3.9.1.4 A file that cites nothing is not judged
-
-The per-file obligation of a non-citable kind and of the homeless kind judges only a file that carries a citation ([§FS-check.3.11.5](FS-check.md#3115-a-file-with-no-citation-is-no-unit)); whether a file cites at all is `require_grounding`'s question ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)). The descriptions of `must` and `should`, which `grund config explain` prints ([§FS-config-explain.3](FS-config-explain.md#3-a-keys-answer)), say so: each is followed by the sentence ``A file of a place or the complement that cites nothing is not checked by this key; `require_grounding` makes it a finding.``, so `must` reads `Kinds each declaration (or file, for a place) must cite; a miss is an error.` and then that sentence, and `should` reads `Kinds it should cite; a miss is a suggestion.` and then that sentence. Version 2 states the same fact for its keys at [§FS-config-v2.rules.citations.uncited](FS-config-v2.md#rulescitationsuncited-an-obligation-never-judges-a-file-that-cites-nothing).
+The per-file obligation of a non-citable kind and of the homeless kind judges only a file that carries a citation ([§FS-check.3.11.5](FS-check.md#3115-a-file-with-no-citation-is-no-unit)); whether a file cites at all is `require_grounding`'s question ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)). The descriptions of `must` and `should` that `grund config explain` prints ([§FS-config-explain.3](FS-config-explain.md#3-a-keys-answer)) each end with the sentence ``A file of a place or the complement that cites nothing is not checked by this key; `require_grounding` makes it a finding.`` Version 2 states the same for its keys ([§FS-config-v2.rules.citations.uncited](FS-config-v2.md#rulescitationsuncited-an-obligation-never-judges-a-file-that-cites-nothing)).
 
 #### 3.9.2 The homeless kind
 
-Every citation site that no single configured kind home claims — outside every home, or in a file two overlapping homes contain — resolves to one citing kind ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)). That kind is the **complement** of the whole `[[kinds]]` table: it is the one kind that is not a place, which is why it has no `folder` and no `file` and why there is exactly one of it. Its name is `code` by default, and a project may name it something truer by declaring it ([§FS-config.3.9.2.1](FS-config.md#3921-declaring-it)). A file here is a spelling, as it is in every v1 home rule: a physical file reached through a home and from outside it answers at each path by what that path is in ([§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling)).
-
-##### 3.9.2.1 Declaring it
+Every citation site that no single configured kind home claims — outside every home, or in a file two overlapping homes contain — resolves to one citing kind ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)). That kind is the **complement** of the whole `[[kinds]]` table, the one kind that is not a place: it has no `folder` and no `file`, and there is exactly one of it. Its name is `code` by default, and a project names it otherwise by declaring it:
 
 ```toml
 [[kinds]]
@@ -1031,33 +845,17 @@ title = "Terraform modules and shell"     # optional: what it covers, for the ge
 should = ["FS|AR"]
 ```
 
-An entry is the homeless kind exactly when it sets `citable = false` and neither `folder` nor `file` — that shape is the declaration, not a separate key. Declaring two is a config error ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)): a complement is one place, and two rows claiming it leave the fallback with no single answer.
+An entry is the homeless kind exactly when it sets `citable = false` and neither `folder` nor `file`; that shape is the declaration, not a separate key. Declaring two is a config error ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). Naming the kind moves the rules with it: `[citations.src]` governs those sites, and `[citations.code]` in that config names an unknown kind ([§FS-config.3.9.5](FS-config.md#395-validation)). `code` stays reserved to this kind ([§FS-config.3.4.5](FS-config.md#345-name-rules)), so declaring `code` with a `title` is how a project keeps the name and says what it covers.
 
-Naming the kind moves the rules with it: `[citations.src]` governs those sites, and `[citations.code]` in that config names an unknown kind ([§FS-config.3.9.5](FS-config.md#395-validation)) rather than sitting inert.
+Its obligations are asked per **source file** ([§FS-check.3.11.1](FS-check.md#3111-the-homeless-kind)), under the exact predicate `require_grounding` uses: a scanned file not read as Markdown ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule), [§DF-require-grounding.2.2](../decisions/functional/DF-require-grounding.md#22-grounded-is-defined-syntactically)). Markdown outside a kind home (a README, the changelog) is therefore prohibition-checked but obligation-exempt. Its row takes the grounding keys of [§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level). A file here is a spelling, as in every v1 home rule: a physical file reached through a home and from outside it answers at each path by what that path is in ([§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling)).
 
-##### 3.9.2.2 `code` is the default name, and reserved
-
-`code` is the default rather than a fixed name because it is the right word for most repositories and the wrong one for some — a Terraform tree, a SQL tree, a prose tree. It is still **reserved** to this kind ([§FS-config.3.4.5.2](FS-config.md#3452-code-is-reserved-to-the-homeless-kind)), so declaring `code` with a `title` is how a project keeps the name and says what it covers.
-
-##### 3.9.2.3 Grounding the source tree and nothing else
-
-The row takes `require_grounding` and `grounding_level` like any other ([§FS-config.3.4.8.4](FS-config.md#3484-the-homeless-kind-takes-both-keys-like-any-row)), and that is how a project asks for grounding of its source tree and of nothing else: `kind = "code"`, `citable = false`, `require_grounding = true`. Written on this row the keys govern the complement alone; written in `[reference]` they are the default this row inherits with every other.
-
-##### 3.9.2.4 Obligations apply per source file
-
-**Obligations apply per file** — and per section unit as well where the row's `grounding_level` is above `1` ([§FS-check.3.11](FS-check.md#311-missing-required-citation)) — only to files that contain at least one citation, and only to **source files** under the exact predicate `require_grounding` uses — a scanned file not read as Markdown ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule), [§DF-require-grounding.2.2](../decisions/functional/DF-require-grounding.md#22-grounded-is-defined-syntactically)). Markdown outside a kind home (a README, the changelog) is therefore prohibition-checked but obligation-exempt. A configured non-citable kind *with* a home ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is the same species and differs on exactly that point: its unit is every scanned file in its home, those read as Markdown included ([§FS-check.3.11](FS-check.md#311-missing-required-citation)).
-
-##### 3.9.2.5 No Project map row, and the last directions row
-
-The homeless kind **gets no Project map row** ([§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections)) — every row there links a place, and this is the kind that has none. Its citation-directions row renders **last**, wherever in the table it was declared, under the subject [§FS-init.2.3.5](FS-init.md#235-citation-directions) gives the homeless kind.
+The homeless kind gets no Project map row ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), and its citation-directions row renders last, wherever in the table it was declared, under the subject [§FS-init.2.3.5](FS-init.md#235-citation-directions) gives it.
 
 #### 3.9.3 Alias matching
 
-Rule entries reuse the citation grammar of [§FS-workspace.1](FS-workspace.md#1-citation-syntax): a bare `AR` matches the **local** project only; `alias/AR` pins one workspace member, spelled with the same whole alias path a citation uses (`group/api/AR`, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)); `*/AR` matches the kind in **any** project including the local one. `*/` is new syntax valid in rule entries only — it is never a citation. Each entry parses as `[alias-path-or-*/]KIND`, split at the last `/` exactly as a citation is; a malformed qualifier is rejected ([§FS-config.3.9.3.1](FS-config.md#3931-a-malformed-qualifier-is-rejected)). The match is textual on the qualifier and kind, and which kinds a qualifier's project has is validation's question, not matching's ([§FS-config.3.9.5.2](FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds), [§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)); resolution failures are separate errors ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)), so the direction check never loads a foreign config. Each member's own `[citations]` governs the citation sites in that member's tree — like `strict`, `require_grounding`, and `[id]`, no section inherits from the workspace root. So a member that must cite no other project says so in its own config: it closes its `default` to `must-not` ([§FS-config.3.9.4](FS-config.md#394-defaults-and-precedence)) and lists each citing kind's own targets bare under `may`, each non-citable kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) and the homeless `code` kind included, so a citation of any other project falls to that default without the member naming one; a rule at the workspace root says nothing about that member's sites ([§FS-config.principle.boundary](FS-config.md#principleboundary-the-project-is-the-widest-committed-scope)).
+Rule entries reuse the citation grammar of [§FS-workspace.1](FS-workspace.md#1-citation-syntax): a bare `AR` matches the **local** project only; `alias/AR` pins one workspace member, spelled with the same whole alias path a citation uses (`group/api/AR`, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)); `*/AR` matches the kind in **any** project, the local one included. `*/` is valid in rule entries only and is never a citation. Each entry parses as `[alias-path-or-*/]KIND`, split at the last `/` as a citation is. A malformed qualifier is rejected with a citation-target finding that names the target's kind and the first invalid qualifier segment; an empty qualifier or segment is named explicitly. A `*` segment is invalid unless it is the whole qualifier, and the finding says so.
 
-##### 3.9.3.1 A malformed qualifier is rejected
-
-A malformed qualifier is rejected with a citation-target finding that names the target's kind and the first invalid qualifier segment; an empty qualifier or segment is named explicitly. A `*` segment is invalid unless it is the whole qualifier, and the finding says so.
+The match is textual on the qualifier and kind; which kinds a qualifier's project has is validation's question, not matching's ([§FS-config.3.9.5](FS-config.md#395-validation), [§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)). Resolution failures are separate errors ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)), so the direction check never loads a foreign config. Each member's own `[citations]` governs the citation sites in that member's tree and inherits nothing from the workspace root, so a rule at the root says nothing about a member's sites ([§FS-config.principle.boundary](FS-config.md#principleboundary-the-project-is-the-widest-committed-scope)). A member that must cite no other project therefore says so in its own config: it closes its `default` to `must-not` ([§FS-config.3.9.4](FS-config.md#394-defaults-and-precedence)) and lists each citing kind's own targets bare under `may`, each non-citable kind and the homeless kind included, so a citation of any other project falls to that default. Decided in [§DF-citation-directions.2.5](../decisions/functional/DF-citation-directions.md#25-namespace-matching-mirrors-citation-grammar).
 
 #### 3.9.4 Defaults and precedence
 
@@ -1065,30 +863,29 @@ A malformed qualifier is rejected with a citation-target finding that names the 
 
 #### 3.9.5 Validation
 
-Config validation rejects: a `[citations.<kind>]` table whose kind is neither a configured `[[kinds]]` name nor the homeless kind's name ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — so `[citations.code]` is rejected in a config that named its complement something else; one naming an unscanned kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)); a target naming a kind that is not a configured *citable* kind of the project its qualifier names ([§FS-config.3.9.5.2](FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)) — reported as *an unknown target kind* for a name the table does not hold and *a non-citable target kind* for one it does, since those are different mistakes; `code` used as a `[[kinds]]` name by anything but the homeless kind ([§FS-config.3.4.5](FS-config.md#345-name-rules)); two entries declaring the homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)); an unknown level key; and two targets of the same cited kind at different levels whose alias matchers can match the same citation ([§FS-config.3.9.5.1](FS-config.md#3951-overlap-not-textual-equality)). The section composes unchanged with project-defined `[[kinds]]` — a new kind is one more `[citations.<KIND>]` table.
+Config validation rejects:
 
-Adding `[citations]` does **not** bump `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)): it is additive surface, like `[workspace]` and `require_grounding`. An older binary meeting it fails loudly with `unknown config section`.
+- a `[citations.<kind>]` table whose kind is neither a configured `[[kinds]]` name nor the homeless kind's name ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), so `[citations.code]` is rejected in a config that named its complement something else;
+- one naming an unscanned kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned));
+- a target naming a kind that is not a configured *citable* kind of the project its qualifier names, reported as *an unknown target kind* for a name the table does not hold and *a non-citable target kind* for one it does, since those are different mistakes;
+- `code` used as a `[[kinds]]` name by anything but the homeless kind ([§FS-config.3.4.5](FS-config.md#345-name-rules));
+- two entries declaring the homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind));
+- an unknown level key;
+- two targets of the same cited kind at different levels whose alias matchers can match the same citation. The rule is on **overlap**, not textual equality: `*/AR` (any project) overlaps a bare `AR` (local), so listing one at `should` and the other at `must-not` is rejected, while a local `AR` permitted beside a pinned `alias/AR` forbidden is allowed, because those matchers are disjoint ([§FS-config.3.9.3](FS-config.md#393-alias-matching)).
 
-##### 3.9.5.1 Overlap, not textual equality
+A target is judged against the kinds of the projects its qualifier names, read as [§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads) says: a bare `KIND` against the local project's, `alias/KIND` against the aliased project's, and `*/KIND` against every loaded project's. So `[citations.FS] must = ["api/API"]` at a workspace root whose member `api` configures `API` loads and is enforced exactly as the rule `Each FS must cite at least one api/API.` is ([§FS-check.3.11](FS-check.md#311-missing-required-citation)).
 
-The rule on two targets of one cited kind is on alias **overlap**, not textual equality — `*/AR` (any project) overlaps a bare `AR` (local), so listing one at `should` and the other at `must-not` is rejected, while a local `AR` permitted alongside a pinned `alias/AR` forbidden is allowed because those matchers are disjoint ([§FS-config.3.9.3](FS-config.md#393-alias-matching)).
+The citing side, `[citations.<kind>]`, and every bare target are judged at load. A pinned or `*/` target is judged when the workspace is expanded, the first point that holds every project's kinds, so `grund config validate` judges it against the workspace its file declares and gives the load's answer. A narrowed `cover`, which reads that workspace's kinds without loading its files ([§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)), judges none of them where the workspace does not expand — a member whose config fails to load, say — because the kinds it can read are then not every project's.
 
-##### 3.9.5.2 A pinned target is judged against its project's kinds
+A pinned or `*/` target the run cannot accept fails the load ([§DF-one-grammar-lands-in-0-19](../decisions/functional/DF-one-grammar-lands-in-0-19.md#df-one-grammar-lands-in-0-19-the-one-grammar-window-closes-in-0190-and-a-pinned-target-the-run-cannot-accept-fails-the-load)): the run prints the first one's line as a CLI-level `error:` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)), writes nothing to stdout, and exits `2`. The first is taken in the order the run judges them: its projects in the order it loads them, and within one config the citing tables in byte order of their kind, each table's levels as `must`, `warn`, `should`, `may`, `should-not`, `warn-not`, `must-not`, and each level's targets as written.
 
-A target is judged against the kinds of the projects its qualifier names, read as [§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads) says: a bare `KIND` against the local project's, `alias/KIND` against the aliased project's, and `*/KIND` against every loaded project's. So `[citations.FS] must = ["api/API"]` at a workspace root whose member `api` configures `API` loads and is enforced exactly as the rule `Each FS must cite at least one api/API.` is, and an `FS` declaration that cites no `api/API` declaration gets `<path>:<line>: error: FS-x must cite api/API (citation direction)`. The citing side, `[citations.<kind>]`, and every bare target are judged at load, as before. A pinned or `*/` target is judged when the workspace is expanded, the first point that holds every project's kinds, so `grund config validate` judges it against the workspace its file declares and gives the load's answer. A narrowed `cover`, which reads that workspace's kinds without loading its files ([§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)), judges none of them where the workspace does not expand — a member whose config fails to load, say — because the kinds it can read are then not every project's. A pinned or `*/` target the run cannot accept was once refused only when its kind was not a citable kind of the *local* project, which is not the question. Through `0.18.x` each such target loaded, was never matched, and printed one load warning on stderr naming `0.19.0` as the release it became an error in ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). Since `0.19.0` each such target fails the load ([§DF-one-grammar-lands-in-0-19](../decisions/functional/DF-one-grammar-lands-in-0-19.md#df-one-grammar-lands-in-0-19-the-one-grammar-window-closes-in-0190-and-a-pinned-target-the-run-cannot-accept-fails-the-load)): the run prints the first one's line as a CLI-level `error:` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)), the warning's text with `; this became an error in grund 0.19.0` in place of its clause, writes nothing to stdout, and exits `2`. The first is taken in the order the run judges them: its projects in the order it loads them, and within one config the citing tables in byte order of their kind, each table's levels as `must`, `warn`, `should`, `may`, `should-not`, `warn-not`, `must-not`, and each level's targets as written.
-
-In a workspace whose member `api` configures `FS` not at all and `SKILL` with `citable = false`, the targets `api/FS`, `api/SKILL`, `*/POLICY` (a kind no loaded project configures) and `nope/FS` (an alias the workspace does not load) each fail the load with the line below that names them, and a member `api` whose own config pins `[citations.API] should = ["web/WEB", "*/WEB"]` and configures no `WEB` fails its own run with one of the last two:
+At a workspace root whose member `api` configures no `FS`, `[citations.FS] must-not = ["api/FS"]` fails the load with:
 
 ```text
 error: grund.toml: [citations.FS] must-not names an unknown target kind `FS` in namespace `api`; this became an error in grund 0.19.0
-error: grund.toml: [citations.FS] must names a non-citable target kind `SKILL` in namespace `api`; this became an error in grund 0.19.0
-error: grund.toml: [citations.FS] must names an unknown target kind `POLICY` in any workspace namespace; this became an error in grund 0.19.0
-error: grund.toml: [citations.FS] must names an unknown project alias `nope`; this became an error in grund 0.19.0
-error: grund.toml: [citations.API] should names `web/WEB`: unknown project alias web; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this became an error in grund 0.19.0
-error: grund.toml: [citations.API] should names `*/WEB`: no workspace is in scope here, so no namespace can be searched for WEB — check from the workspace root; this became an error in grund 0.19.0
 ```
 
-The level key is the one the target is listed under, and the path is the config's as every config message names it. A run that holds no workspace — a member's own run, or a project with no `[workspace]` — cannot judge a target pinned to another project, and a `*/KIND` target it cannot accept locally, at all: such a target fails its load the same way, in the wording of [§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-reasons). A target the run accepts prints nothing, and a bare target keeps the load error it had. The routes are [§DF-one-kind-verdict](../decisions/functional/DF-one-kind-verdict.md#df-one-kind-verdict-every-command-reads-one-kind-verdict-in-its-own-scope-and-refuses-a-rule-sentence-for-the-first-stage-it-fails)'s; retiring the warnings was [§RM-one-grammar-flip](../roadmap.md#rm-one-grammar-flip-end-the-one-grammar-window-in-0190).
+The level key is the one the target is listed under, and the path is the config's as every config message names it. A run that holds no workspace — a member's own run, or a project with no `[workspace]` — cannot judge a target pinned to another project, and a `*/KIND` target it cannot accept locally, at all: such a target fails its load the same way, in the wording of [§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-reasons) ([§DF-one-kind-verdict.decision.routes](../decisions/functional/DF-one-kind-verdict.md#decisionroutes-which-route-each-move-takes)). A target the run accepts prints nothing, and a bare target keeps its own load error.
 
 ### 3.10 `[fmt]` — suppressing the rewrite
 
