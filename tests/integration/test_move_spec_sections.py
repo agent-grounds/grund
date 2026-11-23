@@ -21,6 +21,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import move_spec_sections  # noqa: E402
+import spec_fold_coverage  # noqa: E402
 
 # The marker and its escape, spelled so that this file cites nothing the fixture declares.
 M = "\N{SECTION SIGN}"
@@ -126,7 +127,7 @@ none
 - tests/integration/test_demo_moves.py: KEPT row 1.1 | kept verbatim
 """
 
-GUIDE = f"""See {M}FS-demo.1.1.1 and [{M}FS-demo.1.1](functional-spec/FS-demo.md#11-brief).
+GUIDE = f"""See {M}FS-demo.1.2 and [{M}FS-demo.1.1](functional-spec/FS-demo.md#11-brief).
 Pinned [x](https://github.com/agent-grounds/grund/blob/abc123/docs/functional-spec/FS-demo.md#11-brief).
 Self [y](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-demo.md#111-with-no-lead).
 Plain [z](functional-spec/FS-demo.md#21-moved-away).
@@ -191,6 +192,63 @@ POLICY = """pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-demo.3.1", reason: "rationale" },
     Exception { id: "FS-demo.1.2", reason: "kept" },
 ];
+
+#[rustfmt::skip]
+pub(super) const LEAD_PROMISES: &[LeadPromise<'static>] = &[
+    LeadPromise { id: "FS-demo.1.1", reason: "brief" },
+    LeadPromise { id: "FS-demo.3", reason: "lists" },
+];
+"""
+
+NOTES = """
+## notes
+
+Prose a reviewer reads: FS-demo.1.1 went into its parent.
+
+## overrides
+
+- docs/guide.md:1: FS-demo.1.2 -> FS-demo.1  # the guide means the reading
+- crates/x.rs:3 (FS-demo.3.1, "a row") -> FS-demo.3
+Prose between overrides is ignored.
+
+## lead-promises
+
+- FS-demo.1: a reading prints the lead of its section
+- FS-demo.1: listed twice, kept once
+Prose between promises is ignored.
+"""
+
+QUOTED = f"""Subjects:
+
+```text
+abc123 Fold {M}FS-demo.1.1 into [its parent](../functional-spec/FS-demo.md#11-brief)
+```
+
+Then {M}FS-demo.1.1 outside.
+"""
+
+REPEATS = f"""See {M}FS-demo.1.1 and {M}FS-demo.1.1.1.
+Both ({M}FS-demo.1; {M}FS-demo.1.1) hold.
+Linked [{M}FS-demo.1.1](functional-spec/FS-demo.md#11-brief), {M}FS-demo.1.1.1.
+Authored {M}FS-demo.1.2, {M}FS-demo.1.2 stays.
+Ends {M}FS-demo.1.1,
+{M}FS-demo.1.1.1 opens.
+"""
+
+SOURCE = f"""//! Demo: {M}FS-demo.1.1.
+/// ```text
+/// {M}FS-demo.1.1
+/// ```
+pub fn f() -> &'static str {{
+    "{M}FS-demo.1.1, {M}FS-demo.1.1.1"
+}}
+
+#[cfg(test)]
+mod tests {{
+    // {M}FS-demo.3.1
+    #[test]
+    fn t() {{}}
+}}
 """
 
 RENDER = """from pathlib import Path
@@ -246,6 +304,11 @@ class FoldPassTest(unittest.TestCase):
     def read(self, name: str) -> str:
         return (self.root / name).read_text(encoding="utf-8")
 
+    def track(self, name: str, text: str) -> None:
+        (self.root / name).parent.mkdir(parents=True, exist_ok=True)
+        self.write(name, text)
+        git(self.root, "add", name)
+
     def run_pass(self, *extra: str, record: Path | None = None) -> tuple[int, str]:
         arguments = ["--root", str(self.root), "--base", self.base, "--record", str(record or self.record), *extra]
         out = io.StringIO()
@@ -257,7 +320,7 @@ class FoldPassTest(unittest.TestCase):
         code, out = self.run_pass()
         self.assertEqual(code, 0, out)
         guide = self.read("docs/guide.md").split("\n")
-        self.assertEqual(guide[0], f"See {M}FS-demo.1 and [{M}FS-demo.1](functional-spec/FS-demo.md#1-reading).")
+        self.assertEqual(guide[0], f"See {M}FS-demo.1.2 and [{M}FS-demo.1](functional-spec/FS-demo.md#1-reading).")
         self.assertIn("/blob/abc123/docs/functional-spec/FS-demo.md#11-brief", guide[1])
         self.assertIn("/blob/main/docs/functional-spec/FS-demo.md#1-reading)", guide[2])
         self.assertIn("(functional-spec/FS-other.md#1-home)", guide[3])
@@ -283,7 +346,9 @@ class FoldPassTest(unittest.TestCase):
         self.assertIn('CHAPTERS = (\n    "1",\n    "2", "3",\n)', self.read("tests/integration/test_demo_moves.py"))
         self.assertEqual(self.read("tests/integration/functional_spec_coverage_policy.rs"), POLICY
                          .replace('    Exception { id: "FS-demo.1.1.1", reason: "detail" },\n', "")
-                         .replace('"FS-demo.3.1", reason: "rationale"', '"FS-demo.3", reason: "rationale"'))
+                         .replace('"FS-demo.3.1", reason: "rationale"', '"FS-demo.3", reason: "rationale"')
+                         .replace('"FS-demo.1.1", reason: "brief" },\n    LeadPromise { id: "FS-demo.3", reason: "lists"',
+                                  '"FS-demo.1", reason: "brief"'))
 
     def test_what_is_not_mechanical_is_reported(self):
         code, out = self.run_pass()
@@ -295,6 +360,8 @@ class FoldPassTest(unittest.TestCase):
             "tests/integration/test_demo_moves.py:5: names `1.1` of `FS-demo`",
             "functional_spec_coverage_policy.rs: added the exception row of `FS-demo.3`",
             "pins: tests/integration/test_demo_moves.py: KEPT row 1.1 | kept verbatim",
+            "the lead promise of the removed `FS-demo.1.1` is now `FS-demo.1`'s",
+            "dropped the lead promise of `FS-demo.3`: `FS-demo.3` is now a leaf",
         ):
             self.assertIn(site, report)
         self.assertTrue(out.rstrip().endswith("now run `grund fmt --write` so every link target and anchor follows"))
@@ -326,7 +393,7 @@ class FoldPassTest(unittest.TestCase):
         garbled.write_text(RECORD.replace("- FS-demo.3.1 -> FS-demo.3", "- FS-demo.3.1 into FS-demo.3"), encoding="utf-8")
         code, out = self.run_pass(record=garbled)
         self.assertEqual(code, 2, out)
-        self.assertIn("not `<old> -> <target>` in `folds`", out)
+        self.assertIn("garbled.md:9: under `## folds` only `<old> -> <target>` lines", out)
 
     def test_check_fails_on_a_removed_section_no_record_lists(self):
         code, out = self.run_pass("--check")
@@ -338,6 +405,99 @@ class FoldPassTest(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertIn("FS-demo.3.1: removed, and in no record", out)
         self.assertEqual(self.read("docs/guide.md"), GUIDE)
+
+    def test_a_record_holds_notes_overrides_and_lead_promises(self):
+        self.track("tests/integration/functional_spec_coverage_policy.rs", POLICY.split("    LeadPromise")[0] + "];\n")
+        noted = self.record.with_name("noted.md")
+        noted.write_text(RECORD + NOTES, encoding="utf-8")
+        code, out = self.run_pass(record=noted)
+        self.assertEqual(code, 0, out)
+        self.assertIn("docs/guide.md:1: write `FS-demo.1` for `FS-demo.1.2`; no record removes it", out)
+        self.assertIn("# the guide means the reading", out)
+        self.assertIn(f'overrides: crates/x.rs:3 (FS-demo.3.1, "a row") -> FS-demo.3', out)
+        self.assertNotIn("Prose", out)
+        self.assertIn("1 lead promise(s) added", out)
+        self.assertTrue(self.read("tests/integration/functional_spec_coverage_policy.rs").endswith(
+            '&[\n    LeadPromise { id: "FS-demo.1", reason: "a reading prints the lead of its section" },\n];\n'))
+        self.assertEqual(sorted(["FS-x.10", "FS-x.9.1", "FS-x.9"], key=spec_fold_coverage.natural),
+                         ["FS-x.9", "FS-x.9.1", "FS-x.10"])
+        leaf = self.record.with_name("leaf.md")
+        leaf.write_text(RECORD + "\n## lead-promises\n\n- FS-demo.3: a list\n- FS-demo.1 no colon\n", encoding="utf-8")
+        code, out = self.run_pass(record=leaf)
+        self.assertEqual(code, 2, out)
+        self.assertIn("leaf.md:26: under `## lead-promises` a line naming a section is `<parent>: <the promise>`", out)
+        leaf.write_text(RECORD + "\n## lead-promises\n\n- FS-demo.3: a list\n", encoding="utf-8")
+        code, out = self.run_pass(record=leaf)
+        self.assertEqual(code, 2, out)
+        self.assertIn("leaf.md:25: lead promise FS-demo.3: a leaf, which the coverage gate holds already", out)
+        misfiled = self.record.with_name("misfiled.md")
+        misfiled.write_text(RECORD + "\n## fold-notes\n\n- FS-demo.1.2 -> FS-demo.1\n", encoding="utf-8")
+        code, out = self.run_pass(record=misfiled)
+        self.assertEqual(code, 2, out)
+        self.assertIn("misfiled.md:25: an entry under `## fold-notes`, which the pass does not read", out)
+
+    def test_a_fenced_quote_outside_the_spec_is_reported_not_rewritten(self):
+        self.track("docs/releases/1.0-freeze.md", QUOTED)
+        self.track("crates/demo/src/lib.rs", SOURCE)
+        code, out = self.run_pass()
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.read("docs/releases/1.0-freeze.md"),
+                         QUOTED.replace(f"Then {M}FS-demo.1.1", f"Then {M}FS-demo.1"))
+        self.assertIn(f"/// {M}FS-demo.1.1\n", self.read("crates/demo/src/lib.rs"))
+        for site in (f"docs/releases/1.0-freeze.md:4: `{M}FS-demo.1.1` is quoted in a fenced block, so the pass left it",
+                     "docs/releases/1.0-freeze.md:4: a link in a fenced block names a heading the rewrite removed",
+                     f"crates/demo/src/lib.rs:3: `{M}FS-demo.1.1` is quoted in a fenced block"):
+            self.assertIn(site, out)
+
+    def test_a_repeat_the_retarget_makes_is_kept_once(self):
+        self.track("docs/repeats.md", REPEATS)
+        self.track("crates/demo/src/lib.rs", SOURCE)
+        self.track("docs/changelog.md",
+                   CHANGELOG.replace(f"cite {M}FS-demo.1.1.", f"cite {M}FS-demo.1.1 and {M}FS-demo.1.1.1."))
+        self.write("docs/functional-spec/FS-demo.md",
+                   FOLDED_PAGE.replace("Brief text. Detail.", f"Brief text. Detail, as {M}FS-demo.1.1 says."))
+        code, out = self.run_pass()
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.read("docs/repeats.md").split("\n"), [
+            f"See {M}FS-demo.1.", f"Both ({M}FS-demo.1) hold.",
+            f"Linked [{M}FS-demo.1](functional-spec/FS-demo.md#1-reading).",
+            f"Authored {M}FS-demo.1.2, {M}FS-demo.1.2 stays.", f"Ends {M}FS-demo.1,", f"{M}FS-demo.1 opens.", ""])
+        self.assertIn("3 repeated citation(s) collapsed", out)
+        self.assertIn(f"docs/repeats.md:6: `{M}FS-demo.1` ends line 5 and opens this one", out)
+        self.assertIn(f'"{M}FS-demo.1, {M}FS-demo.1"', self.read("crates/demo/src/lib.rs"))
+        self.assertIn(f"crates/demo/src/lib.rs:6: `{M}FS-demo.1, {M}FS-demo.1` repeats inside a string", out)
+        self.assertIn(f"cite {M}FS-demo.1 and {M}FS-demo.1.", self.read("docs/changelog.md"))
+        self.assertIn("docs/functional-spec/FS-demo.md:11: `FS-demo.1` now cites itself", out)
+        self.assertIn("crates/demo/src/lib.rs: code lines 1, 6; #[cfg(test)] lines 11", out)
+
+    def test_a_relative_row_is_reported_only_for_its_own_page(self):
+        self.track("tests/integration/test_demo_moves.py",
+                   MOVES_TEST + 'OTHER = (("FS-other.md", "1.1", "Home"),)\nRULES = (("3.1", "Child"),)\n')
+        code, out = self.run_pass()
+        self.assertEqual(code, 0, out)
+        self.assertIn("test_demo_moves.py:5: names `1.1` of `FS-demo`", out)
+        self.assertIn("test_demo_moves.py:7: names `3.1` of `FS-demo`, a removed section; it is now `FS-demo.3`", out)
+        self.assertNotIn("test_demo_moves.py:6:", out)
+
+    def test_a_cumulative_run_skips_the_records_already_applied(self):
+        code, out = self.run_pass()
+        self.assertEqual(code, 0, out)
+        git(self.root, "add", "-A")
+        git(self.root, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "first")
+        applied = git(self.root, "rev-parse", "HEAD").strip()
+        page = self.read("docs/functional-spec/FS-demo.md")
+        self.write("docs/functional-spec/FS-demo.md", page.replace("### 1.2 Kept\n\n", ""))
+        second = self.record.with_name("second.md")
+        second.write_text("## folds\n\n- FS-demo.1.2 -> FS-demo.1\n", encoding="utf-8")
+        code, out = self.run_pass("--check", "--base", applied, "--record", str(second))
+        self.assertEqual(code, 0, out)
+        self.assertIn("check ok: 1 removed coordinate(s) recorded, 4 applied before", out)
+        code, out = self.run_pass("--base", applied, "--record", str(second))
+        self.assertEqual(code, 0, out)
+        self.assertIn(f"{self.record}: applied by an earlier pass, all 4 entries gone; skipped", out)
+        self.assertNotIn("pins:", out)
+        self.assertEqual(self.read("docs/guide.md").split("\n")[0], f"See {M}FS-demo.1.")
+        self.assertEqual(self.read("tests/e2e/cases/case-b/spec.refs"), "FS-demo.1\n")
 
     def test_the_fixed_table_moves_as_it_did(self):
         self.write("docs/guide.md", f"{M}FS-check.4.7.4, {M}FS-check.4.7.10 and {ESC}FS-check.4.7\n")

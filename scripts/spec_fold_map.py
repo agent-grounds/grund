@@ -1,8 +1,9 @@
 """What a rewrite of the functional spec removed, and where each removed coordinate now points.
 
 The reading half of `move_spec_sections.py` (§REQ-spec-section-names.permanence): the
-records a rewrite writes, the section map of every declaration before and after it, and
-the one coordinate each removed one is retargeted to. The section map is read the way
+section map of every declaration before and after a rewrite, what its records
+(`spec_fold_records`) make unsafe, and the one coordinate each removed one is retargeted
+to. The section map is read the way
 `grund <ID> --toc` reads it — ATX headings outside fences, with numbered, named and
 relative paths, and each heading's GitHub anchor — so the pass needs no `grund` on the
 path, and the map at a base commit is read with `git show`.
@@ -93,22 +94,42 @@ def slug(text: str) -> str:
     return re.sub(r"[^\w\- ]", "", text).replace(" ", "-")
 
 
-def headings(text: str):
-    """Each ATX heading outside a fence, as (level, text)."""
-    fence = None
-    for line in text.split("\n"):
+def fenced(lines: list[str], prefix: re.Pattern | None = None) -> list[bool]:
+    """For each line, whether it is part of a fenced code block, its fence lines included.
+
+    `prefix` is stripped from a line before its fence is looked for, so that a fence inside a
+    doc-comment (`/// ```text`) is found; a line it does not match is no comment, so it
+    opens no fence and ends any open one.
+    """
+    flags, fence = [], None
+    for line in lines:
+        if prefix is not None:
+            stripped = prefix.match(line)
+            if stripped is None:
+                flags.append(False)
+                fence = None
+                continue
+            line = line[stripped.end():]
         opener = FENCE.match(line)
         if fence:
+            flags.append(True)
             closes = opener and opener.group(1)[0] == fence[0] and len(opener.group(1)) >= len(fence)
             if closes and not opener.group(2).strip():
                 fence = None
             continue
         if opener and not (opener.group(1)[0] == "`" and "`" in opener.group(2)):
             fence = opener.group(1)
-            continue
-        heading = ATX.match(line)
+        flags.append(fence is not None)
+    return flags
+
+
+def headings(text: str):
+    """Each ATX heading outside a fence, as (line index, level, text)."""
+    lines = text.split("\n")
+    for index, (line, inside) in enumerate(zip(lines, fenced(lines))):
+        heading = None if inside else ATX.match(line)
         if heading:
-            yield len(heading.group(1)), CLOSING.sub("", heading.group(2) or "")
+            yield index, len(heading.group(1)), CLOSING.sub("", heading.group(2) or "")
 
 
 def section_path(token: str, parent: str | None) -> str | None:
@@ -125,13 +146,17 @@ def section_path(token: str, parent: str | None) -> str | None:
     return None if named_form and all(part.isdigit() for part in path.split(".")) else path
 
 
-def parse(text: str, file: str) -> tuple[dict[str, Declaration], set[str]]:
-    """The declarations a Markdown file holds, and the anchor of every heading in it."""
+def parse(text: str, file: str, starts: list | None = None) -> tuple[dict[str, Declaration], set[str]]:
+    """The declarations a Markdown file holds, and the anchor of every heading in it.
+
+    Given `starts`, each heading appends `(line index, coordinate)`: the coordinate whose own
+    text runs from that line, `None` outside every declaration.
+    """
     declarations: dict[str, Declaration] = {}
     used: set[str] = set()
     current: tuple[int, Declaration] | None = None
     stack: list[tuple[int, str | None]] = []
-    for level, inner in headings(text):
+    for index, level, inner in headings(text):
         base = anchor = slug(inner)
         repeat = 0
         while anchor in used:
@@ -144,18 +169,31 @@ def parse(text: str, file: str) -> tuple[dict[str, Declaration], set[str]]:
             current = (level, Declaration(declared.group(1), file, anchor))
             declarations.setdefault(declared.group(1), current[1])
             stack = [(level, "")]
-            continue
-        if current is None:
-            continue
-        while stack and stack[-1][0] >= level:
-            stack.pop()
-        parent = stack[-1][1] if stack and stack[-1][0] == level - 1 else None
-        token, _, title = inner.partition(" ")
-        path = section_path(token, parent)
-        stack.append((level, path))
-        if path is not None:
-            current[1].sections.setdefault(path, Section(path, title.strip(), anchor))
+        elif current is not None:
+            while stack and stack[-1][0] >= level:
+                stack.pop()
+            parent = stack[-1][1] if stack and stack[-1][0] == level - 1 else None
+            token, _, title = inner.partition(" ")
+            path = section_path(token, parent)
+            stack.append((level, path))
+            if path is not None:
+                current[1].sections.setdefault(path, Section(path, title.strip(), anchor))
+        if starts is not None:
+            owner = next((path for _, path in reversed(stack) if path is not None), None) if current else None
+            starts.append((index, None if owner is None else ".".join(filter(None, [current[1].id, owner]))))
     return declarations, used
+
+
+def owners(text: str, file: str) -> list[str | None]:
+    """For each line of a spec page, the coordinate whose own text holds it: its innermost
+    section, the declaration in its lead, `None` outside every declaration."""
+    starts: list[tuple[int, str | None]] = []
+    parse(text, file, starts)
+    lines = text.count("\n") + 1
+    found: list[str | None] = [None] * lines
+    for (index, owner), following in zip(starts, starts[1:] + [(lines, None)]):
+        found[index:following[0]] = [owner] * (following[0] - index)
+    return found
 
 
 def read_spec(files: dict[str, str]) -> Spec:
@@ -185,67 +223,6 @@ def spec_in(root: Path) -> Spec:
     """The spec directory as the working tree holds it."""
     pages = sorted((root / SPEC_DIR).glob("*.md"))
     return read_spec({f"{SPEC_DIR}/{page.name}": page.read_text(encoding="utf-8") for page in pages})
-
-
-@dataclass(frozen=True)
-class Entry:
-    source: str
-    target: str
-    kind: str
-    where: str
-
-
-@dataclass
-class Record:
-    path: Path
-    entries: list[Entry]
-    hand: list[str]
-
-
-class RecordError(ValueError):
-    pass
-
-
-ENTRY = re.compile(r"^(?:<§>|§)?(\S+)\s*(?:->|→)\s*(?:<§>|§)?(\S+)$")
-LISTS = {"folds": "fold", "moves": "move"}
-HAND = ("pins",)
-
-
-def read_record(path: Path) -> Record:
-    """The `folds` and `moves` of one rewrite record, and its `pins` to edit by hand.
-
-    A record is a Markdown file with one `## <name>` heading per list. Under `## folds` and
-    `## moves`, a line is `<old> -> <target>`, optionally a list item, in backticks, or
-    followed by `# reason`; `none` says the list is empty. Any other line in those two lists
-    is refused rather than guessed at, because a coordinate the pass misreads keeps its
-    citations. Every other list but `pins`, which names the test rows a person edits, is
-    for the reviewer and is not read.
-    """
-    entries: list[Entry] = []
-    hand: list[str] = []
-    heading = None
-    fenced = False
-    for number, raw in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
-        where = f"{path}:{number}"
-        if raw.lstrip().startswith(("```", "~~~")):
-            fenced = not fenced
-            continue
-        opened = None if fenced else re.match(r"^#{2,6}\s+(\S+)\s*(.*)$", raw)
-        if opened:
-            heading = opened.group(1).lower().rstrip(":")
-            raw = opened.group(2) if heading in LISTS else ""
-        line = re.sub(r"^\s*(?:[-*+]|\d+[.)])\s+", "", raw).replace("`", "").strip()
-        if not line or line.strip("().").lower() == "none":
-            continue
-        if heading in HAND:
-            hand.append(f"{where}: {heading}: {line}")
-        if heading not in LISTS:
-            continue
-        entry = ENTRY.match(line.split("#", 1)[0].strip())
-        if not entry or not all(COORDINATE.match(part) for part in entry.groups()):
-            raise RecordError(f"{where}: not `<old> -> <target>` in `{heading}`: {raw.strip()}")
-        entries.append(Entry(entry.group(1), entry.group(2), LISTS[heading], where))
-    return Record(path, entries, hand)
 
 
 class FoldMap:
@@ -283,37 +260,48 @@ class FoldMap:
         return None
 
 
-def fold_map(records: list[Record]) -> tuple[FoldMap, list[str]]:
+def fold_map(records: list, done: set = frozenset()) -> tuple[FoldMap, list[str]]:
     targets: dict[str, str] = {}
     problems = []
     for entry in (entry for record in records for entry in record.entries):
-        if targets.setdefault(entry.source, entry.target) != entry.target:
+        if targets.get(entry.source, entry.target) != entry.target:
             problems.append(f"{entry.where}: {entry.source} has two targets, {targets[entry.source]} and {entry.target}")
-    return FoldMap(targets), problems
+        targets.setdefault(entry.source, entry.target)
+    return FoldMap({source: target for source, target in targets.items()
+                    if not any(entry.source == source for entry in done)}), problems
 
 
 def is_within(target: str, source: str) -> bool:
     return source.startswith(target + ".")
 
 
-def problems(records: list[Record], before: Spec, after: Spec) -> list[str]:
+def problems(records: list, before: Spec, after: Spec, done: set = frozenset()) -> list[str]:
     """What makes the records unsafe to apply: each names the line to fix."""
     _, found = fold_map(records)
-    sources = {entry.source for record in records for entry in record.entries}
+    live = [entry for record in records for entry in record.entries if entry not in done]
+    sources = {entry.source for entry in live}
     for entry in (entry for record in records for entry in record.entries):
         said = f"{entry.where}: {entry.source} -> {entry.target}"
         if "." not in entry.source:
             found.append(f"{said}: a whole declaration is not folded")
-        elif not before.has(entry.source):
+        if entry.kind == "fold" and not is_within(entry.target, entry.source):
+            found.append(f"{said}: a fold names its nearest surviving ancestor; list a non-ancestor under moves")
+        if entry in done or "." not in entry.source:
+            continue
+        if not before.has(entry.source):
             found.append(f"{said}: the base names no such section")
         elif after.has(entry.source):
             found.append(f"{said}: the section is still there; a surviving section keeps its coordinate")
-        if entry.kind == "fold" and not is_within(entry.target, entry.source):
-            found.append(f"{said}: a fold names its nearest surviving ancestor; list a non-ancestor under moves")
         if entry.target in sources:
             found.append(f"{said}: the target is itself removed; give the final coordinate")
         elif not after.has(entry.target):
             found.append(f"{said}: the working tree has no such target")
+    for promise in (promise for record in records for promise in record.promises if not set(record.entries) & done):
+        said = f"{promise.where}: lead promise {promise.id}"
+        if not after.has(promise.id) or "." not in promise.id:
+            found.append(f"{said}: the working tree has no such section")
+        elif after.is_leaf(promise.id):
+            found.append(f"{said}: a leaf, which the coverage gate holds already; list only a parent that keeps children")
     return found
 
 
