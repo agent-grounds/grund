@@ -349,6 +349,20 @@ pub(super) const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
 // Sorted by coordinate; the fold pass appends a record's `lead-promises` here.
 #[rustfmt::skip]
 pub(super) const LEAD_PROMISES: &[LeadPromise<'static>] = &[
+    LeadPromise { id: "FS-check.3.17", reason: "a bare marked citation of a covered ID that the index holds no entry for, and that the next `grund fmt --write` would wrap, is `unlinked-index-entry`, once per ID at the first such citation in file order; nothing else in the index is reported there" },
+    LeadPromise { id: "FS-config-v2.reader.1", reason: "tables and keys are closed; the unknown-section, unknown-key and duplicate-key refusals at their line; every v1 table but `[workspace]`, and every discarded alias, is unknown in v2" },
+    LeadPromise { id: "FS-config-v2.reader.4", reason: "every value keeps its line, and rows keep the authored header order" },
+    LeadPromise { id: "FS-config-v2.reader.5", reason: "an array may span lines as one value at its key's line; one open at end of file is `unclosed array`" },
+    LeadPromise { id: "FS-declarations.checks.duplicate-section", reason: "only headings of one declaration's body collide, compared on canonical paths; a front-matter key that is a section, written twice in a kind with a `front-matter` field; a stub's headings judged in its target whether or not `[scan] include` reaches it, once; a duplicate in every heading-level mode, with section-heading-level judging only the first claimant" },
+    LeadPromise { id: "FS-distribution.4.6", reason: "no hook, CI job or release step asks a change for a changelog entry, nothing waits in the tree for a release, and the one record a change writes for one is a notice on its decision" },
+    LeadPromise { id: "FS-init.1", reason: "`<path>` may come before or after the flags (folded from 1.1)" },
+    LeadPromise { id: "FS-init.2.4", reason: "`grund.toml` is written only where neither discovery location holds a config; a `.agents/grund.toml` repository gets no bare twin (folded from 2.4.1); an existing config is never overwritten, not even with `--force`, and is reported `exists ` (folded from 2.4.2)" },
+    LeadPromise { id: "FS-init.4", reason: "a `--dry-run` preview exits `0` with paths pending (folded from 4.3)" },
+    LeadPromise { id: "FS-scan.path", reason: "every command but `init` discovers its configuration from its `<path>`" },
+    LeadPromise { id: "FS-scan.scope", reason: "`exclude` skips directory names at any depth, one path component each (version 1 `[scan] exclude`)" },
+    LeadPromise { id: "FS-scan.scope.extensions", reason: "an extension makes a file readable, not declarable" },
+    LeadPromise { id: "FS-scan.scope.homes", reason: "every kind home is scanned whether or not `include` names it; an absent home is silent; `scan = false` lists without scanning" },
+    LeadPromise { id: "FS-scan.scope.links", reason: "file links followed anywhere; directory links fenced at the canonical project root, scan roots included; workspace ownership boundary" },
     LeadPromise { id: "FS-show.2.1", reason: "a declaration with no lead prints nothing and exits 0 (folded 2.1.4)" },
     LeadPromise { id: "FS-show.2.1.2", reason: "an empty lead or map, and a selected section's map (folded 2.1.2.2, 2.1.2.3)" },
     LeadPromise { id: "FS-show.2.2", reason: "the default prints a section's heading and its lead (moved 2.1.5)" },
