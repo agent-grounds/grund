@@ -20,7 +20,7 @@ fn near_miss_repo(name: &str, heading: &str) -> crate::testing::TemporaryRoot {
     root
 }
 
-/// §FS-declarations.checks.declaration-near-miss.5: the classic stumble is an
+/// §FS-declarations.checks.declaration-near-miss: the classic stumble is an
 /// error that names the release it became one in.
 #[test]
 fn off_grammar_heading_missing_the_number_is_reported() {
@@ -103,7 +103,7 @@ fn an_off_grammar_declaration_and_its_exact_marked_citation_remain_readable() {
     );
 }
 
-/// §FS-declarations.checks.declaration-near-miss.1 read from the other side: a heading that *does* match
+/// §FS-declarations.checks.declaration-near-miss read from the other side: a heading that *does* match
 /// gets none.
 #[test]
 fn a_heading_that_matches_is_not_reported() {
@@ -169,7 +169,7 @@ fn off_grammar_kind_override_owns_its_near_miss_shape_and_message() {
     );
 }
 
-/// §FS-declarations.checks.declaration-near-miss.2: the declaration colon is the discriminator. The same
+/// §FS-declarations.checks.declaration-near-miss: the declaration colon is the discriminator. The same
 /// ID-shaped token opens the same heading in both halves here; the one written
 /// `<KIND>-…: <title>` is the near miss and the one without a colon is not.
 /// A line opening with an ID-shaped token and no colon is prose far more often
@@ -202,7 +202,7 @@ fn an_off_grammar_heading_without_a_colon_is_not_a_near_miss() {
     );
 }
 
-/// §FS-declarations.checks.declaration-near-miss.3: never in inline code, prose, or a fenced block. One fixture
+/// §FS-declarations.checks.declaration-near-miss: never in inline code, prose, or a fenced block. One fixture
 /// holds all three exempt contexts — a heading whose token is stopped by a
 /// backtick, a bare `<KIND>-<slug>: <title>` line in Markdown prose, and the
 /// same heading inside a fence — and none of them is read as a near miss,
@@ -223,7 +223,7 @@ fn an_off_grammar_heading_is_never_read_in_code_prose_or_a_fence() {
     );
 }
 
-/// §FS-declarations.checks.declaration-near-miss.6: no opt-out, no rewrite. `fmt` proposes nothing on a near
+/// §FS-declarations.checks.declaration-near-miss: no opt-out, no rewrite. `fmt` proposes nothing on a near
 /// miss and a write leaves the heading byte-identical, so migration stays the
 /// repository author's choice; and the one line-oriented directive grund has,
 /// the `fmt` off/on region, does not suppress the finding either — the position

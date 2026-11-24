@@ -1,10 +1,10 @@
-//! §FS-init.2.3.5.14.3 — the companion symlinks `grund init` mirrors into a
+//! §FS-init.2.3.5 — the companion symlinks `grund init` mirrors into a
 //! scoped directory. The e2e goldens under `tests/e2e/cases/init-scoped-guidance-*`
 //! pin the bytes and the report, but a tree golden reads through a symlink and
 //! cannot tell one from a copy, so this suite pins what only the file system
 //! shows: the mirrored companion is a symlink to its own directory's
 //! `AGENTS.md`, a standalone companion stays a file, and a symlink goes with the
-//! scoped file it points at (§FS-init.2.3.5.14.2, §FS-init.3.2).
+//! scoped file it points at (§FS-init.2.3.5, §FS-init.3.2).
 #![cfg(unix)]
 
 use std::fs;

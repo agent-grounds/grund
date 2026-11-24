@@ -145,11 +145,11 @@ class ClauseReadingTests(unittest.TestCase):
 
 
     def test_an_attribution_pair_yields_both_of_its_claims(self):
-        """§FS-distribution.4.2.3.1 — a verdict that moved names both of its
+        """§FS-distribution.4.2.3 — a verdict that moved names both of its
         releases on one line, so the line makes two claims and the bare
         `an error in <release>` is the landed one. These are the bytes two
         shipped rules print: the `local-section-citation` attribution
-        (§FS-check.3.24.1) and the index rule's."""
+        (§FS-check.3.24) and the index rule's."""
         for text, prior, landed in (
             (
                 "docs/FS-a.md:3: error: local section citation \u00a72; write \u00a7FS-a.2 "
@@ -175,7 +175,7 @@ class ClauseReadingTests(unittest.TestCase):
                 )
 
     def test_a_verb_in_front_of_the_phrase_keeps_the_tense_it_spells(self):
-        """§FS-distribution.4.2.3.1 — the bare clause is a substring of the two
+        """§FS-distribution.4.2.3 — the bare clause is a substring of the two
         named-error tenses, so it is read only where it opens a clause. A verb
         in front of it must still yield exactly one claim in the direction that
         verb spells, and a tense the vocabulary does not carry must not be read
@@ -297,7 +297,7 @@ class VerdictTests(unittest.TestCase):
     )
 
     def test_an_attribution_pair_may_not_ship_below_the_release_it_landed_in(self):
-        """§FS-distribution.4.2.3.1 — the floor is the later half of the pair.
+        """§FS-distribution.4.2.3 — the floor is the later half of the pair.
         A tree carrying this line says the verdict moved in 0.14.0, so cutting
         0.13.5 would ship a binary whose own diagnostics deny its version."""
         report = refused(self.PAIR, "0.13.5")
@@ -306,7 +306,7 @@ class VerdictTests(unittest.TestCase):
         self.assertTrue(any("an error in 0.14.0" in line for line in report))
 
     def test_the_index_rules_attribution_pair_sets_the_floor_too(self):
-        """§FS-distribution.4.2.3.1 — not one rule's wording: the index rule
+        """§FS-distribution.4.2.3 — not one rule's wording: the index rule
         prints the same shape, and has since 0.12.0."""
         report = refused(self.INDEX_PAIR, "0.11.1")
         self.assertTrue(report, "the `an error in 0.12.0` half set no floor")
@@ -371,7 +371,7 @@ class ThisRepositoryTests(unittest.TestCase):
 
     def test_no_line_still_promises_a_change_in_0_20_0(self):
         """§FS-distribution.4.2.2 — the two ramps 0.19.0 announced for 0.20.0 have
-        landed: `grund agent-setup-instructions` is gone (§FS-init.5.7) and a
+        landed: `grund agent-setup-instructions` is gone (§FS-init.5) and a
         citation-only image is no index entry (§FS-citations.checks.image-index-entry).
         A source line or golden that still promised a change at 0.20.0 would make the
         release guard refuse 0.20.0."""
@@ -385,13 +385,13 @@ class ThisRepositoryTests(unittest.TestCase):
     def test_the_landed_string_close_flip_holds_the_floor_at_0_22_0(self):
         """§FS-distribution.4.2.2 — a version-2 string that closes early, and an
         array's comma with no element before it, each became an error in 0.22.0
-        (§FS-config-v2.reader.6.refusal, §FS-config-v2.reader.5.commas.refusal), raising the message
+        (§FS-config-v2.reader.6, §FS-config-v2.reader.5.commas), raising the message
         floor above the 0.19.0 that excluded and ignored stub targets set when
         they became errors (§FS-declarations.stubs.target.3), independently of
         the shared floor. Historical landed clauses
         still refuse lower releases: the bare-`grund` removal (§FS-cli.4) and
         unreached-declaration flip (§FS-rules.checks.unreached-declaration)
-        refuse 0.15.x, the unlisted-`[workspace]` flip (§FS-check.3.29.14)
+        refuse 0.15.x, the unlisted-`[workspace]` flip (§FS-check.3.29)
         refuses 0.14.x, and the `prefix` removal refuses 0.12.x. The integrations
         retirement's lines raise the tree's floor further, and are judged apart.
         So is the off-format flip (§FS-check.checks.off-format-citation.1), whose
@@ -470,7 +470,7 @@ class ThisRepositoryTests(unittest.TestCase):
                 ), f"{path} must explicitly refuse a 0.18.1 release")
 
     def test_the_attribution_pairs_this_tree_ships_are_read(self):
-        """§FS-distribution.4.2.3.1 — two shipped rules print the pair, and two
+        """§FS-distribution.4.2.3 — two shipped rules print the pair, and two
         checked goldens pin those bytes, so the guard must see the landed half
         in both homes it scans. A clause wired to text nobody writes passes in
         silence."""

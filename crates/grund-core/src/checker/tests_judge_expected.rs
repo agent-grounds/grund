@@ -209,7 +209,7 @@ fn each_entrypoint_is_compared_against_its_own_bytes_and_a_probe_error_is_an_io_
 }
 
 /// An `AR` kind whose index enrolls the inline declaration in `src/bus.rs` by its
-/// canonical bare-ID source link (§FS-check.3.18.3).
+/// canonical bare-ID source link (§FS-check.3.18).
 fn external_index_repo(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(

@@ -1,5 +1,5 @@
 //! Every cell of the one unread-name reason, including hidden composition and admitted data
-//! (§FS-scan.checks.unread-scan-root.message, §FS-declarations.stubs.target.3).
+//! (§FS-scan.checks.unread-scan-root, §FS-declarations.stubs.target.3).
 
 use super::*;
 

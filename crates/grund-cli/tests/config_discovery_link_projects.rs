@@ -1,7 +1,7 @@
 //! Black-box: which workspace and which member a path through a directory link belongs
 //! to (§FS-config.1.5). `grund init` teaches the members of the workspace on the target's
 //! own parents, never those of a stranger workspace above the link's target
-//! (§FS-init.2.3.4.15.1), and a narrowed run under a member, written so, runs as that
+//! (§FS-init.2.3.4), and a narrowed run under a member, written so, runs as that
 //! member whether or not the member has a config of its own (§FS-scan.projects.discovery).
 #![cfg(unix)]
 
@@ -82,7 +82,7 @@ impl Run {
     }
 }
 
-/// §FS-init.2.3.4.15.1, §FS-config.1.5: `grund init m`, with `m` linked out of the
+/// §FS-init.2.3.4, §FS-config.1.5: `grund init m`, with `m` linked out of the
 /// workspace `ws` into a stranger workspace that also lists an `m`, finds `ws` on the
 /// target's own parents, so the written guidance never lists the stranger's member `q`.
 #[test]

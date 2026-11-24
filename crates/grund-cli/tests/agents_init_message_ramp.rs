@@ -65,7 +65,7 @@ fn agents_init_line(root: &Path) -> String {
 }
 
 /// The newest block version this binary supports, as `grund init --check` names
-/// it when it refuses a block newer than that: the one limit §FS-init.2.3.7.3.1 has
+/// it when it refuses a block newer than that: the one limit §FS-init.2.3.7 has
 /// `check` name too.
 fn init_supported_max() -> String {
     let root = fixture_root("unsupported-init");

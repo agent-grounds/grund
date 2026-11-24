@@ -52,7 +52,7 @@ fn init_updates_existing_agent_entrypoint_without_creating_agents_md() {
     );
 }
 
-/// §FS-init.2.1.2 / §FS-init.2.3.12.2: a workspace-selected companion symlink to
+/// §FS-init.2.1.2 / §FS-init.2.3.12: a workspace-selected companion symlink to
 /// AGENTS.md is covered by updating the canonical target, even before the
 /// target exists, rather than writing a companion-only block through it.
 /// §FS-init.2.1.1: the dangling symlink is still Claude's copy of that block,
@@ -99,14 +99,14 @@ fn init_workspace_symlinked_alias_writes_canonical_target() {
     );
 }
 
-/// §FS-init.3.1: `.github/` is generic GitHub metadata, so it is not the
+/// §FS-init.2.1.2: `.github/` is generic GitHub metadata, so it is not the
 /// unambiguous signal `.github/copilot-instructions.md` needs — the fixture has
 /// the directory and the file is still never created.
 #[test]
 fn init_creates_agent_aliases_when_agent_workspaces_exist() {
-    // §FS-init.2.1.2 / §FS-init.2.3.12.1: missing neutral companion aliases are created
+    // §FS-init.2.1.2 / §FS-init.2.3.12: missing neutral companion aliases are created
     // only when their owning agent-specific workspace already exists — one per
-    // agent (§FS-init.2.1.1.2), so `.claude/` yields `CLAUDE.md` alone.
+    // agent (§FS-init.2.1.1), so `.claude/` yields `CLAUDE.md` alone.
     let target = workdir("init_creates_agent_aliases_when_agent_workspaces_exist");
     fs::create_dir_all(target.join(".claude")).expect("create .claude");
     fs::create_dir_all(target.join(".gemini")).expect("create .gemini");
@@ -167,7 +167,7 @@ fn init_creates_agent_aliases_when_agent_workspaces_exist() {
     );
 }
 
-/// §FS-init.2.1.2 / §FS-init.2.3.12.1: a present `.cursor/` workspace triggers
+/// §FS-init.2.1.2 / §FS-init.2.3.12: a present `.cursor/` workspace triggers
 /// creation of `.cursor/rules/grund.mdc` in automatic mode — the same
 /// pattern that `.claude/` and `.gemini/` use. The legacy `.cursorrules`
 /// is never auto-created.
@@ -201,12 +201,12 @@ fn init_cursor_workspace_creates_cursor_rules_alias() {
     );
 }
 
-/// §FS-init.2.1.2 / §FS-init.2.3.12.1: `.rules` is too generic a filename to
+/// §FS-init.2.1.2 / §FS-init.2.3.12: `.rules` is too generic a filename to
 /// attribute to Zed by existence alone — automatic mode must NOT pick it
 /// up. Only an explicit `--zed` flag, or a `.zed/` workspace directory,
 /// creates or updates `.rules`.
 ///
-/// §FS-init.3.1: that is the second ambiguous companion of the guarantee — the
+/// §FS-init.2.1.2: that is the second ambiguous companion of the guarantee — the
 /// signal has to be unambiguous, and a bare `.rules` is not one.
 #[test]
 fn init_zed_rules_is_only_workspace_or_flag_gated() {
@@ -330,7 +330,7 @@ fn init_preserves_lone_override_entrypoint_without_creating_agents_md() {
         "AGENTS.override.md should keep existing notes and append the managed block:\n{override_contents}"
     );
 }
-/// §FS-init.2.3.10.2: an entrypoint whose managed block is newer than this
+/// §FS-init.2.3.10: an entrypoint whose managed block is newer than this
 /// binary supports stops the run at exit `2` and leaves the file byte-for-byte
 /// as it was — a downgrade would silently replace a block written by a grund
 /// that knows more than this one.

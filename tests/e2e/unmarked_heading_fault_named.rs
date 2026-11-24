@@ -1,10 +1,10 @@
 //! Black-box: a heading whose path is already written in place, but that lacks only a title, has
 //! a `_` in a named component, or puts a `:` after a purely numeric path, is told that fault and
 //! shown the heading that repairs it with its own path kept
-//! (§FS-declarations.checks.unmarked-heading.2.3), after the unchanged message of
-//! §FS-declarations.checks.unmarked-heading.2. The controls hold what must not move: a titled,
+//! (§FS-declarations.checks.unmarked-heading), after the unchanged message of
+//! §FS-declarations.checks.unmarked-heading. The controls hold what must not move: a titled,
 //! hyphenated heading draws nothing, a dotted heading keeps its relative-form clause alone
-//! (§FS-declarations.checks.unmarked-heading.2.1), and a heading the guard turns away keeps the
+//! (§FS-declarations.checks.unmarked-heading), and a heading the guard turns away keeps the
 //! message exactly as before.
 
 use std::fs;
@@ -145,7 +145,7 @@ impl Drop for Tree {
     }
 }
 
-/// The message §FS-declarations.checks.unmarked-heading.2 fixes today, byte for byte.
+/// The message §FS-declarations.checks.unmarked-heading fixes today, byte for byte.
 fn prefix(id: &str, suggested: &str, coordinate: &str) -> String {
     format!(
         "unmarked heading inside {id}; number it ({suggested}) as {id}.{coordinate}, declare an ID, \
@@ -281,7 +281,7 @@ fn a_titled_hyphenated_heading_draws_no_finding() {
     );
 }
 
-/// A control: a dotted heading is §FS-declarations.checks.unmarked-heading.2.1's, and its message
+/// A control: a dotted heading is §FS-declarations.checks.unmarked-heading's, and its message
 /// ends at the relative-form clause, with no fault clause after it.
 #[test]
 fn a_dotted_heading_keeps_only_its_relative_clause() {
@@ -301,7 +301,7 @@ fn a_dotted_heading_keeps_only_its_relative_clause() {
 }
 
 /// A control: where the shown heading would not declare a recognized section, the guard of
-/// §FS-declarations.checks.unmarked-heading.2.3 leaves the message exactly as it is today.
+/// §FS-declarations.checks.unmarked-heading leaves the message exactly as it is today.
 #[test]
 fn a_repair_that_would_not_declare_a_section_is_not_shown() {
     let findings = Tree::new("guard").findings();
@@ -330,7 +330,7 @@ fn a_repair_that_would_not_declare_a_section_is_not_shown() {
 
 /// agent-grounds/grund#1434: `## 1: Embedded` is told the `:` is the fault and shown the `.` in
 /// its place, path and title kept, where "number it" alone stacks a fresh number in front of them
-/// (§FS-declarations.checks.unmarked-heading.2.3).
+/// (§FS-declarations.checks.unmarked-heading).
 #[test]
 fn a_numeric_path_with_a_colon_is_told_it_takes_a_period() {
     let findings = Tree::with("colon", COLON_FILES).findings();
@@ -345,7 +345,7 @@ fn a_numeric_path_with_a_colon_is_told_it_takes_a_period() {
 }
 
 /// agent-grounds/grund#1434: the same shape nested, `### 1.2: Title` under a declared `## 1. One`,
-/// is told the same and shown `### 1.2. Title` (§FS-declarations.checks.unmarked-heading.2.3).
+/// is told the same and shown `### 1.2. Title` (§FS-declarations.checks.unmarked-heading).
 #[test]
 fn a_nested_numeric_path_with_a_colon_is_told_it_takes_a_period() {
     let findings = Tree::with("colon-nested", COLON_FILES).findings();
@@ -360,7 +360,7 @@ fn a_nested_numeric_path_with_a_colon_is_told_it_takes_a_period() {
 }
 
 /// agent-grounds/grund#1434: `## 1:` has both faults, the `:` and the missing title, and is told
-/// both in one clause (§FS-declarations.checks.unmarked-heading.2.3).
+/// both in one clause (§FS-declarations.checks.unmarked-heading).
 #[test]
 fn a_numeric_path_with_a_colon_and_no_title_is_told_both_faults() {
     let findings = Tree::with("colon-bare", COLON_FILES).findings();
@@ -399,7 +399,7 @@ fn a_numeric_path_with_a_colon_is_still_refused() {
 }
 
 /// A control: a dotted heading with a `:` after its number is
-/// §FS-declarations.checks.unmarked-heading.2.1's, and its message ends at the relative-form
+/// §FS-declarations.checks.unmarked-heading's, and its message ends at the relative-form
 /// clause, with no second clause after it.
 #[test]
 fn a_dotted_number_with_a_colon_keeps_only_its_relative_clause() {
@@ -416,7 +416,7 @@ fn a_dotted_number_with_a_colon_keeps_only_its_relative_clause() {
 
 /// A control: where the shown heading would not declare a recognized section, a numeric path
 /// with a colon keeps the message exactly as it is today, under the guard of
-/// §FS-declarations.checks.unmarked-heading.2.3.
+/// §FS-declarations.checks.unmarked-heading.
 #[test]
 fn a_numeric_colon_repair_that_would_not_declare_a_section_is_not_shown() {
     let findings = Tree::with("colon-guard", COLON_FILES).findings();

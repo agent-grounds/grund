@@ -1,4 +1,4 @@
-//! Test module: a prohibition's targets join with "or" (§FS-init.2.3.5.4,
+//! Test module: a prohibition's targets join with "or" (§FS-init.2.3.5,
 //! §DF-prohibition-targets-join-with-or). Each entry of a `must-not` or `should-not` list is
 //! banned on its own, so "and" would read as forbidding only the pair; the case
 //! is this repository's own `README.md` row (agent-grounds/grund#151).

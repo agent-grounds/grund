@@ -126,12 +126,12 @@ fn agent_setup_instructions_name_the_ordered_adoption_workflow() {
     );
 }
 
-/// §FS-init.5.2: adopting a docs-heavy repository is a choice made *before* any
+/// §FS-init.5.1: adopting a docs-heavy repository is a choice made *before* any
 /// write — the canonical artifact types are shown beside what the repository
 /// already has, the three adoption models are offered, and the recommended
 /// `grund init` form reaches for `--scaffold` only where a scaffold is wanted,
 /// and the existing-structure model starts from `--template=none`
-/// (§FS-init.1.6.2, §DF-skill-init-existing-specs.3).
+/// (§FS-init.1.6, §DF-skill-init-existing-specs.3).
 #[test]
 fn agent_setup_instructions_offer_the_three_adoption_models_before_any_write() {
     let text = AGENT_SETUP_INSTRUCTIONS;
@@ -187,7 +187,7 @@ fn embedded_templates_are_lf_canonical() {
     }
 }
 
-/// §FS-init.2.3.8.1: the `[id].section_separator` is one of the things the
+/// §FS-init.2.3.8: the `[id].section_separator` is one of the things the
 /// effective config fills into the block rather than the `vN` text fixing — so
 /// a repository that separates sections with `#` reads its own separator back
 /// out of the rendered examples.
@@ -251,7 +251,7 @@ fn agents_update_does_not_append_current_block_twice() {
     assert_eq!(updated.matches(current_marker()).count(), 1);
 }
 
-/// §FS-init.2.3.10.1: a file already holding a supported block is re-rendered
+/// §FS-init.2.3.10: a file already holding a supported block is re-rendered
 /// and, where the render differs from the managed region on disk, only those
 /// bytes are replaced — the content before the block stays byte-identical and
 /// the run reports `Updated`, without `--force`.
@@ -280,7 +280,7 @@ fn agents_update_rewrites_current_block_from_rendered_template() {
 /// preserved byte-for-byte on an update that is not a `--force` rewrite.
 #[test]
 fn agents_update_keeps_current_block_in_middle_position() {
-    // §FS-init.2.3.1 / §FS-init.2.2: a block already current and already
+    // §FS-init.2.3.10 / §FS-init.2.2: a block already current and already
     // sitting between user-authored sections is left byte-for-byte untouched
     // (`Unchanged` → `exists `) — nothing around it moves, nothing is rewritten.
     let existing = format!("# Existing agents\n\n{}\n# Local notes\n", current_block());
@@ -299,8 +299,8 @@ fn agents_update_keeps_current_block_in_middle_position() {
 
 #[test]
 fn agents_update_handles_crlf_line_endings() {
-    // §FS-init.2.3.2: a stale CRLF block (same version, different body) is rewritten with
-    // the surrounding CRLF kept verbatim; §FS-init.2.3.9.2: the labelled heading opens a
+    // §FS-init.2.3.10: a stale CRLF block (same version, different body) is rewritten with
+    // the surrounding CRLF kept verbatim; §FS-init.2.3.9: the labelled heading opens a
     // block only inside the delimiters.
     let existing = format!(
         "# Existing agents\r\n\r\n<!-- BEGIN GRUND MANAGED BLOCK -->\r\n{}\r\n\r\n\
@@ -323,7 +323,7 @@ fn agents_update_handles_crlf_line_endings() {
     assert!(!updated.contains("stale body line"));
 }
 
-/// §FS-init.2.3.9.2: a v3-and-earlier block predates the delimiters, so the H2
+/// §FS-init.2.3.9: a v3-and-earlier block predates the delimiters, so the H2
 /// heading opens it and the next H1/H2 closes it. `init` still recognizes that
 /// form and migrates it to the delimited one in place, reported `Updated`.
 #[test]
@@ -359,7 +359,7 @@ fn agents_update_preserves_non_heading_content_after_delimited_block() {
     assert!(updated.contains("<!-- rhei:begin -->\nother tool's region\n<!-- rhei:end -->\n"));
 }
 
-/// §FS-init.2.3.10.2: an entrypoint carrying a block version this binary does
+/// §FS-init.2.3.10: an entrypoint carrying a block version this binary does
 /// not support is a refusal, not a downgrade — the splice never runs, so the
 /// caller has the original text to leave on disk unchanged, and the message
 /// names the version it found beside the one it supports.
@@ -442,7 +442,7 @@ fn check_reports_malformed_agents_block() {
     );
 }
 
-/// §FS-init.2.3.8.2: the worked example citation is written in the escaped
+/// §FS-init.2.3.8: the worked example citation is written in the escaped
 /// illustration form, never as a live citation — its ID is deliberately not a
 /// declaration of the host repo, so a live marker would dangle.
 #[test]
@@ -461,7 +461,7 @@ fn rendered_block_citation_example_is_escaped() {
     );
 }
 
-/// §FS-check.1.1.9 and §FS-init.2.3.8.2 read together: the managed block
+/// §FS-check.1.1.9 and §FS-init.2.3.8 read together: the managed block
 /// `grund init` writes must carry no *recognized* citation, so the scaffold
 /// lands clean in a repository running the compatibility mode
 /// `[reference] strict = false` (§FS-check.1.1) as well as in a strict one.
@@ -515,7 +515,7 @@ fn rendered_block_holds_no_citation_under_non_strict_scanning() {
         assert!(
             !findings.escaped_citations.is_empty(),
             "the block must still teach the escape by using it \
-             (§FS-init.2.3.8.2), so the scan must record at least one \
+             (§FS-init.2.3.8), so the scan must record at least one \
              escaped illustration"
         );
     }

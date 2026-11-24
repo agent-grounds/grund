@@ -1,7 +1,7 @@
 //! An ignore file the walk cannot parse is one failure of the run, whichever walk root met it
 //! (§FS-check.2.4, §FS-check.2.4.2): a project walked only from the directory that holds the file
 //! reports it and exits `2` exactly as one whose kind home sits below the file does, unless the
-//! run does not apply the file (§FS-scan.scope.ignore-files.unparsed). The trees are built in the
+//! run does not apply the file (§FS-scan.scope.ignore-files). The trees are built in the
 //! temp directory, because a malformed `.ignore` committed to this repository would be read by
 //! every other tool that honours ignore files.
 

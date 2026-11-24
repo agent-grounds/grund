@@ -1,6 +1,6 @@
 //! Black-box: each home rule judges each spelling at its own path, and a value source linked
 //! into a second home names both spellings once (§FS-scan.identity.findings.place,
-//! §FS-values.2.3, §FS-declarations.checks.misplaced-declaration.2,
+//! §FS-values.2.3, §FS-declarations.checks.misplaced-declaration,
 //! §FS-config-v2.schema.places.ownership, §FS-config.3.9.2). This is #1216's reproducer.
 #![cfg(unix)]
 
@@ -261,7 +261,7 @@ fn a_second_home_means_a_misplaced_text_file_but_a_duplicate_value_source() {
 }
 
 /// Guard: a single-file kind compares physically, so a link to its document from elsewhere is
-/// that document, not a second one (§FS-declarations.checks.misplaced-declaration.1).
+/// that document, not a second one (§FS-declarations.checks.misplaced-declaration).
 /// Three names read as two do: in one home one declaration at the name listed first, across three
 /// homes one duplicate naming each once and a wrong home at every name but the right one.
 #[test]

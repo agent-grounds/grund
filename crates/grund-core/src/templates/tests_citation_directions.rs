@@ -47,11 +47,11 @@ fn render_shared(name: &str, rules: &str) -> String {
     render(name, &format!("{KINDS}{rules}"))
 }
 
-/// §FS-init.2.3.5.2: three units sit under one verb — a declaration, a file in
+/// §FS-init.2.3.5: three units sit under one verb — a declaration, a file in
 /// a home, and a source file that already cites something — so every bullet
 /// says which one it is.
 ///
-/// §FS-init.2.3.5.2.1 is how the last two are spelled: a non-citable kind is
+/// §FS-init.2.3.5 is how the last two are spelled: a non-citable kind is
 /// named by its place (`skills/`, `docs/runbook.md`), because its name is a
 /// config handle no citation can carry, while the homeless kind has no place,
 /// keeps its name, and narrows its subject with *that cites anything*.
@@ -84,7 +84,7 @@ should = ["FS"]
     );
     // A single-file home is one file, so "each file in" would promise a
     // directory that is not there. Neither row grounds, so both subjects are
-    // narrowed (§FS-init.2.3.5.2.2).
+    // narrowed (§FS-init.2.3.5).
     assert!(
         section.contains("- The file **docs/runbook.md**, if it cites anything, must cite FS."),
         "{section}"
@@ -128,7 +128,7 @@ should = ["FS"]
     assert!(fs < code, "the homeless kind closes the list: {section}");
 }
 
-/// §FS-init.2.3.5.4: `must = ["FS|GOAL", "AR"]` is *(FS or GOAL) and AR*, and
+/// §FS-init.2.3.5: `must = ["FS|GOAL", "AR"]` is *(FS or GOAL) and AR*, and
 /// the ungrouped prose said the opposite. A conjunction of singletons needs
 /// no parentheses, and one entry alone is never parenthesised.
 #[test]
@@ -155,7 +155,7 @@ should = ["FS|GOAL"]
     assert!(section.contains("should cite FS or GOAL."), "{section}");
 }
 
-/// §FS-init.2.3.5.4: three alternatives take the Oxford comma, so a three-way
+/// §FS-init.2.3.5: three alternatives take the Oxford comma, so a three-way
 /// rule cannot be read as a two-way one.
 #[test]
 fn three_alternatives_take_the_oxford_comma() {
@@ -166,7 +166,7 @@ fn three_alternatives_take_the_oxford_comma() {
     assert!(section.contains("must cite FS, AR, or RM."), "{section}");
 }
 
-/// §FS-init.2.3.5.4: a pinned alias is spelled the way a citation is spelled;
+/// §FS-init.2.3.5: a pinned alias is spelled the way a citation is spelled;
 /// `*/K` is rule grammar that is never a citation (§FS-config.3.9.3), so it
 /// is said in words instead of leaked into the entrypoint.
 #[test]
@@ -193,7 +193,7 @@ should-not = ["*/AR"]
     );
 }
 
-/// §FS-init.2.3.5.5: a closed per-kind default plus a `may` list is one rule,
+/// §FS-init.2.3.5: a closed per-kind default plus a `may` list is one rule,
 /// "only these", and takes one clause rather than a permission followed by a
 /// prohibition of everything else.
 #[test]
@@ -216,7 +216,7 @@ may = ["FS|GOAL"]
     );
 }
 
-/// §FS-init.2.3.5.3: the five clauses run `must`, `should`, `may`,
+/// §FS-init.2.3.5: the five clauses run `must`, `should`, `may`,
 /// `must-not`, `should-not`, joined by "; " — one order, so two repositories
 /// reading one config read one bullet.
 #[test]
@@ -265,7 +265,7 @@ may = ["GOAL"]
     );
 }
 
-/// §FS-init.2.3.5.5: a `should-not` per-kind default discourages the rest; a
+/// §FS-init.2.3.5: a `should-not` per-kind default discourages the rest; a
 /// per-kind default with no list at all has nothing to be "else" to.
 #[test]
 fn a_discouraging_default_and_a_default_with_no_lists() {
@@ -360,7 +360,7 @@ must-not = ["GOAL"]
     );
 }
 
-/// §DF-directions-render.2.4 / §FS-init.2.3.5.6: the closing line reports the
+/// §DF-directions-render.2.4 / §FS-init.2.3.5: the closing line reports the
 /// *global* default alone, and only `must-not` / `should-not` close anything —
 /// a `must` or `should` default invents no obligation and forbids nothing
 /// (§FS-config.3.9.4). All three wordings are pinned here, because the open
@@ -409,10 +409,10 @@ fn the_closing_line_reports_the_global_default() {
     );
 }
 
-/// §FS-init.2.3.5.1: the opening paragraph is the legend plus the grounding
-/// sentence. §FS-init.2.3.5.7.1: the sentence distinguishes citing from
+/// §FS-init.2.3.5: the opening paragraph is the legend plus the grounding
+/// sentence. §FS-init.2.3.5: the sentence distinguishes citing from
 /// declaring (§FS-check.3.6) and extends with the walked non-citable homes,
-/// whose files can only cite (§FS-declarations.checks.misplaced-declaration.3); an
+/// whose files can only cite (§FS-declarations.checks.misplaced-declaration); an
 /// unwalked home is left out because nothing in it is scanned.
 #[test]
 fn the_legend_and_the_grounding_sentence_open_the_section() {
@@ -446,7 +446,7 @@ should = ["FS"]
     );
 }
 
-/// §FS-init.2.3.5.7: with no walked non-citable home there is no second clause,
+/// §FS-init.2.3.5: with no walked non-citable home there is no second clause,
 /// and with the key off there is no grounding sentence at all.
 #[test]
 fn grounding_shrinks_to_the_source_file_rule_and_disappears_when_off() {
@@ -472,7 +472,7 @@ fn grounding_shrinks_to_the_source_file_rule_and_disappears_when_off() {
     );
 }
 
-/// §FS-init.2.3.5.1: a kind with no rule has no bullet, and the section never
+/// §FS-init.2.3.5: a kind with no rule has no bullet, and the section never
 /// ends with a newline — the template's placeholder supplies the one that
 /// keeps `grund init` idempotent.
 #[test]

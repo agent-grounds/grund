@@ -41,7 +41,7 @@ fn init(target: &Path, flags: &[&str]) -> (bool, String) {
     )
 }
 
-/// §FS-init.1.7: `--docs` was the deprecated spelling of `--scaffold` and is an
+/// §FS-init.1: `--docs` was the deprecated spelling of `--scaffold` and is an
 /// unknown flag from 0.19.0: refused with exit 2 before anything is written, while
 /// `--scaffold` lays the starter files and warns about nothing.
 #[test]
@@ -66,9 +66,9 @@ fn docs_is_an_unknown_flag_and_scaffold_lays_the_files() {
     assert!(tree(&docs).is_empty(), "a refused flag writes nothing");
 }
 
-/// §FS-init.1.6.2: a fresh `none` tree passes `grund check` and `grund init
+/// §FS-init.1.6: a fresh `none` tree passes `grund check` and `grund init
 /// --check` unmodified, before any kind is declared; the check still teaches the
-/// open step, since a config with no kind is never a complete setup (§FS-init.2.2.2.2).
+/// open step, since a config with no kind is never a complete setup (§FS-init.2.2.2).
 #[test]
 fn a_fresh_none_tree_passes_check_and_init_check() {
     let target = workdir("init_template_none_passes_its_gates");
@@ -96,7 +96,7 @@ fn a_fresh_none_tree_passes_check_and_init_check() {
     );
 }
 
-/// §FS-init.1.6.2, §FS-init.2.2.2.2: once the `none` config declares a first
+/// §FS-init.1.6, §FS-init.2.2.2: once the `none` config declares a first
 /// kind, `init` renders it into the block and the guidance returns to the FS
 /// steps — the hand-off the template's comment and block both teach.
 #[test]
@@ -123,7 +123,7 @@ fn a_first_kind_replaces_the_empty_set() {
     );
 }
 
-/// §FS-init.2.4.10, §FS-init-fixtures.2: a fresh `software-development`
+/// §FS-init.2.4.3, §FS-init-fixtures.2: a fresh `software-development`
 /// scaffold declares `REQ` in `docs/requirements/` beside the `FS` row in
 /// `docs/functional-spec/`, and passes both of its gates.
 #[test]
@@ -148,7 +148,7 @@ fn a_fresh_scaffold_declares_req_in_docs_requirements() {
                   [presentation.kinds.REQ]\n\
                   title = \"Hard requirements: what the project must never break\"\n";
     assert!(config.contains(titles), "{config}");
-    // §FS-init.2.4.5: no commented citation ruleset; no direction is enforced.
+    // §FS-init.2.4.3: no commented citation ruleset; no direction is enforced.
     assert!(!config.contains("citations"), "{config}");
 
     let block = fs::read_to_string(target.join("AGENTS.md")).unwrap();

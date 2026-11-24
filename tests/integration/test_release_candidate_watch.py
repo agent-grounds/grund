@@ -1,4 +1,4 @@
-"""§FS-distribution.4.4.1.1 — the watch on a round's runs gives a round up the
+"""§FS-distribution.4.4.1 — the watch on a round's runs gives a round up the
 moment `main` moves, and the publisher is held to the commit those runs passed.
 
 `scripts/candidate_runs.py` runs here against `release_queue_forge.py`, the
@@ -106,7 +106,7 @@ class WatchTests(unittest.TestCase):
         self.assertTrue(all(run.get("cancelled") for run in self.after()), self.after())
 
     def test_a_failed_run_cancels_the_others_still_going(self):
-        """§FS-distribution.4.4.1.4: a failed run cancels the rest."""
+        """§FS-distribution.4.4.1: a failed run cancels the rest."""
         self.save(fail={"1": "ci.yml"})
         result = self.watch()
         self.assertEqual(1, result.returncode, result.stderr)
@@ -114,7 +114,7 @@ class WatchTests(unittest.TestCase):
         self.assertNoneGoing(result)
 
     def test_a_failed_run_wins_over_a_move_in_the_same_poll(self):
-        """§FS-distribution.4.4.1.4: a failure wins over a move seen on the same look."""
+        """§FS-distribution.4.4.1: a failure wins over a move seen on the same look."""
         git("--git-dir", str(self.origin), "update-ref", "refs/heads/main", self.b, env=self.env)
         self.save(fail={"1": "ci.yml"})
         result = self.watch("--main", self.a)
@@ -123,7 +123,7 @@ class WatchTests(unittest.TestCase):
         self.assertNoneGoing(result)
 
     def test_a_cancel_refused_on_a_run_that_just_finished_ends_nothing(self):
-        """§FS-distribution.4.4.1.4: a cancel refused on a just-finished run ends nothing."""
+        """§FS-distribution.4.4.1: a cancel refused on a just-finished run ends nothing."""
         self.save(move={"1": self.b}, finish_before_cancel=True)
         result = self.watch("--main", self.a)
         self.assertEqual(3, result.returncode, result.stderr)

@@ -1,7 +1,7 @@
 //! CLI contracts for declaration-local numeric citations across check, refs, and
 //! cover text/JSON surfaces (§FS-check.3.24, §FS-refs.2, §FS-cover.2), with
 //! deterministic finding order (§FS-errors.4.1), and the remedy each finding names
-//! clearing its site when it is followed (§FS-check.3.24.3).
+//! clearing its site when it is followed (§FS-check.3.24).
 
 #[path = "support/temporary_root.rs"]
 mod temporary_root;
@@ -76,8 +76,8 @@ fn check_text_reports_owned_missing_unsupported_and_ownerless_local_forms() {
             "docs/FS-a.md:3: error: local section citation \u{a7}2; write \u{a7}FS-a.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
             "docs/FS-a.md:4: error: local section citation \u{a7}2.1; write \u{a7}FS-a.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
             // `FS-a` has no section 9.9, so the finding says so and offers the
-            // escape (§FS-check.3.24.3); §FS-fmt.2.4.6 refuses the site, so
-            // §FS-check.3.24.1 withholds the command clause.
+            // escape (§FS-check.3.24); §FS-fmt.2.4.6 refuses the site, so
+            // §FS-check.3.24 withholds the command clause.
             "docs/FS-a.md:5: error: local section citation \u{a7}9.9; FS-a has no section 9.9, so write a full citation or <§>9.9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:5: error: missing section FS-a.9.9; write <§> before it to show the shape without citing it\n",
             "docs/FS-a.md:6: error: unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
@@ -186,7 +186,7 @@ fn the_written_remedy(message: &str) -> String {
         .to_string()
 }
 
-/// §FS-check.3.24.3, followed the way an agent follows it: every
+/// §FS-check.3.24, followed the way an agent follows it: every
 /// `local-section-citation` finding's own remedy is written over its token, and
 /// the tree is then clean. The fixture is agent-grounds/grund#515's shape — prose
 /// naming sections of other files inside a declaration whose own sections stop
@@ -257,7 +257,7 @@ fn following_each_local_section_findings_remedy_clears_its_site() {
     assert_eq!(
         (after.status.code(), stdout(&after).as_str()),
         (Some(0), "success\n"),
-        "§FS-check.3.24.3: each finding's own remedy clears its site; followed {followed:?}"
+        "§FS-check.3.24: each finding's own remedy clears its site; followed {followed:?}"
     );
     let _ = fs::remove_dir_all(root);
 }

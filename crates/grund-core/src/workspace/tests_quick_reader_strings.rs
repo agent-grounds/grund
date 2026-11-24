@@ -1,7 +1,7 @@
 //! Test module: the readers that read one key of a config without loading it pass over a
 //! string that closes early, which the full load refuses from grund 0.22.0, as they pass
 //! over any value they cannot read, and record no finding of their own
-//! (§FS-config-v2.reader.6.refusal).
+//! (§FS-config-v2.reader.6).
 
 use std::path::Path;
 
@@ -50,7 +50,7 @@ fn the_ancestor_members_pass_over_a_value_refused_before() {
 
 /// A `"""` string a line break runs through makes its line the array's open line, so the
 /// climb reads `members` as no list exactly where the full load refuses it as an unclosed
-/// array (§FS-config-v2.reader.5.strings.refusal, §FS-workspace.6.1.7.5).
+/// array (§FS-config-v2.reader.5.strings, §FS-workspace.6.1.7.5).
 #[test]
 fn the_ancestor_members_are_no_list_where_a_triple_quoted_string_runs_over_a_break() {
     let root = test_root("quick-reader-strings-members-over-a-break");

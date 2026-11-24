@@ -16,7 +16,7 @@
   },
   "facts": {
     "point": "§FS-cover.3.2",
-    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict by default, default kinds and scan, `[id] named_sections = true`); FS-001-alpha.md with a preamble and FS-001-alpha (body to the end of the file) holding a lead, the named section terms and the numbered section 1, one marked §FS-002-beta in each of the four places, so its enclosing declaration and section are none, the declaration, terms and 1 (§FS-cover.3.2); FS-002-beta.md; FS-001-alpha is cited nowhere (§FS-check.4.1) and the FS folder has no README.md index (§FS-check.3.18.7). Cross-reference emission, on by default (§FS-config.3.7), wraps each marked citation to FS-002-beta's heading (§FS-fmt.6.2.1).",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict by default, default kinds and scan, `[id] named_sections = true`); FS-001-alpha.md with a preamble and FS-001-alpha (body to the end of the file) holding a lead, the named section terms and the numbered section 1, one marked §FS-002-beta in each of the four places, so its enclosing declaration and section are none, the declaration, terms and 1 (§FS-cover.3.2); FS-002-beta.md; FS-001-alpha is cited nowhere (§FS-check.4.1) and the FS folder has no README.md index (§FS-check.3.18). Cross-reference emission, on by default (§FS-config.3.7), wraps each marked citation to FS-002-beta's heading (§FS-fmt.6.2.1).",
     "scanned": ["docs/functional-spec/FS-001-alpha.md","docs/functional-spec/FS-002-beta.md"],
     "declarations": [
       {"id":"FS-001-alpha","kind":"FS","file":"docs/functional-spec/FS-001-alpha.md","heading":"FS-001-alpha: Alpha","title":"Alpha","body":[6,15],"anchor":"fs-001-alpha-alpha"},

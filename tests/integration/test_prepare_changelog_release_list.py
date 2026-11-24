@@ -4,7 +4,7 @@ previous tag itself: `prepare` asks the forge about every commit in the range
 newest first by git (§FS-distribution.4.6.2), adds the compatibility notices the
 decisions gained since the tag (§FS-distribution.4.6.4), rotates the former inline
 release into its archive with a counted summary (§FS-distribution.4.5), gets
-past a forge call that fails once (§FS-distribution.4.6.3.1), and otherwise
+past a forge call that fails once (§FS-distribution.4.6.3), and otherwise
 refuses and leaves the tree as it was (§FS-distribution.4.6.3).
 
 Each case runs the script the way the release workflows do, in a throwaway
@@ -172,7 +172,7 @@ class EndToEndTests(ReleaseHistory, unittest.TestCase):
 
 
 class RecoveryTests(ReleaseHistory, unittest.TestCase):
-    """§FS-distribution.4.6.3.1: a forge call that fails once is asked again, and
+    """§FS-distribution.4.6.3: a forge call that fails once is asked again, and
     the release is the one an answer on the first attempt would have written."""
 
     def test_prepare_gets_past_a_commit_the_forge_fails_once_for(self) -> None:
@@ -288,14 +288,14 @@ class RefusalTests(ReleaseHistory, unittest.TestCase):
         self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE, gh=False), "gh")
 
     def test_a_forge_call_that_fails_is_refused(self) -> None:
-        """§FS-distribution.4.6.3.1: refused once its three attempts have failed."""
+        """§FS-distribution.4.6.3: refused once its three attempts have failed."""
         self._history()
         self.answers["fail"][self.glob[0]] = "Server Error"
         self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE), self.glob[0][:7])
         self.assertEqual(3, self._calls(self.glob[0]))
 
     def test_a_commit_the_forge_does_not_answer_for_is_refused(self) -> None:
-        """§FS-distribution.4.6.3.1: the forge's 422 is a failed attempt like any other."""
+        """§FS-distribution.4.6.3: the forge's 422 is a failed attempt like any other."""
         self._history()
         del self.answers["commits"][self.stray]
         self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE), self.stray[:7])

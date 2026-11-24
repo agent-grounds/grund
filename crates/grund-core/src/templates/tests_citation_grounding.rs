@@ -1,5 +1,5 @@
 //! Test module: the Citation directions section claims only the grounding
-//! `grund check` enforces (§FS-init.2.3.5.2.2, §FS-init.2.3.5.7). A non-citable
+//! `grund check` enforces (§FS-init.2.3.5). A non-citable
 //! home whose row grounds nothing narrows its bullet and names the setting that
 //! closes the hole; a home whose own row grounds keeps the unnarrowed bullet and
 //! is named in the grounding sentence. The configs are agent-grounds/grund#908's.
@@ -48,7 +48,7 @@ fn e2e_grounding_only() -> String {
     format!("{CITATION_LEVEL_LEGEND} Every file under tests/e2e/ must cite one.\n")
 }
 
-/// §FS-init.2.3.5.2.2: the ticket's config — a `must` rule and no grounding —
+/// §FS-init.2.3.5: the ticket's config — a `must` rule and no grounding —
 /// passes a file in `tests/e2e/` that cites nothing, so the bullet says so and
 /// names the v2 ladder that makes it a finding; no grounding sentence renders.
 #[test]
@@ -67,7 +67,7 @@ fn a_v2_home_that_grounds_nothing_narrows_its_bullet_and_names_the_ladder() {
     assert!(!section.contains("must cite one"), "{section}");
 }
 
-/// §FS-init.2.3.5.7: a row's own `[rules.citations.<row>.grounding]` ladder is
+/// §FS-init.2.3.5: a row's own `[rules.citations.<row>.grounding]` ladder is
 /// its effective grounding, so the bullet stays unnarrowed and the sentence
 /// names the home — and only the home, since the homeless kind grounds nothing.
 #[test]
@@ -84,7 +84,7 @@ fn a_v2_grounding_ladder_on_the_row_keeps_the_bullet_and_names_the_home() {
     assert!(!section.contains("Every source file"), "{section}");
 }
 
-/// §FS-init.2.3.5.7: the version-1 row key is the same switch as the v2 ladder.
+/// §FS-init.2.3.5: the version-1 row key is the same switch as the v2 ladder.
 #[test]
 fn a_v1_row_require_grounding_keeps_the_bullet_and_names_the_home() {
     let section = render(
@@ -99,7 +99,7 @@ fn a_v1_row_require_grounding_keeps_the_bullet_and_names_the_home() {
     assert!(!section.contains("Every source file"), "{section}");
 }
 
-/// §FS-init.2.3.5.2.2: the setting is spelled in the live config's version.
+/// §FS-init.2.3.5: the setting is spelled in the live config's version.
 #[test]
 fn a_v1_home_that_grounds_nothing_names_the_v1_key() {
     let section = render("v1_home_grounds_nothing", &v1("", ""));
@@ -111,7 +111,7 @@ fn a_v1_home_that_grounds_nothing_names_the_v1_key() {
     );
 }
 
-/// §FS-init.2.3.5.7, §FS-config.3.4.8.3: the row wins over the global default, so
+/// §FS-init.2.3.5, §FS-config.3.4.8.3: the row wins over the global default, so
 /// a row that turns grounding off under a global `true` is left out of the
 /// sentence and narrows its bullet, while the source-file clause stays.
 #[test]
@@ -135,7 +135,7 @@ fn a_row_that_turns_grounding_off_under_a_global_default_narrows_its_bullet() {
     );
 }
 
-/// §FS-init.2.3.5.2: the single-file and several-file homes take their own
+/// §FS-init.2.3.5: the single-file and several-file homes take their own
 /// grounding-off subjects and second sentences.
 #[test]
 fn file_homes_that_ground_nothing_take_their_own_forms() {
@@ -176,7 +176,7 @@ must = ["FS"]
     );
 }
 
-/// §FS-init.2.3.5.2.2: a `warn` rung reaches the home's files, so the row does
+/// §FS-init.2.3.5: a `warn` rung reaches the home's files, so the row does
 /// not ground nothing and its bullet is not narrowed. A guard: it holds today.
 #[test]
 fn a_soft_grounding_rung_keeps_the_bullet_unnarrowed() {

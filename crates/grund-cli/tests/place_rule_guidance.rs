@@ -113,7 +113,7 @@ fn table(version: u8) -> &'static str {
 }
 
 /// The setting that makes an uncited e2e file a finding, as the hint spells it
-/// (§FS-init.2.3.5.2.2).
+/// (§FS-init.2.3.5).
 fn grounding(version: u8) -> &'static str {
     if version == 2 {
         "[rules.citations.e2e.grounding] must = \"file\""

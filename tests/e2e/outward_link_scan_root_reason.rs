@@ -280,7 +280,7 @@ fn a_directory_with_no_read_extension_keeps_the_extensions_wording() {
 }
 
 /// An outward link whose target refuses the lookup is pruned at the same gate, in silence, as one
-/// whose target opens (§FS-scan.scope.homes.lookup.outward), so it takes the same warning. The
+/// whose target opens (§FS-scan.scope.homes.lookup), so it takes the same warning. The
 /// controls share the barred target and differ in one term of that gate each: `z.md` has a name
 /// the walk reads as a file, and `zin` stays inside the project. Both reach the walk's lookup
 /// failure at the root.

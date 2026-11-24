@@ -314,7 +314,7 @@ fn a_cases_root_only_the_manifest_pass_meets_is_one_line_naming_its_folder() {
 }
 
 /// A cases root that links to a barred directory inside the project: the walk reports the link at
-/// its own path, in its own words (§FS-scan.scope.links.unresolvable.unopenable), and the manifest
+/// its own path, in its own words (§FS-scan.scope.links.unresolvable), and the manifest
 /// pass's listing of it is the same failure, so the one line is the walk's (§FS-check.2.4.2).
 #[test]
 fn a_cases_root_that_links_to_a_barred_target_is_the_walks_one_line() {

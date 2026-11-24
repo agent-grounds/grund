@@ -1,5 +1,5 @@
 //! Test module: `grund init` keeps a block's `### Workspace members` section
-//! while an optional member is absent (§FS-init.2.3.4.15.8) — the splice on an
+//! while an optional member is absent (§FS-init.2.3.4) — the splice on an
 //! older block, the section rendered where there is none to keep, one note per
 //! absent member, each companion's own section, `--force` (§FS-init.3.4), the
 //! nested tree, and the expansion error that still suppresses the section.
@@ -49,7 +49,7 @@ fn shop(name: &str, optional: &[&str]) -> crate::testing::TemporaryRoot {
 fn run(target: &Path, opts: InitOpts) -> InitOutput {
     init(InitOpts {
         target: target.to_path_buf(),
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..opts
     })
@@ -101,7 +101,7 @@ fn note(member: &str, clauses: &str) -> String {
     )
 }
 
-/// §FS-init.2.3.4.15.8: a block at an older version keeps its section in the
+/// §FS-init.2.3.4: a block at an older version keeps its section in the
 /// rendering that wrote it, while the rest of the block is upgraded.
 #[test]
 fn an_older_block_keeps_its_member_list_bytes() {
@@ -128,7 +128,7 @@ fn an_older_block_keeps_its_member_list_bytes() {
     assert_eq!(output.notes, [note("secret", &format!("AGENTS.md {KEPT}"))]);
 }
 
-/// §FS-init.2.3.4.15.8: a block with no member list gets one rendered from what
+/// §FS-init.2.3.4: a block with no member list gets one rendered from what
 /// the run can read, and the note says the new section does not list the member,
 /// in the conditional under `--check`.
 #[test]
@@ -168,7 +168,7 @@ fn a_block_without_the_section_renders_what_it_can_read() {
     assert!(written.contains("`billing`") && !written.contains("secret"));
 }
 
-/// §FS-init.2.3.4.15.8: the section is kept once however many members are
+/// §FS-init.2.3.4: the section is kept once however many members are
 /// absent, and each absent member gets its own note, ordered by namespace rather
 /// than by the order the config lists them in.
 #[test]
@@ -210,7 +210,7 @@ fn with_claude() -> InitOpts {
     }
 }
 
-/// §FS-init.2.3.4.15.8: each root entrypoint keeps its own section, and nothing
+/// §FS-init.2.3.4: each root entrypoint keeps its own section, and nothing
 /// is copied from one into another; the note has one clause per entrypoint, in
 /// report order.
 #[test]
@@ -247,7 +247,7 @@ fn each_companion_keeps_its_own_section() {
     );
 }
 
-/// §FS-init.2.3.4.15.8: a companion this run creates has no section to keep, so
+/// §FS-init.2.3.4: a companion this run creates has no section to keep, so
 /// it lists what the run can read and the note says so beside the kept one.
 #[test]
 fn a_new_companion_gets_the_new_clause() {
@@ -301,7 +301,7 @@ fn force_keeps_the_member_list() {
     assert_eq!(output.notes, [note("secret", &format!("AGENTS.md {KEPT}"))]);
 }
 
-/// §FS-init.2.3.4.15.1, §FS-init.2.3.4.15.8: an optional member absent one block
+/// §FS-init.2.3.4: an optional member absent one block
 /// down is absent from the whole tree, so the nested group's root and a present
 /// member keep their lists too, and the note names it by its whole alias path.
 #[test]
@@ -354,7 +354,7 @@ fn the_nested_group_root_and_a_present_member_decide_from_the_outermost_tree() {
     }
 }
 
-/// §FS-init.2.3.4.15, §FS-init.2.3.4.15.8: an expansion error still suppresses
+/// §FS-init.2.3.4: an expansion error still suppresses
 /// the section, absent optional member or not — the run cannot tell that member
 /// is the only gap — and with no list there is nothing to keep or note.
 #[test]
@@ -374,7 +374,7 @@ fn an_expansion_error_still_suppresses_the_section() {
     assert!(output.notes.is_empty(), "{:?}", output.notes);
 }
 
-/// §FS-init.2.3.4.15.8: the splice keeps nothing where the file has no managed
+/// §FS-init.2.3.4: the splice keeps nothing where the file has no managed
 /// block, or its block no member list — the section is then rendered.
 #[test]
 fn the_splice_keeps_nothing_without_a_section_on_disk() {

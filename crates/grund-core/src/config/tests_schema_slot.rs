@@ -310,7 +310,7 @@ fn the_view_reads_each_value_homes_forms_by_the_scans_rule() {
     assert_eq!(fetched.homes, vec![home("f.md", false, &[])]);
 }
 
-/// §FS-init.2.3.5.12.2: the block's bullet is the shape line, which the view
+/// §FS-init.2.3.5: the block's bullet is the shape line, which the view
 /// prints after the slot's key.
 #[test]
 fn the_block_bullet_is_the_shape_line() {

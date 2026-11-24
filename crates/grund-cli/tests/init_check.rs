@@ -21,7 +21,7 @@ use init_fixture::{manifest_dir, run_grund, workdir};
 /// `## Grounding with grund (vN)` heading left alone — the ticket's own tree.
 /// The edit is found through the ownership delimiters rather than by quoting a
 /// line of the block, so a block-version bump cannot silently turn this fixture
-/// into a tree with no drift in it (§FS-init.2.3.1).
+/// into a tree with no drift in it (§FS-init.2.3.10).
 fn drifted_target(name: &str) -> std::path::PathBuf {
     let target = workdir(name);
     let scaffold = run_grund(
@@ -57,7 +57,7 @@ fn version_heading(contents: &str) -> String {
 }
 
 /// Append a few words to the last rendered line inside the managed block. The
-/// delimiters are the boundary `init` owns (§FS-init.2.3.1), so an edit placed
+/// delimiters are the boundary `init` owns (§FS-init.2.3.10), so an edit placed
 /// by them is drift `init` must report however the block is worded.
 fn drift_last_line_of_block(contents: &str) -> String {
     const END: &str = "<!-- END GRUND MANAGED BLOCK -->";

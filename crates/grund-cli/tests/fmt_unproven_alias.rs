@@ -232,7 +232,7 @@ fn a_broken_link_in_the_member_refuses_a_narrowed_rewrite() {
     );
 }
 
-/// A link out of the member is no hole in its set (§FS-scan.scope.links.owed.fence), so its walk
+/// A link out of the member is no hole in its set (§FS-scan.scope.links.owed), so its walk
 /// meets no error, the proof stands, and a whole run writes.
 #[test]
 fn a_link_out_of_the_member_leaves_its_proof_standing() {

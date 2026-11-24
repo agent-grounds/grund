@@ -186,7 +186,7 @@ fn an_unlistable_value_home_is_one_io_entry_in_check_json() {
 }
 
 /// The home links to a hidden directory the walk never descends into. The walk still reports the
-/// link at the home's own path, in its own words (§FS-scan.scope.links.unresolvable.unopenable),
+/// link at the home's own path, in its own words (§FS-scan.scope.links.unresolvable),
 /// and the value pass's listing of that home is the same failure, whatever words each writes
 /// around the reason, so the one line is the walk's (§FS-check.2.4.2). Both config versions refuse
 /// a home linking out of the project, so no layout leaves a home to the pass alone.

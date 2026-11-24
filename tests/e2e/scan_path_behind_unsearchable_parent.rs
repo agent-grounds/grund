@@ -1,10 +1,10 @@
 //! Black-box: a `<path>` given to a command is missing only when its lookup says nothing can stand
-//! there (§FS-scan.scope.homes.lookup.path). Behind a directory the user cannot search, the lookup
+//! there (§FS-scan.scope.homes.lookup). Behind a directory the user cannot search, the lookup
 //! is refused, so a file, a directory and a name that may not exist are each reported as a
 //! permission failure at the path as given, on `check`, `list`, `cover`, `fmt`, `show` and `refs`
 //! alike, and never as `path does not exist`. The controls hold what must not move: a path whose
 //! lookup says not found, or that runs through a regular file, keeps `path does not exist`, a link
-//! to the same place keeps its line (§FS-scan.scope.links.owed.refused), and a readable path is
+//! to the same place keeps its line (§FS-scan.scope.links.owed), and a readable path is
 //! read. Where the project's own walk meets the barred directory too, `show`, single or batched,
 //! and `id` still stop at the path rather than at the directory, which sorts first. Under
 //! `--path-base=invocation` the path is spelled from the working directory, because a
@@ -159,7 +159,7 @@ impl Run {
         }
     }
 
-    /// What went wrong for §FS-scan.scope.homes.lookup.path, or `None`: exit `2`, the permission
+    /// What went wrong for §FS-scan.scope.homes.lookup, or `None`: exit `2`, the permission
     /// line at `path` exactly as given, and never `path does not exist`.
     fn permission_failure_at(&self, path: &str) -> Option<String> {
         let line = format!("error: {path}: permission denied; {PASSED_FIX}");

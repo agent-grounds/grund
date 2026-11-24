@@ -10,7 +10,7 @@ mod init_rule_exit;
 #[path = "../../../tests/integration/ordered_pool.rs"]
 mod ordered_pool;
 
-// §FS-init.2.3.5.10: the generated chapter rules survive a whole init/fmt cycle.
+// §FS-init.2.3.5: the generated chapter rules survive a whole init/fmt cycle.
 #[path = "support/chapter_rule_workflow.rs"]
 mod chapter_rule_workflow;
 
@@ -64,7 +64,7 @@ mod grouping_block_config_findings;
 #[path = "support/fetch_subsection_headings.rs"]
 mod fetch_subsection_headings;
 
-// §FS-check.3.30.1: issue #1169's `..` scope roots, its cases run alone.
+// §FS-check.3.30: issue #1169's `..` scope roots, its cases run alone.
 #[path = "support/dotdot_scope_root_names.rs"]
 mod dotdot_scope_root_names;
 
@@ -84,7 +84,7 @@ mod doc_comment_fenced_heading;
 #[path = "support/kind_heads.rs"]
 mod kind_heads;
 
-// §FS-declarations.checks.unmarked-heading.2.3: issue #1445's cases, run alone.
+// §FS-declarations.checks.unmarked-heading: issue #1445's cases, run alone.
 #[path = "support/unmarked_heading_value_roots_1445.rs"]
 mod unmarked_heading_value_roots_1445;
 
@@ -102,7 +102,7 @@ fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
-/// §FS-init.2.3.4.16: standalone omission and existing workspace-root/member controls.
+/// §FS-init.2.3.4: standalone omission and existing workspace-root/member controls.
 #[test]
 fn project_namespaces_golden_contract() {
     let root = repo_root();

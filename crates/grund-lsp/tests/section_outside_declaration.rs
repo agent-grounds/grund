@@ -1,5 +1,5 @@
 //! Real-server regression for rejected section headings: diagnostics retain the
-//! complete title range without making the heading navigable (§FS-declarations.checks.section-outside-declaration.2,
+//! complete title range without making the heading navigable (§FS-declarations.checks.section-outside-declaration,
 //! §FS-lsp.1.1.1).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 

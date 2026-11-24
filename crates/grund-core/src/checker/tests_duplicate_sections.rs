@@ -143,7 +143,7 @@ fn a_third_heading_joins_the_same_finding() {
     );
 }
 
-/// §DF-duplicate-section-path.2.2 / §FS-declarations.checks.duplicate-section.1: a section path is
+/// §DF-duplicate-section-path.2.2 / §FS-declarations.checks.duplicate-section: a section path is
 /// addressed as `<ID>.<path>`, so the same number under two declarations is two
 /// distinct coordinates and never collided.
 #[test]
@@ -171,7 +171,7 @@ fn the_same_path_under_two_declarations_is_not_a_collision() {
     );
 }
 
-/// §DF-duplicate-section-path.2.2 / §FS-declarations.checks.duplicate-section.3: the collision is a
+/// §DF-duplicate-section-path.2.2 / §FS-declarations.checks.duplicate-section: the collision is a
 /// collision in every `[id] section_heading_levels` mode — `"loose"`, where
 /// `## 1.` and `### 1.` both claim path `1`, most of all.
 #[test]
@@ -371,7 +371,7 @@ fn a_workspace_names_the_other_heading_from_the_workspace_root() {
     );
 }
 
-/// §FS-declarations.checks.duplicate-section.2: the rule reads the records an ID
+/// §FS-declarations.checks.duplicate-section: the rule reads the records an ID
 /// pairs with, and a scanned target is one record however many stubs point at
 /// it, so two stubs to one colliding inline home report its collision once, at
 /// the home's own lines.

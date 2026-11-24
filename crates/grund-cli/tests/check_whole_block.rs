@@ -175,7 +175,7 @@ fn config_migrate_write_then_check() {
     assert!(agents_init_lines(&check).is_empty());
 }
 
-/// §FS-init.requirements.clean, §FS-init.2.3.4.15.6: one `grund init` in each
+/// §FS-init.requirements.clean, §FS-init.2.3.4: one `grund init` in each
 /// project of a fresh workspace, root first or member first, leaves the root's
 /// `check` green, and no block describes a sibling as not yet initialized.
 /// grund#931: the project initialized first kept that mark and went stale.

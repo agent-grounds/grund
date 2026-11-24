@@ -61,7 +61,7 @@ ROOT_READ = re.compile(r"\bcrate::(\{[^}]*\}|[A-Za-z_][A-Za-z0-9_]*)(?!\w|\s*::)
 # The ledger of reads against the direction of §AR-system.1, and it is empty.
 
 # Six former compat reads printed four `[workspace]` findings. Three are now a
-# `Diagnostic` in the run's warning channel (§FS-check.3.29.15, §FS-check.4.10.11,
+# `Diagnostic` in the run's warning channel (§FS-check.3.29, §FS-check.4.10.11,
 # §FS-workspace.6.1.7), rendered by its frontend (§AR-system.2.9.1).
 
 # The fourth, the absorbed scan, became the config error of §FS-check.3.30.

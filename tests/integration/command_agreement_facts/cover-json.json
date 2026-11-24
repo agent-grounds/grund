@@ -18,7 +18,7 @@
   },
   "facts": {
     "point": "§FS-cover",
-    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `[reference] strict = false`, default kinds and scan); src/lib.rs, whose line comment and doc comment on an item carry the marked §FS-001-alpha.1, a section FS-001-alpha does not have (§FS-check.3.2, numeric, so the `missing section` form of §FS-errors.3.11), and the bare FS-002-beta, each outside any declaration (§FS-cover.3.2); the FS folder has no README.md index (§FS-check.3.18.7). Nothing is wrapped: bare citations are not wrapped without `--marker` (§FS-fmt.6.5) and a Rust file is never rewritten (§FS-fmt.6.1); FS-001-alpha's body mentions FS-002-beta bare.",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `[reference] strict = false`, default kinds and scan); src/lib.rs, whose line comment and doc comment on an item carry the marked §FS-001-alpha.1, a section FS-001-alpha does not have (§FS-check.3.2, numeric, so the `missing section` form of §FS-errors.3.11), and the bare FS-002-beta, each outside any declaration (§FS-cover.3.2); the FS folder has no README.md index (§FS-check.3.18). Nothing is wrapped: bare citations are not wrapped without `--marker` (§FS-fmt.6.5) and a Rust file is never rewritten (§FS-fmt.6.1); FS-001-alpha's body mentions FS-002-beta bare.",
     "scanned": ["docs/functional-spec/FS-001-alpha.md","docs/functional-spec/FS-002-beta.md","src/lib.rs"],
     "declarations": [
       {"id":"FS-001-alpha","kind":"FS","file":"docs/functional-spec/FS-001-alpha.md","heading":"FS-001-alpha: Alpha","title":"Alpha","body":[2,3],"anchor":"fs-001-alpha-alpha"},

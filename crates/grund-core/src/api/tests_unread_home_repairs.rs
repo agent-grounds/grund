@@ -1,5 +1,5 @@
 //! Repairs preserve authored row facts and offer only a reader that can read the file
-//! (§FS-scan.checks.unread-scan-root.message, §FS-scan.checks.unread-scan-root.folder).
+//! (§FS-scan.checks.unread-scan-root).
 
 use super::unread_roots::unread_root_warnings;
 use crate::config::load_config;
@@ -38,7 +38,7 @@ fn data_repairs_do_not_overwrite_forms_fetches_or_places() {
     }
 }
 
-/// §FS-scan.checks.unread-scan-root.message: a hidden name a listed data language reads keeps
+/// §FS-scan.checks.unread-scan-root: a hidden name a listed data language reads keeps
 /// its own rename, and is never offered `form = "value"`.
 #[test]
 fn hidden_data_keeps_its_own_repair() {
@@ -109,7 +109,7 @@ fn empty_scan_caution_names_the_mapping_that_restores_a_text_reader() {
     }
 }
 
-/// §FS-scan.checks.unread-scan-root.folder: an admission repair must make this folder read;
+/// §FS-scan.checks.unread-scan-root: an admission repair must make this folder read;
 /// a data language alone cannot read a prose home's declarations.
 #[test]
 fn an_unclaimed_data_suffix_is_not_offered_a_data_only_admission() {
@@ -159,7 +159,7 @@ fn assert_repaired(root: &std::path::Path) {
     );
 }
 
-/// §FS-scan.checks.unread-scan-root.message: fields and every authored closed strength
+/// §FS-scan.checks.unread-scan-root: fields and every authored closed strength
 /// survive the offered Markdown-home repair; the eligible control can actually take value form.
 #[test]
 fn unread_value_form_repairs_preserve_fields_closed_and_existing_prerequisites() {
@@ -210,7 +210,7 @@ fn unread_value_form_repairs_preserve_fields_closed_and_existing_prerequisites()
     }
 }
 
-/// §FS-scan.checks.unread-scan-root.message: a rename with no text reader includes admission,
+/// §FS-scan.checks.unread-scan-root: a rename with no text reader includes admission,
 /// and a hidden name still needs the rename.
 #[test]
 fn unread_rename_repairs_admit_a_reader_and_unhide_the_name() {
@@ -251,7 +251,7 @@ fn unread_rename_repairs_admit_a_reader_and_unhide_the_name() {
     }
 }
 
-/// §FS-scan.checks.unread-scan-root.folder: the offered repair for a Markdown rule restores a
+/// §FS-scan.checks.unread-scan-root: the offered repair for a Markdown rule restores a
 /// document reading, never a source admission. A rule folder no admitted language reads as
 /// Markdown is refused at load (§FS-config-v2.checks.config-rule-folder-not-markdown), so a
 /// document reader is always admitted here.
@@ -296,7 +296,7 @@ fn unread_rule_folder_source_suffix_repairs_read_the_markdown_rule() {
     );
 }
 
-/// §FS-scan.checks.unread-scan-root.folder: source admission remains useful for a non-rule
+/// §FS-scan.checks.unread-scan-root: source admission remains useful for a non-rule
 /// folder holding a declaration in the source reader's doc comments.
 #[test]
 fn unread_non_rule_folder_keeps_the_working_builtin_source_admission() {

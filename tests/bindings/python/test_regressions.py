@@ -176,7 +176,7 @@ class RegressionTests(unittest.TestCase):
             self.assertEqual(before, tree_bytes(root), "nothing is written before the refusal")
 
     def test_init_carries_the_guidance_selection(self):
-        # §FS-init.2.2.2.3: the SPEC row is the selection, its folder not yet made.
+        # §FS-init.2.2.2: the SPEC row is the selection, its folder not yet made.
         with temporary() as temp:
             root = fixture(temp, "init-force-keeps-existing-config")
             allocation = self.module.init(root, no_vcs=True).next.allocation

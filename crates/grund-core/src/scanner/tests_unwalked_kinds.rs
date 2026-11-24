@@ -73,7 +73,7 @@ fn an_unwalked_home_is_neither_grounded_nor_checked() {
 }
 
 /// §FS-config.3.4.7.5 / §FS-check.1.3.3: `--full` walks the whole root and
-/// reports only the tier §FS-check.3.14.2 admits — the dangling citation
+/// reports only the tier §FS-check.3.14 admits — the dangling citation
 /// surfaces, the citation-free file earns no grounding finding.
 #[test]
 fn full_reaches_an_unwalked_home_as_out_of_scope_territory() {
@@ -95,7 +95,7 @@ fn full_reaches_an_unwalked_home_as_out_of_scope_territory() {
     );
 }
 
-/// §FS-init.2.3.4.4.1 / §FS-init.2.3.5.1: the row is the point of configuring
+/// §FS-init.2.3.4 / §FS-init.2.3.5: the row is the point of configuring
 /// the kind; a directions bullet would promise a check nothing performs.
 #[test]
 fn the_generated_block_lists_an_unwalked_kind_without_a_directions_bullet() {

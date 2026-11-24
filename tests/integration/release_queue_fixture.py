@@ -1,5 +1,5 @@
 """The fixture a release helper's whole job runs on while the merge queue moves
-`main` (§FS-distribution.4.4.1.1, §AR-ci.11).
+`main` (§FS-distribution.4.4.1, §AR-ci.11).
 
 `Case` builds a local bare origin that stands for agent-grounds/grund - the
 version sources, changelog and `scripts/` of this checkout, at the `-dev` after
@@ -148,7 +148,7 @@ def template():
         for file, text in files.items():
             (seed / "crates/grund-core/src" / file).write_text(text)
         shas[name] = commit(message)
-    # A pull request that moves every version source (§FS-distribution.4.4.1.2).
+    # A pull request that moves every version source (§FS-distribution.4.4.1).
     git("-C", str(seed), "switch", "-q", "--detach", shas["a"], env=env)
     set_version(PATCH[1])
     shas["versions"] = commit(f"Move main to {PATCH[1]} by hand (#982)")

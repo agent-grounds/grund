@@ -16,7 +16,7 @@
 //! prints them as §FS-check.2.1.1 lines on stderr, while the editor publishes each
 //! on the `grund.toml` it anchors at. §FS-check.3.29's unlisted block is not among
 //! them and is not held that way: it is a located error on both surfaces now
-//! (§FS-check.3.29.15), so the sweep compares it like any other `Finding` — same
+//! (§FS-check.3.29), so the sweep compares it like any other `Finding` — same
 //! path, line, `error` severity, code and message (§FS-lsp.4.1). Every other
 //! CLI-level `warning:` or `error:` line (§FS-errors.2.2) is stepped over: it is
 //! settled before a report exists and neither surface carries it as a located
@@ -71,7 +71,7 @@ const CLI_LEVEL_PREFIXES: [&str; 2] = ["error: ", "warning: "];
 /// config error in grund 0.16.0: its case refuses to load, so there is no run to
 /// compare. §FS-check.3.29's unlisted block left it when its ramp
 /// ended: it is a located error in `check` and a located error in the editor now
-/// (§FS-check.3.29.15), so it is compared below as an ordinary `Finding` — same
+/// (§FS-check.3.29), so it is compared below as an ordinary `Finding` — same
 /// path, line, `error` severity, code and message on both surfaces. That is the
 /// assertion that would catch the terminal and the editor drifting apart on the
 /// one finding whose location has two places it could come from, and it is
@@ -135,7 +135,7 @@ fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSe
                     root.display()
                 );
             };
-            // §FS-check.3.29.13: a run-level warning carried in the report rather
+            // §FS-check.3.29: a run-level warning carried in the report rather
             // than the warning channel arrives as a nulls object — none of the two
             // does today, so this guard keeps the reduction honest if one moves back.
             if let Some(message) = value["message"].as_str()

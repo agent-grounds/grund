@@ -91,7 +91,7 @@ impl View<'_> {
             .filter(|(_, (file, ..))| self.loaded(file))
             .collect();
         declarations.sort_by(|a, b| (&a.1.0, a.1.1).cmp(&(&b.1.0, b.1.1)));
-        // §FS-declarations.checks.duplicate-section.3: a later claimant of a
+        // §FS-declarations.checks.duplicate-section: a later claimant of a
         // path is no section target, so the editor navigates to the first only.
         let mut sections: Vec<_> = self
             .m

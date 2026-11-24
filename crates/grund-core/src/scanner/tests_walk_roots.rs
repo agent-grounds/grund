@@ -206,7 +206,7 @@ fn a_refused_file_root_is_recorded_with_its_row() {
     );
 }
 
-/// §FS-scan.checks.unread-scan-root.silent: a directory root is filtered file by
+/// §FS-scan.checks.unread-scan-root: a directory root is filtered file by
 /// file, which is what the extension list means, so the gate records nothing.
 #[test]
 fn a_directory_root_is_not_recorded() {
@@ -215,7 +215,7 @@ fn a_directory_root_is_not_recorded() {
     let (findings, _) = scan_tree(&config, None, false).expect("scan");
     assert!(
         findings.unread_roots.is_empty(),
-        "§FS-scan.checks.unread-scan-root.silent"
+        "§FS-scan.checks.unread-scan-root"
     );
 }
 
@@ -293,7 +293,7 @@ fn a_root_both_hidden_and_unlisted_is_recorded_once() {
     );
 }
 
-/// §FS-scan.checks.unread-scan-root.silent: a dotfile inside a directory root was
+/// §FS-scan.checks.unread-scan-root: a dotfile inside a directory root was
 /// named by nothing in the configuration, so the gate records nothing for it.
 #[test]
 fn a_dotfile_inside_a_directory_root_is_not_recorded() {
@@ -306,7 +306,7 @@ fn a_dotfile_inside_a_directory_root_is_not_recorded() {
     let (findings, _) = scan_tree(&config, None, false).expect("scan");
     assert!(
         findings.unread_roots.is_empty(),
-        "§FS-scan.checks.unread-scan-root.silent"
+        "§FS-scan.checks.unread-scan-root"
     );
 }
 

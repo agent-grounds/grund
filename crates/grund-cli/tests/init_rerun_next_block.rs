@@ -1,6 +1,6 @@
 //! §FS-init.2.2.2 (issue #973): a `grund init` re-run whose every reported path is
 //! `exists ` keeps the `next:` block while the selected home is missing
-//! (§FS-init.2.2.2.1) or no citable kind is declared (§FS-init.2.2.2.2), and a
+//! (§FS-init.2.2.2) or no citable kind is declared (§FS-init.2.2.2), and a
 //! complete setup still prints none. Run alone through the ordinary e2e fixture
 //! runner; each case also runs in the full e2e suite.
 #[path = "support/case_runner.rs"]

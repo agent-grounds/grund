@@ -9,7 +9,7 @@ use crate::testing::{test_root, write};
 #[path = "tests_project_namespaces.rs"]
 mod project_namespaces;
 
-/// §FS-init.2.3.4.15: `render_workspace_members_section` returns the empty
+/// §FS-init.2.3.4: `render_workspace_members_section` returns the empty
 /// string for a target that is not inside a workspace. The Project Map
 /// section is unchanged from the no-workspace fixture (§FS-init-fixtures.6.3).
 #[test]
@@ -28,9 +28,9 @@ fn workspace_members_empty_when_no_workspace_declared() {
     assert!(!rendered.contains("Cross-project citations"));
 }
 
-/// §FS-init.2.3.4.15: invoked at the workspace root, the section omits the
+/// §FS-init.2.3.4: invoked at the workspace root, the section omits the
 /// root itself and lists every foreign member in alias order, each linking its
-/// directory whether or not it is initialized (§FS-init.2.3.4.15.6). Mirrors
+/// directory whether or not it is initialized (§FS-init.2.3.4). Mirrors
 /// §FS-init-fixtures.6.1.
 #[test]
 fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
@@ -52,7 +52,7 @@ fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
     );
 }
 
-/// §FS-init.2.3.4.15: invoked inside a member, the section omits that member
+/// §FS-init.2.3.4: invoked inside a member, the section omits that member
 /// and keeps the foreign root and siblings in alias order, with link paths
 /// recomputed relative to the member's AGENTS.md: the root is `../../`.
 /// Mirrors §FS-init-fixtures.6.2.
@@ -77,7 +77,7 @@ fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
     );
 }
 
-/// §FS-init.2.3.4.15.6, §FS-init.requirements.reproducible: the section is a
+/// §FS-init.2.3.4, §FS-init.requirements.reproducible: the section is a
 /// function of the workspace's configs, so creating a sibling's `AGENTS.md` (the
 /// sibling's own `grund init`) leaves every other block's bytes as they were, from
 /// the root and from a member alike. grund#931: each init order left the block
@@ -123,7 +123,7 @@ fn workspace_members_bytes_do_not_depend_on_which_siblings_are_initialized() {
     );
 }
 
-/// §FS-init.2.3.4.15.4: companion-only init omits self by the same canonical
+/// §FS-init.2.3.4: companion-only init omits self by the same canonical
 /// identity rule as canonical-AGENTS.md init.
 #[test]
 fn workspace_members_companion_only_init_omits_self() {
@@ -144,7 +144,7 @@ fn workspace_members_companion_only_init_omits_self() {
     assert!(section.contains("- [`root`](../../)"));
 }
 
-/// §FS-init.2.3.4.15.2: the discoverability line is the spec's line verbatim, both clauses,
+/// §FS-init.2.3.4: the discoverability line is the spec's line verbatim, both clauses,
 /// with the target project's configured marker, not a hard-coded `§`.
 #[test]
 fn workspace_members_discoverability_line_uses_configured_marker() {
@@ -165,7 +165,7 @@ fn workspace_members_discoverability_line_uses_configured_marker() {
     assert!(!section.contains("§alias/<ID>"));
 }
 
-/// §FS-init.2.3.4.15.4: self is selected by canonical project identity, not
+/// §FS-init.2.3.4: self is selected by canonical project identity, not
 /// by either the member directory basename or the pending `project_name`.
 #[test]
 fn workspace_members_self_identity_is_canonical_not_pending_alias_text() {
@@ -190,7 +190,7 @@ fn workspace_members_self_identity_is_canonical_not_pending_alias_text() {
     assert!(section.contains("- [`root`](../../)"));
 }
 
-/// §FS-init.2.3.4.15.4: a target reached through a symlink still omits the
+/// §FS-init.2.3.4: a target reached through a symlink still omits the
 /// resolved project whose canonical root it names.
 #[cfg(unix)]
 #[test]
@@ -212,7 +212,7 @@ fn workspace_members_self_identity_follows_target_symlink() {
     assert!(section.contains("- [`root`](../../)"));
 }
 
-/// §FS-init.2.3.4.15.4: `include_root = false` still drops the root from a
+/// §FS-init.2.3.4: `include_root = false` still drops the root from a
 /// member entrypoint; self is also omitted, while another foreign member
 /// keeps the section present.
 #[test]
@@ -239,7 +239,7 @@ fn workspace_members_omits_root_when_include_root_false() {
     assert!(section.contains("- [`web`](../web/)"));
 }
 
-/// §FS-init.2.3.4.15 + §FS-workspace.6: a configured-but-misconfigured
+/// §FS-init.2.3.4 + §FS-workspace.6: a configured-but-misconfigured
 /// workspace (e.g. a member directory that does not exist) silently
 /// suppresses the section so `init` does not fail. `grund check` will
 /// surface the configuration error separately.
@@ -259,7 +259,7 @@ fn workspace_members_silently_skipped_on_workspace_config_error() {
     );
 }
 
-/// §FS-init.2.3.4.15: duplicate aliases are a workspace configuration
+/// §FS-init.2.3.4: duplicate aliases are a workspace configuration
 /// error, so `init` must suppress the section instead of rendering
 /// ambiguous bullets with the same alias.
 #[test]
@@ -278,7 +278,7 @@ fn workspace_members_suppresses_duplicate_aliases() {
     );
 }
 
-/// §FS-init.2.3.4.15.5 + §DF-workspace-member-descriptions: a project's
+/// §FS-init.2.3.4 + §DF-workspace-member-descriptions: a project's
 /// `project_description` renders after its link, and a project without one
 /// keeps the link-only bullet. Mirrors
 /// §FS-init-fixtures.6.4. §FS-workspace.3.1 is the residency rule the rows
@@ -308,7 +308,7 @@ fn workspace_members_renders_configured_descriptions() {
 
     // Initialized member: description after the directory link.
     assert!(section.contains("- [`api`](apps/api/): Payment API service"));
-    // Uninitialized member: the same form, with no suffix (§FS-init.2.3.4.15.6).
+    // Uninitialized member: the same form, with no suffix (§FS-init.2.3.4).
     assert!(section.contains("- [`core`](packages/core/): Core domain library"));
     // Self and its description are omitted together.
     assert!(
@@ -319,7 +319,7 @@ fn workspace_members_renders_configured_descriptions() {
     assert!(section.contains("- [`ui`](packages/ui/)"));
 }
 
-/// §FS-init.2.3.4.15.4: pending self metadata never creates a local row.
+/// §FS-init.2.3.4: pending self metadata never creates a local row.
 #[test]
 fn workspace_members_member_init_omits_pending_self_description() {
     let root = test_root("workspace_members_member_init_omits_pending_self_description");
@@ -349,7 +349,7 @@ fn workspace_members_member_init_omits_pending_self_description() {
     assert!(section.contains("- [`root`](../../)"));
 }
 
-/// §FS-init.2.3.4.15.1 + §FS-workspace.6.1.5: in a nested workspace the search
+/// §FS-init.2.3.4 + §FS-workspace.6.1.5: in a nested workspace the search
 /// climbs to the *outermost* root, so a member three levels down is taught
 /// every foreign alias CI can resolve — not just its enclosing group's.
 /// Rows carry whole alias paths and links stay relative to the entrypoint.
@@ -391,7 +391,7 @@ fn workspace_members_nested_workspace_lists_the_whole_tree() {
     );
 }
 
-/// §FS-init.2.3.4.15.4 + §FS-workspace.6.1.2: `include_root` is read per
+/// §FS-init.2.3.4 + §FS-workspace.6.1.2: `include_root` is read per
 /// `[workspace]` block, so a grouping node that opted out contributes no
 /// alias and therefore no row.
 #[test]
@@ -426,7 +426,7 @@ fn workspace_members_nested_grouping_node_without_include_root_has_no_row() {
     );
 }
 
-/// §FS-init.2.3.4.15.1 + §FS-workspace.6.1.8: an ancestor `[workspace]` that does
+/// §FS-init.2.3.4 + §FS-workspace.6.1.8: an ancestor `[workspace]` that does
 /// not list the directory below it describes a different workspace, so the
 /// section names the tree the target's own outermost *claiming* block
 /// resolves. Reading the outermost *declarer* instead replaced both real
@@ -463,7 +463,7 @@ fn workspace_members_ignores_an_ancestor_workspace_that_does_not_claim_the_targe
     );
 }
 
-/// §FS-init.2.3.4.15.1 + §FS-workspace.6.1.8: the same rule one level in — a
+/// §FS-init.2.3.4 + §FS-workspace.6.1.8: the same rule one level in — a
 /// nested `[workspace]` its parent does not list is a workspace root in its
 /// own right, so `init` inside it teaches its own aliases rather than the
 /// enclosing tree's, which is what a command run there resolves.

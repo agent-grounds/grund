@@ -347,7 +347,7 @@ fn named_section_formatting_uses_rendered_anchor_and_never_changes_handles() {
     assert!(reader.contains("\u{a7}FS-doc.goals"));
 }
 
-/// §FS-init.2.4.4: the v2 starter writes no section switch and its block
+/// §FS-init.2.4.3: the v2 starter writes no section switch and its block
 /// teaches named section paths. §FS-config.4.2.3: in v1, `named_sections`
 /// prints only when enabled — an absent key and an explicit `false` produce
 /// byte-identical `config show` output, so a repository that never opted in
@@ -419,7 +419,7 @@ fn init_writes_no_switch_and_the_disabled_gate_is_an_operational_guard() {
         "and `name.number` and `number.name` are both legal; \
          a cited address with a name under a number is recorded in the section lock."
     ));
-    // §FS-init.2.3.4.5: from v23 the block teaches both forms for doc-comments too.
+    // §FS-init.2.3.4: from v23 the block teaches both forms for doc-comments too.
     assert!(enabled_guidance.contains(
         "In a declaration body, Markdown or doc-comment, a heading may instead write only \
          the component it adds"

@@ -84,7 +84,7 @@ fn stderr(output: &Output) -> &str {
 /// §FS-output-shapes.6.1.2: the bare failed-query text, exit `1`; only an
 /// invalid format keeps the configured-format hint. No release suffix and no
 /// warning follow it: the landed half of the scalar clause is these ordinary
-/// bytes (§FS-distribution.4.2.4).
+/// bytes (§FS-distribution.4.2.3).
 fn expected_refs_text(message: &str, hint: bool) -> (i32, String) {
     let mut rendered = format!("{message}\n");
     if hint {

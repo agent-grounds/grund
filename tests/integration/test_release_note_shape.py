@@ -1,4 +1,4 @@
-"""§FS-distribution.4.6.4.1 — every decision record's `release-note` section is held
+"""§FS-distribution.4.6.4 — every decision record's `release-note` section is held
 to the one bullet the bump publishes on the pull request that writes it, not first
 at the next release (§FS-distribution.4.6.3); the Python suite is where the tree is
 asked (§AR-ci.7).

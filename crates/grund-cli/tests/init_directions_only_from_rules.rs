@@ -1,10 +1,10 @@
 //! Binary regressions for agent-grounds/grund#1075: the `### Citation directions`
-//! section states the rules a config declares and no others (§FS-init.2.3.4.10).
+//! section states the rules a config declares and no others (§FS-init.2.3.5).
 //! A config that declares no citation rule renders no section, `kinds = []`
-//! included (§FS-init.2.3.4.4.2). Where grounding lands, the section is the
-//! heading and the grounding sentence alone (§FS-init.2.3.5.7), at the root and in
-//! a scoped block (§FS-init.2.3.5.12.1). Every shape is one tree that `init`,
-//! `init --check` and `check` agree on (§FS-init.2.3.5.8).
+//! included (§FS-init.2.3.4). Where grounding lands, the section is the
+//! heading and the grounding sentence alone (§FS-init.2.3.5), at the root and in
+//! a scoped block (§FS-init.2.3.5). Every shape is one tree that `init`,
+//! `init --check` and `check` agree on (§FS-init.2.3.7).
 //!
 //! These are binary tests rather than `tests/e2e/cases`, because a red case there
 //! cannot be ignored on its own. Each fixture is a fresh git repository under
@@ -69,7 +69,7 @@ const BEGIN: &str = "<!-- BEGIN GRUND MANAGED BLOCK -->";
 const END: &str = "<!-- END GRUND MANAGED BLOCK -->";
 
 /// A fresh git repository with `config` and the one declaration its kind holds,
-/// plus each of `dirs`, so a scoped destination exists (§FS-init.2.3.5.11.4).
+/// plus each of `dirs`, so a scoped destination exists (§FS-init.2.3.5).
 fn tree(name: &str, config: &str, dirs: &[&str]) -> PathBuf {
     let target = workdir(&format!("directions_only_from_rules_{name}"));
     let git = Command::new("git")
@@ -131,7 +131,7 @@ fn section(target: &Path, file: &str) -> Option<String> {
     Some(rest[..end].trim_end_matches('\n').to_string())
 }
 
-/// One tree the commands agree on (§FS-init.2.3.5.8): no doubled blank line in a
+/// One tree the commands agree on (§FS-init.2.3.7): no doubled blank line in a
 /// block, a second `init` finds every file current, and `init --check` and
 /// `check` exit 0.
 fn assert_settled(target: &Path, files: &[&str]) {
@@ -155,7 +155,7 @@ fn assert_settled(target: &Path, files: &[&str]) {
     assert_eq!(code, Some(0), "grund check: {stdout}{stderr}");
 }
 
-/// §FS-init.2.3.4.10: the issue's config, and its version-2 spelling, declare
+/// §FS-init.2.3.5: the issue's config, and its version-2 spelling, declare
 /// kinds and no rule: no section, and one blank line where it stood.
 #[test]
 fn kinds_and_no_rules_render_no_section() {
@@ -174,7 +174,7 @@ fn kinds_and_no_rules_render_no_section() {
     }
 }
 
-/// §FS-init.2.3.4.4.2: `kinds = []` declares no rule either, so its "No kind is
+/// §FS-init.2.3.4: `kinds = []` declares no rule either, so its "No kind is
 /// declared yet" paragraph goes with the section.
 #[test]
 fn no_kinds_render_no_section() {
@@ -186,7 +186,7 @@ fn no_kinds_render_no_section() {
     }
 }
 
-/// §FS-init.2.3.4.10, §FS-init.2.3.5.7: grounding without rules is the heading
+/// §FS-init.2.3.5: grounding without rules is the heading
 /// and the grounding sentence alone, in either config version.
 #[test]
 fn grounding_without_rules_is_the_grounding_sentence_alone() {
@@ -208,7 +208,7 @@ fn grounding_without_rules_is_the_grounding_sentence_alone() {
     }
 }
 
-/// §FS-init.2.3.5.12.1: grounding on one scoped home alone leaves the root
+/// §FS-init.2.3.5: grounding on one scoped home alone leaves the root
 /// without a section and without a doubled blank line where the swap took it out,
 /// and the scoped block holds its grounding sentence with no legend and no
 /// closing line.
@@ -233,7 +233,7 @@ fn grounding_only_in_a_scoped_home_leaves_the_root_without_a_section() {
     assert_settled(&target, &["AGENTS.md", "tests/e2e/AGENTS.md"]);
 }
 
-/// §FS-init.2.3.4.10: a config scoped only by a field renders no section in
+/// §FS-init.2.3.5: a config scoped only by a field renders no section in
 /// either block, and the root block is whole from its first byte.
 #[test]
 fn a_config_scoped_only_by_a_field_renders_no_section_anywhere() {
@@ -252,7 +252,7 @@ fn a_config_scoped_only_by_a_field_renders_no_section_anywhere() {
     assert_settled(&target, &["AGENTS.md", "docs/fs/AGENTS.md"]);
 }
 
-/// §FS-init.2.3.5.8: a block that still carries the static sentence differs from
+/// §FS-init.2.3.5: a block that still carries the static sentence differs from
 /// the render, so `check` names its citation directions section and `init
 /// --check` would rewrite it.
 #[test]
@@ -285,7 +285,7 @@ fn a_block_still_carrying_the_static_sentence_is_stale() {
 }
 
 /// §DF-directions-only-from-rules: a config that declares a rule renders the
-/// section §FS-init.2.3.5.1 lays out, as before. Passes today and must keep
+/// section §FS-init.2.3.5 lays out, as before. Passes today and must keep
 /// passing.
 #[test]
 fn a_config_with_a_rule_keeps_the_legend_and_the_closing_line() {

@@ -23,15 +23,15 @@ fn full_scope_reports_a_dangling_citation_outside_include() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         vec!["sim/world.py:1: outside [scan] include: unknown reference FS-999-missing"],
-        "§FS-check.3.14.6: --full reports it, naming the key that hid it"
+        "§FS-check.3.14: --full reports it, naming the key that hid it"
     );
     assert_eq!(
         full.report.errors[0].code, "out-of-scope-dangling",
-        "§FS-check.3.14.5: the tier code is the in-scope rule's code under an `out-of-scope-` prefix"
+        "§FS-check.3.14: the tier code is the in-scope rule's code under an `out-of-scope-` prefix"
     );
 }
 
-/// §FS-check.1.3 / §FS-check.3.14.1 / §REQ-no-missed-citation.1: the
+/// §FS-check.1.3 / §FS-check.3.14 / §REQ-no-missed-citation.1: the
 /// configured kind's soft in-scope obligation cannot soften the opt-in
 /// out-of-scope resolution tier.
 #[test]
@@ -82,7 +82,7 @@ fn full_scope_withholds_style_and_grounding_outside_include() {
     let full = check_run(&root, true);
     assert!(
         full.report.errors.is_empty(),
-        "§FS-check.3.14.2: an inline-note budget is a role the project gave the file, so it is not judged out of scope — got {:?}",
+        "§FS-check.3.14: an inline-note budget is a role the project gave the file, so it is not judged out of scope — got {:?}",
         located_diagnostics(&full.config, &full.report.errors)
     );
     let scoped_style = check_run(&root.join("sim"), false);
@@ -108,7 +108,7 @@ fn full_scope_resolves_against_the_whole_walk() {
     let full = check_run(&root, true);
     assert!(
         full.report.errors.is_empty(),
-        "§FS-check.3.14.3: the tier reports references that point at nothing, not references that point outside the scope — got {:?}",
+        "§FS-check.3.14: the tier reports references that point at nothing, not references that point outside the scope — got {:?}",
         located_diagnostics(&full.config, &full.report.errors)
     );
 }
@@ -141,12 +141,12 @@ fn full_scope_withholds_the_mechanical_shorthand_rewrite() {
         vec![
             "sim/world.py:2: outside [scan] include: shorthand citation \u{a7}FS-777 matches no declaration; write the full ID it means"
         ],
-        "§FS-check.3.14.4: the mechanical rewrite is withheld because `fmt` scopes by `include` too; a shorthand matching nothing is still a resolution failure"
+        "§FS-check.3.14: the mechanical rewrite is withheld because `fmt` scopes by `include` too; a shorthand matching nothing is still a resolution failure"
     );
 }
 
-/// §FS-check.3.15.5: the numeric-run finding is withheld out of scope for the
-/// reason §FS-check.3.14.4 withholds the mechanical rewrite — `fmt` scopes by
+/// §FS-check.3.15: the numeric-run finding is withheld out of scope for the
+/// reason §FS-check.3.14 withholds the mechanical rewrite — `fmt` scopes by
 /// `[scan] include` too, so out there the error would name an edit no run in
 /// that scope is asking for. The fixture writes the *same* construct twice,
 /// once under `include` and once past it: the in-scope one is the error, the
@@ -189,7 +189,7 @@ fn full_scope_withholds_the_shorthand_numeric_run_finding() {
             "docs/notes.md:3: shorthand \u{a7}FS-042 sits in a numeric run and was not rewritten; write \u{a7}FS-042-user-login, or <§>FS-042 if these are old numbers",
             "sim/world.py:2: outside [scan] include: shorthand citation \u{a7}FS-777 matches no declaration; write the full ID it means",
         ],
-        "§FS-check.3.15.5: the same numeric run is an error under `include` and silent past it, while a shorthand matching nothing out there is still a resolution failure"
+        "§FS-check.3.15: the same numeric run is an error under `include` and silent past it, while a shorthand matching nothing out there is still a resolution failure"
     );
 }
 

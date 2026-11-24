@@ -1,6 +1,6 @@
 //! Applied version-specific repairs and quiet claim uncertainty for #1000.
-//! §FS-declarations.checks.misplaced-declaration.unlisted-project;
-//! §FS-config.3.5.16; §FS-workspace.6.1.7.5; §FS-check.3.29.2.
+//! §FS-declarations.checks.misplaced-declaration;
+//! §FS-config.3.5.16; §FS-workspace.6.1.7.5; §FS-check.3.29.
 
 use super::*;
 
@@ -144,7 +144,7 @@ fn under_ancestor(workspace: &str) -> (Fixture, Fixture) {
 
 fn assert_quiet_placement_context(workspace: &str) {
     let (_outer, repo) = under_ancestor(workspace);
-    // §FS-check.3.29.2: an ancestor claim left undecidable, by member text that
+    // §FS-check.3.29: an ancestor claim left undecidable, by member text that
     // cannot be obtained or a named claim that cannot expand, keeps both consumers quiet.
     for nested_workspace in [false, true] {
         repo.write("packages/notify/requirements.md", DECLARATION);

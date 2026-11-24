@@ -1,6 +1,6 @@
 //! Black-box: `grund init <path>` calls its target missing only where the lookup says so
 //! (§FS-init.1). Behind a directory the user cannot search the lookup is refused, which says
-//! nothing about the target (§FS-scan.scope.homes.lookup.path), so `init` refuses it at the path as
+//! nothing about the target (§FS-scan.scope.homes.lookup), so `init` refuses it at the path as
 //! given with `permission denied`, exit `2`, an empty stdout and nothing written, and never says
 //! `target directory does not exist`. The control keeps that line for a target that is not there.
 //! The barred case skips where mode 000 does not bar the user (root).

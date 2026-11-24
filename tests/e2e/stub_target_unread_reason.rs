@@ -1,4 +1,4 @@
-//! Why a name is not read is said in one wording, §FS-scan.checks.unread-scan-root.message, and a
+//! Why a name is not read is said in one wording, §FS-scan.checks.unread-scan-root, and a
 //! broken stub's target is told that wording (§FS-declarations.stubs.target.3). Every verdict
 //! here stays `broken-stub` and exit 1: only the reason moves. The trees are built in the temp
 //! directory so one fixture covers each target name under both configuration versions.

@@ -1,9 +1,9 @@
 //! Test module: what counts as an **entry** in a kind's index
 //! (§DF-index-entry-form.2.3). One predicate decides it — a citation is a bare
 //! entry exactly when the next `grund fmt --write` would wrap it — and every
-//! case here is a place where the answer is no, so §FS-check.3.17.4 must stay
+//! case here is a place where the answer is no, so §FS-check.3.17 must stay
 //! silent and §FS-check.3.18's error is what the reader gets instead — which
-//! is §FS-check.3.17.5 read over the whole module: anything else in the index
+//! is §FS-check.3.17 read over the whole module: anything else in the index
 //! is not an entry, satisfies §FS-check.3.18 no more than it is reported here,
 //! and leaves the ID to the finding whose fix is a human edit. Each was
 //! a permanent, unclearable error before the predicate replaced a list of
@@ -14,7 +14,7 @@ use crate::testing::{
     check_run, codes, findings, kind_index_repo, kind_index_repo_loose, only, write,
 };
 
-/// §FS-check.3.17.4 / §DF-index-entry-form.2.3: an unmarked token is a
+/// §FS-check.3.17 / §DF-index-entry-form.2.3: an unmarked token is a
 /// recognized citation off strict mode, and `fmt --cross-refs` still leaves
 /// it alone — without `--marker` a bare token stays bare (§FS-fmt.6.5). So it
 /// is not an entry `fmt` can repair, and the error that names `grund fmt

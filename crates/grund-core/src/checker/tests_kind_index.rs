@@ -47,7 +47,7 @@ fn a_declaration_the_index_does_not_name_is_an_error_at_the_declaration() {
             .message
             .ends_with("— became an error in grund 0.13.0")
             && !finding.message.contains("becomes an error in grund"),
-        "§FS-check.3.18.9: the ramp ended, so the clause reports the release it \
+        "§FS-check.3.18: the ramp ended, so the clause reports the release it \
              ended in rather than promising one: {}",
         finding.message
     );
@@ -56,7 +56,7 @@ fn a_declaration_the_index_does_not_name_is_an_error_at_the_declaration() {
             .errors
             .iter()
             .any(|diagnostic| diagnostic.code == "missing-index-entry"),
-        "§FS-check.3.18.9: an error, so it reaches the exit code: {:?}",
+        "§FS-check.3.18: an error, so it reaches the exit code: {:?}",
         findings(&run)
     );
     assert!(
@@ -64,12 +64,12 @@ fn a_declaration_the_index_does_not_name_is_an_error_at_the_declaration() {
             .warnings
             .iter()
             .all(|diagnostic| diagnostic.code != "missing-index-entry"),
-        "§FS-check.3.18.9: and it is not also on the warning path: {:?}",
+        "§FS-check.3.18: and it is not also on the warning path: {:?}",
         findings(&run)
     );
 }
 
-/// §FS-check.3.18.7: a folder with no index *file* is the same finding class,
+/// §FS-check.3.18: a folder with no index *file* is the same finding class,
 /// once per declaration — which is why it is anchored at the declaration.
 #[test]
 fn a_missing_index_file_reports_once_per_declaration() {
@@ -99,7 +99,7 @@ fn a_missing_index_file_reports_once_per_declaration() {
 
 /// §FS-check.3.17: the entry is there and is not a link. Reported at the
 /// citation's own line in the index, naming the command that fixes it — and
-/// §FS-check.3.17.6, one finding per ID: the bare entry earns exactly one
+/// §FS-check.3.17, one finding per ID: the bare entry earns exactly one
 /// `unlinked-index-entry` and never also §FS-check.3.18's missing-entry
 /// error, because one cause never yields both findings.
 #[test]
@@ -145,7 +145,7 @@ fn a_bare_entry_is_an_error_at_its_line_in_the_index() {
     );
 }
 
-/// §FS-check.3.18.5 / §FS-check.3.17.2 (§FS-citations.wrap.shape): the wrapped form is what satisfies the
+/// §FS-check.3.18 / §FS-check.3.17.2 (§FS-citations.wrap.shape): the wrapped form is what satisfies the
 /// rule, and `check` never looks at where the link points (§DF-index-entry-form.2.2).
 #[test]
 fn a_linked_entry_satisfies_the_rule_whatever_the_target_says() {
@@ -164,7 +164,7 @@ fn a_linked_entry_satisfies_the_rule_whatever_the_target_says() {
     );
 }
 
-/// §FS-check.3.17.1 / §DF-index-entry-form.2.2: the required form is the link
+/// §FS-check.3.17 / §DF-index-entry-form.2.2: the required form is the link
 /// `grund fmt --cross-refs` writes, not "has an anchor" — a declaration whose
 /// home is a source file links to the bare file path with no anchor at all.
 #[test]
@@ -198,7 +198,7 @@ fn an_anchorless_link_to_a_source_home_is_a_full_link() {
     );
 }
 
-/// §FS-check.3.18.6 / §DF-index-entry-form.2.3: and nothing more. One link per
+/// §FS-check.3.18 / §DF-index-entry-form.2.3: and nothing more. One link per
 /// ID is enough, and every other occurrence of the ID in the index — a prose
 /// mention beside a real linked entry — is untouched and never a finding. The
 /// AR index in this repository is the case.
@@ -219,7 +219,7 @@ fn one_link_satisfies_an_id_that_is_also_mentioned_bare() {
     );
 }
 
-/// §FS-check.3.18.2 / §DF-index-entry-form.2.5: which declarations are
+/// §FS-check.3.18 / §DF-index-entry-form.2.5: which declarations are
 /// covered — every ID of the kind with a declaration site anywhere under
 /// `folder`, the whole subtree and not its top level, because a kind's folder
 /// routinely holds a directory per topic.
@@ -318,14 +318,14 @@ fn version(text: &str) -> (u64, u64, u64) {
     )
 }
 
-/// §DF-index-compatibility-ramp.2.3: the releases §FS-check.3.17.3's message
+/// §DF-index-compatibility-ramp.2.3: the releases §FS-check.3.17's message
 /// names are literals in message text, and the version they are measured
 /// against is bumped at release time rather than when the work lands
 /// (§FS-distribution.4.4). This is the guard on the pair that is left. Both
 /// halves of it are claims about releases that happened — the verdict a
 /// §REQ-backwards-compatibility.3 migration *moved between* — so a run that
 /// printed either as a date still ahead would be promising rather than
-/// reporting. §FS-check.3.18.9's own release is a literal in its message
+/// reporting. §FS-check.3.18's own release is a literal in its message
 /// rather than a constant here, and the release gate reads it out of that
 /// line (§FS-distribution.4.2.2).
 #[test]
@@ -339,17 +339,17 @@ fn index_rule_releases_are_ordered_and_behind_us() {
     );
     assert!(
         prior <= current,
-        "§FS-check.3.17.3 says the rule was unchecked in {INDEX_RULE_PRIOR_RELEASE}, which has to be a release that happened (this tree is {})",
+        "§FS-check.3.17 says the rule was unchecked in {INDEX_RULE_PRIOR_RELEASE}, which has to be a release that happened (this tree is {})",
         env!("CARGO_PKG_VERSION")
     );
     assert!(
         arrival <= current,
-        "§FS-check.3.17.3 says the rule is an error as of {INDEX_RULE_RELEASE}, which has to be a release that happened rather than one still ahead (this tree is {})",
+        "§FS-check.3.17 says the rule is an error as of {INDEX_RULE_RELEASE}, which has to be a release that happened rather than one still ahead (this tree is {})",
         env!("CARGO_PKG_VERSION")
     );
 }
 
-/// §FS-check.3.18.7: the three ways an index file fails to read are named apart.
+/// §FS-check.3.18: the three ways an index file fails to read are named apart.
 /// "does not exist", said about a directory that plainly does, is a diagnosis
 /// the reader has to argue with before acting on it.
 #[test]
@@ -367,7 +367,7 @@ fn an_index_path_that_is_a_directory_says_so() {
     );
 }
 
-/// §FS-check.3.18.8: the entries come from the scan and the form from disk, so a
+/// §FS-check.3.18: the entries come from the scan and the form from disk, so a
 /// run that never scanned the index cannot say what it lists. Reporting every
 /// declaration as unlisted there would be a finding about the scope.
 #[test]

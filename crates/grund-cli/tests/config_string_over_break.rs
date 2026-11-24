@@ -2,8 +2,8 @@
 //! (§FS-config-v2.reader.5.strings). Ports grund.160's reproducer (#1089) and #1118's: from
 //! grund 0.22.0 the open line is the array's last, so an array is refused at its key's line as
 //! `unclosed array`, naming the open line, and the release that made it one where the readers
-//! before would have loaded it (§FS-config-v2.reader.5.strings.refusal); a `"""` string says
-//! version 2 does not read it (§FS-config-v2.reader.5.strings.multi-line); an array they refused
+//! before would have loaded it (§FS-config-v2.reader.5.strings); a `"""` string says
+//! version 2 does not read it (§FS-config-v2.reader.5.strings); an array they refused
 //! too, one that never closes among them, keeps its bare refusal; `config-not-toml` and
 //! `config-multiline-string` are spent (§FS-config-v2.checks.config-not-toml); and `config show`
 //! writes a line break inside a value as `\n`, so its output loads back (§FS-config.4.2).
@@ -21,7 +21,7 @@ const HEAD: &str = "grund_config_version = 2\n\n[schema.kinds.SPEC]\nfiles = [\"
                     [schema.kinds.code]\nfolders = [\"src\"]\n\n[schema.sources]\nexclude = ";
 
 /// The 0.22.0 refusal of the array at line 10 whose string is open at the end of line
-/// `open`, which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
+/// `open`, which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings).
 fn became(open: usize) -> String {
     format!(
         "error: grund.toml:10: unclosed array (a string is still open at the end of line \
@@ -126,7 +126,7 @@ impl Drop for Fixture {
     }
 }
 
-/// grund.160's first case, §FS-config-v2.reader.5.strings.refusal: `"a` / `b",` loaded as
+/// grund.160's first case, §FS-config-v2.reader.5.strings: `"a` / `b",` loaded as
 /// `a b` through 0.21.x, and from 0.22.0 its open line, line 11, ends the array, which is
 /// refused at its key's line, naming that line and 0.22.0, where `config-not-toml` warned
 /// (§FS-config-v2.checks.config-not-toml.1).
@@ -135,7 +135,7 @@ fn a_string_over_a_break_is_refused_naming_its_open_line() {
     Fixture::excluding("[\n  \"a\nb\",\n]\n").refused(&became(11));
 }
 
-/// grund.160's second case, §FS-config-v2.reader.5.strings.refusal: `"a,` / `b",`, which
+/// grund.160's second case, §FS-config-v2.reader.5.strings: `"a,` / `b",`, which
 /// loaded as `a, b`, is refused the same way.
 #[test]
 fn a_string_holding_a_comma_over_a_break_is_refused() {
@@ -157,7 +157,7 @@ fn an_escaped_quote_at_a_line_end_leaves_the_string_open() {
     Fixture::excluding("[\n  \"a\\\"\n  b\",\n]\n").refused(&became(11));
 }
 
-/// §FS-config-v2.reader.5.strings.multi-line: a string opened with `"""` is TOML, so the
+/// §FS-config-v2.reader.5.strings: a string opened with `"""` is TOML, so the
 /// refusal says version 2 does not read it, with the suffix, because it loaded through the
 /// window as `""a b""`.
 #[test]
@@ -167,7 +167,7 @@ fn a_multi_line_string_over_a_break_is_refused_as_one_version_2_does_not_read() 
     Fixture::excluding("[\n  \"\"\"a\nb\"\"\",\n]\n").refused(refusal);
 }
 
-/// §FS-config-v2.reader.5.strings, §FS-config-v2.reader.5.strings.multi-line: three quotes in a
+/// §FS-config-v2.reader.5.strings: three quotes in a
 /// row open a multi-line string, so `""""a` leaves line 11 open, the line TOML names, where
 /// reading quote by quote named line 12 (#1091's review, R1-04). The readers before did not
 /// close the array either, so the refusal claims no release.
@@ -178,7 +178,7 @@ fn a_run_of_four_quotes_opens_a_multi_line_string_on_its_own_line() {
     Fixture::excluding("[\n\"\"\"\"a\nb\"\"\",\n\"c\",\n]\n").refused(refusal);
 }
 
-/// §FS-config-v2.reader.5.strings.refusal: the suffix says the readers before loaded the array,
+/// §FS-config-v2.reader.5.strings: the suffix says the readers before loaded the array,
 /// their reading decides it end to end, so `"""a"`, in which reading quote by quote met no open
 /// line, loaded as `""a` and names 0.22.0, and `"a` / `b", 1,`, which that reading closed and
 /// then refused for its `1`, claims no release.
@@ -216,7 +216,7 @@ fn both_codes_are_spent_and_say_so_when_selected() {
     }
 }
 
-/// Guard, green today and kept (§FS-config-v2.reader.5.strings.refusal): an array the readers
+/// Guard, green today and kept (§FS-config-v2.reader.5.strings): an array the readers
 /// before never closed is refused as before, at its key's line, naming its open line; the `#`
 /// on the line after it is never read as a comment that swallows the quote, and the refusal
 /// claims no release, because it was refused before.

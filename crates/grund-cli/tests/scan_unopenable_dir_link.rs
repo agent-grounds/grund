@@ -1,8 +1,8 @@
 //! Black-box: a directory link whose target cannot be opened fails at the link, once, and never
-//! at a walk root that met it (§FS-scan.scope.links.unresolvable.unopenable). A link to a target
+//! at a walk root that met it (§FS-scan.scope.links.unresolvable). A link to a target
 //! in no tree the run reads, and a link the walk is told not to read, stay silent whether or not
 //! the target can be opened; a link into a project or an import the run reads does not
-//! (§FS-scan.scope.links.owed.fence). What is judged is the `path` of every `io` diagnostic in
+//! (§FS-scan.scope.links.owed). What is judged is the `path` of every `io` diagnostic in
 //! `--format json`, and the exit code, not the wording. Git carries no mode, so the e2e corpus
 //! cannot hold these trees, and every test skips where mode 000 does not bar the user (root).
 #![cfg(unix)]
@@ -509,7 +509,7 @@ fn a_link_into_an_imported_tree_is_reported_at_the_link() {
 
 /// A link standing at a home the config lists without walking is not kept out as a hidden name is:
 /// no declared blind spot covers it, so its exit stays 2 and the line moves to the link, even with
-/// a target nothing else reads (§FS-scan.scope.links.unresolvable.unopenable).
+/// a target nothing else reads (§FS-scan.scope.links.unresolvable).
 #[test]
 fn a_link_standing_at_an_unwalked_home_is_reported_at_the_link() {
     let mut tree = Tree::new("unwalked-home");

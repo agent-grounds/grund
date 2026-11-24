@@ -330,7 +330,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     let init_output = init(InitOpts {
         target: init_root.to_path_buf(),
         dry_run: true,
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })

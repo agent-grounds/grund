@@ -1,4 +1,4 @@
-"""§FS-distribution.4.6.3.1 — a forge call the release makes is tried three times,
+"""§FS-distribution.4.6.3 — a forge call the release makes is tried three times,
 waiting one second and then two between failed attempts; a non-zero `gh` and an
 answer that is not JSON share that budget, the last attempt's diagnostic is the
 refusal, and a missing `gh` or an answer of the wrong shape is refused at once.

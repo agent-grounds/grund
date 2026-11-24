@@ -4,7 +4,7 @@
 //! the four readers of a string agree on what a quote is (§FS-config.3.11); `config show`
 //! writes a line break inside a value as its escape (§FS-config.4.2). An array takes one
 //! trailing comma, after an element, and from grund 0.22.0 any other comma before its `]` is
-//! the element reader's to refuse (§FS-config-v2.reader.5.commas.refusal).
+//! the element reader's to refuse (§FS-config-v2.reader.5.commas).
 
 use std::path::Path;
 
@@ -48,7 +48,7 @@ fn an_escaped_quote_at_a_line_end_leaves_the_string_open() {
     assert_eq!(refusal("[\n  \"a\\\"\n"), unclosed(3));
 }
 
-/// §FS-config-v2.reader.5.strings.multi-line: a string opened with `"""` is named as one
+/// §FS-config-v2.reader.5.strings: a string opened with `"""` is named as one
 /// version 2 does not read, not as one left unclosed.
 #[test]
 fn a_multi_line_string_names_what_version_2_does_not_read() {
@@ -145,7 +145,7 @@ fn only_one_trailing_comma_after_an_element_comes_off_before_the_bracket() {
     }
 }
 
-/// §FS-config-v2.reader.5.commas.refusal: the walk refuses each array whose text loaded through
+/// §FS-config-v2.reader.5.commas: the walk refuses each array whose text loaded through
 /// the window as `expected string` with 0.22.0's suffix, at its key's line, and each shape it
 /// refused before with the bare message.
 #[test]

@@ -166,7 +166,7 @@ POINTERS = (
      ("FS-scan.scope.roots",), 12,
      ("no scan root is pruned by `exclude`, an ignore file, or the hidden-directory rule",)),
     ("FS-config.3.5.10",
-     ("FS-scan.scope.homes.why",), 9,
+     ("FS-scan.scope.homes",), 9,
      ("outside `include` was never scanned, so its declarations did not exist",)),
     ("FS-config.3.5.11",
      ("FS-scan.scope.not-a-fence",), 12,

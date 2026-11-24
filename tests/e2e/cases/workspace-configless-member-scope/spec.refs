@@ -3,7 +3,7 @@ FS-workspace.5
 FS-workspace.8.8
 FS-scan.path.discovery
 FS-scan.projects.discovery
-FS-declarations.checks.misplaced-declaration.1
+FS-declarations.checks.misplaced-declaration
 FS-config.principle.boundary
 FS-config.requirements.8
 FS-workspace.5.1.1

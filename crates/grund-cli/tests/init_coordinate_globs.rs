@@ -1,5 +1,5 @@
 //! The managed block, the query guide and the `grund-init` skill teach coordinate globs in place
-//! of the `jq` pipe (§FS-init.2.3.4.3.1), and every block from v27 does (§FS-init.2.3.7.1).
+//! of the `jq` pipe (§FS-init.2.3.4), and every block from v27 does (§FS-init.2.3.7).
 
 use std::fs;
 

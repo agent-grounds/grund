@@ -1,6 +1,6 @@
 //! Binary-level contract for unmarked Markdown headings, the error they became
 //! in grund 0.16.0, and managed-block repair (§FS-declarations.checks.unmarked-heading,
-//! §FS-init.2.3.4.5.1, §FS-declarations.checks.unmarked-heading.5).
+//! §FS-init.2.3.4, §FS-declarations.checks.unmarked-heading).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -50,7 +50,7 @@ fn stderr(output: &Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
 }
 
-/// §FS-declarations.checks.unmarked-heading.5: the ramp landed in grund 0.16.0 —
+/// §FS-declarations.checks.unmarked-heading: the ramp landed in grund 0.16.0 —
 /// the finding is an error that exits `1`, says so in the past tense, and is
 /// still the one `--ignore unmarked-heading` clears together with the exit.
 #[test]
@@ -78,12 +78,12 @@ fn unmarked_heading_is_an_error_that_names_the_release_it_landed_in() {
     assert_eq!(stdout(&ignored), "success\n");
 }
 
-/// §FS-declarations.checks.unmarked-heading.6: no command numbers the heading, and nothing else moves
+/// §FS-declarations.checks.unmarked-heading: no command numbers the heading, and nothing else moves
 /// either — `grund_config_version` stays `1`, no `unmarked_headings` key
 /// appears, and the managed agent block is the mechanical repair surface that
 /// moves to the current schema under `grund init`.
 ///
-/// §FS-init.2.3.7.1: v47 is the current base schema and every earlier block is
+/// §FS-init.2.3.7: v47 is the current base schema and every earlier block is
 /// repaired by the same one-command `grund init` re-render — the fixture starts
 /// at v9 and the re-rendered block reads v47, still carrying the in-body heading
 /// policy v10 is the version that added.
@@ -209,7 +209,7 @@ fn suggested_titles_preserve_hash_text_and_only_remove_atx_closers() {
     assert_eq!(stdout(&repaired), "success\n");
 }
 
-/// §FS-declarations.checks.unmarked-heading.3: the suggested coordinate is guidance, not a rewrite, and
+/// §FS-declarations.checks.unmarked-heading: the suggested coordinate is guidance, not a rewrite, and
 /// a titleless ATX heading has no authored title to preserve — so the
 /// otherwise-identical suggestion uses the literal title `Untitled`, and
 /// applying that complete suggested heading produces a recognized section and
@@ -248,7 +248,7 @@ fn titleless_heading_gets_a_self_valid_suggestion() {
     assert_eq!(stdout(&repaired), "success\n");
 }
 
-/// §FS-declarations.checks.unmarked-heading.6: `show`, `list` and the slices they cut keep their current
+/// §FS-declarations.checks.unmarked-heading: `show`, `list` and the slices they cut keep their current
 /// behaviour — the error names a heading, it never renumbers one or shortens
 /// the body a reader gets. The plain H1 below it ends the body, as every reader
 /// ends one since 0.19.0 (§FS-declarations.body).

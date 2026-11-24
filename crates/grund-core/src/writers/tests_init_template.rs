@@ -1,7 +1,7 @@
 //! Test module: the template a `grund init` run lays (§FS-init.1.6) — the two
 //! built-ins and their refusals, the note an explicit template earns over an
 //! existing config, and what the `none` template's run writes, renders and
-//! advises (§FS-init.2.2.2.2, §FS-init.2.3.4.4.2, §FS-init.2.4.9).
+//! advises (§FS-init.2.2.2, §FS-init.2.3.4, §FS-init.2.4.9).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -17,7 +17,7 @@ fn run(root: &Path, template: Option<&str>, docs: bool) -> Result<InitOutput, In
         name: Some("demo".to_string()),
         template: template.map(str::to_string),
         docs,
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })
@@ -42,7 +42,7 @@ fn tree(root: &Path) -> Vec<(PathBuf, Vec<u8>)> {
     out
 }
 
-/// §FS-init.1.6.1, §FS-init.1.6.3, §FS-init.1.6.4: no name is the default, the
+/// §FS-init.1.6: no name is the default, the
 /// two built-ins resolve by name, and the refusals name what is built in.
 #[test]
 fn a_template_name_resolves_or_is_refused() {
@@ -65,7 +65,7 @@ fn a_template_name_resolves_or_is_refused() {
     );
 }
 
-/// §FS-init.1.6.3, §FS-init.1.6.4: a refused template writes nothing at all.
+/// §FS-init.1.6: a refused template writes nothing at all.
 #[test]
 fn a_refused_template_writes_nothing() {
     for (case, template, docs) in [("unknown", "docs", false), ("none_scaffold", "none", true)] {
@@ -80,7 +80,7 @@ fn a_refused_template_writes_nothing() {
     }
 }
 
-/// §FS-init.1.6.1: naming the default lays the tree no name lays, starter files
+/// §FS-init.1.6: naming the default lays the tree no name lays, starter files
 /// included.
 #[test]
 fn naming_the_default_template_lays_the_same_tree() {
@@ -91,7 +91,7 @@ fn naming_the_default_template_lays_the_same_tree() {
     assert_eq!(tree(&bare), tree(&named));
 }
 
-/// §FS-init.1.6.2, §FS-init.2.4.9, §FS-init.3.6: `none` writes its config and the
+/// §FS-init.1.6, §FS-init.2.4.9, §FS-init.3.6: `none` writes its config and the
 /// entrypoint, and nothing in a home; the guidance teaches the first kind.
 #[test]
 fn the_none_template_writes_a_config_with_no_kinds() {
@@ -118,10 +118,10 @@ fn the_none_template_writes_a_config_with_no_kinds() {
     assert!(output.notes.is_empty(), "{:?}", output.notes);
 }
 
-/// §FS-init.2.3.4.4.2: the block a config with no kinds renders names no empty
+/// §FS-init.2.3.4: the block a config with no kinds renders names no empty
 /// set, and teaches the first `[schema.kinds.<KIND>]` table of the v2 file
 /// `none` writes instead (§FS-init.2.4.9); it declares no rule, so it has no
-/// Citation directions section (§FS-init.2.3.4.10).
+/// Citation directions section (§FS-init.2.3.5).
 #[test]
 fn the_none_template_block_teaches_the_first_kind() {
     let root = test_root("init_template_none_block");
@@ -142,7 +142,7 @@ fn the_none_template_block_teaches_the_first_kind() {
     assert!(!block.contains("No kind is declared yet"), "{block}");
 }
 
-/// §FS-init.1.6.5: an explicit template over an existing config keeps the config
+/// §FS-init.1.6: an explicit template over an existing config keeps the config
 /// and says so; a run that named no template gets no note.
 #[test]
 fn an_explicit_template_over_a_config_earns_a_note() {

@@ -1,4 +1,4 @@
-//! §FS-scan.scope.homes.lookup.path.library: a library caller's path whose lookup says nothing
+//! §FS-scan.scope.homes.lookup: a library caller's path whose lookup says nothing
 //! stands there is refused with `path does not exist: <path>`, whatever `path_provided` says.
 //! Ported from tool report grund.308's reproducer (agent-grounds/grund#1443): an embedder that
 //! sets only `path` got `Ok`, the check of the project the missing path's parent sits in.
@@ -55,7 +55,7 @@ impl Drop for Repo {
     }
 }
 
-/// The refusal the CLI prints for the same path (§FS-scan.scope.homes.lookup.path).
+/// The refusal the CLI prints for the same path (§FS-scan.scope.homes.lookup).
 fn assert_refused<T: std::fmt::Debug>(entry: &str, path: &Path, result: anyhow::Result<T>) {
     let expected = format!("path does not exist: {}", path.display());
     match result {

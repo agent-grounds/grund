@@ -1,5 +1,5 @@
 //! Test module: which numbered headings are a declaration's **own** sections
-//! (§FS-declarations.checks.duplicate-section.2's body scope, §FS-show.2.5, §FS-show.2.3.1), and the agreement
+//! (§FS-declarations.checks.duplicate-section's body scope, §FS-show.2.5, §FS-show.2.3.1), and the agreement
 //! that rests on the answer — `grund <ID>.<path>` refuses exactly the coordinates
 //! `grund check` reports as `duplicate-section` (§FS-show.2.2.2). The cases here
 //! are the shapes that made the two disagree: a heading inside a fenced example, a
@@ -98,7 +98,7 @@ fn core() -> Id {
     }
 }
 
-/// §FS-declarations.checks.duplicate-section.2, the body scope: the scan's "current declaration" runs to the
+/// §FS-declarations.checks.duplicate-section, the body scope: the scan's "current declaration" runs to the
 /// next declaration line, so a `## 1.` in the *next* item's doc-comment lands on
 /// the one above it. It is not one of that declaration's sections — `show` stops
 /// at the blank line ending the comment block (§FS-show.2.3.1.2) and never reads it
@@ -199,7 +199,7 @@ fn a_collision_inside_one_doc_comment_is_reported() {
     );
 }
 
-/// §FS-declarations.checks.duplicate-section.2, the stub clause: a stub's heading tail is a path, its body is
+/// §FS-declarations.checks.duplicate-section, the stub clause: a stub's heading tail is a path, its body is
 /// one line, and the prose under it belongs to no declaration's sections. The
 /// headings that count are the inline home's — the file `show` actually reads.
 #[test]

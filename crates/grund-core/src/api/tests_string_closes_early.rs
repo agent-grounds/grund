@@ -1,11 +1,11 @@
 //! Test module: a version-2 string ends at its first unescaped quote
 //! (§FS-config-v2.reader.6). From grund 0.22.0 a string that closes early is refused at
 //! its key's line as `expected string`, ending with the release that made it one where
-//! it loaded through the 0.21.x window (§FS-config-v2.reader.6.refusal); a `"""` string
+//! it loaded through the 0.21.x window (§FS-config-v2.reader.6); a `"""` string
 //! on one line is refused with a parenthetical naming the form
-//! (§FS-config-v2.reader.6.multi-line). A string that closes at its end, a value refused
+//! (§FS-config-v2.reader.6). A string that closes at its end, a value refused
 //! before and a version-1 file keep what they had, and an array with an open line is refused
-//! for it first (§FS-config-v2.reader.5.strings.refusal).
+//! for it first (§FS-config-v2.reader.5.strings).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::Path;
@@ -68,12 +68,12 @@ fn multi_line(key: usize) -> String {
 }
 
 /// The 0.22.0 refusal of the array at line 10 whose string is open at the end of line 11,
-/// which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
+/// which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings).
 const OPEN_LINE: &str = "grund.toml:10: unclosed array (a string is still open at the end of line \
                          11); this became an error in grund 0.22.0";
 
 /// [`OPEN_LINE`] where the string open at line 11's end opened with `"""`
-/// (§FS-config-v2.reader.5.strings.multi-line).
+/// (§FS-config-v2.reader.5.strings).
 const MULTI_LINE_OPEN: &str = "grund.toml:10: unclosed array (a multi-line string opens on line \
                                11, which version 2 does not read); this became an error in \
                                grund 0.22.0";
@@ -89,13 +89,13 @@ fn spec_fetch(root: &Path) -> Option<String> {
     spec.fetch.clone()
 }
 
-/// §FS-config-v2.reader.6.refusal: a scalar that closes early is refused with the suffix.
+/// §FS-config-v2.reader.6: a scalar that closes early is refused with the suffix.
 #[test]
 fn a_scalar_that_closes_early_is_refused() {
     refused(&v2("scalar", "fetch = \"one\" \"two\"\n"), &suffixed(8));
 }
 
-/// §FS-config-v2.reader.6.refusal: an element that closes early is refused with the
+/// §FS-config-v2.reader.6: an element that closes early is refused with the
 /// suffix.
 #[test]
 fn an_element_that_closes_early_is_refused() {
@@ -106,7 +106,7 @@ fn an_element_that_closes_early_is_refused() {
     refused(&root, &suffixed(10));
 }
 
-/// §FS-config-v2.reader.6.refusal: a value is refused once however many of its strings
+/// §FS-config-v2.reader.6: a value is refused once however many of its strings
 /// close early.
 #[test]
 fn a_value_with_two_early_closes_is_refused() {
@@ -117,7 +117,7 @@ fn a_value_with_two_early_closes_is_refused() {
     refused(&root, &suffixed(10));
 }
 
-/// §FS-config-v2.reader.6.refusal: in an array written across lines the refusal is at
+/// §FS-config-v2.reader.6: in an array written across lines the refusal is at
 /// the key's line, as every value's is.
 #[test]
 fn an_element_on_a_later_line_is_refused_at_its_key() {
@@ -128,7 +128,7 @@ fn an_element_on_a_later_line_is_refused_at_its_key() {
     refused(&root, &suffixed(10));
 }
 
-/// §FS-config-v2.reader.6.refusal: a quoted key is a string of its own, and is refused.
+/// §FS-config-v2.reader.6: a quoted key is a string of its own, and is refused.
 #[test]
 fn a_quoted_key_that_closes_early_is_refused() {
     let root = v2(
@@ -150,7 +150,7 @@ fn escapes_before_an_early_close_are_refused() {
     refused(&root, &suffixed(8));
 }
 
-/// §FS-config-v2.reader.6.multi-line: a `"""` string on one line is refused with the
+/// §FS-config-v2.reader.6: a `"""` string on one line is refused with the
 /// parenthetical, then the suffix.
 #[test]
 fn a_triple_quoted_string_on_one_line_is_refused() {
@@ -161,7 +161,7 @@ fn a_triple_quoted_string_on_one_line_is_refused() {
     refused(&root, &multi_line(10));
 }
 
-/// §FS-config-v2.reader.5.strings.refusal, §FS-config-v2.reader.6.refusal: an array with an
+/// §FS-config-v2.reader.5.strings, §FS-config-v2.reader.6: an array with an
 /// open line is refused for it before any element is read, so its string that closes early
 /// earns no refusal of its own.
 #[test]
@@ -175,7 +175,7 @@ fn an_open_line_and_an_early_close_are_refused_as_the_open_line() {
 
 /// §FS-config-v2.reader.5.strings: a `"""` run closes the multi-line string the one before it
 /// opened, so the `"` after it opens a plain string, and the line it leaves open is the plain
-/// open line the array is refused for (§FS-config-v2.reader.5.strings.refusal).
+/// open line the array is refused for (§FS-config-v2.reader.5.strings).
 #[test]
 fn a_break_after_a_one_line_triple_quoted_string_is_refused_as_a_plain_open_line() {
     let root = v2(
@@ -185,7 +185,7 @@ fn a_break_after_a_one_line_triple_quoted_string_is_refused_as_a_plain_open_line
     refused(&root, OPEN_LINE);
 }
 
-/// §FS-config-v2.reader.5.strings.multi-line: a `"""` string a line break runs through is the
+/// §FS-config-v2.reader.5.strings: a `"""` string a line break runs through is the
 /// open line's construct, refused as an unclosed array with its multi-line parenthetical.
 #[test]
 fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
@@ -196,7 +196,7 @@ fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
     refused(&root, MULTI_LINE_OPEN);
 }
 
-/// §FS-config-v2.reader.5.strings.refusal: the first open line is the array's last, so of two
+/// §FS-config-v2.reader.5.strings: the first open line is the array's last, so of two
 /// `"""` strings over breaks the first is the one the refusal names.
 #[test]
 fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
@@ -207,7 +207,7 @@ fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
     refused(&root, MULTI_LINE_OPEN);
 }
 
-/// §FS-config-v2.reader.5.strings.refusal: a `"""` string over a break after a plain open line
+/// §FS-config-v2.reader.5.strings: a `"""` string over a break after a plain open line
 /// is never reached, so the plain open line is the refusal's.
 #[test]
 fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_is_refused_as_that_line() {
@@ -231,7 +231,7 @@ fn strings_that_close_at_their_end_earn_nothing() {
 }
 
 /// Guard, green today and kept: a value the readers before refused is refused as
-/// before, with the bare `expected string` (§FS-config-v2.reader.6.refusal).
+/// before, with the bare `expected string` (§FS-config-v2.reader.6).
 #[test]
 fn a_value_refused_before_is_refused_as_before() {
     let root = v2(

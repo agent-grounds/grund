@@ -13,7 +13,7 @@ fn init_next_guidance_uses_the_built_in_fs_folder() {
         target: root.to_path_buf(),
         docs: true,
         dry_run: true,
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })
@@ -55,7 +55,7 @@ file = "specs/requirements.md"
         target: root.to_path_buf(),
         docs: true,
         dry_run: true,
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })
@@ -132,7 +132,7 @@ fn refresh_after_config_change(name: &str, fs_home_exists: bool) -> InitOutput {
     }
     let opts = || InitOpts {
         target: root.clone(),
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     };
@@ -155,7 +155,7 @@ fn refresh_after_config_change(name: &str, fs_home_exists: bool) -> InitOutput {
 
 #[test]
 fn refresh_of_a_complete_setup_has_no_next_guidance() {
-    // §FS-init.2.2.2.1: a refresh whose effective FS home exists teaches nothing.
+    // §FS-init.2.2.2: a refresh whose effective FS home exists teaches nothing.
     let output = refresh_after_config_change("refresh_of_a_complete_setup", true);
     assert!(
         output.next.is_none(),
@@ -166,7 +166,7 @@ fn refresh_of_a_complete_setup_has_no_next_guidance() {
 
 #[test]
 fn refresh_without_the_fs_home_keeps_next_guidance() {
-    // §FS-init.2.2.2.1: the counter-case keeps the block, step 1 included.
+    // §FS-init.2.2.2: the counter-case keeps the block, step 1 included.
     let output = refresh_after_config_change("refresh_without_the_fs_home", false);
     let rendered = output.next.expect("next guidance").render();
     assert!(

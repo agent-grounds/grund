@@ -3,9 +3,9 @@
 //! body holds it (§FS-declarations.section.map.nested, §FS-declarations.section.map,
 //! §FS-declarations.body). `show` prints it, `--toc` lists it, a citation of it checks clean,
 //! and it is a claimant like any other in that body: a path repeated across the nested
-//! declaration is a duplicate (§FS-declarations.checks.duplicate-section.2), and an unmarked
+//! declaration is a duplicate (§FS-declarations.checks.duplicate-section), and an unmarked
 //! heading after it is suggested the next unused sibling
-//! (§FS-declarations.checks.unmarked-heading.3). The verdicts this moves are
+//! (§FS-declarations.checks.unmarked-heading). The verdicts this moves are
 //! §DF-section-after-nested-declaration. Issue #1359 is the report's shape: `check` told the
 //! author to number the heading as `AR-ci.1`, and once numbered nothing resolved it.
 //!

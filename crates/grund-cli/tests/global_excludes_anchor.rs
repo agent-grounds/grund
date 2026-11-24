@@ -1,6 +1,6 @@
 //! A pattern in git's global `core.excludesFile` anchors at the top of the
 //! repository its path belongs to, wherever the run starts
-//! (§FS-scan.scope.ignore-files.global). Git-backed, because a committed fixture
+//! (§FS-scan.scope.ignore-files). Git-backed, because a committed fixture
 //! can carry neither a `.git` nor a global git configuration.
 
 use std::fs;

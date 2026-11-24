@@ -282,7 +282,7 @@ class RequirementRouteTests(unittest.TestCase):
 
 class DecisionRouteTests(unittest.TestCase):
     def test_every_correction_decision_proves_all_five_gates(self):
-        """Explain every refusal without truncating its reasons (§FS-distribution.4.6.4.2)."""
+        """Explain every refusal without truncating its reasons (§FS-distribution.4.6.4)."""
         catalog = _requirement_catalog()
         release_entries = _release_entries()
         for path in sorted(DECISIONS.rglob("*.md")):
@@ -360,7 +360,7 @@ but there is no conflict proof, ordinary-route analysis, or release record.
 
 class ReleaseRecordSourceTests(unittest.TestCase):
     """Where the meter finds a release record now that no change waits in the
-    tree for a release (§FS-distribution.4.12): the released sections, archived
+    tree for a release (§FS-distribution.4.6): the released sections, archived
     and inline, and the correction's own `release-note` section
     (§FS-distribution.4.6.4) - never `docs/changelog/unreleased/`."""
 

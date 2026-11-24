@@ -28,7 +28,7 @@ fn fmt_tree(case: &str, version: u8) -> (Tree, &'static str, &'static str) {
 }
 
 /// The bytes `fmt --write` writes for one file under each link name and each scope, which must
-/// be those of the same tree with no link (§FS-scan.identity.reading.every-caller).
+/// be those of the same tree with no link (§FS-scan.identity.reading).
 fn every_name_and_scope_writes_one_set_of_bytes(version: u8) {
     let (control, folder, id) = fmt_tree(&format!("fmt-v{version}-control"), version);
     let original = format!("Quoted \"$${id}\" here.\nOutside $${id} here.\n");
@@ -137,7 +137,7 @@ fn ignored_rust_target(case: &str) -> Tree {
 }
 
 /// The compatibility case: an in-root target whose own spelling is never scanned still claims by
-/// its name, and the link earns the one warning (§FS-scan.identity.reading.claims,
+/// its name, and the link earns the one warning (§FS-scan.identity.reading,
 /// §FS-scan.checks.reading-moved).
 #[test]
 fn an_excluded_targets_own_name_still_claims_a_reading() {
@@ -179,7 +179,7 @@ fn an_excluded_targets_own_name_still_claims_a_reading() {
 
 /// "At each link whose reading moved": the name listed first decided the file before, so only it
 /// earns the warning, and a link listed after its target earns none
-/// (§FS-scan.checks.reading-moved.1).
+/// (§FS-scan.checks.reading-moved).
 #[test]
 fn the_warning_stands_at_the_link_whose_reading_moved_and_nowhere_else() {
     for (alias, moved) in [("a-link.txt", true), ("z-link.txt", false)] {
@@ -221,7 +221,7 @@ fn license_under_v1(case: &str, extensions: &str) -> Tree {
 }
 
 /// The owner's addition: a v1 list holding `""` reads `LICENSE`, so there it claims a reading and
-/// the link stops being Markdown (§FS-scan.identity.reading.claims,
+/// the link stops being Markdown (§FS-scan.identity.reading,
 /// §FS-scan.scope.extensions.empty).
 #[test]
 fn a_v1_empty_extension_makes_license_claim_a_reading() {
@@ -243,7 +243,7 @@ fn a_v1_empty_extension_makes_license_claim_a_reading() {
 }
 
 /// The value reader asks the rule too: this file is YAML by its own name, and `paths[0]`, a link
-/// named `.json`, no longer decides (§FS-scan.identity.reading.every-caller).
+/// named `.json`, no longer decides (§FS-scan.identity.reading).
 #[test]
 fn the_value_reader_takes_its_format_from_the_files_own_name() {
     let tree = Tree::new(
@@ -263,7 +263,7 @@ fn the_value_reader_takes_its_format_from_the_files_own_name() {
 
 /// Guard: `docs/license.md -> ../LICENSE` and `src/gen.rs -> ../build/gen.rs.in` must stay read
 /// by the link's name, since the target's own name claims nothing
-/// (§FS-scan.identity.reading.claims).
+/// (§FS-scan.identity.reading).
 #[test]
 fn a_target_whose_own_name_claims_nothing_keeps_the_links_reading() {
     let tree = Tree::new(
@@ -289,7 +289,7 @@ fn without_the_empty_extension_license_claims_nothing() {
 }
 
 /// Guard: an outside name has no say, so a Markdown link to `/elsewhere/spec.txt` keeps its
-/// declarations with no second name in sight (§FS-scan.identity.reading.outside).
+/// declarations with no second name in sight (§FS-scan.identity.reading).
 #[test]
 fn a_target_outside_the_root_keeps_the_links_reading() {
     let outside = Tree::new("outside-target", "");
@@ -305,7 +305,7 @@ fn a_target_outside_the_root_keeps_the_links_reading() {
 }
 
 /// Guard: whether a spelling enters the scan is judged by the name met
-/// (§FS-scan.identity.reading.entry).
+/// (§FS-scan.identity.reading).
 #[test]
 fn a_spelling_the_scan_does_not_admit_stays_unread() {
     let tree = Tree::new(

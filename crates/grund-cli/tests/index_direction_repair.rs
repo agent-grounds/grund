@@ -1,6 +1,6 @@
 //! Black-box regression for index-specific direction repairs (§FS-check.3.12.2).
 //! The CLI's verdict, site and JSON shape stay fixed; the suggested edit must
-//! preserve the marked index entry that §FS-check.3.18.5 requires.
+//! preserve the marked index entry that §FS-check.3.18 requires.
 
 #[path = "support/fixture_cleanup.rs"]
 mod fixture_cleanup;
@@ -252,7 +252,7 @@ fn rule_sentence_index_repair_names_its_authority() {
     );
 }
 
-/// §FS-check.3.18.5: removing the marker is not an accepted repair.
+/// §FS-check.3.18: removing the marker is not an accepted repair.
 #[test]
 fn markerless_index_link_still_fails_after_the_may_edit() {
     let repo = Repo::new("[rules.citations.REQ]\nmay = [\"GOAL\", \"REQ\"]");

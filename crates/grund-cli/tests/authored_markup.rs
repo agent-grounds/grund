@@ -329,12 +329,12 @@ fn a_collapsed_reference_and_its_definition_keep_one_key() {
 }
 
 /// The §FS-check.3.18 finding for `ADR-use-redis` where the index mentions it and holds
-/// no entry for it: it appears, but not as an entry (§FS-check.3.18.5).
+/// no entry for it: it appears, but not as an entry (§FS-check.3.18).
 const REDIS_APPEARS: &str = "docs/adr/use-redis.md:1: error: ADR-use-redis appears in docs/adr/README.md \
      but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an \
      error in grund 0.13.0\n";
 
-/// §FS-check.3.18.5 by §FS-citations.wrap.enclosing: in a kind's index, a reference
+/// §FS-check.3.18 by §FS-citations.wrap.enclosing: in a kind's index, a reference
 /// whose key a definition matches and a complete link whose text runs onto a second
 /// line go somewhere, so each is the entry; `check` never says "is not a link"
 /// and `fmt --write` writes nothing. Today each is reported as not a link, and the
@@ -442,7 +442,7 @@ fn index_rows_that_go_nowhere_are_missing_entries() {
 
 /// §FS-citations.checks.image-index-entry, §FS-citations.wrap.enclosing.images: from
 /// grund 0.20.0 a citation-only image that was the ID's only entry is no entry, so the ID
-/// is reported missing, an error, in the "appears" words of §FS-check.3.18.5, and never
+/// is reported missing, an error, in the "appears" words of §FS-check.3.18, and never
 /// as `image-index-entry` or as not a link; `fmt` keeps `cache.png`; and the link the
 /// 0.19.0 warning named, written beside the image, is the entry.
 #[test]
@@ -486,7 +486,7 @@ fn a_citation_only_image_is_no_entry_and_a_link_beside_it_is() {
 
 /// §FS-citations.checks.image-index-entry: from grund 0.20.0 a citation-only image
 /// whose destination is the canonical link to an external source declaration no longer
-/// enrolls it (§FS-check.3.18.4). The declaration is no member, so the image is an
+/// enrolls it (§FS-check.3.18). The declaration is no member, so the image is an
 /// ordinary citation of it and nothing is reported: no warning, and no uncited note
 /// naming an index entry.
 #[test]
