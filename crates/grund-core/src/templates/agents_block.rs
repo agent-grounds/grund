@@ -263,8 +263,8 @@ const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a doc
 
 /// §FS-inline-citation-style.5.2: the sentence that follows the budgets and
 /// precedes the layout sentence, under `citation-with-note` only — restating
-/// §FS-inline-citation-style.1's block rule at the point an agent needs it to act on a cap finding
-/// (§FS-languages.comment-block). `check` compares it as it does the doc-comment sentence
+/// §FS-inline-citation-style.1's block rule at the point an agent needs it to act on a cap
+/// finding. `check` compares it as it does the doc-comment sentence
 /// (§FS-inline-citation-style.5.5), so a change to its wording moves the block version
 /// (§FS-init.2.3.7).
 const BLOCK_SENTENCE: &str =
