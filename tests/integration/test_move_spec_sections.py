@@ -506,8 +506,8 @@ class FoldPassTest(unittest.TestCase):
         with contextlib.redirect_stdout(out):
             code = move_spec_sections.main(["--root", str(self.root)])
         self.assertEqual(code, 0, out.getvalue())
-        self.assertEqual(self.read("docs/guide.md"), f"{M}FS-check.3.30.2, {M}FS-check.3.30.10 and {ESC}FS-check.4.7\n")
-        self.assertEqual(self.read("tests/e2e/cases/case-b/spec.refs"), "FS-check.3.30.2.1\n")
+        self.assertEqual(self.read("docs/guide.md"), f"{M}FS-check.3.30, {M}FS-check.3.30.10 and {ESC}FS-check.4.7\n")
+        self.assertEqual(self.read("tests/e2e/cases/case-b/spec.refs"), "FS-check.3.30.1\n")
 
 
 if __name__ == "__main__":
