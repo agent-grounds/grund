@@ -3,7 +3,7 @@
 //! published option it sets, which is a contract of its own (§AR-bindings.2):
 //! it defaults off, it widens the section filter when set, and with it off the
 //! same options return what they returned before the field existed.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

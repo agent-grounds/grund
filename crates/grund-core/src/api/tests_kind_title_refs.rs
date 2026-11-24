@@ -1,7 +1,7 @@
 //! Detailed refs metadata comes from the queried target (§FS-config.3.4.3,
 //! §FS-refs.3.2); public carrier construction remains compatible (§AR-bindings.2).
 //! A list summary carries the kind's title only where it has one (§FS-output-shapes.5).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::*;
 use crate::queries::{LspSnapshot, LspSnapshotOpts, LspUsage, lsp_title_hover_body};

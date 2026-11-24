@@ -1,6 +1,4 @@
-"""Real-helper acceptance for §FS-repository-maintenance.2.1,
-§FS-repository-maintenance.2.2, §FS-repository-maintenance.2.3 and
-§FS-repository-maintenance.2.4; ownership format: §AR-ci.3.4.1.2.
+"""Real-helper acceptance for §FS-repository-maintenance.2; ownership format: §AR-ci.3.4.1.2.
 
 Port the issue #963 two-checkout reproducer: copy the real harness, create both
 targets, remove one source checkout, and ask the survivor for its target again.

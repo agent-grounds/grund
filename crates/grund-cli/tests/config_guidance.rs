@@ -1,5 +1,5 @@
 //! Loaded-version repair vocabulary: §FS-show.3.5,
-//! §FS-declarations.checks.declaration-near-miss, §FS-check.4.5.2,
+//! §FS-declarations.checks.declaration-near-miss, §FS-check.4.5,
 //! §FS-check.2.2.2 and §FS-cli.2.3. These black-box runs port #817's
 //! near-miss, nothing-recognized and help reproducer, then cover each hint adapter.
 
@@ -356,7 +356,7 @@ fn v2_full_outside_scope_label() {
     );
 }
 
-/// §FS-check.4.10.5: another project may use either supported scope model.
+/// §FS-check.4.10: another project may use either supported scope model.
 #[test]
 fn v2_unread_workspace_repair() {
     let fixture = Fixture::new(2, false);

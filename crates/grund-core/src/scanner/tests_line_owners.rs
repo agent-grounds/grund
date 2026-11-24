@@ -149,7 +149,7 @@ fn every_citation_is_owned_as_its_line_is() {
     assert!(unowned_sites >= 3, "and outside every body");
 }
 
-/// §FS-check.1.1.5.2.1: every front-matter line, delimiters included, belongs to the
+/// §FS-check.1.1.5.2: every front-matter line, delimiters included, belongs to the
 /// file's first declaration under no section, though its body still starts at its
 /// heading; the blank line below the block stays unowned.
 #[test]

@@ -1,6 +1,6 @@
 //! A dry-run row names every kind of rewrite its line receives, the `--write`
 //! summary totals them, and a lock file a write creates or deletes is said to be
-//! created or deleted (§FS-fmt.3.5.1, §FS-fmt.3.7, §FS-section-lock.write.report,
+//! created or deleted (§FS-fmt.3.5, §FS-fmt.3.7, §FS-section-lock.write.report,
 //! agent-grounds/grund#1021). Every line an earlier release printed stays a
 //! verbatim prefix of the line printed now, so each expectation below is today's
 //! line with text appended.
@@ -104,7 +104,7 @@ src/inventory/reserve.py:7: bare \u{2192} marker
 
 #[test]
 fn a_marker_line_the_link_pass_also_wraps_names_both_kinds() {
-    // §FS-fmt.3.5.1: the list follows a detail-free leading label with `, `.
+    // §FS-fmt.3.5: the list follows a detail-free leading label with `, `.
     assert_eq!(
         fmt(&["--marker"], &e2e_case("fmt-report-kinds-marker-check"), 1),
         MARKER_DRY_RUN
@@ -228,7 +228,7 @@ fn the_kinds_after_an_expansion_follow_its_detail_after_a_semicolon() {
             })
             .collect()
     };
-    // §FS-fmt.3.5.1, §FS-fmt.3.5.2, §FS-fmt.3.6.1: the detail stays on the
+    // §FS-fmt.3.5, §FS-fmt.3.6: the detail stays on the
     // leading label; a withheld token (line 11's <§>9) is never named.
     assert_eq!(
         rows("--cross-refs"),
@@ -266,7 +266,7 @@ fn the_kinds_after_an_expansion_follow_its_detail_after_a_semicolon() {
 
 #[test]
 fn a_trailing_markdown_link_keeps_its_repeated_anchor_detail() {
-    // §FS-fmt.3.6.2, §DF-repeated-heading-anchor.decision.row: the note, then the
+    // §FS-fmt.3.6, §DF-repeated-heading-anchor.decision.row: the note, then the
     // items, which end the row. The first link is already right, so it is no link
     // written and is not listed.
     assert_eq!(
@@ -284,7 +284,7 @@ fn a_trailing_markdown_link_keeps_its_repeated_anchor_detail() {
 
 #[test]
 fn the_api_label_is_the_cli_row_after_its_location() {
-    // §FS-distribution.3.2.2.2: `label` carries what the CLI row appends.
+    // §FS-distribution.3.2.2: `label` carries what the CLI row appends.
     let mut opts = FmtOpts::default();
     opts.path = e2e_case("fmt-report-kinds-marker-check");
     opts.add_marker = true;

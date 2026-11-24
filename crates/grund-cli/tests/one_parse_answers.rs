@@ -1,6 +1,6 @@
 //! What every command answers from one parse of each file from 0.19.0
 //! (§FS-declarations.body, §FS-declarations.section, §FS-show.2.3,
-//! §FS-languages.comment-wrapper.headings, §FS-declarations.section.relative.where):
+//! §FS-languages.comment-wrapper.headings, §FS-declarations.section.relative.form):
 //! one tree per row of the table §DF-one-parse-answers-from-0-19 moves, the doc-comment
 //! headings that ride it, and the `parse-moves` code that goes with it
 //! (§FS-declarations.checks.parse-moves). Each test asserts the record's answer, so each
@@ -199,7 +199,7 @@ fn the_toc_title_drops_closing_hashes() {
     assert_eq!(toc(&t, "FS-a"), vec![("1".into(), "Steps".into())]);
 }
 
-// §FS-declarations.section.relative.where: a relative doc-comment heading is its section,
+// §FS-declarations.section.relative.form: a relative doc-comment heading is its section,
 // and a citation below it moves into that section.
 #[test]
 fn a_relative_doc_comment_heading_is_a_section() {
@@ -213,7 +213,7 @@ fn a_relative_doc_comment_heading_is_a_section() {
     assert_eq!(owner(&t, "FS-thing", 7).as_deref(), Some("format.1"));
 }
 
-// §FS-declarations.section.relative.where: a complete mixed doc-comment heading.
+// §FS-declarations.section.relative.form: a complete mixed doc-comment heading.
 #[test]
 fn a_complete_mixed_doc_comment_heading_is_a_section() {
     let t = tree(
@@ -225,7 +225,7 @@ fn a_complete_mixed_doc_comment_heading_is_a_section() {
     assert_eq!(toc_paths(&t, "FS-x"), vec!["1", "1.goals"]);
 }
 
-// §FS-declarations.section.relative.where: a relative mixed doc-comment heading.
+// §FS-declarations.section.relative.form: a relative mixed doc-comment heading.
 #[test]
 fn a_relative_mixed_doc_comment_heading_is_a_section() {
     let t = tree(
@@ -237,7 +237,7 @@ fn a_relative_mixed_doc_comment_heading_is_a_section() {
     assert_eq!(toc_paths(&t, "FS-x"), vec!["1", "1.goals"]);
 }
 
-// §FS-declarations.section.relative.where: the parent is read from the 0.19.0 map, so a
+// §FS-declarations.section.relative.form: the parent is read from the 0.19.0 map, so a
 // relative child of a bare `/** … */` `## 1.` line resolves under it (#682's R1-01).
 #[test]
 fn a_relative_child_of_a_bare_block_comment_heading_resolves() {

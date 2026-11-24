@@ -1,7 +1,7 @@
 //! #1387's reproducer, ported to the CLI harness: a candidate config line with no
 //! version-1 line prints in `config migrate`'s `differs:` comparison as the
 //! candidate's own line, the one `grund check` names once the candidate is
-//! written, marked as the candidate's (§FS-config-migrate.5.2.1).
+//! written, marked as the candidate's (§FS-config-migrate.5.2).
 
 #[path = "support/fixture_cleanup.rs"]
 mod fixture_cleanup;
@@ -90,7 +90,7 @@ fn candidate_line() -> (String, usize) {
     (candidate, line)
 }
 
-/// §FS-config-migrate.5.2.1: the `+ ` line names the line `grund check` names on
+/// §FS-config-migrate.5.2: the `+ ` line names the line `grund check` names on
 /// the written candidate, marked as the candidate's, and still refuses
 /// (§FS-config-migrate.5.4).
 #[test]
@@ -118,7 +118,7 @@ fn migrate_names_an_unmapped_candidate_line_as_the_candidates_own() {
     );
 }
 
-/// §FS-config-migrate.5.2.1: no comparison line names a config line that neither
+/// §FS-config-migrate.5.2: no comparison line names a config line that neither
 /// the version-1 file nor the candidate has.
 #[test]
 fn migrate_never_names_a_config_line_neither_file_has() {

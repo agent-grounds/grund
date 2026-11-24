@@ -1,5 +1,5 @@
 //! Black-box: two in-tree names that read a file differently, where its own name claims nothing,
-//! are refused and both named (§FS-scan.checks.reading-conflict, §FS-fmt.2.3.2.3,
+//! are refused and both named (§FS-scan.checks.reading-conflict, §FS-fmt.2.3.2,
 //! §FS-check.2.1.2). Sort order must not come back in here.
 #![cfg(unix)]
 

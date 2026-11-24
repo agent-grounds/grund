@@ -1,5 +1,5 @@
 //! Prefix-related kinds must retain every canonical and off-format citation
-//! exactly once (§FS-config.3.4.5.1, §FS-citations.recognized.off-format).
+//! exactly once (§FS-config.3.4.5, §FS-citations.recognized.off-format).
 
 use crate::config::load_config;
 use crate::testing::{scan_findings, test_root, write};

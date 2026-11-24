@@ -251,7 +251,7 @@ fn v2_show_round_trips_several_places() {
     assert_eq!(first.project().schema.rows, second.project().schema.rows);
 }
 
-/// §FS-config-v2.defaults.1: a v2 file with no citable row has no kinds and
+/// §FS-config-v2.defaults: a v2 file with no citable row has no kinds and
 /// still loads, where v1 refuses a table with no citable kind.
 #[test]
 fn v2_a_file_with_no_citable_row_loads() {

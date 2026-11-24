@@ -74,7 +74,7 @@ mod tests {
         Duration::from_millis(value)
     }
 
-    /// §FS-check.6.1.2: events every 10 ms, which never leave 100 ms of quiet, still
+    /// §FS-check.6.1: events every 10 ms, which never leave 100 ms of quiet, still
     /// make each burst due 500 ms after its first event, and never later, however
     /// long they go on.
     #[test]

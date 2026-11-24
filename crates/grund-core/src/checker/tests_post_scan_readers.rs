@@ -15,7 +15,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 /// The calls that read a file's text: the shared read of an effective input
-/// (§FS-check.6.1.1) or the standard library's, the run's sources, which put
+/// (§FS-check.6.1) or the standard library's, the run's sources, which put
 /// the editor's buffers in front of the disk (§AR-system.2.13), and the calls a
 /// rule reaches such a read through in another file — the scanner's listing of
 /// agent-entrypoint companions, which reads a companion's text, and the

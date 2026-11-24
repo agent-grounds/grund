@@ -1,8 +1,8 @@
 //! Test module: the index a folder kind keeps (§FS-check.3.18, §FS-check.3.17,
 //! §DF-index-entry-form). Every case here is about the two conditions an entry
 //! has to meet — present, and a full link — plus the two carve-outs that make
-//! the rule cheap: `fmt` always linkifies an index (§FS-fmt.6.1.1), and an entry
-//! is never an inbound citation (§FS-check.4.1.2).
+//! the rule cheap: `fmt` always linkifies an index (§FS-fmt.6.1), and an entry
+//! is never an inbound citation (§FS-check.4.1).
 
 use std::path::Path;
 
@@ -193,7 +193,7 @@ fn an_anchorless_link_to_a_source_home_is_a_full_link() {
     assert!(
         !codes(&run).contains(&"unlinked-index-entry".to_string())
             && !codes(&run).contains(&"missing-index-entry".to_string()),
-        "§FS-list.2.5: the stub-and-inline pair collapses to one entry: {:?}",
+        "§FS-list.2: the stub-and-inline pair collapses to one entry: {:?}",
         findings(&run)
     );
 }
@@ -244,7 +244,7 @@ fn the_walk_reaches_a_declaration_in_a_subdirectory() {
     );
 }
 
-/// §FS-check.4.1.2 / §DF-index-not-an-inbound-citation: the hazard. An index
+/// §FS-check.4.1 / §DF-index-not-an-inbound-citation: the hazard. An index
 /// names every declaration in its folder by construction, so its entries must
 /// not make a declaration look used.
 #[test]
@@ -399,7 +399,7 @@ fn a_run_that_did_not_scan_the_index_does_not_judge_it() {
     );
 }
 
-/// §FS-fmt.6.1.2 / §DF-index-always-linkified.2.2: under `enabled = false` the
+/// §FS-fmt.6.1 / §DF-index-always-linkified.2.2: under `enabled = false` the
 /// carve-out reaches the index for the sake of its entries and writes nothing
 /// else — the smallest write that clears §FS-check.3.17.
 #[test]

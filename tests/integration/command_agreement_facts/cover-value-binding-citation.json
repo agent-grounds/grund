@@ -13,11 +13,11 @@
     "repo/values": {"directory":true},
     "repo/values/field-price.md": {"bytes":[35,32,67,79,78,83,84,45,102,105,101,108,100,45,112,114,105,99,101,58,32,82,101,102,101,114,101,110,99,101,32,102,105,101,108,100,32,112,114,105,99,101,10,35,35,32,49,46,32,49,50,48,48,10]},
     "repo/values/runtime.json": {"bytes":[123,10,32,32,34,67,79,78,83,84,45,100,105,115,99,111,117,110,116,34,58,32,91,48,46,50,53,44,32,34,37,34,93,10,125,10]},
-    "spec.refs": {"bytes":[70,83,45,99,111,118,101,114,46,50,46,50,10]}
+    "spec.refs": {"bytes":[70,83,45,99,111,118,101,114,46,50,10]}
   },
   "facts": {
-    "point": "§FS-cover.2.2",
-    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, marker §, strict, `[id] format = \"{kind}-{slug}\"`, an untitled CONST kind with `values = true` homed at values and an untitled DOC kind homed at docs, both `index = false`, `[scan] include = [\"docs\"]`, `extensions = [\"md\"]`); docs/offer.md declaring DOC-offer, which nothing cites (§FS-check.4.1), and binding `1200.0` to §CONST-field-price.1 and `0.25` to §CONST-discount.1, each counted once as its ordinary citation (§FS-cover.2.2) and equal to its component under exact decimal equality (§FS-values.4); values/field-price.md, scanned as a kind home (§FS-scan.scope.homes), declaring CONST-field-price and its component section `1. 1200`; values/runtime.json, home JSON read as catalog input and never as a citing file (§FS-values.2.2), declaring CONST-discount with components 0.25 and \"%\", which read as their exact source slices with no title or anchor (§FS-output-shapes.4.3, §FS-values.6.2). `fmt` never rewrites a recognized binding (§FS-values.8).",
+    "point": "§FS-cover.2",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, marker §, strict, `[id] format = \"{kind}-{slug}\"`, an untitled CONST kind with `values = true` homed at values and an untitled DOC kind homed at docs, both `index = false`, `[scan] include = [\"docs\"]`, `extensions = [\"md\"]`); docs/offer.md declaring DOC-offer, which nothing cites (§FS-check.4.1), and binding `1200.0` to §CONST-field-price.1 and `0.25` to §CONST-discount.1, each counted once as its ordinary citation (§FS-cover.2) and equal to its component under exact decimal equality (§FS-values.4); values/field-price.md, scanned as a kind home (§FS-scan.scope.homes), declaring CONST-field-price and its component section `1. 1200`; values/runtime.json, home JSON read as catalog input and never as a citing file (§FS-values.2.2), declaring CONST-discount with components 0.25 and \"%\", which read as their exact source slices with no title or anchor (§FS-output-shapes.4, §FS-values.6.2). `fmt` never rewrites a recognized binding (§FS-values.8).",
     "kinds": [
       {"kind":"CONST","title":null,"home":"values","index":false},
       {"kind":"DOC","title":null,"home":"docs","index":false}

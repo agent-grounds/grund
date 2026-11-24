@@ -4,7 +4,7 @@
 //! built-in `c` differ, `.cc` under version 1 and `.cc` mapped to the built-in `cpp` do not, and
 //! a Haskell prime is part of it although no row of the forms table names `hs`. What migration
 //! itself writes compares equal, so no version-1 migration starts refusing.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::opted_out::Block;
 use super::records_gate::compare;

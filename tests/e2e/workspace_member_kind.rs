@@ -1,4 +1,4 @@
-//! §FS-workspace.8.1.1.4 / §FS-workspace.8.2.2.1: port of #1363's root
+//! §FS-workspace.8.1.1 / §FS-workspace.8.2.2: port of #1363's root
 //! DA/member ACT fixture, in both config versions, without shared root kinds.
 use std::fs;
 use std::io::Write;
@@ -247,7 +247,7 @@ fn refs_text(version: u8) {
             ));
         }
     }
-    // §FS-workspace.8.2.2.1: the original finding shape and API data survive.
+    // §FS-workspace.8.2.2: the original finding shape and API data survive.
     let json_run = tree.run(&["refs", ID, "--format", "json"]);
     assert_eq!(json_run.status.code(), Some(1));
     assert_eq!(out(&json_run), "");

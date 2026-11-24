@@ -1,6 +1,6 @@
 //! Workspace-folder discovery and lifecycle cases driven against a real server
 //! process (§FS-lsp.2.2, §AR-lsp.2).
-//! Guarded roots outlive server shutdown and assertions (§FS-repository-maintenance.4.1).
+//! Guarded roots outlive server shutdown and assertions (§FS-repository-maintenance.4).
 
 mod support;
 
@@ -131,7 +131,7 @@ fn every_initial_workspace_folder_gets_an_independent_snapshot() {
     wait_for_exit(&mut child);
 }
 
-/// §FS-lsp.2.2.5: on `workspace/didChangeWorkspaceFolders` an added folder is
+/// §FS-lsp.2.2.1: on `workspace/didChangeWorkspaceFolders` an added folder is
 /// discovered by the same rules and starts answering, and a removed one stops
 /// contributing — so a later add/remove order cannot silently narrow
 /// references.
@@ -192,7 +192,7 @@ fn workspace_folder_changes_rebuild_and_remove_project_snapshots() {
     wait_for_exit(&mut child);
 }
 
-/// §FS-lsp.2.2.5: keeping a folder that still resolves to a project keeps that
+/// §FS-lsp.2.2.1: keeping a folder that still resolves to a project keeps that
 /// project active when another folder for the same project is removed, so the
 /// remaining anchor answers exactly as it did before the event.
 #[test]

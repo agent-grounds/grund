@@ -5,7 +5,7 @@
 //!
 //! The shape that makes it more than vacuous is `clean-markdown`, whose section
 //! headings carry citations the run expands while other lines link to those
-//! headings (§FS-fmt.6.3.3): a link written with the anchor of the heading as it
+//! headings (§FS-fmt.6.3): a link written with the anchor of the heading as it
 //! was read is rewritten again by the next run.
 //!
 //! Unix only: the corpus needs real broken symlinks.
@@ -66,7 +66,7 @@ fn a_second_write_changes_nothing_and_the_check_after_a_write_is_clean() {
 }
 
 #[test]
-/// §FS-fmt.6.3.3 — the heading sites asserted by their own lines, so the
+/// §FS-fmt.6.3 — the heading sites asserted by their own lines, so the
 /// property above cannot pass because the class stopped firing: the first write
 /// expands both headings and links both notes lines, and it leaves each link
 /// with the anchor of the heading as that write left it.
@@ -116,7 +116,7 @@ fn a_heading_the_run_expands_is_linked_with_the_anchor_it_leaves() {
         assert_eq!(
             written, want,
             "{path}:{number}: the link names the heading as the run read it, not as it \
-             left it (§FS-fmt.6.3.3)",
+             left it (§FS-fmt.6.3)",
         );
     }
 }

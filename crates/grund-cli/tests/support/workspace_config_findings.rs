@@ -1,6 +1,6 @@
 //! Issue #1134's cases, run alone: at a workspace root `config validate` names the config
-//! findings `check` names there, and `config show` only its own config's (§FS-config.4.1.1,
-//! §FS-config.4.2, §FS-check.4.11.3). Every one is also in the full pass.
+//! findings `check` names there, and `config show` only its own config's (§FS-config.4.1,
+//! §FS-config.4.2, §FS-check.4.11). Every one is also in the full pass.
 
 use super::case_runner::CaseKind::E2e;
 use super::case_runner::{assert_every_case_passed, run_case};

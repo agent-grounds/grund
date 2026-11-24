@@ -1,6 +1,6 @@
 //! Test module: init's effective-scope decision and shared guidance renderer
 //! (§FS-init.2.2.2, §FS-config.3.5).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 

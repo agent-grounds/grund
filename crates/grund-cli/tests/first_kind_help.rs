@@ -1,5 +1,5 @@
 //! Binary regressions for agent-grounds/grund#1023: the no-kinds warning gives
-//! usable offline help (§FS-check.4.5.2), and the parent kind table teaches the
+//! usable offline help (§FS-check.4.5), and the parent kind table teaches the
 //! child's complete key rows without another lookup (§FS-config-explain.1.2).
 
 #[path = "support/fixture_cleanup.rs"]
@@ -86,7 +86,7 @@ fn key_rows(answer: &str) -> Vec<&str> {
         .collect()
 }
 
-/// §FS-check.4.5.2: both versions name a usable, quoted command, without moving
+/// §FS-check.4.5: both versions name a usable, quoted command, without moving
 /// the diagnostic identity, stream, severity, location fields or exit.
 fn warning_teaches_kind(version: u32, target: &str, place_keys: &[&str]) {
     let project = Project::new(version);

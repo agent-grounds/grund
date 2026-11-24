@@ -1,6 +1,6 @@
 //! A numbered, named or relative heading that follows a nested declaration in Markdown, back
 //! inside the enclosing declaration's body, is a coordinate of the innermost declaration whose
-//! body holds it (§FS-declarations.section.map.nested, §FS-declarations.section.map,
+//! body holds it (§FS-declarations.section.map,
 //! §FS-declarations.body). `show` prints it, `--toc` lists it, a citation of it checks clean,
 //! and it is a claimant like any other in that body: a path repeated across the nested
 //! declaration is a duplicate (§FS-declarations.checks.duplicate-section), and an unmarked

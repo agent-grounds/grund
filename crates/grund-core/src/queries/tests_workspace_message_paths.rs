@@ -9,7 +9,7 @@
 //! site named inside the message text has to agree, or one workspace line has
 //! two halves relative to two different roots and an editor can follow only the
 //! first of them.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::BTreeMap;
 

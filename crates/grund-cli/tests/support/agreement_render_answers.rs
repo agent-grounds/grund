@@ -1,8 +1,8 @@
 //! Every question's answer, per producer, mapped from one Python envelope the
 //! compact facts render (§REQ-one-answer.proof.evidence.closed): the command
 //! line's streams and exit, and Node's envelope through the projection the
-//! bindings define (§FS-distribution.3.2.2.1), with its show metadata and its
-//! one refusal, `cover --lines` (§FS-distribution.3.2.1.1).
+//! bindings define (§FS-distribution.3.2.2), with its show metadata and its
+//! one refusal, `cover --lines` (§FS-distribution.3.2.1).
 
 use super::agreement_render_cli::{fact, text};
 use super::agreement_render_tree::{View, ok};
@@ -23,7 +23,7 @@ fn node(python: &Value, operation: &str) -> Result<Value, String> {
 
 /// §FS-distribution.3.3.1: the typed manifest Node's show answer carries for
 /// a case, from the same object and in the corpus's snake_case
-/// (§FS-distribution.3.2.2.2); null for a show of anything else. The renderer
+/// (§FS-distribution.3.2.2); null for a show of anything else. The renderer
 /// and the audit of a complete Node show both read it here.
 pub fn node_case_manifest(object: &Value) -> Value {
     match object.get("args") {

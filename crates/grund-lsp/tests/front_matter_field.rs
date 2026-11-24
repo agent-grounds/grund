@@ -1,7 +1,7 @@
 //! A front-matter coordinate in the editor (§FS-fields.front-matter.surfaces):
 //! its finding is the CLI's at the key's line, a citation of a key navigates to
-//! that line, and its hover is the key's slice (§FS-lsp.1.1.2, §FS-lsp.1.2.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! that line, and its hover is the key's slice (§FS-lsp.1.1, §FS-lsp.1.2.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 
@@ -48,7 +48,7 @@ fn a_front_matter_key_resolves_navigates_and_hovers_as_the_cli_shows_it() {
         &root,
         json!({ "textDocument": { "definition": { "linkSupport": true } } }),
     );
-    // §FS-lsp.1.1.2: the CLI's finding, at the key's line.
+    // §FS-lsp.1.1: the CLI's finding, at the key's line.
     let diagnostics = recv_diagnostics(&receiver, &mut child, "cache.md");
     let found = diagnostics
         .iter()

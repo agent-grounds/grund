@@ -1,7 +1,7 @@
 //! The one rule that picks the name a file's reading is taken from (§AR-config.1.6,
 //! §FS-scan.identity.reading), per sort of file, and the guard that no caller gets a reading any
 //! other way. Unix-only: the cases are about links.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

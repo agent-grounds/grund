@@ -1,5 +1,5 @@
 //! Test module: config parsing, kind homes, and the parallel scan path (§FS-config, §FS-check)
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 #[cfg(unix)]
 use std::collections::BTreeMap;

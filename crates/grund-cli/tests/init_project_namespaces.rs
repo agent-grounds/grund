@@ -57,7 +57,7 @@ fn assert_sections(root: &Path, file: &str, namespaces: bool, members: bool, mar
     }
 }
 
-/// §FS-init.2.3.4, §FS-init-fixtures.6.3: fresh standalone omission, then re-init/check.
+/// §FS-init.2.3.4, §FS-init-fixtures.6: fresh standalone omission, then re-init/check.
 #[test]
 fn project_namespaces_fresh_standalone_omits_both_sections_and_stays_current() {
     let root = target("project_namespaces_fresh_standalone", None);

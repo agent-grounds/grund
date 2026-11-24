@@ -4,7 +4,7 @@
 //! block, a chapter rule written into its subject kind's scoped block, and the
 //! root section the swap of `finish_root_block` leaves out when no rule is
 //! declared (§FS-init.2.3.5).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 

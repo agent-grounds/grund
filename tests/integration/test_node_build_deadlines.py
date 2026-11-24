@@ -1,4 +1,4 @@
-"""Bounded Node acceptance deadlines (§AR-ci.3.4.1.1, §FS-distribution.3.2.4).
+"""Bounded Node acceptance deadlines (§AR-ci.3.4.1.1, §FS-distribution.3.2).
 
 The controlled child ports #913's triage reproducer. It supplements, rather than
 replaces, the real release/LTO acceptance. Imports and transport patches live in

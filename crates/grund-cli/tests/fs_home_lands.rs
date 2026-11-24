@@ -48,7 +48,7 @@ const FS_FOLDER: &[(&str, &str)] = &[
 ];
 
 fn tree(name: &str, files: &[(&str, &str)]) -> TemporaryRoot {
-    // §FS-repository-maintenance.4.1: own the leaf before fallible setup.
+    // §FS-repository-maintenance.4: own the leaf before fallible setup.
     let root = TemporaryRoot::new(
         &std::env::temp_dir(),
         &format!("grund-fs-home-lands-{name}"),
@@ -121,7 +121,7 @@ fn fs_row(output: &Output) -> String {
 }
 
 /// §FS-config.3.4.4: the built-in `FS` row is `folder = "docs/functional-spec"`,
-/// with or without a config file; §FS-config.3.4.4.4's split is gone.
+/// with or without a config file; §FS-config.3.4.4's split is gone.
 #[test]
 fn zero_config_and_a_kindless_config_print_the_same_fs_row() {
     let (zero, kindless) = pair("show", &[]);

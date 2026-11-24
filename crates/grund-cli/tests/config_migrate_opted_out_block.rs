@@ -19,7 +19,7 @@ const BARE: &str = "[workspace]\ninclude_root = false\nmembers = [\"a\"]\n";
 const REPAIRED: &str = "[id]\nnamed_sections = true\n\n[scan]\ninclude = []\n\n\
 [workspace]\ninclude_root = false\nmembers = [\"a\"]\n";
 
-/// §FS-config-migrate.8.1.3: the version line and the `[workspace]` table.
+/// §FS-config-migrate.8.1: the version line and the `[workspace]` table.
 const CANDIDATE: &str =
     "grund_config_version = 2\n\n[workspace]\nmembers = [\"a\"]\ninclude_root = false\n";
 
@@ -47,7 +47,7 @@ fn text(bytes: &[u8]) -> String {
 /// The reported tree under the system temp directory, where no config above it
 /// is discovered, with `block` as `group/grund.toml`.
 fn tree(name: &str, block: &str) -> TemporaryRoot {
-    // §FS-repository-maintenance.4.2: claim a direct leaf without an unowned pid parent.
+    // §FS-repository-maintenance.4: claim a direct leaf without an unowned pid parent.
     let root = TemporaryRoot::new(
         &std::env::temp_dir(),
         &format!("grund-migrate-opted-out-{name}"),
@@ -91,7 +91,7 @@ fn assert_run(out: &Output, code: i32, stdout: &str, stderr: &str) {
     );
 }
 
-/// §FS-config-migrate.8.1.5: the bare block previews its compact candidate,
+/// §FS-config-migrate.8.1: the bare block previews its compact candidate,
 /// writes exactly those bytes, and a second run finds version 2.
 #[test]
 fn bare_block_previews_and_writes_its_envelope_and_workspace_table() {
@@ -123,7 +123,7 @@ fn bare_block_previews_and_writes_its_envelope_and_workspace_table() {
     );
 }
 
-/// §FS-config-migrate.8.1.2, §FS-config-migrate.3.2: the two old repairs have no
+/// §FS-config-migrate.8.1, §FS-config-migrate.3.2: the two old repairs have no
 /// force on the block, so they are dropped with a notice each and the file is the
 /// same compact candidate, far under the report's 20-line bound.
 #[test]
@@ -142,11 +142,11 @@ dropped: grund.toml:5: [scan] include: include_root = false, so no project scans
     assert_run(&write, 0, "", &report);
 }
 
-/// §FS-config-migrate.8.1.4: a block holding a file version 2's whole-root scope
+/// §FS-config-migrate.8.1: a block holding a file version 2's whole-root scope
 /// reads, and version 1's default scope never did, reaches the report gate in one
 /// run (§FS-check.4.10) rather than an `include` repair. The `differs:` lines are
 /// the unread-block warning, its unread tree the block root named `.`
-/// (§FS-check.4.10.5, agent-grounds/grund#1145).
+/// (§FS-check.4.10, agent-grounds/grund#1145).
 #[test]
 fn block_holding_a_readme_or_agents_md_stops_at_the_report_gate_in_one_run() {
     let warning = "+ run-warning warning unread-workspace-block grund.toml:2:- grund.toml:2: \

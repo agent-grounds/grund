@@ -1,4 +1,4 @@
-"""Filesystem-boundary fixture for §FS-repository-maintenance.2.4.
+"""Filesystem-boundary fixture for §FS-repository-maintenance.2.
 
 Port issue #986's triage reproducer: copy the real helper, preserve eligibility
 and shutil traversal, and inject only OS operations. The Windows delete-pending

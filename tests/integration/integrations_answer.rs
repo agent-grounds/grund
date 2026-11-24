@@ -1,4 +1,4 @@
-//! §FS-integrations.1.3.2, §FS-integrations.1.3.3, §AR-bindings.3 — what the
+//! §FS-integrations.1.3, §AR-bindings.3 — what the
 //! engine's `integrations` answers, read as data rather than as the bytes a
 //! frontend renders: a manual client's `write` lists its step beside the
 //! resolver it wrote, and a run the resolver stops still carries that step.
@@ -57,7 +57,7 @@ fn assert_iterm2_step(steps: &[IntegrationManualStep], artifact: Option<Integrat
 
 #[test]
 fn a_manual_clients_step_is_in_the_answer_and_in_the_refusal() {
-    // §FS-integrations.1.3.2: facts only — every client's status, the named
+    // §FS-integrations.1.3: facts only — every client's status, the named
     // client's artifact, the events in order, and the step left to the user.
     let root = sandbox("written");
     let out = integrations(iterm2_write()).expect("iterm2 --write");
@@ -90,7 +90,7 @@ fn a_manual_clients_step_is_in_the_answer_and_in_the_refusal() {
     );
     assert_iterm2_step(&out.manual_steps, out.artifact);
 
-    // §FS-integrations.1.3.3: the resolver's directory is a file, so the run
+    // §FS-integrations.1.3: the resolver's directory is a file, so the run
     // stops there; the refusal names it with the filesystem's message, and
     // still carries the step the run reached before it.
     let root = sandbox("resolver-fails");

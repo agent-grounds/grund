@@ -1,4 +1,4 @@
-//! A failed status is never a determination that a listed file is no source (§FS-values.5.3.1),
+//! A failed status is never a determination that a listed file is no source (§FS-values.5.3),
 //! even where the rule reads its target as none (§FS-scan.identity.reading). A failed stat
 //! also fails the resolution, so only a spelling this run resolved earlier reaches the seam: the
 //! disk changed under the run, and the one way a format of `None` meets a failed status.

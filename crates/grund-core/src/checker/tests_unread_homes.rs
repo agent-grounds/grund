@@ -1,6 +1,6 @@
 //! Test module: the one answer to whether a run may call an ID absent from a home it could not
 //! read (§FS-check.2.4).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

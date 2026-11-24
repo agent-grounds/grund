@@ -1,9 +1,9 @@
 //! A `citation-cardinality` or `uncited-unit` row whose count is above zero names every citation
 //! it counted, `; counted at <path>:<line> (<citation as written>), …` after the whole of the
 //! message it printed before, and JSON `sites` carries each distinct `{path, line}` in the same
-//! order (§FS-rules.7.3.1, §FS-rules.7.3, §FS-rules.7.4, §FS-rules.7.6, §FS-errors.5.1). A zero
+//! order (§FS-rules.7.3, §FS-rules.7.4, §FS-rules.7.6, §FS-errors.5.1). A zero
 //! count keeps its bytes and `"sites":null`. A run narrowed to a counted citing file reports the
-//! row whole, at its subject (§FS-check.1.3.6.2), and on a file with two names the identity
+//! row whole, at its subject (§FS-check.1.3.6), and on a file with two names the identity
 //! clause stays before the list (§FS-scan.identity.findings.content). Issue #1366 is the report:
 //! a price record held to one item cites it and then the item's own section, the count reads 2,
 //! and the row named neither site.
@@ -93,7 +93,7 @@ const FILES: &[(&str, &str)] = &[
 ];
 
 // The messages these rows printed before #1366, each a verbatim prefix of the row after it
-// (§FS-rules.7.3.1: the clause is appended after the whole message).
+// (§FS-rules.7.3: the clause is appended after the whole message).
 const INPUT_001: &str = "INPUT-001-diesel is cited by PRICE 3 times; RULE-002-input-use \
                          requires at most 2; add or remove the citations of it until the count fits";
 const LABOR_001: &str = "LABOR-001-driver is cited by PRICE 2 times; RULE-005-driver-once \
@@ -111,7 +111,7 @@ const P2_ONE_ITEM: &str = "PRICE-002-haul cites INPUT or LABOR 2 times; RULE-001
                            requires exactly one; add or remove those citations until the count fits";
 
 /// Each counted citation of a row, `(path, line, citation as written)`, in the order the clause
-/// lists them: by path, then line, then column (§FS-rules.7.3.1).
+/// lists them: by path, then line, then column (§FS-rules.7.3).
 type Counted<'a> = &'a [(&'a str, usize, &'a str)];
 
 const P1: &str = "docs/prices/PRICE-001-diesel-retail.md";
@@ -173,7 +173,7 @@ fn record(code: &str, path: &str, message: &str, sites: &[(&str, usize)], rule: 
 }
 
 /// Each distinct `(path, line)` of `counted`, in its order: two citations on one line are one
-/// site (§FS-rules.7.3.1).
+/// site (§FS-rules.7.3).
 fn sites_of<'a>(counted: Counted<'a>) -> Vec<(&'a str, usize)> {
     let mut sites: Vec<(&str, usize)> = Vec::new();
     for (path, line, _) in counted {
@@ -252,7 +252,7 @@ impl Drop for Tree {
 
 /// The controls, green today and after: a zero count names nothing and keeps its bytes and
 /// `"sites":null`, the record that cites one item gets no row, and a check of a file whose
-/// citations no count reads still succeeds (§FS-rules.7.3.1). They also prove the fixture sound,
+/// citations no count reads still succeeds (§FS-rules.7.3). They also prove the fixture sound,
 /// so a red test below is about the list alone.
 #[test]
 fn a_zero_count_and_an_uncounted_file_keep_what_they_print_today() {
@@ -421,7 +421,7 @@ fn a_cite_each_row_lists_only_its_own_targets_citations() {
 }
 
 /// A check of one citing file reports the inbound count its citation is part of, whole and at
-/// the subject's title, and exits 1 (§FS-check.1.3.6.2,
+/// the subject's title, and exits 1 (§FS-check.1.3.6,
 /// §FS-check.requirements.narrow-never-lenient). Before #1366 it printed `success`.
 #[test]
 fn a_check_of_a_counted_citing_file_reports_the_count_it_is_part_of() {
@@ -498,7 +498,7 @@ fn the_counted_list_is_spelled_from_the_report_base() {
 /// On a file with two names the identity clause stays directly after the remedy, so the released
 /// two-name row stays a prefix, and the counted list follows it; `sites` holds the row's own
 /// spellings and each counted line's, as the identity pass grows every finding's sites
-/// (§FS-rules.7.3.1, §FS-scan.identity.findings.content).
+/// (§FS-rules.7.3, §FS-scan.identity.findings.content).
 #[cfg(unix)]
 #[test]
 fn on_a_file_with_two_names_the_list_follows_the_identity_clause() {

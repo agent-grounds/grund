@@ -1,7 +1,7 @@
 //! Lifecycle, navigation, and diagnostics cases driven against a real server
 //! process over stdio (§FS-lsp.1, §FS-lsp.2.2, §FS-lsp.2.4). `textDocument/hover` has its
 //! own suite in `tests/hover.rs`.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 
@@ -350,7 +350,7 @@ fn navigation_covers_source_comment_citations_and_stub_titles() {
 fn diagnostic_anchors_on_offending_citation_token() {
     // A single line can carry several citations, so an unknown-reference
     // diagnostic anchors on the offending token's start column — not merely the
-    // first citation on the line (§FS-lsp.1.1.1).
+    // first citation on the line (§FS-lsp.1.1).
     let root = test_root("diagnostic-anchor");
     fs::create_dir_all(root.join("docs/functional-spec")).expect("create specs");
     fs::write(
@@ -400,7 +400,7 @@ fn diagnostic_anchors_on_offending_citation_token() {
         dangling["range"]["start"]["character"].as_i64(),
         Some(ghost_marker_col),
         "diagnostic must anchor on the offending \u{a7}FS-404-ghost token, not the \
-         resolving first citation at column {first_marker_col} (§FS-lsp.1.1.1): {dangling:?}"
+         resolving first citation at column {first_marker_col} (§FS-lsp.1.1): {dangling:?}"
     );
 
     send_message(
@@ -418,7 +418,7 @@ fn diagnostic_anchors_on_offending_citation_token() {
 /// the checker (§FS-check.3.6), but only the dangling diagnostic belongs to
 /// the citation token. The line-level ungrounded diagnostic must not borrow
 /// the citation range, because VSCode renders overlapping diagnostics in the
-/// same hover popup (§FS-lsp.1.1.1).
+/// same hover popup (§FS-lsp.1.1).
 #[test]
 fn line_anchored_diagnostic_does_not_overlap_dangling_citation() {
     let root = test_root("diagnostic-line-anchor-no-citation-overlap");

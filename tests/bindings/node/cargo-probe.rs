@@ -1,4 +1,4 @@
-//! Test-only native launcher for §FS-distribution.3.2.3.3 Cargo interception.
+//! Test-only native launcher for §FS-distribution.3.2.3 Cargo interception.
 
 use std::{env, process};
 

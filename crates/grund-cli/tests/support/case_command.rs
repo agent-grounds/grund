@@ -71,7 +71,7 @@ fn case_command_cwd(case: &Path) -> String {
     }
 }
 
-/// The same owner supplies argv, cwd and every later reader (§FS-examples.5.6.1).
+/// The same owner supplies argv, cwd and every later reader (§FS-examples.5.6).
 struct CaseExecution {
     copy: Option<CaseCopy>,
     args: Vec<String>,
@@ -86,7 +86,7 @@ impl CaseExecution {
         })
     }
 
-    /// Normalize before the comparison/refresh split (§FS-examples.5.6.2).
+    /// Normalize before the comparison/refresh split (§FS-examples.5.6).
     fn normalize(&self, text: &str) -> String {
         self.copy
             .as_ref()
@@ -95,7 +95,7 @@ impl CaseExecution {
 }
 
 /// Validate all command manifests before allocating or copying, and retain the
-/// owner even if copying or link creation unwinds (§FS-examples.5.6.1).
+/// owner even if copying or link creation unwinds (§FS-examples.5.6).
 fn prepare_case(manifest_dir: &Path, case: &Path, name: &str) -> CaseExecution {
     let command = case_command(case);
     let external = external_words(case);
@@ -128,7 +128,7 @@ fn prepare_case(manifest_dir: &Path, case: &Path, name: &str) -> CaseExecution {
     }
 }
 
-/// Expand whole and suffix arguments from the invocation's copy (§FS-examples.5.6.1).
+/// Expand whole and suffix arguments from the invocation's copy (§FS-examples.5.6).
 fn command_args(
     manifest_dir: &Path,
     case: &Path,
@@ -142,7 +142,7 @@ fn command_args(
         .unwrap_or(&repo)
         .to_string_lossy()
         .into_owned();
-    // §FS-examples.5.6.2: typed with `/` as its logical path is, so an argument echoed as given
+    // §FS-examples.5.6: typed with `/` as its logical path is, so an argument echoed as given
     // (§FS-config-migrate.6.5.1) reads alike everywhere; a Windows join mixes in `\`, while on
     // unix a backslash is a filename byte.
     let repo_copy_arg = copy.map(|copy| {
@@ -209,7 +209,7 @@ fn external_words(case: &Path) -> Option<Vec<String>> {
 }
 
 /// A case's own command run in its copy and kept, for a test that goes on to
-/// run more commands over the tree it left (§FS-examples.5.6.1). The copy is
+/// run more commands over the tree it left (§FS-examples.5.6). The copy is
 /// removed when this is dropped. Only `init_then_check.rs` reads it, so the
 /// other binaries that include the runner allow it unused.
 #[allow(dead_code)]

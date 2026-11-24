@@ -5,7 +5,7 @@
 //! never on the function that answers it: whether a line begins inside a literal
 //! (`FileReading::literals`), and whether a qualified citation after a Rust lifetime or a
 //! Haskell prime, or inside a literal, is reported by `check` (§FS-citations.recognized.contexts).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::*;
 use crate::testing::{TemporaryRoot, check_run, test_root, write};

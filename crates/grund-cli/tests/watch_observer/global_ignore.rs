@@ -1,4 +1,4 @@
-//! Isolated Git home/XDG inputs with native subscriptions (§FS-check.6.1.3).
+//! Isolated Git home/XDG inputs with native subscriptions (§FS-check.6.1).
 use crate::support::*;
 
 #[test]
@@ -35,7 +35,7 @@ fn watch_inventory_git_home_child() {
         return;
     };
     let f = Fixture::new();
-    // §FS-check.6.1.3: global patterns anchor at the repository top, the fixture, from any
+    // §FS-check.6.1: global patterns anchor at the repository top, the fixture, from any
     // cwd (§FS-scan.scope.ignore-files). This process runs only the isolated child
     // case, so the parent tests keep their cwd.
     std::env::set_current_dir(&f.0).unwrap();

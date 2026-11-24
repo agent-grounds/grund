@@ -2,7 +2,7 @@
 //! way an editor drives the server: open the files, hover the citation, and read
 //! what the server published. Each tree is answered twice, once with the edit
 //! held unsaved in the editor and once with the same bytes saved and nothing
-//! open, and the two must be one (§FS-lsp.4.1). A new file the editor has not
+//! open, and the two must be one (§FS-lsp.4). A new file the editor has not
 //! saved is a file (§FS-scan.text.buffer-only), and a buffer is its file under
 //! every spelling, a symlinked one included (§FS-scan.identity.buffers).
 //! Every reader takes a file's text from one place, `sources` (§AR-system.2.13).

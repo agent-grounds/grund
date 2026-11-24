@@ -13,7 +13,7 @@ use std::process::{Command, Output};
 #[path = "support/fixture_root_contract.rs"]
 mod fixture_root_contract;
 
-/// Own each fixture until its caller finishes (§FS-repository-maintenance.4.1).
+/// Own each fixture until its caller finishes (§FS-repository-maintenance.4).
 fn test_root(name: &str) -> TemporaryRoot {
     TemporaryRoot::new(
         &std::env::temp_dir(),
@@ -57,7 +57,7 @@ fn assert_code(output: &Output, expected: i32, label: &str) {
 
 /// A narrowed component regex cannot claim a shorter configured prefix before
 /// the complete colon-delimited spelling reaches the catalog (§FS-config.3.2.5,
-/// §FS-show.1.1, §FS-list.2.3, §FS-refs.1, §FS-declarations.checks.declaration-near-miss).
+/// §FS-show.1.1, §FS-list.2, §FS-refs.1, §FS-declarations.checks.declaration-near-miss).
 #[test]
 fn off_grammar_narrowed_slug_pattern_retains_the_exact_written_token() {
     let root = test_root("narrowed-pattern");

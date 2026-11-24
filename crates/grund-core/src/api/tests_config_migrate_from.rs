@@ -1,7 +1,7 @@
 //! Test module: `MigrateOpts::config_from`, the config a migrate run acts on
 //! spelled from the directory a command is pasted in (§FS-config-migrate.6.5.1
 //! item 1), found by the discovery the run itself runs (§FS-config-migrate.1.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

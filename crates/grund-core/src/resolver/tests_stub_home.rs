@@ -1,8 +1,8 @@
 //! Test module: a stub's sections are read from its target outside the walk,
 //! once per target per scan, through the input observation a watching run
-//! subscribes from (§FS-check.3.2.1, §FS-check.6.1.1, §AR-scanner.4.6). The e2e
+//! subscribes from (§FS-check.3.2, §FS-check.6.1, §AR-scanner.4.6). The e2e
 //! cases pin what `check` reports; these pin what the scan reads to report it.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -94,13 +94,13 @@ fn a_target_is_read_once_per_scan() {
     assert_eq!(
         seen.iter().filter(|input| input.path == source).count(),
         3,
-        "§FS-check.6.1.1: each of the two stubs covers its target as it resolves it, \
+        "§FS-check.6.1: each of the two stubs covers its target as it resolves it, \
          and the scan reads the target once, however many stubs and IDs name it"
     );
     assert!(resolves("first", "1"), "a recorded section resolves");
     assert!(
         resolves("second", "1"),
-        "§FS-check.3.2.1: the target's section"
+        "§FS-check.3.2: the target's section"
     );
     assert!(resolves("third", "1"), "another ID in the same target");
     assert!(
@@ -135,7 +135,7 @@ fn the_target_read_is_observed_before_it_is_made() {
     assert_eq!(
         observe(false),
         (true, true),
-        "§FS-check.6.1.1: a watching run subscribes to the target it read"
+        "§FS-check.6.1: a watching run subscribes to the target it read"
     );
     assert_eq!(
         observe(true),

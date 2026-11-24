@@ -1,4 +1,4 @@
-//! Format-aware admission, shared by both readers (§FS-config.3.4.5.1,
+//! Format-aware admission, shared by both readers (§FS-config.3.4.5,
 //! §FS-config.3.2.9). Each matrix runs every row before reporting failures.
 
 use super::load_config;

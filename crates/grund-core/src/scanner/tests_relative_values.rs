@@ -125,7 +125,7 @@ fn a_relative_heading_is_a_marked_root() {
     );
 }
 
-/// §FS-values.2.4.4: a marker on a relative named heading, or on a relative
+/// §FS-values.2.4: a marker on a relative named heading, or on a relative
 /// heading no parent takes, grants nothing and is reported at the marker; a
 /// relative marked root that repeats a path is reported as a duplicate there.
 #[test]
@@ -150,7 +150,7 @@ fn a_marker_no_relative_root_takes_is_reported_at_the_marker() {
     );
 }
 
-/// §FS-declarations.section.relative.where, §FS-values.2.4: a marked relative
+/// §FS-declarations.section.relative.form, §FS-values.2.4: a marked relative
 /// heading in a doc-comment is the root its complete form and the Markdown
 /// relative form are, and holds the same component.
 #[test]

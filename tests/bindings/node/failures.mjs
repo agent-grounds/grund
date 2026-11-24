@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.2.1 — failures are Promise data, never parsed messages.
+// §FS-distribution.3.2.2 — failures are Promise data, never parsed messages.
 import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, mkdir, cp, readFile } from 'node:fs/promises';
 import * as api from 'grund-cli';
@@ -99,7 +99,7 @@ assert.equal(incomplete.hadScanErrors, true, 'incomplete checks still resolve');
 assert.ok(incomplete.report.errors.some(f => f.code === 'io'));
 await assert.rejects(api.scan(partial), error => {
   assert.equal(error.failure.kind, 'io');
-  // §FS-distribution.3.2.2.3: the strict rejection says the failure as check does, fix and all.
+  // §FS-distribution.3.2.2: the strict rejection says the failure as check does, fix and all.
   const io = incomplete.report.errors.find(f => f.code === 'io' && f.path === error.failure.path);
   assert.equal(error.failure.message, io.message);
   assert.equal(error.failure.partial.operation, 'scan');
@@ -135,7 +135,7 @@ await assert.rejects(api.fmt({ root: conflicted, write: true }), error => {
   return true;
 });
 assert.equal(await readFile(conflicted + '/docs/use.md', 'utf8'), '# Use\n\nSee also $$FS-login.\n');
-// §FS-distribution.3.2.2.2: a real completed integration write precedes resolver refusal.
+// §FS-distribution.3.2.2: a real completed integration write precedes resolver refusal.
 // Rehearsal supplies a fresh isolated HOME/XDG tree for this subprocess.
 await mkdir(process.env.HOME + '/.local', { recursive: true });
 await writeFile(process.env.HOME + '/.local/bin', 'blocked resolver directory');

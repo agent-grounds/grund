@@ -1,9 +1,9 @@
 //! Test module: what the link pass records for each link it writes, which the
-//! `markdown link` row's items are read from (§FS-fmt.3.6.2). The pass sees the
+//! `markdown link` row's items are read from (§FS-fmt.3.6). The pass sees the
 //! real spans, so the span rule is pinned here rather than by searching a row's
-//! text (§FS-fmt.3.6.2.1), and so is the bracket rule an item is read by
-//! (§FS-fmt.3.6.2.2).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! text (§FS-fmt.3.6), and so is the bracket rule an item is read by
+//! (§FS-fmt.3.6).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::fmt_links::{WrappedLine, wrap_markdown_links_with_targets};
 use super::fmt_row::LineRewrite;
@@ -55,7 +55,7 @@ fn link(config: &Config, findings: &Catalog, id: &str) -> String {
     pass(config, findings, &format!("\u{a7}{id}")).line
 }
 
-/// §FS-fmt.3.6.2.1: the spans stand in source order, each after the last; a fresh
+/// §FS-fmt.3.6: the spans stand in source order, each after the last; a fresh
 /// one is one whole citation token and a re-pointed one runs from `[` to its `)`;
 /// and replacing each with the text written gives the line the write leaves.
 fn assert_spans(read: &str, wrapped: &WrappedLine) {
@@ -88,7 +88,7 @@ fn row(read: &str, wrapped: &WrappedLine) -> String {
     rewrite.label()
 }
 
-/// §FS-fmt.3.6.2.1: `<§>FS-1` is the start of the unresolved `<§>FS-10`, which the
+/// §FS-fmt.3.6: `<§>FS-1` is the start of the unresolved `<§>FS-10`, which the
 /// pass leaves alone; the span is the `<§>FS-1` token after it, not the first
 /// place its text stands.
 #[test]
@@ -108,7 +108,7 @@ fn a_span_is_the_citation_token_and_not_the_first_match_of_its_text() {
     );
 }
 
-/// §FS-fmt.3.6.2.1, §FS-fmt.3.6.2.3: a link already right writes nothing and is not
+/// §FS-fmt.3.6: a link already right writes nothing and is not
 /// listed; the fresh citation after it, with the same text, is the one span.
 #[test]
 fn a_correct_link_beside_a_fresh_one_lists_only_the_fresh_one() {
@@ -126,7 +126,7 @@ fn a_correct_link_beside_a_fresh_one_lists_only_the_fresh_one() {
     );
 }
 
-/// §FS-fmt.3.6.2.2: a re-pointed link's left side runs to the `)` that closes it,
+/// §FS-fmt.3.6: a re-pointed link's left side runs to the `)` that closes it,
 /// title and all, so a title holding `, ` stays inside its one item; the write
 /// drops it, and the item shows that.
 #[test]
@@ -149,7 +149,7 @@ fn a_dropped_title_holding_a_comma_stays_inside_its_item() {
     );
 }
 
-/// §FS-fmt.3.6.2.1: a stale wrap and a fresh citation on one line, each span
+/// §FS-fmt.3.6: a stale wrap and a fresh citation on one line, each span
 /// replaced in source order, and every reading of the record agrees on the count.
 #[test]
 fn a_stale_wrap_and_a_fresh_citation_are_two_spans_in_source_order() {
@@ -170,7 +170,7 @@ fn a_stale_wrap_and_a_fresh_citation_are_two_spans_in_source_order() {
     assert_eq!(rewrite.anchor_detail, None);
 }
 
-/// §FS-fmt.3.6.2.1: on a line `--marker` marked earlier in the run, the span is
+/// §FS-fmt.3.6: on a line `--marker` marked earlier in the run, the span is
 /// the citation as the marking left it, and the row names it after the marking.
 #[test]
 fn a_line_marked_earlier_in_the_run_names_the_marked_citation() {

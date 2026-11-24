@@ -64,7 +64,7 @@ fn operator_table_is_shared_with_glob_candidate() {
     assert_eq!(glob(brace).literal_prefix("."), "FS-x");
 }
 
-/// §FS-coordinate-globs.grammar.globstar: a run of two or more stars is a whole component
+/// §FS-coordinate-globs.grammar: a run of two or more stars is a whole component
 /// or it is refused, rewritten to `*` (with the subtree beside it at the end) or to `**`.
 #[test]
 fn star_run_must_be_a_whole_component() {
@@ -90,7 +90,7 @@ fn star_run_must_be_a_whole_component() {
     }
 }
 
-/// §FS-coordinate-globs.errors.reasons: an empty component is refused where it is closed,
+/// §FS-coordinate-globs.errors.shape: an empty component is refused where it is closed,
 /// and rewritten only where dropping one `.` mends it.
 #[test]
 fn empty_component_is_refused_and_rewritten_where_one_dot_mends_it() {
@@ -113,7 +113,7 @@ fn empty_component_is_refused_and_rewritten_where_one_dot_mends_it() {
     assert!(refused("a...b").accepted.is_empty());
 }
 
-/// §FS-coordinate-globs.grammar.braces: a `{` inside a group is refused at itself.
+/// §FS-coordinate-globs.grammar: a `{` inside a group is refused at itself.
 #[test]
 fn braces_do_not_nest() {
     let refusal = refused("FS-{a,{b,c}}");
@@ -126,7 +126,7 @@ fn braces_do_not_nest() {
     assert!(matches("a,b}", ".", "a,b}", None));
 }
 
-/// §FS-coordinate-globs.errors.reasons: an unclosed bracket points at its opener.
+/// §FS-coordinate-globs.errors.shape: an unclosed bracket points at its opener.
 #[test]
 fn unclosed_brace_and_class_point_at_the_opener() {
     assert_eq!(
@@ -142,7 +142,7 @@ fn unclosed_brace_and_class_point_at_the_opener() {
     assert_eq!(refused("x[!]").column, 2);
 }
 
-/// §FS-coordinate-globs.grammar.braces: `{N..M}` is a range, which a group never takes.
+/// §FS-coordinate-globs.grammar: `{N..M}` is a range, which a group never takes.
 #[test]
 fn braces_take_no_range() {
     assert_eq!(
@@ -154,7 +154,7 @@ fn braces_take_no_range() {
     assert_eq!(refused("FS-x.{1..3,4}").reason, "empty component");
 }
 
-/// §FS-coordinate-globs.errors.reasons: a backwards range offers the forward one.
+/// §FS-coordinate-globs.errors.shape: a backwards range offers the forward one.
 #[test]
 fn backwards_class_range_names_the_forward_one() {
     assert_eq!(
@@ -164,7 +164,7 @@ fn backwards_class_range_names_the_forward_one() {
     );
 }
 
-/// §FS-coordinate-globs.grammar.operators: a `\` that ends the pattern escapes nothing.
+/// §FS-coordinate-globs.grammar: a `\` that ends the pattern escapes nothing.
 #[test]
 fn dangling_escape_escapes_nothing() {
     assert_eq!(
@@ -176,7 +176,7 @@ fn dangling_escape_escapes_nothing() {
     assert!(!matches("FS-\\*", ".", "FS-x", None));
 }
 
-/// §FS-coordinate-globs.grammar.components: the qualifier is `*` or one exact alias.
+/// §FS-coordinate-globs.grammar: the qualifier is `*` or one exact alias.
 #[test]
 fn qualifier_is_one_alias_or_star() {
     assert_eq!(
@@ -197,7 +197,7 @@ fn qualifier_is_one_alias_or_star() {
     );
 }
 
-/// §FS-coordinate-globs.errors.marker: a pattern opening with the marker is refused at
+/// §FS-coordinate-globs.errors.shape: a pattern opening with the marker is refused at
 /// column 1, and the accepted glob is the pattern without it.
 #[test]
 fn citation_marker_is_refused() {
@@ -254,7 +254,7 @@ fn separator_checks_wait_for_the_config() {
 fn every_offer_is_accepted_when_pasted_back() {
     let marked = |rest: &str| format!("{DEFAULT_MARKER}{rest}");
     let mut patterns: Vec<String> = [
-        // The rows of §FS-coordinate-globs.errors.reasons, and the empty pattern.
+        // The rows of §FS-coordinate-globs.errors.shape, and the empty pattern.
         "FS-**",
         "FS-**.terms",
         "FS-config.***",
@@ -345,7 +345,7 @@ fn config_stage_reports_the_leftmost_refusal() {
     );
 }
 
-/// §FS-coordinate-globs.matching.anchored: `?` and a class each match one code point.
+/// §FS-coordinate-globs.matching: `?` and a class each match one code point.
 #[test]
 fn question_and_classes_match_one_code_point() {
     assert!(matches("FS-caf?", ".", "FS-café", None));
@@ -360,7 +360,7 @@ fn question_and_classes_match_one_code_point() {
     assert!(!matches("fs-*", ".", "FS-a", None), "case-sensitive");
 }
 
-/// §FS-coordinate-globs.grammar.globstar: `**` matches zero or more whole components where
+/// §FS-coordinate-globs.grammar: `**` matches zero or more whole components where
 /// it leads or stands between two, and one or more where it ends the pattern.
 #[test]
 fn globstar_matches_zero_or_more_whole_components() {
@@ -386,7 +386,7 @@ fn globstar_matches_zero_or_more_whole_components() {
     );
 }
 
-/// §FS-coordinate-globs.matching.bounded: a group product is walked, never expanded.
+/// §FS-coordinate-globs.matching: a group product is walked, never expanded.
 #[test]
 fn brace_product_is_never_expanded() {
     let pattern = format!("FS-{}*", "{a,b}".repeat(24));
@@ -398,7 +398,7 @@ fn brace_product_is_never_expanded() {
     assert!(started.elapsed() < std::time::Duration::from_secs(1));
 }
 
-/// §FS-coordinate-globs.grammar.components, §FS-coordinate-globs.workspace.escapes: under
+/// §FS-coordinate-globs.grammar, §FS-coordinate-globs.workspace: under
 /// `#` the first unescaped `#` ends the ID atom, with none the first unescaped `.` does,
 /// and an escaped dot stays in the ID.
 #[test]

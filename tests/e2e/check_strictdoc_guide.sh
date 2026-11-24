@@ -2,7 +2,7 @@
 set -uo pipefail
 
 # Manual live-network acceptance for #1485; run from the checkout root with bash.
-# §FS-non-goals.1.1: a persistent authored 404 fails the production external-link sweep.
+# §FS-non-goals.1: a persistent authored 404 fails the production external-link sweep.
 # §AR-ci.3.1.5: use the existing sweep and its retained failure report.
 if (( $# != 0 )); then
     echo 'cannot run: this reproducer takes no arguments or flags' >&2

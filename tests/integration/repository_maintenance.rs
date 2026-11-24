@@ -29,7 +29,7 @@ fn git(args: &[&str]) -> Output {
     output
 }
 
-/// §FS-repository-maintenance.1.1: the root is free of a script or wrapper.
+/// §FS-repository-maintenance.1: the root is free of a script or wrapper.
 #[test]
 fn root_clean_script_is_absent() {
     assert!(
@@ -41,7 +41,7 @@ fn root_clean_script_is_absent() {
     );
 }
 
-/// §FS-repository-maintenance.1.1: executable mode survives the relocation.
+/// §FS-repository-maintenance.1: executable mode survives the relocation.
 #[test]
 fn relocated_clean_script_is_tracked_executable_and_grounded() {
     let script = repository_root().join("scripts/clean.sh");
@@ -65,13 +65,13 @@ fn relocated_clean_script_is_tracked_executable_and_grounded() {
     let source = fs::read_to_string(script).unwrap();
     assert!(
         source.lines().any(|line| {
-            line.trim_start().starts_with('#') && line.contains("§FS-repository-maintenance.1.4")
+            line.trim_start().starts_with('#') && line.contains("§FS-repository-maintenance.1")
         }),
         "clean script must cite its cleanup responsibilities"
     );
 }
 
-/// §FS-repository-maintenance.1.2 and §FS-repository-maintenance.1.3:
+/// §FS-repository-maintenance.1:
 /// check the supported manifest contract without installing or summoning ephor.
 #[test]
 fn checkout_manifest_binds_relocated_clean_at_root() {
@@ -149,7 +149,7 @@ mod cleanup {
     struct Fixture(PathBuf);
 
     impl Fixture {
-        /// §FS-repository-maintenance.1.4.1: copy the real script without a cargo executable.
+        /// §FS-repository-maintenance.1: copy the real script without a cargo executable.
         /// §AR-ci.10.2: exclusively claim the disposable root before populating it.
         fn new() -> Self {
             let script = fs::read(repository_root().join("scripts/clean.sh"))
@@ -191,12 +191,12 @@ mod cleanup {
             fs::write(file, contents).unwrap();
         }
 
-        /// §FS-repository-maintenance.1.4.1: portable acceptance uses controlled cargo.
+        /// §FS-repository-maintenance.1: portable acceptance uses controlled cargo.
         fn run(&self, cargo_status: &str) -> Output {
             self.run_with_path(cargo_status, &std::env::var_os("PATH").unwrap())
         }
 
-        /// §FS-repository-maintenance.1.4.1: an installed shell reads the copied script
+        /// §FS-repository-maintenance.1: an installed shell reads the copied script
         /// with a cargo function, avoiding both generated-executable boundaries.
         fn run_with_path(&self, cargo_status: &str, path: &std::ffi::OsStr) -> Output {
             Command::new("sh")
@@ -226,7 +226,7 @@ mod cleanup {
         }
     }
 
-    /// §FS-repository-maintenance.1.3 and §FS-repository-maintenance.1.4:
+    /// §FS-repository-maintenance.1:
     /// cargo and cache traversal keep their checkout-wide scope and protect Git.
     #[test]
     fn relocated_clean_preserves_checkout_cleanup_scope() {
@@ -268,7 +268,7 @@ mod cleanup {
         }
     }
 
-    /// §FS-repository-maintenance.1.4: cargo failure prevents cache deletion.
+    /// §FS-repository-maintenance.1: cargo failure prevents cache deletion.
     #[test]
     fn relocated_clean_stops_when_cargo_clean_fails() {
         let fixture = Fixture::new();
@@ -356,25 +356,25 @@ mod cleanup {
             drop(writer);
         }
 
-        /// §FS-repository-maintenance.1.4.1: scope survives a busy copied script.
+        /// §FS-repository-maintenance.1: scope survives a busy copied script.
         #[test]
         fn held_script_writer_preserves_cleanup_scope() {
             check("scripts/clean.sh", "0");
         }
 
-        /// §FS-repository-maintenance.1.4.1: cargo status 7 survives a busy copied script.
+        /// §FS-repository-maintenance.1: cargo status 7 survives a busy copied script.
         #[test]
         fn held_script_writer_preserves_cargo_failure() {
             check("scripts/clean.sh", "7");
         }
 
-        /// §FS-repository-maintenance.1.4.1: scope and cargo isolation survive a busy stub.
+        /// §FS-repository-maintenance.1: scope and cargo isolation survive a busy stub.
         #[test]
         fn held_cargo_writer_preserves_cleanup_scope() {
             check("bin/cargo", "0");
         }
 
-        /// §FS-repository-maintenance.1.4.1: the substitute still supplies status 7.
+        /// §FS-repository-maintenance.1: the substitute still supplies status 7.
         #[test]
         fn held_cargo_writer_preserves_cargo_failure() {
             check("bin/cargo", "7");

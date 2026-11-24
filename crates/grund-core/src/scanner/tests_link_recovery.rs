@@ -2,7 +2,7 @@
 //! (§AR-scanner.1.9). Each link hands out its path once and explains one walker error of its kind;
 //! an error with no link left to explain it is the walk root's to report, so it never disappears.
 //! Each directory is listed once per walk root.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::io;

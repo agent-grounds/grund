@@ -1,4 +1,4 @@
-//! §FS-examples.5.6.1: overlapping real-runner calls own their mutable trees.
+//! §FS-examples.5.6: overlapping real-runner calls own their mutable trees.
 //! The reported symlink fixture keeps its original diagnostic goldens
 //! (§FS-declarations.stubs.target.3). Scheduling lives in an external child,
 //! using the ordinary manifest seam, with no hooks in runner implementation.
@@ -114,11 +114,11 @@ impl Drop for Release<'_> {
     }
 }
 
-/// §FS-examples.5.6.1: hold the first real invocation in its child while the
+/// §FS-examples.5.6: hold the first real invocation in its child while the
 /// second prepares the same fixture. Check actual cwd/argv paths and witnesses,
 /// then let both finish through original exit/stream goldens and a final-tree
 /// golden. No assumed copy-path formula or probabilistic overlap is involved.
-/// §FS-examples.5.6.2: a subsequent path-output run preserves the logical copy
+/// §FS-examples.5.6: a subsequent path-output run preserves the logical copy
 /// prefix in relative and absolute output while leaving unrelated paths alone.
 #[test]
 fn overlapping_mutable_cases_keep_their_own_copy() {

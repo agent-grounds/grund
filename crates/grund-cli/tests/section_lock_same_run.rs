@@ -1,6 +1,6 @@
 //! The cases of agent-grounds/grund#847, run alone: one `fmt` run judges the
 //! section lock against the tree as it leaves it, not as it read it
-//! (§FS-section-lock.write.same-run), so a `--write` that marks a trigger is a
+//! (§FS-section-lock.write.rules), so a `--write` that marks a trigger is a
 //! fixed point (§FS-fmt.requirements.fixed-point) and the dry run lists the
 //! rows that write makes (§FS-fmt.7.3). Every case is also in the full e2e pass.
 

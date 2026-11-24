@@ -130,7 +130,7 @@ fn show_of_it_names_both_spellings() {
 }
 
 /// The scoped table: a finding that names several sites is in scope at any of them and keeps its
-/// bytes; the misplaced line belongs to the link's home alone (§FS-check.1.3.6.2).
+/// bytes; the misplaced line belongs to the link's home alone (§FS-check.1.3.6).
 #[test]
 fn a_run_naming_either_spelling_keeps_the_duplicate() {
     for (home, suffix) in CASES {

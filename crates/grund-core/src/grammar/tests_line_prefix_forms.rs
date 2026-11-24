@@ -5,7 +5,7 @@
 //! (§FS-languages.comment-wrapper), and the Lisp definition-starters of the
 //! position row (§FS-inline-citation-style.1.1.2). The whole-tree reading is
 //! pinned by the e2e cases `declare-line-prefix-forms*` and `inline-site-lisp`.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::{comment_envelope, declaration_id_on_line, render_id};
 use crate::model::BlockForm;

@@ -1,7 +1,7 @@
 //! Test module: the conflict blocks the file pass records (§AR-scanner.2.9,
 //! §FS-declarations.body.conflict). Every marker line here is inside an indented
 //! string literal, so no line of this file is itself a marker line.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 
@@ -113,7 +113,7 @@ fn marker_lines_cut_blocks_as_the_definition_says() {
     assert_eq!(blocks(&[(2, b'<'), (3, b'<')]), vec![(2, 3)]);
 }
 
-/// §FS-declarations.body.conflict.where and .owners: in a Markdown file that
+/// §FS-declarations.body.conflict.block and .owners: in a Markdown file that
 /// declares, every block counts, a fenced one and one inside an HTML comment too
 /// (§FS-declarations.body.conflict.markers), and each names the declarations it
 /// overlaps, each ID once, in the order they open; one after a heading that
@@ -177,7 +177,7 @@ fn a_declaring_markdown_file_records_every_block_with_its_owners() {
     );
 }
 
-/// §FS-declarations.body.conflict.where: whether a Markdown file declares is read
+/// §FS-declarations.body.conflict.block: whether a Markdown file declares is read
 /// off its raw lines, so a fence the conflict left open does not hide the one
 /// declaration below it and the block is still recorded, naming none.
 #[test]
@@ -199,7 +199,7 @@ fn a_fence_the_conflict_left_open_does_not_hide_the_file_declaring() {
     assert_eq!(recorded(&root), vec!["docs/login.md:1-6 []"]);
 }
 
-/// §FS-declarations.body.conflict.where: in a source file a block counts inside a
+/// §FS-declarations.body.conflict.block: in a source file a block counts inside a
 /// body, a docstring's or a `/** */` comment's as much as a line-style run's, and
 /// right after the line-style run it cut, and nowhere else in the code.
 #[test]

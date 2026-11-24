@@ -4,7 +4,7 @@
 //! it, and holds the outcome the table names: *mapped* and *written* pass the
 //! records gate (§FS-config-migrate.5.1) with the spelling in the candidate, a
 //! *notice* is reported, a *refused* key names its repair.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::{BTreeMap, BTreeSet};
 

@@ -30,7 +30,7 @@ fn repo_text(relative: &str) -> Option<String> {
     std::fs::read_to_string(repo_file(relative)).ok()
 }
 
-/// §FS-check.3.30, §FS-workspace.2.1.1: the whole sentence, assembled from
+/// §FS-check.3.30, §FS-workspace.2.1: the whole sentence, assembled from
 /// the covered pairs the rule found — each covered root named beside the member
 /// entry it is inside — with the golden's `members`-line breadcrumb taken off
 /// the front. Held here as well as end to end because this is where a failure

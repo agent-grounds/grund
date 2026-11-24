@@ -2,7 +2,7 @@
 //! what compares as one directory entry, the names a survivor keeps, and the guard that only a
 //! run with two or more failures resolves anything for it (§GOAL-fast-feedback). Unix-only:
 //! every tree here is about a link or a mode.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;

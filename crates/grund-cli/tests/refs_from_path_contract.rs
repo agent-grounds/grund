@@ -170,7 +170,7 @@ fn copy_tree(source: &Path, target: &Path) {
     }
 }
 
-/// §FS-refs.from.stubs and §FS-scan.path.refs: reuse the unscanned-target
+/// §FS-refs.from.owned and §FS-scan.path.refs: reuse the unscanned-target
 /// fixture to distinguish the stub's home, the site's file, and target homes.
 #[test]
 fn refs_from_path_stub_outside_tree_with_inline_sites_inside() {

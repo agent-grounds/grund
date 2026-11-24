@@ -1,10 +1,10 @@
 //! Integration: what `grund init` writes is what `grund check` holds it to
-//! (§FS-check.3.5.4, §FS-init.2.3.7). After every `init` end-to-end case that
+//! (§FS-check.3.5, §FS-init.2.3.7). After every `init` end-to-end case that
 //! writes, `check` reports no `agents-init` finding about a block `init` wrote
 //! — a member's fixture block a root run leaves alone is not one — and
 //! `init --check` exits 0,
 //! and `check`, `check --full` and `check <path>` report the same blocks
-//! (§FS-check.1.3.6.1).
+//! (§FS-check.1.3.6).
 #![allow(dead_code)]
 #[path = "support/case_runner.rs"]
 mod case_runner;

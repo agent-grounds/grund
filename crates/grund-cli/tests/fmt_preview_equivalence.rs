@@ -8,7 +8,7 @@
 //! built, one previewed and one written, and the lines that actually differ
 //! after the write are compared to the lines the preview named.
 //!
-//! A `markdown link` row also says what each link becomes (§FS-fmt.3.6.2), so the
+//! A `markdown link` row also says what each link becomes (§FS-fmt.3.6), so the
 //! last case here holds that text to the disk too: applying the row by hand gives
 //! the line the write leaves.
 //!
@@ -26,7 +26,7 @@ const ARROW: &str = " \u{2192} ";
 const NOTE: &str = "repeated heading anchor ";
 
 /// The end of a link's destination in `text`, which opens with `[`: the byte
-/// after the `)` that closes the `(` after its label (§FS-fmt.3.6.2.2).
+/// after the `)` that closes the `(` after its label (§FS-fmt.3.6).
 fn link_end(text: &str) -> usize {
     let open = text.find("](").expect("a link's label closes") + 2;
     let mut depth = 1;
@@ -45,7 +45,7 @@ fn link_end(text: &str) -> usize {
 }
 
 /// The items of a row's `markdown link` detail, `(replaced, written)`, read by
-/// their brackets rather than by splitting on `, ` (§FS-fmt.3.6.2.2), after the
+/// their brackets rather than by splitting on `, ` (§FS-fmt.3.6), after the
 /// repeated-anchor note where it fires.
 fn link_items(detail: &str) -> Vec<(String, String)> {
     let mut rest = match detail.strip_prefix(NOTE) {
@@ -68,7 +68,7 @@ fn link_items(detail: &str) -> Vec<(String, String)> {
 }
 
 /// Whether `left` stands at `at` in `line` as a span the link pass replaces
-/// (§FS-fmt.3.6.2.1): a whole wrap, or a citation token in no wrap and not the
+/// (§FS-fmt.3.6): a whole wrap, or a citation token in no wrap and not the
 /// start of a longer token.
 fn is_span(line: &str, at: usize, left: &str) -> bool {
     if left.starts_with('[') {
@@ -84,7 +84,7 @@ fn is_span(line: &str, at: usize, left: &str) -> bool {
     !before && !continues
 }
 
-/// The declaration-local sites §FS-fmt.7.5.2 requires the rewritable shape to
+/// The declaration-local sites §FS-fmt.7 requires the rewritable shape to
 /// hold: one whose target section exists and one whose target does not
 /// (§FS-fmt.2.4.6). Written with `\u{a7}` because `$$2.1` is not a candidate.
 const RESOLVING_LOCAL_SITE: &str = "\u{a7}2.1";
@@ -203,7 +203,7 @@ fn every_shape_rewrites_exactly_where_it_claims_to() {
 }
 
 #[test]
-/// §FS-fmt.7.5.2 — the declaration-local class asserted by its own lines, not by
+/// §FS-fmt.7 — the declaration-local class asserted by its own lines, not by
 /// the shape: `clean-markdown` also rewrites through its notes file, so the
 /// shape-level assertions stay green if this class stops firing. The site whose
 /// target exists is previewed and written; the one whose target is absent is
@@ -241,7 +241,7 @@ fn the_declaration_local_rewrite_is_previewed_and_written_on_its_own_lines() {
         assert_eq!(
             sites.len(),
             1,
-            "clean-markdown must hold `{token}` on exactly one line (§FS-fmt.7.5.2), found {sites:?}",
+            "clean-markdown must hold `{token}` on exactly one line (§FS-fmt.7), found {sites:?}",
         );
         sites.into_iter().next().unwrap()
     };
@@ -266,7 +266,7 @@ fn the_declaration_local_rewrite_is_previewed_and_written_on_its_own_lines() {
 }
 
 #[test]
-/// §FS-fmt.3.6.2.1 — for every preview row whose only kind is `markdown link`,
+/// §FS-fmt.3.6 — for every preview row whose only kind is `markdown link`,
 /// replacing each item's left side with its right side in the line the write read,
 /// in source order and each after the last, gives the line on disk after the
 /// write. The line is read from the disk before the write and after it, not from

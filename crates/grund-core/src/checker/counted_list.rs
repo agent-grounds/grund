@@ -118,7 +118,7 @@ mod tests {
         (clause, sites)
     }
 
-    /// §FS-rules.7.3.1: by path, then line, then column; two citations on one line are two
+    /// §FS-rules.7.3: by path, then line, then column; two citations on one line are two
     /// entries and one site.
     #[test]
     fn entries_sort_by_path_line_and_column_and_one_line_is_one_site() {
@@ -138,7 +138,7 @@ mod tests {
         );
     }
 
-    /// §FS-rules.7.3.1: no cap.
+    /// §FS-rules.7.3: no cap.
     #[test]
     fn twelve_citations_are_twelve_entries() {
         let entries = (1..=12).map(|line| entry("a.md", line, 1, "X-a")).collect();

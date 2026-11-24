@@ -1,4 +1,4 @@
-//! Black-box regressions for §FS-check.3.5.3.1 and §FS-errors.3.6.
+//! Black-box regressions for §FS-check.3.5 and §FS-errors.3.6.
 //! Port grund#932's intake join/mark reproducer: make blocks current before
 //! changing them, and inspect only detail before the refresh command.
 
@@ -178,7 +178,7 @@ const BILLING: &str = "- [`billing`](packages/billing/)";
 const BILLING_MARK: &str = "- [`billing`](packages/billing/) *(not yet initialized)*";
 const NOTIFY: &str = "- [`notify`](packages/notify/)";
 
-/// §FS-check.3.5.3.1: the first unequal pair is positional in each block.
+/// §FS-check.3.5: the first unequal pair is positional in each block.
 #[test]
 fn joined_member_detail_names_notify_in_root_and_member_findings() {
     let fixture = Fixture::new(&["billing"]);

@@ -309,7 +309,7 @@ fn folder_value_source_control_other_project_does_not_block_creation() {
     assert_usable(&fixture.0);
 }
 
-/// §FS-fetch.5.1, §FS-values.2.2.4: a fetched kind's YAML source declares its IDs, so it refuses.
+/// §FS-fetch.5.1, §FS-values.2.2.3: a fetched kind's YAML source declares its IDs, so it refuses.
 #[test]
 fn folder_value_source_yaml_and_yml_refuse_without_changing_tree() {
     for extension in ["yaml", "yml"] {
@@ -355,7 +355,7 @@ fn folder_value_source_control_yaml_and_yml_with_other_ids_allow_creation() {
     }
 }
 
-/// §FS-fetch.5, §FS-values.2.2.4: an unparsable source stops fetch as it stops every reader.
+/// §FS-fetch.5, §FS-values.5.3: an unparsable source stops fetch as it stops every reader.
 #[test]
 fn folder_value_source_unparsable_yaml_and_yml_refuse_without_changing_tree() {
     for extension in ["yaml", "yml"] {

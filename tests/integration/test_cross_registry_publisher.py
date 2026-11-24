@@ -361,7 +361,7 @@ class RecoveryTests(PublisherFixture):
 
 
 class TransportFailureTests(PublisherFixture):
-    """§FS-distribution-candidate.8.5.1 — a question that gets no HTTP answer is asked
+    """§FS-distribution-candidate.8.5 — a question that gets no HTTP answer is asked
     again before it is refused; a write is never repeated (#1229)."""
 
     NAME = "@grund-cli/darwin-x64"

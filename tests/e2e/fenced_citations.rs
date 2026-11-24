@@ -2,7 +2,7 @@
 //! block is, and stays a fence for everything else (§FS-config-v2.schema.sources.fenced,
 //! §FS-languages.fence.language, §FS-citations.recognized.contexts). Its citations resolve, count
 //! as uses and are reported where they dangle; no line of it declares, opens a section or toggles
-//! `fmt`, and `fmt` rewrites none of it (§FS-fmt.2.3.3, §FS-fmt.2.5.2.2,
+//! `fmt`, and `fmt` rewrites none of it (§FS-fmt.2.3.3, §FS-fmt.2.5.2,
 //! §FS-citations.rewrite-exemption). The index looks at its lines (§FS-check.3.18), `config
 //! show` prints the key (§FS-config-v2.schema.sources.effective), and the managed block names
 //! only the fences left unread (§FS-init.2.3.4, §FS-init.2.3.7). The verdicts are

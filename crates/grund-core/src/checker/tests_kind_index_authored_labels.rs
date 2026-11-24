@@ -5,7 +5,7 @@
 //! still falls to §FS-check.3.18. Each case is one side of the three-way reading:
 //! which brackets enclose (§FS-citations.wrap.enclosing.shape), which never do
 //! (§FS-citations.wrap.enclosing.images), and the nested line an older `fmt`
-//! wrote (§FS-citations.wrap.enclosing.wrap-wins).
+//! wrote (§FS-citations.wrap.recognized).
 
 use crate::api::CheckRun;
 use crate::testing::{check_run, codes, findings, kind_index_repo, kind_index_repo_loose, write};
@@ -264,7 +264,7 @@ fn a_citation_only_image_beside_an_entry_draws_no_warning() {
     assert!(!has(&run, "image-index-entry"), "{:?}", findings(&run));
 }
 
-/// §FS-citations.wrap.enclosing.wrap-wins: on a line an older `fmt` nested, the
+/// §FS-citations.wrap.recognized: on a line an older `fmt` nested, the
 /// inner wrap is the entry and the outer brackets are text.
 #[test]
 fn an_already_nested_line_is_an_entry() {

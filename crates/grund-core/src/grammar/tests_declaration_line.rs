@@ -4,7 +4,7 @@
 //! (§FS-declarations.line, §AR-scanner.2.1.1). The e2e cases
 //! `*-section-suffixed-line-*` pin what `list`, `check` and `show` print; these
 //! pin the one answer underneath them, in each shape a declaration line takes.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::{
     Grammar, declaration_captures, declaration_id_on_line, near_miss_heading, parse_id,
@@ -42,7 +42,7 @@ fn declared(grammar: &Grammar, shape: Shape, line: &str) -> Option<String> {
         .map(|(id, _)| render_id(grammar, &id))
 }
 
-/// §FS-declarations.line.configured-slug: punctuation admitted by the slug
+/// §FS-declarations.line: punctuation admitted by the slug
 /// grammar keeps the query's identity in every declaration position.
 #[test]
 fn configured_star_slug_declarations_keep_canonical_identity() {
@@ -77,7 +77,7 @@ fn configured_star_slug_declarations_keep_canonical_identity() {
     assert!(disagreements.is_empty(), "{}", disagreements.join("\n"));
 }
 
-/// §FS-declarations.line.configured-slug: preserving punctuation never grants
+/// §FS-declarations.line: preserving punctuation never grants
 /// a canonical prefix to an invalid longer token or a section coordinate.
 #[test]
 fn configured_star_slug_invalid_extended_tokens_keep_exact_spelling() {
@@ -107,7 +107,7 @@ fn configured_star_slug_invalid_extended_tokens_keep_exact_spelling() {
     }
 }
 
-/// §FS-declarations.line.configured-slug: a section heading cannot declare
+/// §FS-declarations.line: a section heading cannot declare
 /// either its parent ID or a shorter canonical prefix of that parent.
 #[test]
 fn configured_star_slug_section_coordinates_never_declare_a_prefix() {
@@ -195,7 +195,7 @@ fn a_section_suffixed_id_declares_nothing_in_any_shape() {
     );
 }
 
-/// §FS-declarations.line.section-suffix.3: a named path is a section only where
+/// §FS-declarations.line.section-suffix: a named path is a section only where
 /// the project enables named sections, and where it does, an ID followed by one
 /// declares nothing.
 #[test]
@@ -223,11 +223,11 @@ fn a_named_section_suffix_declares_nothing_where_named_sections_are_on() {
     );
 }
 
-/// §FS-declarations.line.section-suffix.3: the separator is the configured one.
+/// §FS-declarations.line.section-suffix: the separator is the configured one.
 /// Under `section_separator = ":"` the `:` after the ID is the separator in
 /// front of a section, so these lines declare nothing and are no near miss
 /// either: the near-miss reading must not take that `:` for a declaration colon
-/// (§FS-declarations.line.section-suffix.1).
+/// (§FS-declarations.line.section-suffix).
 #[test]
 fn the_configured_separator_is_the_one_that_counts() {
     let config = config_with(
@@ -287,7 +287,7 @@ fn a_declaration_with_its_colon_still_declares() {
     }
 }
 
-/// §FS-declarations.line.section-suffix.2: with the declaration colon, the
+/// §FS-declarations.line.section-suffix: with the declaration colon, the
 /// token ends at the colon and is all of `FS-042-user-login.2`. The grammar
 /// rejects it, so it is the off-grammar declaration §FS-config.3.2.5 retains
 /// under its exact spelling, and a near miss — never the parent ID. This holds
@@ -324,7 +324,7 @@ fn with_the_colon_the_whole_token_is_the_near_miss() {
     }
 }
 
-/// §FS-declarations.line.configured-literals: the full canonical identity and
+/// §FS-declarations.line: the full canonical identity and
 /// the body reader's boundary must survive an internal colon in every shape.
 #[test]
 fn colon_format_declaration_is_canonical_in_every_shape() {
@@ -356,7 +356,7 @@ fn colon_format_declaration_is_canonical_in_every_shape() {
     }
 }
 
-/// §FS-declarations.line.configured-literals: a conforming heading must never
+/// §FS-declarations.line: a conforming heading must never
 /// be diagnosed as a near miss, even though its spelling can be cataloged today.
 #[test]
 fn colon_format_declaration_is_not_a_near_miss() {

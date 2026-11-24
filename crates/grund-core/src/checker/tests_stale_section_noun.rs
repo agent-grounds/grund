@@ -1,11 +1,11 @@
 //! Test module: the stale-block finding's text and the noun read back out of it
-//! (§FS-errors.3.6, §FS-check.3.5.3), the pair `grund config migrate`'s
+//! (§FS-errors.3.6, §FS-check.3.5), the pair `grund config migrate`'s
 //! report gate relies on (§FS-config-migrate.5.2).
 
 use super::agents::{stale_block, stale_section_noun};
 use std::path::Path;
 
-/// Every noun §FS-check.3.5.3 lists, and a heading someone wrote into the block.
+/// Every noun §FS-check.3.5 lists, and a heading someone wrote into the block.
 const NOUNS: [&str; 13] = [
     "citation scheme",
     "grounding from a citation",
@@ -24,7 +24,7 @@ const NOUNS: [&str; 13] = [
 
 /// §FS-errors.3.6: the text a stale `noun` is reported with, for the run's own
 /// block (`owner` is `None`) or another project's. With no section bytes a
-/// workspace section carries the fallback detail (§FS-check.3.5.3.1).
+/// workspace section carries the fallback detail (§FS-check.3.5).
 fn expected(noun: &str, owner: Option<&str>) -> String {
     let tail = "(does not affect citation validity)";
     if matches!(noun, "project namespaces" | "workspace members") {

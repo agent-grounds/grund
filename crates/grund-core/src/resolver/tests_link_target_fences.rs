@@ -1,6 +1,6 @@
 //! Test module: the anchor of a `.<section>` citation names a section the scan
 //! records, so a heading inside a fence of the declaration's Markdown home gives
-//! no anchor (§FS-fmt.6.4.1). The anchor is the one `fmt --cross-refs` writes and
+//! no anchor (§FS-fmt.6.4). The anchor is the one `fmt --cross-refs` writes and
 //! `show --format=json` reports (§FS-fmt.6.2.1).
 //!
 //! Each case states its premise first: whether the scan records the cited
@@ -65,7 +65,7 @@ fn assert_no_anchor(name: &str, home: &str) {
     );
 }
 
-/// §FS-fmt.6.4.1: the reported tree, a section heading only inside a backtick
+/// §FS-fmt.6.4: the reported tree, a section heading only inside a backtick
 /// fence of the declaration's body.
 #[test]
 fn a_section_heading_only_inside_a_backtick_fence_gives_no_anchor() {
@@ -75,7 +75,7 @@ fn a_section_heading_only_inside_a_backtick_fence_gives_no_anchor() {
     );
 }
 
-/// §FS-fmt.6.4.1: the same with a tilde fence, which the scan reads alike.
+/// §FS-fmt.6.4: the same with a tilde fence, which the scan reads alike.
 #[test]
 fn a_section_heading_only_inside_a_tilde_fence_gives_no_anchor() {
     assert_no_anchor(
@@ -84,7 +84,7 @@ fn a_section_heading_only_inside_a_tilde_fence_gives_no_anchor() {
     );
 }
 
-/// §FS-fmt.6.4.1: a fence left open runs to the end of the file, so a section
+/// §FS-fmt.6.4: a fence left open runs to the end of the file, so a section
 /// heading after its opener is still inside it.
 #[test]
 fn a_section_heading_inside_an_unclosed_fence_gives_no_anchor() {
@@ -94,7 +94,7 @@ fn a_section_heading_inside_an_unclosed_fence_gives_no_anchor() {
     );
 }
 
-/// §FS-fmt.6.4.1: a fenced copy of `# FS-a: A` inside `FS-b`'s body opens
+/// §FS-fmt.6.4: a fenced copy of `# FS-a: A` inside `FS-b`'s body opens
 /// nothing, so `FS-b`'s own `## 1.` after it is no section of `FS-a`.
 #[test]
 fn a_fenced_copy_of_the_cited_heading_does_not_open_its_declaration() {

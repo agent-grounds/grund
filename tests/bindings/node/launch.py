@@ -1,4 +1,4 @@
-"""Test command launchers for §FS-distribution.3.2.3.3 source-package proofs."""
+"""Test command launchers for §FS-distribution.3.2.3 source-package proofs."""
 
 import os
 import shutil

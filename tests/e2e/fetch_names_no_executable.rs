@@ -1,6 +1,6 @@
 //! A `fetch` key that names no executable, under both config versions (§FS-fetch.2.1): version 2
 //! refuses it at load from grund 0.23.0 (§FS-config-v2.checks.config-fetch-names-nothing), version
-//! 1 loads it unchanged (§FS-config.3.4.10.2), its `grund fetch` refuses it before any spawn, and
+//! 1 loads it unchanged (§FS-config.3.4.10), its `grund fetch` refuses it before any spawn, and
 //! `config migrate` refuses it with the repair (§FS-config-migrate.3.1.10). Each tree is built
 //! in the temp directory, because a file named `" "` cannot be a committed case fixture on every
 //! platform the suite runs on.
@@ -245,7 +245,7 @@ fn v2_refuses_at_load_on_every_reporting_command() {
     }
 }
 
-/// §FS-config.3.4.10.2: a version 1 row keeps loading, with no new finding, and
+/// §FS-config.3.4.10: a version 1 row keeps loading, with no new finding, and
 /// §FS-config-v2.checks.config-fetch-names-nothing never reaches version 1.
 #[test]
 fn v1_check_is_unchanged() {

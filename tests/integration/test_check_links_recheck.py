@@ -39,7 +39,7 @@ SETTLED = [
 class TransientRecheckTests(unittest.TestCase):
     """§AR-ci.3.1.3 — a failure of a transient shape from any host is checked
     once more with lychee, and passes only on that check's success
-    (§FS-non-goals.1.1); nothing else is checked again."""
+    (§FS-non-goals.1); nothing else is checked again."""
 
     def assertReported(self, output, checked, passed, failed):
         match = RECHECK_LINE.search(output)

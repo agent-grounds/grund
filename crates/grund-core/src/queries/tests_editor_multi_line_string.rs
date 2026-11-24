@@ -1,5 +1,5 @@
 //! The editor's two writers on the interior line of a string literal that spans
-//! lines (§FS-languages.multi-line-string, §FS-lsp.1.4.3, §FS-lsp.1.6.1): the
+//! lines (§FS-languages.multi-line-string, §FS-lsp.1.4, §FS-lsp.1.6): the
 //! on-type transform and completion refuse there exactly as `grund fmt` does,
 //! and act again in a comment after the literal's closer.
 

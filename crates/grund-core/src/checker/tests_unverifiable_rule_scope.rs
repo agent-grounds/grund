@@ -6,7 +6,7 @@
 //! `…-pinned-rule-…` e2e cases. What is here is the seam each one rests on: the
 //! classification bit, the authored sentence surviving into the row, and the
 //! alias set `init` resolves against being the one `check` loads.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::chapter_rules::{configured_rule_sentences, declared_workspace_vocabulary, vocabulary};
 use crate::config::{Config, KindScope, KindVerdict, ProjectRecords, load_config};
@@ -24,7 +24,7 @@ const PINNED: &str = "The operations chapter of each SEG must cite at least one 
 /// sentence. `workshop` is written beside it whether or not the project claims
 /// it as a member, so what varies between the cases below is the `[workspace]`
 /// line and nothing else.
-/// Keep this owner through every workspace read (§FS-repository-maintenance.4.1).
+/// Keep this owner through every workspace read (§FS-repository-maintenance.4).
 fn project(name: &str, extra: &str, sentence: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
@@ -122,7 +122,7 @@ fn verdict(config: &Config, sentence: &str) -> Result<(), bool> {
     }
 }
 
-/// §FS-rules.4.1.1: all seven rows. The absence of every workspace namespace is
+/// §FS-rules.4.1: all seven rows. The absence of every workspace namespace is
 /// the whole test — where the vocabulary holds namespaces and the alias was
 /// rejected anyway, the answer was no and the rule is invalid.
 #[test]
@@ -197,7 +197,7 @@ fn an_unverifiable_rule_keeps_its_row_and_its_authored_sentence() {
     );
 
     // And a genuinely invalid rule beside it is still `Err`, which is what
-    // withholds the write (§FS-rules.4.1.2).
+    // withholds the write (§FS-rules.4.1).
     write(
         &root.join("docs/rules/RULE-broken.md"),
         "# RULE-broken: Segments ought to be nice.\n\nNot a rule at all, for \u{a7}GOAL-build.\n",
@@ -272,7 +272,7 @@ fn the_declared_vocabulary_holds_the_aliases_the_workspace_load_yields() {
     );
 }
 
-/// §FS-rules.4.1.1: the workspace read is best-effort — an expansion that fails
+/// §FS-rules.4.1: the workspace read is best-effort — an expansion that fails
 /// raises nothing — but a config that declares `[workspace]` still holds its own
 /// project's namespace, so the run is never one that no workspace is in scope
 /// for. The reader is standing at the workspace root; sending them to check from

@@ -2,7 +2,7 @@
 //! (§FS-imports.declaration.path): a symlink is followed exactly as far as the
 //! directory whose identity is then checked, and two spellings of one root are one
 //! target.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::expand_workspace_tree;
 use crate::config::load_config_at;

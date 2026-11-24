@@ -1,7 +1,7 @@
 //! The empty-scan caution's hidden-file branch (§FS-check.2.2.2, §AR-scanner.1.13), the
 //! outward link it names below a handed directory (§FS-check.2.2.2), and how it names
 //! the scope it read (§FS-workspace.5.3, §FS-config.3.6).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::scope_cautions::{display_scope, empty_scan_warning};
 use crate::config::{Config, load_config_at};

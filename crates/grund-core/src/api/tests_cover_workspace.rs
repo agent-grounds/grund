@@ -4,7 +4,7 @@
 //! a coverage index that omits whole projects, and one that reports a fully
 //! grounded file as citing nothing — and both print as absence, which is why
 //! they need a test that names what should be there.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 
@@ -104,7 +104,7 @@ fn rows(output: &CoverOutput) -> Vec<String> {
 }
 
 /// §FS-workspace.8.6: the member's files are in the index, spelled from the
-/// workspace root, and carrying their own alias. §FS-workspace.8.6.2 is why the
+/// workspace root, and carrying their own alias. §FS-workspace.8.6 is why the
 /// index spans every project rather than one: before this, a run at the root saw
 /// only `docs/` and exited `0` over a tree it had not read — the silent skip
 /// §REQ-no-missed-citation.1 forbids.
@@ -126,7 +126,7 @@ fn cover_at_a_workspace_root_indexes_every_member() {
     );
 }
 
-/// §FS-workspace.8.6.3, §DF-cover-workspace-scope.2.2: a `§<alias>/<ID>` is one
+/// §FS-workspace.8.6.4, §DF-cover-workspace-scope.2.2: a `§<alias>/<ID>` is one
 /// of the citing file's citations, listed at its own `(line, column)`. A file
 /// whose citations are all qualified used to print as `(no citations)` — the
 /// report a reader takes for "ungrounded".

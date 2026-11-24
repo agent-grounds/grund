@@ -1,8 +1,8 @@
-//! §FS-config.1.4 — a file argument with no directory part has the working
+//! §FS-config.1 — a file argument with no directory part has the working
 //! directory as its parent, so `grund <command> NAME` and `grund <command> ./NAME`
 //! are one run: same config root, same workspace member, same path base. Each
 //! case runs the built binary from the file's own directory, the only place the
-//! two spellings differ. The `fmt` cases pin §FS-fmt.6.2.5 the same way: the
+//! two spellings differ. The `fmt` cases pin §FS-fmt.6.2 the same way: the
 //! link a bare name gets is the link `./NAME` gets.
 
 use std::fs;
@@ -82,7 +82,7 @@ fn copy_dir(from: &Path, to: &Path) {
     }
 }
 
-/// §FS-config.1.4: from `docs/functional-spec/`, a bare name finds the
+/// §FS-config.1: from `docs/functional-spec/`, a bare name finds the
 /// `grund.toml` two levels up, whose `id_format` and folder `FS` home both
 /// disagree with the built-in defaults, so a run on the defaults cannot pass.
 #[test]
@@ -93,7 +93,7 @@ fn bare_file_check_from_a_subdirectory_loads_the_config_above_it() {
     assert_eq!(String::from_utf8_lossy(&output.stdout), "success\n");
 }
 
-/// §FS-config.1.4: the bare name renders its path from the config root, as
+/// §FS-config.1: the bare name renders its path from the config root, as
 /// `./FS-widget.md` does, not from the working directory.
 #[test]
 fn bare_file_list_from_a_subdirectory_renders_paths_from_the_config_root() {
@@ -107,7 +107,7 @@ fn bare_file_list_from_a_subdirectory_renders_paths_from_the_config_root() {
     );
 }
 
-/// §FS-config.1.4 with §FS-workspace.5.1: inside a member that has no
+/// §FS-config.1 with §FS-workspace.5.1: inside a member that has no
 /// `grund.toml` of its own, a bare name is rooted at that member, exactly as
 /// `./FS-thing.md` is, so its path renders from the member's root.
 #[test]
@@ -128,7 +128,7 @@ fn bare_file_list_inside_a_configless_member_is_rooted_at_the_member() {
     );
 }
 
-/// §FS-fmt.6.2.5: from the repository root, `fmt --write NOTES.md` wraps the
+/// §FS-fmt.6.2: from the repository root, `fmt --write NOTES.md` wraps the
 /// citation with the link `./NOTES.md` gets, `docs/fs/...`, not one `../` per
 /// directory above the repository, and reports the file as `NOTES.md`, not by
 /// an absolute path (§FS-config.3.6). Each spelling writes its own copy.
@@ -161,7 +161,7 @@ fn bare_file_fmt_write_writes_the_link_dotted_spelling_writes() {
     );
 }
 
-/// §FS-fmt.6.2.5: a file that already holds the canonical link passes
+/// §FS-fmt.6.2: a file that already holds the canonical link passes
 /// `fmt --check` by its bare name, as it does by `./LINKED.md`.
 #[test]
 fn bare_file_fmt_check_passes_an_already_canonical_link() {
@@ -169,7 +169,7 @@ fn bare_file_fmt_check_passes_an_already_canonical_link() {
     assert_eq!(output.status.code(), Some(0), "{}", render(&output));
 }
 
-/// §FS-fmt.6.2.5: the preview (neither `--check` nor `--write`) of an
+/// §FS-fmt.6.2: the preview (neither `--check` nor `--write`) of an
 /// already-canonical file is empty for the bare name too, and the preview of
 /// a pending wrap names the file by the same path under both spellings.
 #[test]

@@ -2,7 +2,7 @@
 //! surface (§FS-languages.multi-line-string, §FS-fmt.2.3.1). `check` and
 //! `fmt --check` must give each line of one fixture the same verdict: silent on
 //! the literal's interior, live again after its closer.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

@@ -1,4 +1,4 @@
-//! [§FS-lsp.1.1.2](../../../docs/functional-spec/FS-lsp.md#112-findings-the-core-report-shapes) / [§REQ-runs-offline](../../../docs/requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service): missing-snapshot diagnostics cross the existing LSP transport without executing the fetcher.
+//! [§FS-lsp.1.1](../../../docs/functional-spec/FS-lsp.md#11-diagnostics) / [§REQ-runs-offline](../../../docs/requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service): missing-snapshot diagnostics cross the existing LSP transport without executing the fetcher.
 #![cfg(unix)]
 
 mod support;
@@ -60,7 +60,7 @@ fn external_facts_lsp_publishes_the_warning_without_fetch_or_code_action() {
     wait_for_exit(&mut child);
 }
 
-/// [§FS-check.3.1.3.2](../../../docs/functional-spec/FS-check.md): the editor shows the repair `check` gives.
+/// [§FS-check.3.1](../../../docs/functional-spec/FS-check.md): the editor shows the repair `check` gives.
 #[test]
 fn a_blank_fetch_key_publishes_the_repair() {
     let root = test_root("external-facts-blank-fetch");

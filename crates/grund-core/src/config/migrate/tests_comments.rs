@@ -1,7 +1,7 @@
 //! Test module: §FS-config-migrate.4, the comments a migration carries or
 //! lists. No comment may be neither, since `--drop-comments` is the only way a
 //! migration loses one (§REQ-no-data-loss.4).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::{Located, MigrateReport, Prepared, translate};
 use crate::testing::{test_root, write};

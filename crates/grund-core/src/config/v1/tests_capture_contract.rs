@@ -1,7 +1,7 @@
-//! Migration capture is opt-in (§FS-config-migrate.4.3, §AR-config.8.1). The observer
+//! Migration capture is opt-in (§AR-config.8.1). The observer
 //! counts records actually constructed, including those an ordinary read drops;
 //! it is thread-local and compiled only into unit tests.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::cell::Cell;
 use std::path::Path;
@@ -32,7 +32,7 @@ const TEXT: &str = "# lead\n\n\
     kind = \"FS\" # kind\n\
     folder = \"docs\"\n";
 
-/// §FS-config-migrate.4.3: the real ordinary entrypoint must construct no migration
+/// §AR-config.8.1: the real ordinary entrypoint must construct no migration
 /// records, for either spelling of the version selector.
 #[test]
 fn ordinary_section_reads_construct_no_line_records() {
@@ -47,7 +47,7 @@ fn ordinary_section_reads_construct_no_line_records() {
     }
 }
 
-/// §FS-config-migrate.4.3: an unsuccessful ordinary read does not capture either.
+/// §AR-config.8.1: an unsuccessful ordinary read does not capture either.
 /// §FS-config.4.3: it still reports the first spelling error at its own line.
 #[test]
 fn ordinary_refusals_construct_no_line_records() {
@@ -68,7 +68,7 @@ fn ordinary_refusals_construct_no_line_records() {
     );
 }
 
-/// §FS-config-migrate.4.3: discovery's shared path (also used for workspace members,
+/// §AR-config.8.1: discovery's shared path (also used for workspace members,
 /// `config show` and `config validate`) must use the non-capturing reader.
 #[test]
 fn discovered_config_constructs_no_line_records() {
@@ -79,7 +79,7 @@ fn discovered_config_constructs_no_line_records() {
     assert_eq!(captured, 0, "discovery captured migration records");
 }
 
-/// §FS-config-migrate.4.3: text that has not reached disk takes the same ordinary path.
+/// §AR-config.8.1: text that has not reached disk takes the same ordinary path.
 #[test]
 fn pending_config_constructs_no_line_records() {
     let root = test_root("config-capture-contract-pending");
@@ -148,7 +148,7 @@ fn migration_keeps_complete_line_records() {
     assert_eq!(pass.lines, expected);
 }
 
-/// §AR-config.4, §FS-config-migrate.4.3: capture preserves lowering and the first
+/// §AR-config.4, §AR-config.8.1: capture preserves lowering and the first
 /// spelling error. This guards behavior while the separate capture tests fail.
 #[test]
 fn capture_preserves_lowering_and_first_spelling_error() {

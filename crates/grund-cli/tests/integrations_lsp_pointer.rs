@@ -1,7 +1,7 @@
-//! §FS-integrations.2.3: wherever `grund integrations` offers setup it names
+//! §FS-integrations.2: wherever `grund integrations` offers setup it names
 //! `grund-lsp`, so detection closes on the way to it, in the catalog and in the
-//! detected list alike (§FS-integrations.2.1). The no-client form is byte-stable
-//! only for a fixed environment (§FS-integrations.2.2, §FS-integrations.6), so
+//! detected list alike (§FS-integrations.2). The no-client form is byte-stable
+//! only for a fixed environment (§FS-integrations.2, §FS-integrations.6), so
 //! each run clears the caller's environment, keeps `PATH`, points `HOME` and
 //! `XDG_CONFIG_HOME` at an empty sandbox, and sets only what its case is about.
 //! Unix only, like the other integrations runs: the cleared environment is the
@@ -13,7 +13,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 /// What both detection forms close with: the preview hint and the setup guide
-/// (§FS-integrations.2.1), then the way to `grund-lsp` (§FS-integrations.2.3).
+/// (§FS-integrations.2), then the way to `grund-lsp` (§FS-integrations.2).
 const CLOSING: &str = concat!(
     "\n",
     "Run `grund integrations <client>` to preview one before installing.\n",
@@ -48,7 +48,7 @@ fn run(case: &str, vars: &[(&str, &str)], args: &[&str]) -> (Option<i32>, String
     )
 }
 
-/// §FS-integrations.2.3: IntelliJ's terminal sets `TERMINAL_EMULATOR`, which
+/// §FS-integrations.2: IntelliJ's terminal sets `TERMINAL_EMULATOR`, which
 /// detection does not read (§FS-integrations.2), so the IntelliJ user the ticket
 /// is about gets the catalog, and the catalog has to tell them where their
 /// editor's integration is.
@@ -76,7 +76,7 @@ fn the_catalog_an_intellij_terminal_gets_closes_on_the_way_to_grund_lsp() {
     );
 }
 
-/// §FS-integrations.2.1, §FS-integrations.2.3: a detected client closes with the
+/// §FS-integrations.2: a detected client closes with the
 /// same lines as the catalog, so a user in WezTerm learns of `grund-lsp` too.
 #[test]
 fn a_detected_client_closes_on_the_same_way_to_grund_lsp() {
@@ -97,7 +97,7 @@ fn a_detected_client_closes_on_the_same_way_to_grund_lsp() {
     );
 }
 
-/// §FS-integrations.2.3, §FS-integrations.5: the pointer is text a person reads.
+/// §FS-integrations.2, §FS-integrations.5: the pointer is text a person reads.
 /// The JSON detection plan carries none, so these are its bytes before the
 /// pointer and after it, for both environments above.
 #[test]

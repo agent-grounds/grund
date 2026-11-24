@@ -117,7 +117,7 @@ fn facts(completeness: Completeness) -> RuleFacts {
     }
 }
 
-/// §FS-rules.11: the sentence front end returns a complete `ParsedRule` and
+/// §AR-rules.1: the sentence front end returns a complete `ParsedRule` and
 /// knows neither facts nor findings.
 #[test]
 fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics() {
@@ -169,7 +169,7 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
     );
 }
 
-/// §FS-rules.11, §FS-rules.5.2: the engine evaluates a family clause over
+/// §AR-rules.1, §FS-rules.5.2: the engine evaluates a family clause over
 /// hand-built facts, with no sentence text, Markdown or scanner record.
 #[test]
 fn logic_engine_evaluates_hand_built_rule_and_facts_without_parser_or_scanner() {

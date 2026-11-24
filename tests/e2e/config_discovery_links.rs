@@ -65,7 +65,7 @@ impl Tree {
     }
 
     fn check_scopes(&self, link: &str, code: i32, messages: &[&str]) {
-        // §FS-check.1.3.6.3: the failure is at or under each of these scopes.
+        // §FS-check.1.3.6: the failure is at or under each of these scopes.
         for args in [
             vec!["check"],
             vec!["check", link.split('/').next().unwrap()],
@@ -127,13 +127,13 @@ fn v2_narrowed_checks_keep_the_projects_refusal() {
     Tree::new("v2", V2, "e2e/cases").check_scopes("e2e/cases", 2, &["grund.toml:8:", REFUSAL]);
 }
 
-/// §FS-config.1.5, §FS-check.1.3.6.3: v1 still reads the in-scope bad manifest.
+/// §FS-config.1.5, §FS-check.1.3.6: v1 still reads the in-scope bad manifest.
 #[test]
 fn v1_narrowed_checks_keep_the_projects_read_failure() {
     Tree::new("v1", V1, "tests/e2e").check_scopes("tests/e2e", 2, &[READ_ERROR, V1_WARNING]);
 }
 
-/// §FS-config.3.6.1, §FS-check.1.3.6.3: a path spelled through a link above the project is
+/// §FS-config.3.6.1, §FS-check.1.3.6: a path spelled through a link above the project is
 /// the same path as its resolved spelling, so its in-scope read failure still exits 2.
 #[test]
 fn a_path_through_a_linked_ancestor_keeps_the_projects_read_failure() {
@@ -228,7 +228,7 @@ fn explain_uses_the_lexical_projects_version() {
     tree.write("outside/grund.toml", STRANGER.as_bytes());
     tree.write("project/note.md", b"Note.\n");
     let mut failures = Vec::new();
-    // §FS-config.1.4: ordinary, bare and dotted file starts remain equivalent.
+    // §FS-config.1: ordinary, bare and dotted file starts remain equivalent.
     for path in [
         ".",
         "tests",

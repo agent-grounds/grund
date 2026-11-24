@@ -215,7 +215,7 @@ fn member_local_qualified_citation_with_foreign_grammar_reports_unknown_alias() 
     );
 }
 
-/// §FS-workspace.4.1: a qualified dangling diagnostic names the target ID
+/// §FS-workspace.4: a qualified dangling diagnostic names the target ID
 /// using the target project's grammar, not the citing project's grammar.
 #[test]
 fn workspace_qualified_dangling_diagnostic_uses_target_id_grammar() {

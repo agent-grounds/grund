@@ -32,7 +32,7 @@ fn unparsable(manifest: &str) -> String {
 
 /// A fresh leaf of the temp directory that the test owns until it drops the root, which removes
 /// it; `name` keeps concurrent tests apart, and an occupied leaf is never cleared to be reused
-/// (§FS-repository-maintenance.4.1, §FS-repository-maintenance.4.2).
+/// (§FS-repository-maintenance.4).
 fn scratch_root(name: &str) -> TemporaryRoot {
     TemporaryRoot::new(&std::env::temp_dir(), &format!("grund-1207-{name}"))
 }
@@ -285,7 +285,7 @@ fn ignore_file_named(line: &str) -> String {
 
 /// An ignore file outside the loaded root, here the global excludes file, is named by `fetch`'s
 /// refusal as `check`'s tail names it for the same home, with the broken-stub line's fallback
-/// rather than a `..` path that climbs out of the root (§FS-fetch.4.2.1, §FS-check.3.1.3.1,
+/// rather than a `..` path that climbs out of the root (§FS-fetch.4.2.1, §FS-check.3.1,
 /// §FS-cli.3.4, §AR-config.1.7).
 #[test]
 fn fetch_and_check_name_an_ignore_file_outside_the_root_alike() {

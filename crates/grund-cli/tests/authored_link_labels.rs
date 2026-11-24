@@ -130,7 +130,7 @@ fn authored_link_label_cases() {
     );
 }
 
-/// §FS-citations.wrap.enclosing.images, §FS-citations.wrap.enclosing.wrap-wins,
+/// §FS-citations.wrap.enclosing.images, §FS-citations.wrap.recognized,
 /// §FS-check.3.18: what must not move — an image encloses nothing, a nested line
 /// is a fixed point, and the missing-entry message keeps both its forms' bytes.
 #[test]
@@ -172,7 +172,7 @@ fn a_v1_round_trip_leaves_authored_labels() {
     );
 }
 
-/// §FS-fmt.6.4 over §FS-fmt.6.1.1: under `enabled = false` the index carve-out
+/// §FS-fmt.6.4 over §FS-fmt.6.1: under `enabled = false` the index carve-out
 /// still wraps a bare entry, and leaves the author's link as written.
 #[test]
 fn the_disabled_carve_out_wraps_a_bare_entry_and_leaves_an_authored_label() {
@@ -202,7 +202,7 @@ fn the_disabled_carve_out_wraps_a_bare_entry_and_leaves_an_authored_label() {
     );
 }
 
-/// §FS-fmt.6.4 over §FS-fmt.2.5.3: in a suppressed scope, the `[fmt] exclude`
+/// §FS-fmt.6.4 over §FS-fmt.6.1: in a suppressed scope, the `[fmt] exclude`
 /// file and the `grund:fmt off` region alike, the carve-out still wraps a bare
 /// entry and leaves the author's link as written.
 #[test]

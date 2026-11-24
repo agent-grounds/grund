@@ -1,7 +1,7 @@
 //! Black-box: a file's names are judged over the names the plain run reaches, when it reaches any.
 //! A name only `--full` or a handed path reaches decides nothing, so `--full` stays additive and a
 //! run naming a path agrees with the whole run (§FS-scan.identity.reading,
-//! §FS-scan.checks.reading-conflict, §FS-scan.checks.reading-moved, §FS-check.1.3.2).
+//! §FS-scan.checks.reading-conflict, §FS-scan.checks.reading-moved, §FS-check.1.3).
 #![cfg(unix)]
 
 #[path = "support/two_names.rs"]

@@ -1,5 +1,5 @@
 //! Black-box: a rewrite that resolves a qualified citation against another project needs that
-//! project's proof (§FS-fmt.7.4.4). Where the project's scan met an error, nothing is rewritten and
+//! project's proof (§FS-fmt.7.4). Where the project's scan met an error, nothing is rewritten and
 //! the run names the path, on every route to the rewrite: a narrowed run with a clean walk, a link
 //! only an ignore file covers, and a whole run under §FS-fmt.3.1 that goes on to exit 2. A wrong
 //! write is the defect, so each refusal reads the file back. The refusal belongs to the rewrite,
@@ -195,7 +195,7 @@ fn a_narrowed_run_with_no_link_refuses_and_leaves_the_file() {
 }
 
 /// A full ID and a stale link change no token, so only the link pass can write here, and it asks
-/// the same proof before it does (§FS-fmt.7.4.4).
+/// the same proof before it does (§FS-fmt.7.4).
 #[test]
 fn a_link_the_pass_would_write_into_a_member_with_a_hole_refuses_and_leaves_the_file() {
     for (test, body) in [
@@ -215,7 +215,7 @@ fn a_link_the_pass_would_write_into_a_member_with_a_hole_refuses_and_leaves_the_
 }
 
 /// The proof asks whether the member's scan met an error, not which: a broken link is a path the
-/// walk could not read, and no mode bars anything here, so this one runs as root too (§FS-fmt.7.4.4).
+/// walk could not read, and no mode bars anything here, so this one runs as root too (§FS-fmt.7.4).
 #[test]
 fn a_broken_link_in_the_member_refuses_a_narrowed_rewrite() {
     let tree = Tree::new("broken-link", SHORTHAND, true);
@@ -256,7 +256,7 @@ fn a_link_out_of_the_member_leaves_its_proof_standing() {
 }
 
 /// A conflict block changes no recognition, so it leaves the member's set short of nothing: a
-/// narrowed rewrite into it lands, and a whole run still refuses on the block (§FS-fmt.7.4.4).
+/// narrowed rewrite into it lands, and a whole run still refuses on the block (§FS-fmt.7.4).
 #[test]
 fn a_conflict_block_in_the_member_refuses_a_whole_run_and_no_narrowed_rewrite() {
     let tree = Tree::new("conflict", SHORTHAND, true);

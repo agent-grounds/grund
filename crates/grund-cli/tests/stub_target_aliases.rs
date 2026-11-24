@@ -166,7 +166,7 @@ fn an_unrelated_ignore_keeps_the_alias_readable() {
     single(&root, "gen", false);
 }
 
-/// §FS-config-v2.schema.sources.exclude.stubs: config-relative patterns also
+/// §FS-config-v2.schema.sources.exclude: config-relative patterns also
 /// match the lexical alias, not the physical directory behind it.
 #[test]
 fn v2_patterns_filter_the_alias_spelling() {

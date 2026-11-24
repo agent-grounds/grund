@@ -48,7 +48,7 @@ class ScanScopeTests(RecipeCase):
         self.assert_policy_remedy(message, "source_paths", "test_paths")
 
     def move_destination(self, destination):
-        """A source move to an unscanned destination (§FS-cochange-recipe.snapshots.scope.move)."""
+        """A source move to an unscanned destination (§FS-cochange-recipe.snapshots.scope)."""
         (self.fixture.root / "lib").mkdir()
         self.fixture.git("mv", "src/lib.py", destination)
         message = self.scan_scope(self.evaluate(2), destination)

@@ -1,5 +1,5 @@
-//! End-to-end explanation of index entries excluded from use: §FS-check.4.1.2,
-//! §FS-refs.3.1.1 and §FS-refs.3.3.1. Port of issue #909's triage reproducer.
+//! End-to-end explanation of index entries excluded from use: §FS-check.4.1,
+//! §FS-refs.3.1 and §FS-refs.3.3. Port of issue #909's triage reproducer.
 
 #[path = "fixture_cleanup.rs"]
 mod fixture_cleanup;
@@ -125,7 +125,7 @@ fn accounting_controls(repo: &Repo) -> String {
     check
 }
 
-/// §FS-check.4.1.2: explain the same exclusion in text and JSON messages;
+/// §FS-check.4.1: explain the same exclusion in text and JSON messages;
 /// a true non-use keeps its old warning and an outside-index use still counts.
 #[test]
 fn index_only_warning_locates_the_discounted_site() {
@@ -157,7 +157,7 @@ fn index_only_warning_locates_the_discounted_site() {
     );
 }
 
-/// §FS-refs.3.1.1: both index-only and genuinely used IDs label index sites,
+/// §FS-refs.3.1: both index-only and genuinely used IDs label index sites,
 /// retaining every row and leaving ordinary rows byte-identical.
 #[test]
 fn refs_labels_index_entries_beside_real_uses() {
@@ -175,7 +175,7 @@ fn refs_labels_index_entries_beside_real_uses() {
     annotated_row(&cache, &format!("{INDEX}:6: \u{a7}AR-cache"));
 }
 
-/// §FS-refs.3.3.1: keep summary rows/counts/line lists and append excluded lines.
+/// §FS-refs.3.3: keep summary rows/counts/line lists and append excluded lines.
 #[test]
 fn summary_labels_index_entries_without_changing_the_fold() {
     let repo = triage_repo("summary");
@@ -194,7 +194,7 @@ fn summary_labels_index_entries_without_changing_the_fold() {
     assert!(suffix.contains('6'), "missing excluded line: {cache}");
 }
 
-/// §FS-check.4.1.2: multiple discounted sites are deterministic and informative.
+/// §FS-check.4.1: multiple discounted sites are deterministic and informative.
 #[test]
 fn warning_accounts_for_multiple_index_sites() {
     let repo = triage_repo("multiple");
@@ -224,7 +224,7 @@ fn warning_accounts_for_multiple_index_sites() {
     );
 }
 
-/// §FS-check.4.1.2 / §FS-errors.3: paths within the explanation use the
+/// §FS-check.4.1 / §FS-errors.3: paths within the explanation use the
 /// same output base as the declaration path, including invocation-relative output.
 #[test]
 fn warning_uses_the_invocation_report_base() {
@@ -244,7 +244,7 @@ fn warning_uses_the_invocation_report_base() {
     );
 }
 
-/// §FS-refs.3.1.1 / §FS-refs.3.3.1 / §FS-check.4.1.2.1: bindings and
+/// §FS-refs.3.1 / §FS-refs.3.3 / §FS-check.4.1: bindings and
 /// sections on an index page are uses, including a sectionless root binding.
 #[test]
 fn mixed_index_summary_preserves_section_and_root_binding_uses() {
@@ -279,7 +279,7 @@ fn mixed_index_summary_preserves_section_and_root_binding_uses() {
     );
 }
 
-/// §FS-check.4.1.2 / §FS-refs.3.1.1 / §FS-refs.3.3.1: canonical external
+/// §FS-check.4.1 / §FS-refs.3.1 / §FS-refs.3.3: canonical external
 /// enrollment is excluded, while a bare mention on the very same line is use.
 #[test]
 fn external_enrollment_summary_distinguishes_sites_on_the_same_line() {
@@ -313,7 +313,7 @@ fn external_enrollment_summary_distinguishes_sites_on_the_same_line() {
     );
 }
 
-/// §FS-refs.3.1.1 / §FS-refs.3.3.1: site-mode has a separate text loop;
+/// §FS-refs.3.1 / §FS-refs.3.3: site-mode has a separate text loop;
 /// both glob and outgoing queries must obey the same annotation contract.
 #[test]
 fn glob_and_from_render_the_same_index_annotations() {
@@ -339,7 +339,7 @@ fn glob_and_from_render_the_same_index_annotations() {
     }
 }
 
-/// §FS-refs.3.2 / §FS-refs.3.3.1 / §FS-refs.3.4: passing compatibility
+/// §FS-refs.3.2 / §FS-refs.3.3 / §FS-refs.3.4: passing compatibility
 /// controls, deliberately active while the explanation tests above are red.
 #[test]
 fn json_records_and_totals_keep_index_citations_unchanged() {

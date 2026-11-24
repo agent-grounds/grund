@@ -200,7 +200,7 @@ fn a_snapshot_records_path_is_already_resolved() {
     fixture(&root, 2);
     // An unmarked heading inside a declaration body keeps its authored span for
     // the diagnostic alone, which is what puts a record in `finding_ranges`
-    // (§FS-lsp.1.1.1).
+    // (§FS-lsp.1.1).
     write(
         &root.join("docs/functional-spec/FS-loose.md"),
         "# FS-loose: a point\n\nLead.\n\n## Not a section\n\nBody.\n",

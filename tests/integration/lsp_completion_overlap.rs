@@ -1,9 +1,9 @@
-//! Real protocol regressions for grammar-owned introducers (§FS-lsp.1.6.1,
-//! §FS-lsp.1.6.3). Accepted edits preserve UTF-16 neighbors.
+//! Real protocol regressions for grammar-owned introducers
+//! (§FS-lsp.1.6). Accepted edits preserve UTF-16 neighbors.
 //!
 //! Unqualified underscore-marked citations are not scanned because of the existing
 //! ID word boundary (tool report grund.57). Their cases verify token/edit semantics;
-//! the hyphen controls below prove navigation and replay (§FS-lsp.1.6.4).
+//! the hyphen controls below prove navigation and replay (§FS-lsp.1.6).
 
 use super::completion_support::*;
 use serde_json::json;

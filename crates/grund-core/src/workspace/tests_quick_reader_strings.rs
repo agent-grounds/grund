@@ -17,7 +17,7 @@ fn the_unread_project_name_passes_over_a_string_that_closes_early() {
 }
 
 /// The ancestor climb's `members` cannot be obtained when an element closes early, as for
-/// any value it cannot read (§FS-workspace.6.1.7.5).
+/// any value it cannot read (§FS-workspace.6.1.7).
 #[test]
 fn the_ancestor_members_pass_over_an_element_that_closes_early() {
     let root = test_root("quick-reader-strings-members");
@@ -50,7 +50,7 @@ fn the_ancestor_members_pass_over_a_value_refused_before() {
 
 /// A `"""` string a line break runs through makes its line the array's open line, so the
 /// climb reads `members` as no list exactly where the full load refuses it as an unclosed
-/// array (§FS-config-v2.reader.5.strings, §FS-workspace.6.1.7.5).
+/// array (§FS-config-v2.reader.5.strings, §FS-workspace.6.1.7).
 #[test]
 fn the_ancestor_members_are_no_list_where_a_triple_quoted_string_runs_over_a_break() {
     let root = test_root("quick-reader-strings-members-over-a-break");

@@ -1,4 +1,4 @@
-"""One checked workflow for §FS-distribution.3.2.4; absent capability stays red."""
+"""One checked workflow for §FS-distribution.3.2; absent capability stays red."""
 
 import sys
 import unittest

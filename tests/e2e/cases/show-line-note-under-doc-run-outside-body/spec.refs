@@ -1,5 +1,3 @@
 FS-languages.requirements.one-block
-FS-languages.comment-block.open
-FS-languages.comment-block.close
-FS-languages.comment-block.forms
+FS-languages.comment-block
 FS-show.2.3.1

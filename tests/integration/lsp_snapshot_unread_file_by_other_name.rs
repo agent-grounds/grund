@@ -1,6 +1,6 @@
 //! §AR-lsp.5.1.1 — `grund_core::lsp_snapshot` anchored below a workspace root answers for an
 //! unreadable file at or under the anchor by any of the file's names, as `grund check` of the
-//! same path must (§FS-check.1.3.6.3, agent-grounds/grund#1299). The tree is the issue's: a
+//! same path must (§FS-check.1.3.6, agent-grounds/grund#1299). The tree is the issue's: a
 //! member that only has to exist, `real/s.md` at mode 000, and a directory link to `real` whose
 //! name decides which name the walk keeps.
 #![cfg(unix)]

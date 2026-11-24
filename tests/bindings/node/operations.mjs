@@ -50,7 +50,7 @@ assert.equal(empty.code, 'empty-citation-obligation');
 assert.equal(empty.message, '--rule applies to nothing — tests/e2e/ declares no e2e ID');
 assert.deepEqual(empty.authority, ['--rule']);
 const id = 'FS-001-alpha';
-// §FS-distribution.3.2.2.2: brief and Markdown retain this fixture's heading.
+// §FS-distribution.3.2.2: brief and Markdown retain this fixture's heading.
 const lead = 'References FS-002-beta and FS-999-missing.\n';
 const headed = '# FS-001-alpha: Alpha\n\n' + lead;
 for (const mode of ['lead', 'brief', 'toc', 'full']) {
@@ -87,7 +87,7 @@ assert.equal(refs.totals.sites, refs.hits.length);
 assert.ok(refs.summaries.length > 0);
 const undeclared = await invoke('refs', ['FS-999-missing', { root }]);
 assert.ok(undeclared.hits.length > 0);
-// §FS-distribution.3.2.2.2: only an uncited undeclared target needs a refs note.
+// §FS-distribution.3.2.2: only an uncited undeclared target needs a refs note.
 assert.equal(undeclared.note, null);
 const uncited = await invoke('refs', ['FS-998-unused', { root }]);
 assert.deepEqual(uncited.hits, []);
@@ -106,7 +106,7 @@ assert.ok(cover.entries.some(e => e.citations.length > 0));
 const preview = await invoke('fmt', [{ root }]);
 assert.ok(Array.isArray(preview.changes));
 assert.ok(Array.isArray(preview.refusedWrites));
-// §FS-distribution.3.2.2.2: each change carries its per-kind counts and its lock-file flag.
+// §FS-distribution.3.2.2: each change carries its per-kind counts and its lock-file flag.
 assert.ok(preview.changes.every(c => typeof c.counts.linksWritten === 'number'
   && Object.hasOwn(c, 'lockFile')));
 const proposed = await invoke('proposeId', ['FS', 'Fresh snow', { root }]);

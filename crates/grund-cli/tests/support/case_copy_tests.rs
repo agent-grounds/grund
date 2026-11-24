@@ -1,4 +1,4 @@
-//! §FS-examples.5.6.2: only owned paths change at the shared output seam.
+//! §FS-examples.5.6: only owned paths change at the shared output seam.
 use super::{copy_path_spellings, normalize_copy_output};
 
 #[test]

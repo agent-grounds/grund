@@ -1,4 +1,4 @@
-//! Absent and lexical input probes before rediscovery (§FS-check.6.1.1).
+//! Absent and lexical input probes before rediscovery (§FS-check.6.1).
 use crate::support::*;
 use grund::WatchObservation;
 #[cfg(unix)]
@@ -32,8 +32,8 @@ fn watch_missing_stub_creation_has_coverage_before_completion() {
     h.stop(0);
 }
 
-/// §FS-check.6.1.3: the file a blank `fetch` would run is an input, so its creation reruns
-/// the check and the tail follows the disk (§FS-check.3.1.3.2).
+/// §FS-check.6.1: the file a blank `fetch` would run is an input, so its creation reruns
+/// the check and the tail follows the disk (§FS-check.3.1).
 #[test]
 #[cfg(unix)]
 fn watch_blank_fetch_file_is_an_input() {
@@ -65,7 +65,7 @@ fn watch_blank_fetch_file_is_an_input() {
     h.stop(after.status);
 }
 
-/// §FS-check.6.1.1: creation at the subscribed candidate barrier affects the
+/// §FS-check.6.1: creation at the subscribed candidate barrier affects the
 /// very first selection, rather than merely arranging a later repair run.
 #[test]
 fn watch_stub_candidate_is_subscribed_before_selection() {
@@ -99,7 +99,7 @@ fn watch_stub_candidate_is_subscribed_before_selection() {
     h.stop(0);
 }
 
-/// §FS-check.6.1.1, §AR-bindings.3: ancestor discovery in a Rayon project
+/// §FS-check.6.1, §AR-bindings.3: ancestor discovery in a Rayon project
 /// worker blocks after subscription and before ignore's read.
 #[test]
 fn watch_workspace_worker_subscribes_ancestor_ignore_before_read() {
@@ -151,7 +151,7 @@ fn watch_workspace_worker_subscribes_ancestor_ignore_before_read() {
     h.stop(before.status);
 }
 
-/// §FS-check.6.1.3, §FS-check.6.1.4: lexical anchors survive physical retargeting.
+/// §FS-check.6.1: lexical anchors survive physical retargeting.
 #[cfg(unix)]
 #[test]
 fn watch_lexical_invocation_link_retargets_and_refreshes() {

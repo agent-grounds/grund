@@ -1,6 +1,6 @@
 //! Black-box: a CRLF file's front matter, a `---` (YAML) or a `+++` (TOML) block, reads as its LF
-//! form does, when its kind declares the `front-matter` field (§FS-fields.front-matter.reading,
-//! §FS-fields.front-matter.constructs). The pin lives here, not under `tests/e2e/cases/`, because
+//! form does, when its kind declares the `front-matter` field (§FS-fields.front-matter.reading).
+//! The pin lives here, not under `tests/e2e/cases/`, because
 //! `.gitattributes` checks every case fixture out with LF endings.
 
 use std::fs;

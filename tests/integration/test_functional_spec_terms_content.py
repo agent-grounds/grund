@@ -12,7 +12,7 @@ one is also proved to fire against a fixture home built to break exactly it.
 The advisory report is the other half and it never gates. Its contract is pinned on
 a fixture whose answer cannot move when the specification's prose is edited, and
 nothing here asserts over what it finds in the live tree: a frozen count would make
-it a gate under another name, which §FS-terms.senses.5 forbids.
+it a gate under another name, which §FS-terms.senses forbids.
 
 Run the report with `python3 tests/integration/test_functional_spec_terms_content.py
 --advisory`; `--home` points it at another tree.
@@ -55,7 +55,7 @@ INVARIANTS = (
     "shared/local collision only as `(narrowed)`",
 )
 
-# The two line forms §FS-terms.senses.5 fixes, as a reader of the report sees them.
+# The two line forms §FS-terms.senses fixes, as a reader of the report sees them.
 USES = re.compile(r"^\S+: uses \*[^*]+\* in prose but does not lean on it \(terms\.\d+\)$")
 LEANS = re.compile(r"^\S+: leans on \*[^*]+\* but the token appears nowhere in its prose$")
 
@@ -98,7 +98,7 @@ VOCABULARY = """# FS-terms: the fixture vocabulary
 
 # *level* stands on its own here and is not leaned on, so it is reported; *declaration*
 # is both used and leaned on, so it is not; *anchor* occurs only inside a fence and a
-# code span, so §FS-terms.senses.4 keeps it out.
+# code span, so §FS-terms.senses keeps it out.
 FIRST = """# FS-first: the first fixture document
 
 ## terms: Terms
@@ -117,9 +117,9 @@ anchor
 The `anchor` spelling is a name, not a use.
 """
 
-# *note* and *anchor* stand in the senses §FS-terms.senses.1 and §FS-terms.senses.3 exclude,
+# *note* and *anchor* stand in senses §FS-terms.senses excludes,
 # so both are reported; *level* and *declaration* occur only inside compounds; *catalog* is
-# leaned on and occurs only where §FS-terms.senses.4 says a token names rather than uses.
+# leaned on and occurs only where §FS-terms.senses says a token names rather than uses.
 SECOND = """# FS-second: the second fixture document
 
 ## terms: Terms
@@ -275,14 +275,14 @@ class AdvisoryReportTests(FixtureHomeMixin):
         return list(vocabulary().advisory_report(self.home()))
 
     def test_a_different_sense_is_reported_because_no_machine_sees_it(self):
-        """§FS-terms.senses.1 — `note:` before a hint line is not the word's shared
+        """§FS-terms.senses — `note:` before a hint line is not the word's shared
         sense, and the report cannot tell. It names the occurrence as a use, which is
         the false line a reader discards and the reason the report never gates."""
         self.assertIn("FS-second: uses *note* in prose but does not lean on it (terms.1)",
                       self.report())
 
     def test_a_compound_is_not_a_use_of_the_words_in_it(self):
-        """§FS-terms.senses.2 — in both directions: *level* inside "CLI-level" and
+        """§FS-terms.senses — in both directions: *level* inside "CLI-level" and
         *declaration* inside *declaration-local* are each one name. The same *level*
         standing on its own in the other document is reported, so what the exclusion
         turns on is the compound and not the word."""
@@ -293,14 +293,14 @@ class AdvisoryReportTests(FixtureHomeMixin):
         self.assertEqual([], [line for line in report if "*declaration*" in line])
 
     def test_a_retired_sense_is_reported_because_no_machine_sees_it_either(self):
-        """§FS-terms.senses.3 — *anchor* standing where a finding is located is the
+        """§FS-terms.senses — *anchor* standing where a finding is located is the
         sense its own row retires, not a lean the lean line is missing. Mechanically
         indistinguishable from a use, so the report names it."""
         self.assertIn("FS-second: uses *anchor* in prose but does not lean on it (terms.2)",
                       self.report())
 
     def test_a_token_that_names_rather_than_uses_is_not_a_use(self):
-        """§FS-terms.senses.4 — *catalog* occurs in a link target, a heading anchor, a
+        """§FS-terms.senses — *catalog* occurs in a link target, a heading anchor, a
         fenced block and a code span and nowhere else, so the document that leans on it
         is reported as not using it; *anchor* in the other document occurs only in a
         fence and a code span, so it is not reported as used."""
@@ -310,7 +310,7 @@ class AdvisoryReportTests(FixtureHomeMixin):
         self.assertEqual([], [line for line in report if line.startswith("FS-first: uses *anchor*")])
 
     def test_the_report_has_two_line_forms_in_a_fixed_order(self):
-        """§FS-terms.senses.5 — every line of the first form before every line of the
+        """§FS-terms.senses — every line of the first form before every line of the
         second, documents ascending, and inside a document the shared words in group
         order and then in row order."""
         report = self.report()
@@ -336,7 +336,7 @@ class AdvisoryIsAskedForTests(FixtureHomeMixin):
         return self.run_module(str(THIS_FILE), "--advisory", "--home", str(home))
 
     def test_two_runs_over_one_tree_print_the_same_bytes(self):
-        """§FS-terms.senses.5 — the fixed order is what makes the report comparable
+        """§FS-terms.senses — the fixed order is what makes the report comparable
         between two runs, which is the property §REQ-deterministic-output asks of every
         surface this repository prints."""
         home = self.home()
@@ -346,7 +346,7 @@ class AdvisoryIsAskedForTests(FixtureHomeMixin):
         self.assertEqual(list(REPORT), first.stdout.splitlines())
 
     def test_the_report_is_silent_unless_it_is_asked_for(self):
-        """§FS-terms.senses.5 — the gating run prints no line of either form and its
+        """§FS-terms.senses — the gating run prints no line of either form and its
         verdict does not turn on the report, so the hook that runs this suite on every
         commit does not grow the report's lines."""
         asked = self.advisory(self.home())

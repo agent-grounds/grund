@@ -1,7 +1,7 @@
 //! Real-server coverage for a relative section heading
 //! (§FS-declarations.section.relative.shown): its title hover, the range the
-//! record gives it, and where a citation of its canonical path goes (§FS-lsp.1.2.4).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! record gives it, and where a citation of its canonical path goes (§FS-lsp.1.2.3).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 
@@ -9,7 +9,7 @@ use serde_json::json;
 use std::fs;
 use support::*;
 
-/// §FS-lsp.1.2.4: `### .1: Username` hovers as `format.1: Username` over the
+/// §FS-lsp.1.2.3: `### .1: Username` hovers as `format.1: Username` over the
 /// written title, a heading with odd spacing as `--toc` prints it, and a
 /// citation of `FS-login.format.1` previews and goes to that written line.
 #[test]

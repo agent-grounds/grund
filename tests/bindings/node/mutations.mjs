@@ -25,7 +25,7 @@ async function fixture(name) {
   await cp(cases + name + '/repo', target, { recursive: true });
   return target;
 }
-// §FS-distribution.3.2.3.1: arrange the core's complete VCS-ancestry precondition.
+// §FS-distribution.3.2.3: arrange the core's complete VCS-ancestry precondition.
 async function vcsMarkers(target) {
   const found = [];
   for (let dir = await realpath(target); ; dir = path.dirname(dir)) {
@@ -91,7 +91,7 @@ const appended = await api.init(appending, { noVcs: true, name: 'append-fixture'
 assert.ok(appended.events.some(e => e.path === 'AGENTS.md' && e.verb === 'appended'));
 assert.ok((await readFile(appending + '/AGENTS.md', 'utf8')).startsWith(prose));
 const nodeAppend = await bytes(appending);
-// §FS-distribution.3.2.3.1: compare exact bytes at the identical restored CLI target.
+// §FS-distribution.3.2.3: compare exact bytes at the identical restored CLI target.
 await rm(appending, { recursive: true });
 await mkdir(appending);
 await cp(cases + 'init-conflict-no-force/repo', appending, { recursive: true });

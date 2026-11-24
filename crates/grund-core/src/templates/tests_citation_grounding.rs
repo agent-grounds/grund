@@ -111,7 +111,7 @@ fn a_v1_home_that_grounds_nothing_names_the_v1_key() {
     );
 }
 
-/// §FS-init.2.3.5, §FS-config.3.4.8.3: the row wins over the global default, so
+/// §FS-init.2.3.5, §FS-config.3.4.8: the row wins over the global default, so
 /// a row that turns grounding off under a global `true` is left out of the
 /// sentence and narrows its bullet, while the source-file clause stays.
 #[test]

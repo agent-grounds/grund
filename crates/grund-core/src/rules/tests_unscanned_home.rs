@@ -1,10 +1,10 @@
 //! A stub's home outside the walk lends the stubbed declaration its chapters
 //! (§FS-declarations.stubs.target.5): a citation of one of them counts for that
 //! chapter, as on the scanned tree (§FS-rules.5.1), each is a node with a chapter
-//! row, cited or not, judged as a scanned one since §FS-rules.7.11 closed (§AR-rules.3), and rules read
+//! row, cited or not, judged as a scanned one since §FS-rules.5.1 closed (§AR-rules.3), and rules read
 //! the home out of the scan's one reading of the stub's target (§AR-scanner.4.6),
 //! never a reading of their own.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::facts::{NodeKey, RuleFacts};
 use super::markdown::adapt_markdown;

@@ -1,4 +1,4 @@
-// §FS-config.4.1.1, §FS-check.4.11.3: at a workspace root, validateConfig's runCautions carry
+// §FS-config.4.1, §FS-check.4.11: at a workspace root, validateConfig's runCautions carry
 // the root's config findings and each expanded project's, in check's order and report base.
 import assert from 'node:assert/strict';
 import { cp, mkdtemp } from 'node:fs/promises';

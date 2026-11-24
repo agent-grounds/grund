@@ -1,4 +1,4 @@
-//! Chapter diagnostic regressions for §FS-rules.7.2.1 and §FS-rule-refusals.sentences.whitespace.
+//! Chapter diagnostic regressions for §FS-rules.7.2 and §FS-rule-refusals.sentences.whitespace.
 //! The unchanged-selector controls prove the goal chapter is actually reached.
 
 use super::case_runner::{CaseKind::E2e, assert_every_case_passed, run_case};
@@ -10,13 +10,13 @@ fn case(name: &str) {
     assert_every_case_passed(name, &[run_case(&root, &path, E2e)]);
 }
 
-/// §FS-rules.7.2.1, §FS-errors.3: old bytes plus display-name context in text.
+/// §FS-rules.7.2, §FS-errors.3: old bytes plus display-name context in text.
 #[test]
 fn chapter_diagnostic_display_name_text() {
     case("check-chapter-diagnostic-display-name-text");
 }
 
-/// §FS-rules.7.2.1: preserve every JSON field while explaining the zero count.
+/// §FS-rules.7.2: preserve every JSON field while explaining the zero count.
 #[test]
 fn chapter_diagnostic_display_name_json() {
     case("check-chapter-diagnostic-display-name-json");

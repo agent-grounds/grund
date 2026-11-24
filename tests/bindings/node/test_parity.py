@@ -1,6 +1,6 @@
 """§FS-distribution.3.0.3 — complete Rust/Node data and distinct CLI-byte proofs.
 
-§FS-distribution.3.0.3.1: Node field mapping and the frozen CLI wire projection.
+§FS-distribution.3.0.3: Node field mapping and the frozen CLI wire projection.
 """
 
 import errno
@@ -83,7 +83,7 @@ class NodeParityTests(unittest.TestCase):
         (validation / ".agents/grund.toml").write_text('grund_config_version = 1\n')
         (validation / "child/grund.toml").write_text('grund_config_version = "bad"\n')
         requests.append(("validateConfig", [{"root": str(validation)}]))
-        # §FS-distribution.3.2.3.1: representable raw basenames refuse before alias derivation.
+        # §FS-distribution.3.2.3: representable raw basenames refuse before alias derivation.
         # Windows cannot represent this raw-byte filename; the rest of the corpus runs there.
         raw_workspaces = {}
         if os.name == "posix":
@@ -141,7 +141,7 @@ class NodeParityTests(unittest.TestCase):
                     self.assertIn("redundant-config",
                                   [f["code"] for f in envelope["run_cautions"]])
                 if operation == "validateConfig" and args[0]["root"] in raw_workspaces:
-                    # §FS-distribution.3.2.2.1: expected fields come from shared preflight.
+                    # §FS-distribution.3.2.2: expected fields come from shared preflight.
                     self.assertIsNone(envelope["result"])
                     self.assertEqual({
                         "kind": "input", "code": "path-encoding", "operation": operation,

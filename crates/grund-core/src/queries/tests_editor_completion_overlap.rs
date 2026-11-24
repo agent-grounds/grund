@@ -1,9 +1,9 @@
-//! Grammar-owned introducer punctuation and adjacent tokens (§FS-lsp.1.6.1,
-//! §FS-lsp.1.6.3). Byte edits retain the full old suffix and its neighbors.
+//! Grammar-owned introducer punctuation and adjacent tokens
+//! (§FS-lsp.1.6). Byte edits retain the full old suffix and its neighbors.
 //!
 //! Unqualified underscore-marked citations are not scanned because of the existing
 //! ID word boundary (tool report grund.57). Their cases verify token/edit semantics;
-//! the hyphen controls below prove scanning, resolution and replay (§FS-lsp.1.6.4).
+//! the hyphen controls below prove scanning, resolution and replay (§FS-lsp.1.6).
 
 use super::tests_editor_completion::{Fixture, apply, ids};
 

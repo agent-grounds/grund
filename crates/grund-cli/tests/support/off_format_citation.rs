@@ -73,7 +73,7 @@ pub const UNUSED_FS_A: &str =
     "docs/FS/FS-a.md:1: warning: declared but never cited: FS-a; cite it\n";
 
 /// The message of §FS-check.checks.off-format-citation for `token`, whose kind `follows`, closing
-/// with the release attribution of §FS-check.checks.off-format-citation.1.
+/// with the release attribution of §FS-check.checks.off-format-citation.
 pub fn off_format(token: &str, follows: &str) -> String {
     // Releases as arguments: the release guard (§FS-distribution.4.2.5) reads the clause from the
     // code that ships it, not from this test ahead of it.

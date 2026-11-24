@@ -1,7 +1,7 @@
 //! Test module: drift detection for the managed blocks grund writes into
 //! agent entrypoints — citation directions, clickable citations, and the
 //! guidance block version (§FS-init).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::agents::section_in_block;
 use super::*;
@@ -53,7 +53,7 @@ fn citation_directions_drift_is_reported() {
     );
 }
 
-// §FS-check.3.5.4: the render reads no run flag, so the block `grund init`
+// §FS-check.3.5: the render reads no run flag, so the block `grund init`
 // wrote stays current under `check --require-grounding`, whose agents-init
 // error `grund init` could never clear (§FS-check.requirements.no-declined-fix).
 #[test]
@@ -278,7 +278,7 @@ fn citation_directions_section_extraction_is_position_independent() {
     );
 }
 
-/// §FS-check.3.5.3: all five agents-init variants are §FS-errors.3.6's final
+/// §FS-check.3.5: all five agents-init variants are §FS-errors.3.6's final
 /// templates, with no compatibility tail. This checker contract survives removal
 /// of the deprecated process adapter.
 #[test]

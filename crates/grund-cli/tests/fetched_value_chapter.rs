@@ -1,4 +1,4 @@
-//! §FS-config-migrate.3.1.7.1: the way through a fetched `value_chapter`'s refusal is a real one.
+//! §FS-config-migrate.3.1.7: the way through a fetched `value_chapter`'s refusal is a real one.
 //!
 //! The refusal's case and the repair's two cases run in the full pass. What the pass cannot see is
 //! whether the tree the repair's check case reads is the one its write case leaves, so this ties

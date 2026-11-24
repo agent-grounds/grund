@@ -1,5 +1,5 @@
 //! Explicit host schema projections without another engine scan
-//! (§FS-distribution.3.2.2.1, §FS-distribution.3.2.2.2). These are agreement
+//! (§FS-distribution.3.2.2). These are agreement
 //! projections, never independent expected source facts.
 //! Python's returned refs totals and every summary field must first pass
 //! `agreement_refs_fields::validate` (§FS-distribution.3.3.1), including partials.

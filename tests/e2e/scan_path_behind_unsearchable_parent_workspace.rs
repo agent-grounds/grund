@@ -1,5 +1,5 @@
 //! Black-box: §FS-scan.scope.homes.lookup in a workspace run. A workspace run walks each
-//! project whole and narrows its report to the `<path>` afterwards (§FS-check.1.3.6.1), so no walk
+//! project whole and narrows its report to the `<path>` afterwards (§FS-check.1.3.6), so no walk
 //! starts at the path and the walk never asks it. A path behind a directory the user cannot
 //! search must still fail at the path as given, with exit `2`, on `check` in text and JSON and on
 //! `list`, `cover`, `fmt`, `show` and `refs`, whether or not the root is a project of the run and

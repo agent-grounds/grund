@@ -2,7 +2,7 @@
 //! the server publishes (§FS-lsp.1.1), the declarations, sections and
 //! citations it navigates (§FS-lsp.1.3.1), and every file its run read
 //! (§FS-lsp.responsiveness.3). Site-less CLI-level config cautions are
-//! `check`'s alone (§FS-check.checks.config-version-1, §FS-check.4.11.2);
+//! `check`'s alone (§FS-check.checks.config-version-1, §FS-check.4.11);
 //! the site-less scope cautions are not (§DA-engine-renders-nothing).
 
 use super::agreement_render_model::Decl;
@@ -14,7 +14,7 @@ use serde_json::{Value, json};
 /// in report order (§DA-engine-renders-nothing): the empty scan
 /// (§FS-check.2.2), nothing recognized (§FS-check.4.5) and the redundant
 /// `--full` (§FS-check.1.3). Every other site-less finding is a CLI-level
-/// caution of `check` and no other command (§FS-check.4.11.2).
+/// caution of `check` and no other command (§FS-check.4.11).
 const SCOPE_CAUTIONS: [&str; 3] = ["empty-scan", "nothing-recognized", "full-scope-ignored"];
 
 impl View<'_> {
@@ -174,7 +174,7 @@ impl View<'_> {
         json!({"kind_titles":kind_titles,"readFiles":read,"snapshot":{
             "citations":cites.iter().map(|c| {
                 // §FS-values.7: a citation navigates by its written alias path, and
-                // in a workspace an unwritten one by its own project's (§FS-lsp.1.2.5).
+                // in a workspace an unwritten one by its own project's (§FS-lsp.1.2.3).
                 let id = self.citation(c, true)["id"].as_str().unwrap().to_string();
                 let id = match self.project_of(&c.file).as_str() {
                     Some(project) if !id.contains('/') => format!("{project}/{id}"),
@@ -201,7 +201,7 @@ impl View<'_> {
             "scanned_files":scanned,
             "sections":sections.iter().map(|s| {
                 let query = format!("{}.{}", self.qualified(s.owner), s.path);
-                // §FS-values.2.4.2: a marked root's LSP title excludes its tag.
+                // §FS-values.6.1: a marked root's LSP title excludes its tag.
                 let text = match s.facts["valueRoot"].as_str() {
                     Some("marked") => s.text.strip_suffix(" <!-- grund:value -->").unwrap_or(&s.text),
                     _ => &s.text,

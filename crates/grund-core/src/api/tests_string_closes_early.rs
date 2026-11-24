@@ -6,7 +6,7 @@
 //! (§FS-config-v2.reader.6). A string that closes at its end, a value refused
 //! before and a version-1 file keep what they had, and an array with an open line is refused
 //! for it first (§FS-config-v2.reader.5.strings).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

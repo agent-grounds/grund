@@ -1,6 +1,6 @@
 //! Black-box: at a workspace root, a narrowed `grund check <path>` answers for an unreadable
 //! file at or under the path by any of the file's names, so a directory link whose name sorts
-//! first decides nothing about the exit (§FS-check.1.3.6.3, agent-grounds/grund#1299).
+//! first decides nothing about the exit (§FS-check.1.3.6, agent-grounds/grund#1299).
 //! A path that holds the file under no name keeps the caution and its exit `0`. Git carries no
 //! mode a fixture could keep unreadable, so the e2e corpus cannot hold this; the tests skip
 //! where the mode does not bar the user (root).

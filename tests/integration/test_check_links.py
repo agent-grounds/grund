@@ -277,7 +277,7 @@ class StubbedGate:
 
 class GitHub5xxRecheckTests(unittest.TestCase):
     """§AR-ci.3.1.2 — a github.com 5xx is re-checked through the API, and passes
-    only on the API's successful answer (§FS-non-goals.1.1)."""
+    only on the API's successful answer (§FS-non-goals.1)."""
 
     def assertReported(self, output, checked, confirmed, broken, unsettled):
         match = REPORT_LINE.search(output)

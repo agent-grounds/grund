@@ -120,7 +120,7 @@ fn show(target: &Path) -> (bool, String) {
 }
 
 /// A fresh starter for `template`, asserted to be version 2 (§FS-init.2.4.3) and to
-/// open with the comment of §FS-config.4.2.3.1.
+/// open with the comment of §FS-config.4.2.
 fn fresh_starter(case: &str, template: &str) -> (std::path::PathBuf, String) {
     let target = workdir(case);
     let (ok, stderr) = init(&target, &[&format!("--template={template}")]);

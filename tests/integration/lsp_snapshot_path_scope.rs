@@ -1,7 +1,7 @@
 //! §AR-lsp.5.1.1 — `grund_core::lsp_snapshot` anchored at a configured sub-folder is
 //! a path-scoped run: it resolves against the whole project and narrows only its
 //! report, so the report is the one `grund_core::check` of the same path returns
-//! (§FS-check.1.3.6.1, §FS-rules.9.1.1). The fixture is agent-grounds/grund#414's:
+//! (§FS-check.1.3.6, §FS-rules.9.1). The fixture is agent-grounds/grund#414's:
 //! the anchor `docs/fs` holds no rule declaration and cites a goal in `docs/goals`,
 //! so a snapshot that walked only the anchor would render a bulletless
 //! `### Chapter rules` section and leave the citation dangling.
@@ -279,7 +279,7 @@ fn a_sub_folder_snapshot_carries_the_resolution_scope_records() {
     );
 }
 
-/// §FS-check.1.3.6.3: a file outside the anchor that the wider walk cannot read is
+/// §FS-check.1.3.6: a file outside the anchor that the wider walk cannot read is
 /// not dropped with the rest of the out-of-path report — the snapshot cautions about
 /// it, as `check(docs/fs)` does.
 #[cfg(unix)]

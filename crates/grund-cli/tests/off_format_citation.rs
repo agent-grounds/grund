@@ -227,7 +227,7 @@ fn under_full_an_out_of_scope_site_takes_the_compound_code() {
     let fx = out_of_scope();
     let scope = "outside configured places and source scope: ";
     let off = format!("{scope}{}", off_format("REQ-999", REQ_FORMAT));
-    // No docs/REQ exists here, so the dangling control names the missing place (§FS-check.3.1.4).
+    // No docs/REQ exists here, so the dangling control names the missing place (§FS-check.3.1).
     let dangling = format!(
         "{scope}unknown reference REQ-a12; no place of kind REQ exists: docs/REQ (grund.toml:9)"
     );

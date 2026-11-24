@@ -155,7 +155,7 @@ mod tests {
         assert!(!fetch_runs_nothing("scripts/fetch", &nothing));
     }
 
-    /// §FS-check.3.1.3.2: the repair's bytes, its setting spelled by the version that wrote it.
+    /// §FS-check.3.1: the repair's bytes, its setting spelled by the version that wrote it.
     #[test]
     fn the_repair_names_the_setting_of_its_version() {
         let tail = "name the program, or if this kind is not fetched remove the key and any";

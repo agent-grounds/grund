@@ -1,5 +1,5 @@
 //! Check warning-channel API contracts (§FS-distribution.3.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use anyhow::Result;
 
@@ -142,7 +142,7 @@ fn absorbed_root_error_wins_over_a_later_expansion_refusal() {
     );
 }
 
-/// §FS-check.4.10.8: the run root's unread-block question is answerable from its
+/// §FS-check.4.10: the run root's unread-block question is answerable from its
 /// populated boundary and survives a later nested expansion refusal.
 #[test]
 fn answerable_unread_root_warning_survives_a_later_expansion_refusal() {
@@ -179,7 +179,7 @@ fn absorbed_root_success_is_refused_with_no_warning() {
     );
 }
 
-/// §FS-check.4.10.8, §FS-distribution.3.1: a successful root unread-block answer
+/// §FS-check.4.10, §FS-distribution.3.1: a successful root unread-block answer
 /// has identical bytes, location, order, and cardinality on both channels.
 #[test]
 fn unread_root_success_returns_the_same_warning_on_both_channels() {

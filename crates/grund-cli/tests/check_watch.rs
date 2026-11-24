@@ -10,7 +10,7 @@ mod watch_process;
 use std::fs;
 use watch_process::{BAD, CLEAN, CONFIG, Fixture, Watch};
 
-/// §FS-check.6.1.3: creating an absent external stub target repairs the run.
+/// §FS-check.6.1: creating an absent external stub target repairs the run.
 #[test]
 fn watch_missing_stub_target_creation_repairs() {
     let f = Fixture::new();
@@ -31,7 +31,7 @@ fn watch_missing_stub_target_creation_repairs() {
     watch.interrupt(0);
 }
 
-/// §FS-check.6.1.3, §FS-check.6.1.4: re-resolve a replaced invocation link.
+/// §FS-check.6.1: re-resolve a replaced invocation link.
 #[test]
 fn watch_lexical_project_link_retargets() {
     use std::os::unix::fs::symlink;
@@ -187,7 +187,7 @@ fn watch_json_finding_bytes_match_one_shot_and_interrupt_returns_one() {
     watch.interrupt(1);
 }
 
-/// §FS-check.6.1.3, §FS-check.6.3.1: invalid initial config retains repair coverage.
+/// §FS-check.6.1, §FS-check.6.3.1: invalid initial config retains repair coverage.
 #[test]
 fn watch_invalid_initial_config_remains_resident_and_repairs() {
     let f = Fixture::new();
@@ -219,7 +219,7 @@ fn watch_read_error_remains_resident_and_repairs() {
     watch.interrupt(0);
 }
 
-/// §FS-check.6.1.3: followed file targets outside source roots are effective inputs.
+/// §FS-check.6.1: followed file targets outside source roots are effective inputs.
 #[test]
 fn watch_followed_external_file_link_updates_report() {
     use std::os::unix::fs::symlink;
@@ -276,7 +276,7 @@ fn watch_interrupt_after_config_error_returns_two() {
     watch.interrupt(2);
 }
 
-/// §FS-check.6.1.3: hidden discovery and atomic config precedence changes.
+/// §FS-check.6.1: hidden discovery and atomic config precedence changes.
 #[test]
 fn watch_discovers_hidden_config_after_root_config_removal() {
     let f = Fixture::new();
@@ -295,7 +295,7 @@ fn watch_discovers_hidden_config_after_root_config_removal() {
     watch.interrupt(0);
 }
 
-/// §FS-check.6.1.3: effective ignore changes must refresh input discovery.
+/// §FS-check.6.1: effective ignore changes must refresh input discovery.
 #[test]
 fn watch_ignore_edits_change_the_report_and_repair() {
     let f = Fixture::new();
@@ -311,7 +311,7 @@ fn watch_ignore_edits_change_the_report_and_repair() {
     watch.interrupt(1);
 }
 
-/// §FS-check.6.1.1, §FS-check.6.1.3: real saves and parent-anchor reattachment.
+/// §FS-check.6.1: real saves and parent-anchor reattachment.
 #[test]
 fn watch_atomic_create_rename_delete_and_recreated_root() {
     let f = Fixture::new();
@@ -332,7 +332,7 @@ fn watch_atomic_create_rename_delete_and_recreated_root() {
     watch.interrupt(0);
 }
 
-/// §FS-check.6.1.4: a root deleted and recreated while it is being resubscribed is a
+/// §FS-check.6.1: a root deleted and recreated while it is being resubscribed is a
 /// missing input met by its parent anchor; the watcher must stay resident throughout.
 #[test]
 fn watch_stays_resident_while_root_is_deleted_and_recreated() {
@@ -356,7 +356,7 @@ fn watch_stays_resident_while_root_is_deleted_and_recreated() {
     ));
 }
 
-/// §FS-cli.3.3: terminal discovery must expose the resident mode and its guide.
+/// §FS-cli.2.3: terminal discovery must expose the resident mode and its guide.
 #[test]
 fn watch_check_help_describes_mode_and_links_guide() {
     let f = Fixture::new();

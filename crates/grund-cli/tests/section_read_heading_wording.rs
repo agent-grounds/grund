@@ -1,6 +1,6 @@
 //! The two surfaces an agent reads before it runs `grund <ID>` say that a section read opens
 //! with its own heading line, as every format prints it (§FS-show.2.2): the `show` page's
-//! `--format` row (§FS-cli.2.3.4) and the managed block's first grounding rung
+//! `--format` row (§FS-cli.2.3) and the managed block's first grounding rung
 //! (§FS-init.2.3.4).
 
 use std::fs;
@@ -19,7 +19,7 @@ const LEAD_RUNG: &str = "- `grund <ID>` — the lead, cut at the first child sec
 whole declaration, while `grund <ID>.<section>` opens with that section's heading line. The cheap \
 first read for a bare `§<ID>` citation.";
 
-/// The `--format` row reads exactly as §FS-cli.2.3.4 fixes it and no longer calls text heading-less.
+/// The `--format` row reads exactly as §FS-cli.2.3 fixes it and no longer calls text heading-less.
 #[test]
 fn show_help_format_row_names_the_section_heading() {
     let output = run_grund(&["show", "--help"], manifest_dir());
@@ -31,7 +31,7 @@ fn show_help_format_row_names_the_section_heading() {
     );
     assert!(
         help.contains(FORMAT_ROW),
-        "the --format row is not §FS-cli.2.3.4's:\n{help}"
+        "the --format row is not §FS-cli.2.3's:\n{help}"
     );
 }
 

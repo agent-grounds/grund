@@ -1,10 +1,10 @@
 //! Test module: the path scope layer — a run given an explicit path reads what
 //! its project's ordinary run reads and reports only the path
-//! (§FS-check.1.3.6.1, §DF-path-scope-resolves-project-wide). The `--full`
+//! (§FS-check.1.3.6, §DF-path-scope-resolves-project-wide). The `--full`
 //! scope layer beside it is `tests_check_full_scope.rs`, and the two must not
 //! be confused: that one narrows the scan before any rule runs, this one
 //! narrows the report after every rule has run (§AR-resolver.3.3).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::testing::{check_run, codes, findings, graph_codes, test_root, write};
 
@@ -39,7 +39,7 @@ fn widget_repo(name: &str) -> crate::testing::TemporaryRoot {
     root
 }
 
-/// §FS-check.1.3.6.1: a run given an explicit path resolves against the
+/// §FS-check.1.3.6: a run given an explicit path resolves against the
 /// project, so the one citation in the path resolves and the run is silent —
 /// the headline of the defect this layer corrects.
 #[test]
@@ -58,7 +58,7 @@ fn a_path_scoped_run_resolves_a_declaration_outside_the_path() {
     );
 }
 
-/// §FS-check.4.1.4: the declaring side of the same cause. A declaration cited
+/// §FS-check.4.1: the declaring side of the same cause. A declaration cited
 /// only from outside the path is cited, so the `declared but never cited`
 /// warnings of a path-scoped run are exactly the whole-project run's.
 #[test]
@@ -68,7 +68,7 @@ fn a_citation_outside_the_path_retires_the_unused_declaration_warning() {
     assert_eq!(
         findings(&check_run(&root.join("docs"), false)),
         Vec::<String>::new(),
-        "§FS-check.4.1.4: a citation counts wherever the run read it"
+        "§FS-check.4.1: a citation counts wherever the run read it"
     );
 }
 
@@ -119,7 +119,7 @@ fn a_path_scoped_run_resolves_a_declaration_written_inline_in_source() {
     );
 }
 
-/// §FS-check.1.3.6.1: the one direction this layer *adds* a finding. A
+/// §FS-check.1.3.6: the one direction this layer *adds* a finding. A
 /// duplicate declaration whose twin lies outside the path was invisible and is
 /// reported, so a path-scoped run that was silent exits 1
 /// (§FS-declarations.checks.duplicate).
@@ -138,7 +138,7 @@ fn a_duplicate_whose_twin_lies_outside_the_path_is_reported() {
     ));
     assert_eq!(
         narrow, whole_tree,
-        "§FS-check.1.3.6.1: the path-scoped run and the whole-tree run stop disagreeing"
+        "§FS-check.1.3.6: the path-scoped run and the whole-tree run stop disagreeing"
     );
     assert_eq!(
         graph_codes(&check_run(
@@ -179,7 +179,7 @@ fn a_finding_in_a_sibling_file_inside_the_resolution_scope_is_not_reported() {
 /// no scannable file must still earn its empty-scan caution however much the
 /// widened walk read, which a caution computed over the wrong scope would
 /// silently delete. (The nothing-recognized caution of §FS-check.4.5 is
-/// withheld from a narrowed run either way, by §FS-check.4.5.4.)
+/// withheld from a narrowed run either way, by §FS-check.4.5.)
 #[test]
 fn an_empty_path_still_earns_its_caution_however_much_the_walk_read() {
     let root = widget_repo("an_empty_path_still_earns_its_caution_however_much_the_walk_read");
@@ -199,7 +199,7 @@ fn an_empty_path_still_earns_its_caution_however_much_the_walk_read() {
     );
 }
 
-/// §FS-check.2.2.3: the unread-source caution of §FS-check.1.3.6.3 is about a
+/// §FS-check.2.2.3: the unread-source caution of §FS-check.1.3.6 is about a
 /// file the *resolution* scope could not read, so it is not a finding about the
 /// report scope and must not suppress that scope's own caution. Guards against
 /// the change: a caution appended before the emptiness question is asked makes
@@ -236,12 +236,12 @@ fn an_unread_file_outside_the_path_does_not_suppress_the_empty_scan_caution() {
             .iter()
             .any(|diagnostic| diagnostic.code == "io"
                 && diagnostic.message.contains("outside the report scope")),
-        "§FS-check.1.3.6.3: and the unread file still earns its own caution, got {:?}",
+        "§FS-check.1.3.6: and the unread file still earns its own caution, got {:?}",
         codes(&run)
     );
 }
 
-/// §FS-check.1.3.6.1: the agent-entrypoint check is a probe over the project
+/// §FS-check.1.3.6: the agent-entrypoint check is a probe over the project
 /// root rather than a finding about a scanned file, and its finding is exempted
 /// by its code rather than by its path. Guards against the
 /// change: a blanket filter on the path would drop it, because `AGENTS.md`
@@ -265,7 +265,7 @@ fn the_agent_entrypoint_finding_survives_the_report_filter() {
     );
 }
 
-/// §FS-check.1.3.6.1: a run-level finding carries no path, so the report
+/// §FS-check.1.3.6: a run-level finding carries no path, so the report
 /// filter never sees one. Guards against the change: a blanket path filter
 /// would drop the config findings, the scope cautions and the workspace run
 /// warnings along with the diagnostics it was written for.
@@ -282,12 +282,12 @@ fn a_run_level_finding_survives_the_report_filter() {
             .iter()
             .any(|diagnostic| diagnostic.code == "deprecated-config-location"
                 && diagnostic.path.is_none()),
-        "§FS-check.1.3.6.1: a finding that is not about a scanned file is not filtered, got {:?}",
+        "§FS-check.1.3.6: a finding that is not about a scanned file is not filtered, got {:?}",
         codes(&run)
     );
 }
 
-/// §FS-check.1.3.6.1 and §FS-workspace.5: the resolution scope is the
+/// §FS-check.1.3.6 and §FS-workspace.5: the resolution scope is the
 /// enclosing project's and never a sibling member's. A path inside a member
 /// resolves against that member's own `include` and homes, and the boundary
 /// stays where §AR-workspace.6 puts it.
@@ -326,7 +326,7 @@ fn in_a_workspace_a_path_inside_a_member_resolves_against_that_member() {
     );
 }
 
-/// §FS-check.1.3.6.1: the entrypoint exemption is by finding and not by file.
+/// §FS-check.1.3.6: the entrypoint exemption is by finding and not by file.
 /// An ordinary dangling citation in `AGENTS.md` is a finding about a scanned
 /// file like any other, so a run about `src/lib.rs` must not report it — while
 /// the §FS-check.3.5 probe's own finding still survives. An entrypoint inside
@@ -373,7 +373,7 @@ fn an_ordinary_finding_about_the_agent_entrypoint_is_dropped_by_the_report_filte
             .errors
             .iter()
             .any(|diagnostic| diagnostic.code == "dangling"),
-        "§FS-check.1.3.6.1: the report is still exactly the path, got {:?}",
+        "§FS-check.1.3.6: the report is still exactly the path, got {:?}",
         codes(&narrow)
     );
     assert!(
@@ -387,7 +387,7 @@ fn an_ordinary_finding_about_the_agent_entrypoint_is_dropped_by_the_report_filte
     );
 }
 
-/// §FS-check.1.3.6.1 and §FS-config.3.5.8: the resolution scope is `[scan]
+/// §FS-check.1.3.6 and §FS-config.3.5.8: the resolution scope is `[scan]
 /// include` **plus every walked kind home**, so a citable `E2E` kind whose home
 /// `include` does not name is read under a path scope exactly as the ordinary
 /// walk reads it. Asking `include` alone made a `§E2E-…` citation dangle under
@@ -436,7 +436,7 @@ fn a_path_scoped_run_resolves_an_e2e_case_whose_home_lies_outside_include() {
     );
 }
 
-/// §FS-check.1.3.6.2: a finding that spans several sites is in scope at any of
+/// §FS-check.1.3.6: a finding that spans several sites is in scope at any of
 /// them. The duplicate message is located at the lexicographically-first site,
 /// so a run over the *other* twin has to report it from a site rather than from
 /// the anchor — and the diagnostic is kept whole, with the same anchor and the
@@ -454,7 +454,7 @@ fn a_duplicate_is_reported_from_the_twin_it_is_not_anchored_at() {
     assert_eq!(
         findings(&twin),
         whole_tree,
-        "§FS-check.1.3.6.2: the anchor is the other twin, and the run still reports it"
+        "§FS-check.1.3.6: the anchor is the other twin, and the run still reports it"
     );
     assert_eq!(
         graph_codes(&twin),
@@ -463,7 +463,7 @@ fn a_duplicate_is_reported_from_the_twin_it_is_not_anchored_at() {
     );
 }
 
-/// §FS-check.1.3.6.2: the same rule, a second code. §FS-values.5.2's value
+/// §FS-check.1.3.6: the same rule, a second code. §FS-values.5.2's value
 /// mismatch is anchored at the binding and names the declaration as its site,
 /// so a run over the declaring file reports a mismatch it was silent about.
 #[test]
@@ -498,11 +498,11 @@ fn a_value_mismatch_is_reported_from_the_declaring_file() {
     assert_eq!(
         findings(&declaring),
         findings(&whole_tree),
-        "§FS-check.1.3.6.2: the declaration is a site of the finding anchored at the binding"
+        "§FS-check.1.3.6: the declaration is a site of the finding anchored at the binding"
     );
 }
 
-/// §FS-check.1.3.6.3: a file the resolution scope could not read leaves the
+/// §FS-check.1.3.6: a file the resolution scope could not read leaves the
 /// errors and the exit code — the narrow run is complete about its path — but
 /// it is not passed over in silence, because the citation whose declaration lay
 /// in it is reported as unresolved and §REQ-no-wrong-citation.2 asks that a
@@ -525,7 +525,7 @@ fn a_file_the_resolution_scope_could_not_read_earns_a_caution() {
     let narrow = check_run(&root.join("src/lib.rs"), false);
     assert!(
         !narrow.had_scan_errors,
-        "§FS-check.1.3.6.3: the exit code stays the narrow run's, got {:?}",
+        "§FS-check.1.3.6: the exit code stays the narrow run's, got {:?}",
         codes(&narrow)
     );
     let caution = narrow
@@ -541,7 +541,7 @@ fn a_file_the_resolution_scope_could_not_read_earns_a_caution() {
         });
     assert!(
         caution.message.contains("outside the report scope"),
-        "§FS-check.1.3.6.3: the caution says where the file stands, got {:?}",
+        "§FS-check.1.3.6: the caution says where the file stands, got {:?}",
         caution.message
     );
     assert!(

@@ -81,7 +81,7 @@ fn stderr(output: &Output) -> &str {
     std::str::from_utf8(&output.stderr).expect("stderr is UTF-8")
 }
 
-/// §FS-output-shapes.6.1.2: the bare failed-query text, exit `1`; only an
+/// §FS-output-shapes.6.1: the bare failed-query text, exit `1`; only an
 /// invalid format keeps the configured-format hint. No release suffix and no
 /// warning follow it: the landed half of the scalar clause is these ordinary
 /// bytes (§FS-distribution.4.2.3).
@@ -93,7 +93,7 @@ fn expected_refs_text(message: &str, hint: bool) -> (i32, String) {
     (1, rendered)
 }
 
-/// §FS-output-shapes.6.1.2: the one failed-query object, exit `1`, no hint.
+/// §FS-output-shapes.6.1: the one failed-query object, exit `1`, no hint.
 fn expected_refs_json(message: &str, code: &str) -> (i32, String) {
     (
         1,

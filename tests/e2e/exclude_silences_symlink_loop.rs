@@ -1,6 +1,6 @@
 //! A version-2 `[schema.sources] exclude` pattern that matches a looping directory link below a
 //! root keeps the link and its loop out of the scan, as it does any other entry
-//! (§FS-config-v2.schema.sources.exclude.roots, §FS-check.2.4.3): the loop's error offers "keep
+//! (§FS-config-v2.schema.sources.exclude, §FS-check.2.4.3): the loop's error offers "keep
 //! it out of the scan", and in version 2 `exclude` is that fix. Both ways a loop is found are
 //! pinned — the walker's own detection of a link to its ancestor, and the pruning of a link whose
 //! target is at or above the walk root (§FS-config.3.5.5) — beside the control that an

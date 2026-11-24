@@ -5,7 +5,7 @@
 //! fixture is grund#854's: a section-locked citation in `src/`, and in `docs/` a
 //! citation of an ID nothing declares.
 //!
-//! The help pages say the same in one line (§FS-cli.2.3.2); that test is the red
+//! The help pages say the same in one line (§FS-cli.2.3); that test is the red
 //! half of the contract until the pages change.
 
 use std::fs;
@@ -13,7 +13,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// §FS-cli.2.3.2: the line, worded once for every page whose path narrows.
+/// §FS-cli.2.3: the line, worded once for every page whose path narrows.
 const NO_PATH_LINE: &str = "With no PATH, the run covers the whole project or workspace \
                             discovered from the current directory; a PATH narrows it.";
 const LOCK: &str = ".grund/sections/FS-login.lock";
@@ -216,7 +216,7 @@ fn help_page(command: &str) -> String {
     String::from_utf8_lossy(&output.stdout).into_owned()
 }
 
-/// §FS-cli.2.3.2: each page whose path narrows says, in the one line, what a run
+/// §FS-cli.2.3: each page whose path narrows says, in the one line, what a run
 /// with no path covers, and none of them says PATH defaults to `.`. `show`'s path
 /// narrows only its generated batches, so its `--path` entry says what those cover
 /// with no path, and the page names no `.` default.

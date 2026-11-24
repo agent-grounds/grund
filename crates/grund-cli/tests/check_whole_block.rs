@@ -1,4 +1,4 @@
-//! Black-box: `grund check` holds the whole managed block (§FS-check.3.5.4), so the
+//! Black-box: `grund check` holds the whole managed block (§FS-check.3.5), so the
 //! two scenarios of grund#906 go red until `grund init` runs where the findings say,
 //! and every way of naming the tree reports the same findings; and one `grund init`
 //! per project of a fresh workspace, in either order, leaves none (grund#931).
@@ -284,7 +284,7 @@ fn new_member_blocks_clear_after_init_in_each_named_directory() {
     assert!(agents_init_lines(&check).is_empty());
 }
 
-/// §FS-check.3.5.4: the render reads the config and the workspace, never the scan
+/// §FS-check.3.5: the render reads the config and the workspace, never the scan
 /// or a path argument, so `check`, `check --full` and `check <root>` agree.
 #[test]
 fn check_full_and_path_report_the_same_stale_blocks() {

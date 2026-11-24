@@ -2,7 +2,7 @@
 //! §FS-check.3.6) — the two keys on the `[[kinds]]` row against their
 //! `[reference]` defaults, which row governs which file, the unit each level
 //! cuts, and the obligations that follow the same unit (§FS-check.3.11).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::api::{CheckRun, run_check};
 use crate::config::load_config;
@@ -79,7 +79,7 @@ fn a_row_grounds_its_own_home_with_the_global_off() {
     );
 }
 
-/// §FS-config.3.4.8.3: precedence is row > global, so an explicit `false`
+/// §FS-config.3.4.8: precedence is row > global, so an explicit `false`
 /// exempts one home while every other place stays grounded.
 #[test]
 fn a_row_false_exempts_its_home_under_a_global_true() {
@@ -125,7 +125,7 @@ fn the_flag_does_not_override_an_explicit_row_false() {
     );
 }
 
-/// §FS-check.3.6.2.1 / §FS-config.3.4.8.2: at level 2 every `##` subtree is a
+/// §FS-check.3.6.2 / §FS-config.3.4.8: at level 2 every `##` subtree is a
 /// unit, and the file stays one — satisfied here by the citation before the
 /// first heading, which is what makes level `1` the whole file and level `2`
 /// the file plus each `##` subtree.
@@ -151,7 +151,7 @@ fn level_two_asks_each_section_of_a_markdown_home() {
     );
 }
 
-/// §FS-check.3.6.2.1: a parent is satisfied by any descendant, so a cited
+/// §FS-check.3.6.2: a parent is satisfied by any descendant, so a cited
 /// `###` clears the `##` it sits under.
 #[test]
 fn level_three_lets_a_leaf_satisfy_its_parent() {
@@ -169,7 +169,7 @@ fn level_three_lets_a_leaf_satisfy_its_parent() {
     assert!(ungrounded(&run).is_empty(), "{:?}", ungrounded(&run));
 }
 
-/// §FS-check.3.6.2.1: nothing passes vacuously for lacking structure — a file
+/// §FS-check.3.6.2: nothing passes vacuously for lacking structure — a file
 /// with no heading at the level is one unit, the file.
 #[test]
 fn a_file_with_no_section_at_the_level_is_one_unit() {
@@ -191,9 +191,9 @@ fn a_file_with_no_section_at_the_level_is_one_unit() {
     );
 }
 
-/// A source tree at a level, spelled on the homeless row (§FS-config.3.9.2.3).
+/// A source tree at a level, spelled on the homeless row (§FS-config.3.4.8).
 /// The module doc grounds the file; one top-level block and one indented
-/// block are what the two ranks of §FS-check.3.6.2.2 tell apart.
+/// block are what the two ranks of §FS-check.3.6.2 tell apart.
 fn source_repo(name: &str, level: usize) -> crate::testing::TemporaryRoot {
     repo(
         name,
@@ -212,12 +212,12 @@ fn source_repo(name: &str, level: usize) -> crate::testing::TemporaryRoot {
     )
 }
 
-/// §FS-check.3.6.2.2: level 2 reaches the *unindented* doc-comment blocks —
+/// §FS-check.3.6.2: level 2 reaches the *unindented* doc-comment blocks —
 /// the parse-free stand-in for a top-level item (§FS-non-goals.3), which is the
-/// source half of the unit §FS-config.3.4.8.2 names: a file has no headings, so
+/// source half of the unit §FS-config.3.4.8 names: a file has no headings, so
 /// the level buys the two ranks grund can see by indentation. The level is
 /// written on the homeless row here, which takes both keys like any other
-/// (§FS-config.3.4.8.4).
+/// (§FS-config.3.4.8).
 #[test]
 fn level_two_reaches_only_unindented_doc_comments() {
     let run = check_run(
@@ -232,7 +232,7 @@ fn level_two_reaches_only_unindented_doc_comments() {
     );
 }
 
-/// §FS-check.3.6.2.2: any higher level reaches every doc-comment block.
+/// §FS-check.3.6.2: any higher level reaches every doc-comment block.
 #[test]
 fn level_three_reaches_every_doc_comment() {
     let run = check_run(
@@ -248,7 +248,7 @@ fn level_three_reaches_every_doc_comment() {
     );
 }
 
-/// §FS-check.3.11.3: the obligation unit follows the row's level, so `must`
+/// §FS-check.3.11: the obligation unit follows the row's level, so `must`
 /// fires on the section that cites something else rather than on the file
 /// that already cites an `FS` somewhere.
 #[test]
@@ -278,8 +278,8 @@ fn an_obligation_fires_per_section_at_level_two() {
     );
 }
 
-/// §FS-check.3.11.4: at level 2 an unmet obligation reports on the file unit
-/// *and* on each failing section — the shape §FS-check.3.6.3.1 states for
+/// §FS-check.3.11: at level 2 an unmet obligation reports on the file unit
+/// *and* on each failing section — the shape §FS-check.3.6.2 states for
 /// grounding, for the same reason: the file cites no `FS`, and neither does
 /// the section under it.
 #[test]
@@ -351,7 +351,7 @@ fn the_no_unit_warning_asks_for_grounding_only_where_it_is_off() {
     );
 }
 
-/// §FS-check.3.6.2.3: the inline-declaration escape is a source file's and has
+/// §FS-check.3.6.2: the inline-declaration escape is a source file's and has
 /// no effect in a non-citable home, where the declaration is misplaced to
 /// begin with (§FS-declarations.checks.misplaced-declaration) — so the file earns both findings.
 #[test]
@@ -402,7 +402,7 @@ fn runbook_repo(name: &str, row: &str) -> crate::testing::TemporaryRoot {
 }
 
 /// §FS-check.3.6.1: a non-citable `file` home is a home, so its one document
-/// is governed — and §FS-check.3.6.2.1 cuts it into heading subtrees at level
+/// is governed — and §FS-check.3.6.2 cuts it into heading subtrees at level
 /// 2 exactly as it cuts a folder home's files.
 #[test]
 fn a_non_citable_file_home_is_governed_and_cut_by_its_level() {
@@ -422,7 +422,7 @@ fn a_non_citable_file_home_is_governed_and_cut_by_its_level() {
     );
 }
 
-/// §FS-config.3.4.8.3: and the row's own `require_grounding` exempts it under a
+/// §FS-config.3.4.8: and the row's own `require_grounding` exempts it under a
 /// global `true` — the per-place switch the shape most in need of it could
 /// not write before.
 #[test]
@@ -437,7 +437,7 @@ fn a_non_citable_file_row_can_exempt_its_own_document() {
     assert!(ungrounded(&run).is_empty(), "{:?}", ungrounded(&run));
 }
 
-/// §FS-check.3.6.3.1: every failing unit is reported — a file that cites
+/// §FS-check.3.6.2: every failing unit is reported — a file that cites
 /// nothing at level 2 earns the file finding *and* one per section, which is
 /// what "each level contains the one below it" means on the reporting side.
 #[test]
@@ -510,7 +510,7 @@ fn a_global_only_config_grounds_every_place_at_the_file() {
     );
 }
 
-/// §FS-config.4.2.1 / §FS-config.3.4.8.6: each key prints on a row only where
+/// §FS-config.4.2: each key prints on a row only where
 /// its effective value differs from the effective global — which is kept and
 /// printed under `[reference]` — and the printed config loads back to the same
 /// effective values.
@@ -533,7 +533,7 @@ fn config_show_prints_a_row_key_only_where_it_differs() {
     assert!(config.grounding_enabled(), "the [reference] level prints");
 }
 
-/// §FS-config.3.4.8.5: a row turning grounding on is enough — the global level
+/// §FS-config.3.4.8: a row turning grounding on is enough — the global level
 /// is then a default some place actually reads.
 #[test]
 fn a_global_level_loads_when_a_row_turns_grounding_on() {

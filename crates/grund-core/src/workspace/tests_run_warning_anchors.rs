@@ -1,11 +1,11 @@
 //! Test module: where each of the three run-level `[workspace]` warnings anchors
-//! (§FS-check.3.29, §FS-check.4.10.11, §FS-workspace.6.1.7), and where the
+//! (§FS-check.3.29, §FS-check.4.10, §FS-workspace.6.1.7), and where the
 //! absorbed-scan config error that was the fourth is located (§FS-check.3.30).
 //!
 //! The *text* of each is pinned end to end, in `tests/e2e/cases/`, because a byte
 //! on stderr is what a repository greps. The anchor is not on stderr at all: it
 //! is the location the engine hands back so an editor places the warning without
-//! reading one back out of the message (§FS-lsp.1.1.3, §AR-bindings.2). No golden
+//! reading one back out of the message (§FS-lsp.1.1, §AR-bindings.2). No golden
 //! can see it, and the CLI renders the same bytes whether it is right or wrong —
 //! so it is held here, one case per section that names one.
 //!
@@ -73,7 +73,7 @@ fn an_absorbed_scan_is_a_config_error_at_the_blocks_members_line() {
     );
 }
 
-/// §FS-check.4.10.11: "It **is located at the block's `include_root` line**" — the key
+/// §FS-check.4.10: "It **is located at the block's `include_root` line**" — the key
 /// that took the block's files out of every scan is the line to open, which
 /// neither the `members` line above it nor the `[workspace]` header is.
 #[test]
@@ -120,7 +120,7 @@ fn an_unread_opted_out_block_anchors_at_its_include_root_line() {
     );
 }
 
-/// §FS-check.4.10.11: the breadcrumb falls back to the block's `[workspace]` line
+/// §FS-check.4.10: the breadcrumb falls back to the block's `[workspace]` line
 /// when there is no `include_root` key to point at — a shape the default `true`
 /// makes unreachable through a config file, so it is held against the builder
 /// rather than against a fixture no `grund.toml` can produce.
@@ -147,7 +147,7 @@ fn an_unread_block_with_no_include_root_key_falls_back_to_the_workspace_line() {
     );
 }
 
-/// §FS-check.3.29, §FS-lsp.1.1.3: the unlisted block anchors at its `[workspace]`
+/// §FS-check.3.29, §FS-lsp.1.1: the unlisted block anchors at its `[workspace]`
 /// line — "the reader has two files to open and this is the one that is wrong" —
 /// and that anchor is the one thing the flip did not move. What moved is the
 /// channel: it is one of `check`'s report errors now (§FS-check.3.29), so the
@@ -175,7 +175,7 @@ fn an_unlisted_block_anchors_at_its_workspace_line() {
     );
 }
 
-/// §FS-lsp.1.1.3: three warnings on the run's channel, not four. The editor shows
+/// §FS-lsp.1.1: three warnings on the run's channel, not four. The editor shows
 /// this finding once, and it shows it as an error off the report — a copy left on
 /// the warning channel would publish a second, warning-severity squiggle on the
 /// same line, which is the one way this change can go wrong invisibly.
@@ -228,7 +228,7 @@ fn unlisted_block_snapshot(name: &str) -> crate::LspSnapshot {
     .expect("snapshot the fixture")
 }
 
-/// §FS-workspace.6.1.7 / §FS-workspace.6.1.7.6: the undecidable ancestor claim
+/// §FS-workspace.6.1.7: the undecidable ancestor claim
 /// travels as one of the run's warnings and "anchors at the config it
 /// could not read — that file and no line, because the `members` value whose
 /// line would be the anchor is exactly what could not be obtained".

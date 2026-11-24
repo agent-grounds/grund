@@ -56,7 +56,7 @@ fn fixture(name: &str, outside: bool) -> TemporaryRoot {
     } else {
         repository_root().join("target/config-migrate-tests")
     };
-    // §FS-repository-maintenance.4.2: claim a direct leaf without an unowned pid parent.
+    // §FS-repository-maintenance.4: claim a direct leaf without an unowned pid parent.
     TemporaryRoot::new(&base, &format!("grund-config-migrate-{name}"))
 }
 

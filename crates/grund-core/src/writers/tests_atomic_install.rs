@@ -3,7 +3,7 @@
 //! the target just before the rename each leave the original byte for byte and
 //! no temporary file behind (§FS-config-migrate.6.2, §FS-config-migrate.6.3); the
 //! install that succeeds keeps the original's permissions.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::{Path, PathBuf};
 

@@ -1,10 +1,10 @@
 //! Test module: the one policy that says whether a version-1 block with
-//! `include_root = false` migrates compactly (§FS-config-migrate.8.1.2,
+//! `include_root = false` migrates compactly (§FS-config-migrate.8.1,
 //! §AR-config.8.4), driven through `config_migrate` so item 1 is answered by the
 //! unread-block probe itself. A compact block's report carries the one notice
-//! about no key, version 1's defaults left unwritten (§FS-config-migrate.8.1.3);
+//! about no key, version 1's defaults left unwritten (§FS-config-migrate.8.1);
 //! a conservative one never does.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::config::migrate::{MigrateOutcome, MigrateReport};
 use crate::testing::{test_root, write};
@@ -12,7 +12,7 @@ use crate::{MigrateOpts, config_migrate};
 
 const WORKSPACE: &str = "[workspace]\ninclude_root = false\nmembers = [\"a\"]\n";
 
-/// §FS-config-migrate.8.1.3: the version line and the `[workspace]` table.
+/// §FS-config-migrate.8.1: the version line and the `[workspace]` table.
 const ENVELOPE: &str =
     "grund_config_version = 2\n\n[workspace]\nmembers = [\"a\"]\ninclude_root = false\n";
 
@@ -41,7 +41,7 @@ fn preview(root: impl AsRef<std::path::Path>) -> MigrateReport {
     }
 }
 
-/// Whether the report took the compact path (§FS-config-migrate.8.1.3).
+/// Whether the report took the compact path (§FS-config-migrate.8.1).
 fn compact(report: &MigrateReport) -> bool {
     report.notices.iter().any(|notice| notice.line.is_none())
 }
@@ -71,7 +71,7 @@ fn assert_conservative(name: &str, head: &str, files: &[&str]) -> MigrateReport 
     report
 }
 
-/// §FS-config-migrate.8.1.2: `[id] named_sections` omitted, true or false, has
+/// §FS-config-migrate.8.1: `[id] named_sections` omitted, true or false, has
 /// no reader on the block, so each of the three migrates compactly.
 #[test]
 fn named_sections_omitted_true_or_false_stays_compact() {
@@ -90,7 +90,7 @@ fn named_sections_omitted_true_or_false_stays_compact() {
     }
 }
 
-/// §FS-config-migrate.8.1.2 item 2: an include that is `[]`, or exactly version
+/// §FS-config-migrate.8.1 item 2: an include that is `[]`, or exactly version
 /// 1's default list, counts as omitted.
 #[test]
 fn an_empty_or_default_include_counts_as_omitted() {
@@ -99,7 +99,7 @@ fn an_empty_or_default_include_counts_as_omitted() {
     assert_compact("include-default", default, &[]);
 }
 
-/// §FS-config-migrate.8.1.2 item 2: a partial include is a setting someone
+/// §FS-config-migrate.8.1 item 2: a partial include is a setting someone
 /// chose, so the block keeps the conservative path, and the missing entry is
 /// refused there (§FS-config-migrate.3.1.3).
 #[test]
@@ -108,7 +108,7 @@ fn a_partial_include_goes_conservative() {
     assert!(!report.refusals.is_empty());
 }
 
-/// §FS-config-migrate.8.1.2 item 2: `[output]` keys leave the block compact and
+/// §FS-config-migrate.8.1 item 2: `[output]` keys leave the block compact and
 /// are dropped as on any config (§FS-config-migrate.3.2).
 #[test]
 fn output_keys_stay_compact() {
@@ -121,7 +121,7 @@ fn output_keys_stay_compact() {
     );
 }
 
-/// §FS-config-migrate.8.1.3: an authored description is kept, as
+/// §FS-config-migrate.8.1: an authored description is kept, as
 /// `[presentation] description`, beside the kept `project_name`.
 #[test]
 fn a_project_description_is_kept_on_the_compact_candidate() {
@@ -133,7 +133,7 @@ members = [\"a\"]\ninclude_root = false\n\n[presentation]\ndescription = \"a blo
     assert_eq!(report.candidate.as_deref(), Some(candidate));
 }
 
-/// §FS-config-migrate.8.1.2 item 1: a version-1 default kind home on disk is in
+/// §FS-config-migrate.8.1 item 1: a version-1 default kind home on disk is in
 /// the block's scope even under `include = []`, so the block is conservative.
 #[test]
 fn a_kind_home_on_disk_goes_conservative() {
@@ -141,14 +141,14 @@ fn a_kind_home_on_disk_goes_conservative() {
     assert_conservative("kind-home", "[scan]\ninclude = []\n\n", &files);
 }
 
-/// §FS-config-migrate.8.1.2 item 1: a default root inside a member is the
-/// member's, outside the block's scope (§FS-check.4.10.2).
+/// §FS-config-migrate.8.1 item 1: a default root inside a member is the
+/// member's, outside the block's scope (§FS-check.4.10).
 #[test]
 fn a_default_root_inside_a_member_stays_compact() {
     assert_compact("member-docs", "", &["a/docs/x.md", "a/src/x.rs"]);
 }
 
-/// §FS-config-migrate.8.1.2 item 1: a block whose members do not expand keeps
+/// §FS-config-migrate.8.1 item 1: a block whose members do not expand keeps
 /// the conservative path.
 #[test]
 fn a_missing_member_goes_conservative() {
@@ -160,7 +160,7 @@ fn a_missing_member_goes_conservative() {
     assert!(!compact(&report), "{:?}", report.notices);
 }
 
-/// §FS-config-migrate.8.1.2 item 2: `[reference] strict = false` is not version
+/// §FS-config-migrate.8.1 item 2: `[reference] strict = false` is not version
 /// 1's default, though the records gate's reduction does not see it, so the
 /// block is conservative and the key is refused rather than dropped as unread.
 #[test]
@@ -177,7 +177,7 @@ fn strict_false_goes_conservative() {
     assert_compact("strict-true", "[reference]\nstrict = true\n\n", &[]);
 }
 
-/// §FS-config-migrate.8.1.1: on a conservative block nobody reads its named
+/// §FS-config-migrate.8.1: on a conservative block nobody reads its named
 /// sections either, so an omitted `[id] named_sections` is never refused there.
 #[test]
 fn a_conservative_block_is_never_refused_on_named_sections() {

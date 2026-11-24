@@ -1,6 +1,6 @@
 //! Real-server coverage for the named-section records shared with the CLI:
 //! diagnostics, hover, navigation, references, and highlights (§FS-lsp.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 
@@ -31,7 +31,7 @@ fn named_sections_have_cli_parity_across_editor_surfaces() {
 
     let (mut child, mut stdin, receiver) = start_server(&root);
 
-    // §FS-lsp.1.1.2: the core's named missing-section finding is transported at
+    // §FS-lsp.1.1: the core's named missing-section finding is transported at
     // the citation line with the same message and whole-token range.
     let diagnostics = recv_diagnostics(&receiver, &mut child, "FS-doc.md");
     let missing = diagnostics

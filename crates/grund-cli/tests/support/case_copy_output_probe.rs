@@ -1,4 +1,4 @@
-//! §FS-examples.5.6.2: external output goes through the real compare/refresh seam.
+//! §FS-examples.5.6: external output goes through the real compare/refresh seam.
 use super::super::{CaseOutcome, case_paths, prepare_case, run_prepared_case};
 use std::fs;
 use std::path::PathBuf;

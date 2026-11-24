@@ -101,7 +101,7 @@ fn grund(dir: &Path, args: &[&str]) -> Run {
 impl Run {
     /// The scan failures a run reports, from either stream. A located finding reads
     /// `path:line: error:`, so a line that starts `error: ` is a failure of the run
-    /// (§FS-errors.2.2), and outside the report scope it is the caution of §FS-check.1.3.6.3.
+    /// (§FS-errors.2.2), and outside the report scope it is the caution of §FS-check.1.3.6.
     /// Other warnings, the version-1 notice among them, say nothing about a failure.
     fn failure_lines(&self) -> Vec<&str> {
         self.stdout
@@ -259,7 +259,7 @@ fn a_members_unlistable_cases_root_is_one_line_from_the_workspace_root() {
     assert_one_line(&scratch.root, &[&["check"]], &unlistable("m/e2e/cases"));
 }
 
-/// Under a path scope the one line is the caution outside the report scope (§FS-check.1.3.6.3)
+/// Under a path scope the one line is the caution outside the report scope (§FS-check.1.3.6)
 /// and the error inside it, never one of each.
 #[test]
 fn under_a_path_scope_the_one_line_keeps_the_severity_its_location_earns() {

@@ -125,7 +125,7 @@ fn a_looping_link_an_ignore_file_covers_is_not_reported() {
     );
 }
 
-/// §FS-check.1.3.2: `--full` walks every `include` root beside the config root
+/// §FS-check.1.3: `--full` walks every `include` root beside the config root
 /// that already contains it, so an error met once per root printed twice.
 #[test]
 fn a_scan_error_is_reported_once_under_full_scope() {
@@ -139,7 +139,7 @@ fn a_scan_error_is_reported_once_under_full_scope() {
         vec![
             "docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan"
         ],
-        "§FS-check.1.3.2: overlapping roots meet one broken link once each, and the report names it once"
+        "§FS-check.1.3: overlapping roots meet one broken link once each, and the report names it once"
     );
 }
 

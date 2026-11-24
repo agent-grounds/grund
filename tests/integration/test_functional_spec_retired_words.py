@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 
 # The sense filter this file reads prose through is shared with the vocabulary's
-# own checks rather than copied: one implementation of §FS-terms.senses.4.
+# own checks rather than copied: one implementation of §FS-terms.senses.
 from terms_prose import prose
 
 

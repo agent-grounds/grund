@@ -1,4 +1,4 @@
-"""Test-only local package rehearsal for §FS-distribution.3.2.3.3."""
+"""Test-only local package rehearsal for §FS-distribution.3.2.3."""
 
 import hashlib
 import importlib.util
@@ -45,7 +45,7 @@ def node_root():
 
 
 def node_target():
-    """Reuse this checkout's persistent build output (§FS-repository-maintenance.2.1).
+    """Reuse this checkout's persistent build output (§FS-repository-maintenance.2).
 
     One per source checkout under `node_root()`, as `tests/bindings/support.py` derives it
     for both bindings (§AR-ci.3.4.1.2).
@@ -182,7 +182,7 @@ def _checkout_cli_build():
 
 
 def checkout_cli():
-    """Independent same-source mutation byte oracle (§FS-distribution.3.2.3.1).
+    """Independent same-source mutation byte oracle (§FS-distribution.3.2.3).
 
     Built once per run into this checkout's target, and reused by every test (§AR-ci.3.4.1).
     """

@@ -101,7 +101,7 @@ fn an_unarmed_selected_code_earns_one_off_line() {
     );
 }
 
-/// §FS-check.1.4, §FS-check.3.5.4: `--only agents-init` carries `invalid-rule`
+/// §FS-check.1.4, §FS-check.3.5: `--only agents-init` carries `invalid-rule`
 /// in a run where an invalid rule left a project's blocks uncompared, and in no
 /// other run; `--ignore invalid-rule` still wins.
 #[test]

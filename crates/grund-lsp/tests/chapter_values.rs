@@ -2,9 +2,9 @@
 //! the diagnostic equals the CLI finding, the root hover is the whole heading
 //! because there are no marker bytes to trim, and go-to-definition lands on the
 //! component heading, or on the root heading for a binding aimed at the root
-//! (§FS-lsp.1.2.1, §FS-lsp.1.3.5, §FS-values.2.5, §FS-values.3.1.2,
+//! (§FS-lsp.1.2.1, §FS-lsp.1.3, §FS-values.2.5, §FS-values.3.1.2,
 //! §FS-values.7).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

@@ -1,5 +1,5 @@
 //! Black-box: every surface that reads a selected section gets the one first line the slicer
-//! gives it, its own heading at the canonical path (§FS-declarations.section.relative.shown.selected):
+//! gives it, its own heading at the canonical path (§FS-declarations.section.relative.shown):
 //! the numeric form, a name under a number, a stub's target, a fenced heading left as written,
 //! `show --batch` by query and by glob, and the bytes `list --size` measures (§FS-list.3.4.1).
 

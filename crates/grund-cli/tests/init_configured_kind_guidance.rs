@@ -38,7 +38,7 @@ const REQ_TREE: &[(&str, &str)] = &[
 
 const REFRESHED: &str = "updated AGENTS.md\nexists grund.toml\n";
 
-/// §FS-init-fixtures.8.1: a first run over an existing home.
+/// §FS-init-fixtures.8: a first run over an existing home.
 const HOME_EXISTS: &str = "wrote AGENTS.md
 exists grund.toml
 
@@ -48,7 +48,7 @@ next:
 see AGENTS.md for the full workflow.
 ";
 
-/// §FS-init-fixtures.8.2: the selected home is missing.
+/// §FS-init-fixtures.8: the selected home is missing.
 const HOME_MISSING_STEPS: &str = "
 next:
   1. create the REQ home (docs/req)
@@ -57,7 +57,7 @@ next:
 see AGENTS.md for the full workflow.
 ";
 
-/// §FS-init-fixtures.8.3: the selected row has no home.
+/// §FS-init-fixtures.8: the selected row has no home.
 const NO_HOME: &str = "wrote AGENTS.md
 exists grund.toml
 
@@ -173,7 +173,7 @@ fn assert_names_no_fs(label: &str, stderr: &str) {
 }
 
 /// The #940 reproducer: a REQ-only project adopts grund, migrates to version 2,
-/// and refreshes the block `grund check` reports stale (§FS-init-fixtures.8.1).
+/// and refreshes the block `grund check` reports stale (§FS-init-fixtures.8).
 #[test]
 fn req_only_adoption_teaches_req_and_the_refresh_after_migrating_is_quiet() {
     let fixture = Fixture::req_only("migrate");
@@ -210,7 +210,7 @@ fn req_only_adoption_teaches_req_and_the_refresh_after_migrating_is_quiet() {
     assert_eq!(text(&id.stdout), "REQ-something\n");
 }
 
-/// §FS-init-fixtures.8.2: a missing selected home is asked for, on a first run
+/// §FS-init-fixtures.8: a missing selected home is asked for, on a first run
 /// and on a refresh, and `--scaffold` is never offered for it.
 #[test]
 fn a_missing_home_is_asked_for_on_a_first_run_and_on_a_refresh() {
@@ -233,7 +233,7 @@ fn a_missing_home_is_asked_for_on_a_first_run_and_on_a_refresh() {
     );
 }
 
-/// §FS-init-fixtures.8.3: a row with no home teaches a doc-comment declaration,
+/// §FS-init-fixtures.8: a row with no home teaches a doc-comment declaration,
 /// names no directory, and leaves a refresh with nothing to teach.
 #[test]
 fn a_row_with_no_home_teaches_a_doc_comment_and_its_refresh_is_quiet() {
@@ -247,7 +247,7 @@ fn a_row_with_no_home_teaches_a_doc_comment_and_its_refresh_is_quiet() {
     assert_eq!(fixture.stderr_of(&["init"], 0), REFRESHED);
 }
 
-/// §FS-init-fixtures.8.4: `--scaffold` writes what it wrote before, and only the
+/// §FS-init-fixtures.8: `--scaffold` writes what it wrote before, and only the
 /// allocation step names the selected kind.
 #[test]
 fn the_scaffold_form_names_the_selected_kind_and_writes_what_it_wrote() {
@@ -279,7 +279,7 @@ see AGENTS.md for the full workflow.
     );
 }
 
-/// §FS-init-fixtures.8.4, §FS-init.2.1.3: `--scaffold` lays the whole starter, so on the
+/// §FS-init-fixtures.8, §FS-init.2.1.3: `--scaffold` lays the whole starter, so on the
 /// tree with `docs/req` absent it writes the `REQ` home too, and the block stays the same.
 #[test]
 fn the_scaffold_lays_a_missing_req_home_with_the_rest_of_the_starter() {
@@ -365,7 +365,7 @@ fn first_block(name: &str, rows: &str, dirs: &[&str]) -> String {
     stderr
 }
 
-/// The `next:` block of a first run that asks for `home` of `kind` (§FS-init-fixtures.8.2).
+/// The `next:` block of a first run that asks for `home` of `kind` (§FS-init-fixtures.8).
 fn asks_for(kind: &str, home: &str, under: &str) -> String {
     format!(
         "wrote AGENTS.md\nexists grund.toml\n\nnext:\n  1. create the {kind} home ({home})\n  \

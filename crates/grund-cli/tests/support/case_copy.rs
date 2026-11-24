@@ -1,4 +1,4 @@
-// §FS-examples.5.6.1: one allocation owns every use, including preparation and unwind.
+// §FS-examples.5.6: one allocation owns every use, including preparation and unwind.
 struct CaseCopy {
     scratch: PathBuf,
     repo: PathBuf,
@@ -40,7 +40,7 @@ impl CaseCopy {
         panic!("{name}: could not allocate an invocation directory after 128 attempts");
     }
 
-    /// §FS-examples.5.6.2: record exact argv and resolved absolute spellings once.
+    /// §FS-examples.5.6: record exact argv and resolved absolute spellings once.
     fn set_output_prefixes(&mut self, manifest_dir: &Path, name: &str) {
         let logical = case_paths::logical_copy(name);
         let relative = self.repo.strip_prefix(manifest_dir).unwrap_or(&self.repo);
@@ -64,7 +64,7 @@ impl CaseCopy {
         self.output_prefixes.dedup();
     }
 
-    /// Both compare and refresh receive the same output (§FS-examples.5.6.2).
+    /// Both compare and refresh receive the same output (§FS-examples.5.6).
     fn normalize(&self, text: &str) -> String {
         normalize_copy_output(text, &self.output_prefixes, cfg!(windows))
     }
@@ -86,7 +86,7 @@ impl Drop for CaseCopy {
 }
 
 /// Windows path producers can use argv's mixed separators, native separators,
-/// forward slashes or a verbatim prefix (§FS-examples.5.6.2). Native output maps
+/// forward slashes or a verbatim prefix (§FS-examples.5.6). Native output maps
 /// to the authored PathBuf spelling; explicitly slash-rendered output keeps its
 /// slash-rendered golden. Unix backslashes are filename bytes, not separators.
 fn copy_path_spellings(actual: &str, logical: &str, windows: bool) -> Vec<(String, String)> {
@@ -104,7 +104,7 @@ fn copy_path_spellings(actual: &str, logical: &str, windows: bool) -> Vec<(Strin
 }
 
 /// Output paths are whole whitespace-delimited fields or quoted fields, as in
-/// diagnostics and JSON (§FS-examples.5.6.2). Parse those contexts instead of
+/// diagnostics and JSON (§FS-examples.5.6). Parse those contexts instead of
 /// guessing which punctuation is legal in a filename. A field must be the owned
 /// path or its descendant; sibling suffixes and enclosing names stay significant.
 /// Quoted fields include their spaces. Quotes embedded in a bare filename or

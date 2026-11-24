@@ -2,7 +2,7 @@
 //! declarations owning the targets of the sites the plain count reads, so a declaration cited
 //! bare, at a numbered section and at a named chapter counts once; its row
 //! (§FS-rules.7.3) and its counted sites, one per citation and not one per declaration
-//! (§FS-rules.7.3.1); and its deduplication key, which carries the counting mode
+//! (§FS-rules.7.3); and its deduplication key, which carries the counting mode
 //! (§FS-rules.6). Issue #1367 is the report: one `SRC` cited three times satisfied
 //! `must cite at least 3 SRC`, and no sentence could ask for three different ones.
 //!
@@ -182,7 +182,7 @@ fn about(rules: &[ParsedRule], subject: &str) -> Vec<(String, Vec<String>)> {
         .collect()
 }
 
-/// §FS-rules.3.2.1, §FS-rules.7.3.1: `SRC-x` cited bare, at `.2` and at `.outcome` is one
+/// §FS-rules.3.2.1, §FS-rules.7.3: `SRC-x` cited bare, at `.2` and at `.outcome` is one
 /// declaration, and the row lists all three sites, so its list adds up to the sites; a subject
 /// that cites no `SRC` is a zero count, which names no site.
 #[test]
@@ -240,7 +240,7 @@ fn a_subject_in_its_own_target_set_counts_itself_once() {
     );
 }
 
-/// §FS-rules.7.3, §FS-rules.7.3.1: `exactly one` and `at most 1` are bounds the form takes; a
+/// §FS-rules.7.3: `exactly one` and `at most 1` are bounds the form takes; a
 /// zero count is `citation-cardinality` too, and names no site.
 #[test]
 fn exactly_one_and_at_most_one_bound_the_count() {

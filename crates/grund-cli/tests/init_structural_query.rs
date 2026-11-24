@@ -93,7 +93,7 @@ fn querying_guide_and_skill_hold_the_query_recipes() {
 /// skill copies name the call, so an agent that reads them never loops `grund refs` over
 /// every ID. The guide and both skill copies state the `E2E` exclusion as a configured
 /// `E2E` kind's and carry no `--unused --kind E2E` example, a form the default kinds refuse
-/// (§FS-init.2.3.4, §FS-list.1.3.2).
+/// (§FS-init.2.3.4, §FS-list.1.3).
 #[test]
 fn querying_guide_and_skill_teach_the_unused_recipe() {
     let root = manifest_dir();

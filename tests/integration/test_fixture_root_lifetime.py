@@ -1,6 +1,6 @@
 """Gate entry for the two-run suite oracle (§AR-ci.10.2).
 
-The executable end-to-end test is §FS-repository-maintenance.4.1. When its
+The executable end-to-end test is §FS-repository-maintenance.4. When its
 build or a suite run fails, the failure carries that child's output and not
 only the log it was written to (§AR-ci.requirements.5.1), because the gate
 entry removes the log directory with the run.

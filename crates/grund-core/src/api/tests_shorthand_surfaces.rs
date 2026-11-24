@@ -5,7 +5,7 @@
 //! which pins recognition, resolution, and the check error: these cases fail
 //! when a surface stops accepting the shorthand, not when the scanner changes
 //! its mind about one (§AR-core-module-layout.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::BTreeMap;
 
@@ -46,7 +46,7 @@ fn render_id_prints_a_slugless_id_as_the_shorthand() {
 
 // §FS-check.1.2.6 (§FS-citations.shorthand.cli) / §FS-show.1.2: a query persists
 // nothing, so the shorthand is simply expanded at the CLI boundary. This is also
-// what makes a clicked `<§>FS-042` open (§FS-integrations.3.1.7).
+// what makes a clicked `<§>FS-042` open (§FS-integrations.3.1).
 #[test]
 fn shorthand_resolves_as_a_query_argument() {
     let root = test_root("shorthand_resolves_as_a_query_argument");
@@ -132,7 +132,7 @@ fn ambiguous_shorthand_query_carries_no_sites() {
     );
 }
 
-/// §FS-lsp.1.4.5: a shorthand already in the document navigates like any other
+/// §FS-lsp.1.4: a shorthand already in the document navigates like any other
 /// citation. The snapshot carries the canonical target while the range stays
 /// the written token, which is what makes hover, go-to-definition,
 /// references, document links, and highlight all work without any of them
@@ -187,7 +187,7 @@ fn lsp_snapshot_navigates_a_shorthand_citation() {
     );
 }
 
-/// §FS-integrations.3.1.7: the clients need no shorthand matcher of their own —
+/// §FS-integrations.3.1: the clients need no shorthand matcher of their own —
 /// the shared citation shape already accepts one, in every form. This pins
 /// that, because the spec claims it and six hand-written regexes would
 /// otherwise be free to drift from the engine.
@@ -224,7 +224,7 @@ fn client_matchers_already_accept_the_shorthand() {
 }
 
 /// The citation shape every client matcher embeds: the ID shape of
-/// §FS-integrations.3.1.4, then a suffix whose components are digits or the
+/// §FS-integrations.3.1, then a suffix whose components are digits or the
 /// named handle of §FS-config.3.3.1. The named alternative is read from the
 /// engine's own pattern, so the clients cannot drift from the section grammar.
 fn client_citation_shape() -> String {
@@ -258,9 +258,9 @@ fn embedded_citation_matchers(artifact: &str) -> Vec<String> {
     matchers
 }
 
-/// §FS-integrations.3.1.4: the matchers keep the whole `.<section>` suffix,
+/// §FS-integrations.3.1: the matchers keep the whole `.<section>` suffix,
 /// named and mixed paths included, so a click opens the cited section rather
-/// than the declaration heading (§FS-integrations.3.1.5, §FS-integrations.3.2.1).
+/// than the declaration heading (§FS-integrations.3.1, §FS-integrations.3.2).
 #[test]
 fn client_matchers_keep_named_and_mixed_section_paths() {
     let text = "see \u{a7}FS-login.requirements.lockout, \u{a7}FS-login.1.goals and \

@@ -2,7 +2,7 @@
 //! `grund fmt --cross-refs` derives for the same coordinate, under every
 //! `anchor_format` profile (§FS-show.3.1.3, §FS-output-shapes.4), and through a
 //! stub whose target the walk did not reach (§FS-fmt.6.2.1.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::*;
 use crate::queries::{ShowFormat, ShowMode, ShowOpts};

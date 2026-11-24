@@ -1,5 +1,5 @@
-//! Owner and qualified core authoring (§FS-lsp.1.6.1, §FS-lsp.1.6.2,
-//! §FS-lsp.1.6.3). Colliding spellings must not create sibling ambiguity.
+//! Owner and qualified core authoring
+//! (§FS-lsp.1.6). Colliding spellings must not create sibling ambiguity.
 
 use super::tests_editor_completion::{Fixture, apply, ids};
 

@@ -1,6 +1,6 @@
-//! §FS-list.1.3.2 (issue #962): `grund list --help` teaches only `--unused` forms that
+//! §FS-list.1.3 (issue #962): `grund list --help` teaches only `--unused` forms that
 //! work under the default kinds `grund init` writes, where `--kind E2E` is refused,
-//! while a config-v2 `E2E` kind keeps §FS-list.1.3.1's rule. Run alone through the
+//! while a config-v2 `E2E` kind keeps §FS-list.1.3's rule. Run alone through the
 //! ordinary e2e fixture runner; each case also runs in the full e2e suite.
 #[path = "support/case_runner.rs"]
 #[allow(dead_code)]

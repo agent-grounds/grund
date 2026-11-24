@@ -1,4 +1,4 @@
-// §FS-declarations.line.configured-slug: port grund.68's reader matrix.
+// §FS-declarations.line: port grund.68's reader matrix.
 use super::*;
 
 #[test]

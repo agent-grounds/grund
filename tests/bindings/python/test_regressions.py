@@ -1,5 +1,5 @@
 """Fetch sources, filesystem roots, fmt refusals and init's guidance selection
-(§FS-distribution.3.3.2, §FS-distribution.3.3.3, §FS-distribution.3.2.2.2)."""
+(§FS-distribution.3.3.2, §FS-distribution.3.3.3, §FS-distribution.3.2.2)."""
 
 import errno
 import os
@@ -160,7 +160,7 @@ class RegressionTests(unittest.TestCase):
             self.assertEqual(before, tree_bytes(root), "a refused fmt writes nothing")
 
     def test_read_failure_partway_through_fmt_lists_no_change(self):
-        # §FS-fmt.7.4.3: with cross-references off, the walk meets the unreadable file late.
+        # §FS-fmt.7.4: with cross-references off, the walk meets the unreadable file late.
         with temporary() as temp:
             root = Path(temp) / "repo"
             (root / "docs").mkdir(parents=True)
@@ -185,7 +185,7 @@ class RegressionTests(unittest.TestCase):
         self.assertFalse(allocation.home_exists)
 
     def test_validate_config_names_member_config_findings_at_a_workspace_root(self):
-        # §FS-config.4.1.1, §FS-check.4.11.3: the root's config plus each expanded project,
+        # §FS-config.4.1, §FS-check.4.11: the root's config plus each expanded project,
         # in check's order, as `warnings`; `run_cautions` carry no config finding, as before.
         with temporary() as temp:
             result = self.module.validate_config(
@@ -210,7 +210,7 @@ class RegressionTests(unittest.TestCase):
         self.assertEqual((), result.run_cautions)
 
     def test_check_and_validate_config_name_a_grouping_blocks_config_findings(self):
-        # §FS-check.4.11.3: each include_root = false block the workspace expansion reaches,
+        # §FS-check.4.11: each include_root = false block the workspace expansion reaches,
         # in check's report.warnings and in validate_config's warnings, as a member's are.
         line = ("group/grund.toml is version 1;"
                 " migrate it with grund config migrate --to 2 group")

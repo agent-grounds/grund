@@ -3,7 +3,7 @@
 //! §AR-scanner.4.4). A block opens only on a line that starts with an opener and
 //! closes at the first `*/` after it; a bare line is in declaration position only
 //! in a block whose `*/` is found.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::source_line::{BlockCommentLine, BlockCommentScanState};
 use super::{CommentBlockKind, comment_blocks, is_bare_block_line};

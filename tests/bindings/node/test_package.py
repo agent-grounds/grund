@@ -179,7 +179,7 @@ class NodePackageTests(unittest.TestCase):
         self.assertTrue(example.is_file())
         self.assertTrue(golden.is_file())
         shutil.copyfile(example, self.r.consumer / "example.mjs")
-        # §FS-distribution.3.2.4, §FS-errors.4.1: rehearse both fixtures in the consumer.
+        # §FS-distribution.3.2, §FS-errors.4.1: rehearse both fixtures in the consumer.
         warning_fixture = self.r.root / "warnings"
         shutil.copytree(CASES / "cross-project-citation-without-workspace" / "repo",
                         warning_fixture)
@@ -191,7 +191,7 @@ class NodePackageTests(unittest.TestCase):
     def test_source_builder_refuses_abort_panic_strategy(self):
         output = self.r.root / "abort-native"
         from support import command
-        # §FS-distribution.3.2.3.3: refusal precedes Cargo even with combined inputs.
+        # §FS-distribution.3.2.3: refusal precedes Cargo even with combined inputs.
         probes = self.r.root / "abort-cargo-probe"
         trace = self.r.root / "abort-cargo-invoked"
         probe_env = cargo_probe(probes,

@@ -1,6 +1,6 @@
 """§AR-ci.3.1.4 — the gate sends an external URL to the network only where the
 change adds or modifies its line, and checks every internal link of the tree
-offline (§AR-ci.3.1, §FS-non-goals.1.1).
+offline (§AR-ci.3.1, §FS-non-goals.1).
 
 Real lychee against a git fixture and a loopback host that counts requests: no
 subprocess result is mocked, so a request count of zero means the wrapper made

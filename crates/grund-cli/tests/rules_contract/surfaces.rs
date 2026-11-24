@@ -25,7 +25,7 @@ fn chapter_scope_and_exact_once_coverage_are_hard_findings() {
 }
 
 /// §FS-rules.7.6: rule-derived JSON adds no source-list field but a count row's counted sites,
-/// each line once (§FS-rules.7.3.1), and same-anchor rows sort by target-ID bytes even where
+/// each line once (§FS-rules.7.3), and same-anchor rows sort by target-ID bytes even where
 /// one target prefixes another.
 #[test]
 fn rule_findings_have_exact_ndjson_codes_and_bytes() {
@@ -426,7 +426,7 @@ fn valid_rules_render_exact_sentences_in_a_rule_enabled_managed_section() {
     );
 }
 
-/// §FS-rules.9.1.1: a path-scoped `check` compares the chapter rules against the
+/// §FS-rules.9.1: a path-scoped `check` compares the chapter rules against the
 /// render `check .` compares against, so with the block `init` wrote every scope
 /// is clean, and with the bullets removed every scope reports the same drift —
 /// including the paths that hold no rule declaration, the issue #377 shape.

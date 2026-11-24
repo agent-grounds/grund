@@ -1,4 +1,4 @@
-//! Stdio acceptance fixtures for §FS-lsp.1.6.4; no completion implementation.
+//! Stdio acceptance fixtures for §FS-lsp.1.6; no completion implementation.
 #![allow(dead_code)]
 
 #[path = "binaries.rs"]

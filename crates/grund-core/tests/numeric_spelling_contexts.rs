@@ -1,5 +1,5 @@
 //! Numeric identity and authored spelling agree at the editor and host report
-//! boundaries (§FS-config.3.2.8, §FS-lsp.1.2.5, §FS-lsp.1.3.1).
+//! boundaries (§FS-config.3.2.8, §FS-lsp.1.2.3, §FS-lsp.1.3.1).
 
 #[path = "support/numeric_spelling.rs"]
 mod support;

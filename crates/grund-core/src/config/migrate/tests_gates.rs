@@ -2,7 +2,7 @@
 //! means something else is caught, and each difference the gate ignores is a
 //! real difference between the two projects that it passes. The report gate is
 //! `api/tests_config_migrate_gates.rs`.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fmt::Debug;
 use std::path::Path;
@@ -160,7 +160,7 @@ fn records_gate_ignores_include_spelled_as_places() {
     );
 }
 
-/// §FS-config-migrate.3.1.4.1: the gate's scan-root section drops an include
+/// §FS-config-migrate.3.1.4: the gate's scan-root section drops an include
 /// inside any equivalent home, as mapping does before selecting protected roots.
 #[test]
 fn records_gate_scan_roots_drop_include_inside_equivalent_homes() {

@@ -1,6 +1,6 @@
 //! Test module: the declaration near-miss error (§FS-declarations.checks.declaration-near-miss) — a heading
 //! that opens like a declaration and parses as none.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 

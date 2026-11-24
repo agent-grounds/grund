@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Two passing core lib suites must leave no owned roots (§FS-repository-maintenance.4.1).
+"""Two passing core lib suites must leave no owned roots (§FS-repository-maintenance.4).
 
 Exit 0: clean; 1: passing suites leaked; 2: build, suite or harness error.
 Counts before the enclosing scratch owner removes anything, without following links.

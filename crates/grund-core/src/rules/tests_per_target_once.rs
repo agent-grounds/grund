@@ -84,7 +84,7 @@ fn per_target_once_normalizes_without_a_minimum_and_with_maximum_one() {
     }
 }
 
-/// §FS-rule-refusals.sentences.rewrite.fs-only,
+/// §FS-rule-refusals.sentences.rewrite.by-refusal,
 /// §FS-rule-refusals.sentences.rewrite.reparsed: exact FS-only row and
 /// typed subject/modality preservation over every subject spelling and repair.
 #[test]

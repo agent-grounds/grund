@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.3.1 — deterministic test-only native barriers and faults.
+// §FS-distribution.3.2.3 — deterministic test-only native barriers and faults.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { Worker } from 'node:worker_threads';

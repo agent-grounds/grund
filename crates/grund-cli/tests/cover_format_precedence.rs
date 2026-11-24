@@ -9,7 +9,7 @@ fn run(args: &[&str], path: &std::path::Path) -> Output {
         .expect("run grund cover")
 }
 
-/// §FS-cover.1.1: the shipped CLI rejects an unsupported format before it
+/// §FS-cover.1: the shipped CLI rejects an unsupported format before it
 /// loads a path whose scan would fail, with the stable usage-error status and
 /// diagnostic.
 #[test]

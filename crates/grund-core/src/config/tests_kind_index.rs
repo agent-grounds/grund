@@ -34,7 +34,7 @@ fn index_false_opts_the_kind_out() {
     );
 }
 
-/// §FS-config.3.4.2.2: `index` names a file *inside* `folder`, so a kind with
+/// §FS-config.3.4.2: `index` names a file *inside* `folder`, so a kind with
 /// no folder has nothing to index and the key is a config error — the same
 /// reason it is refused on a single-file or non-citable kind.
 #[test]
@@ -52,7 +52,7 @@ fn index_without_a_folder_is_a_config_error() {
     );
 }
 
-/// §FS-config.3.4.2.2: `index = true` names no file. The default is spelled by
+/// §FS-config.3.4.2: `index = true` names no file. The default is spelled by
 /// leaving the key out, so `true` is rejected rather than read as one.
 #[test]
 fn index_true_is_a_config_error() {
@@ -69,7 +69,7 @@ fn index_true_is_a_config_error() {
     );
 }
 
-/// §FS-config.3.4.2.3: a named `index` is a relative path *inside* `folder`,
+/// §FS-config.3.4.2: a named `index` is a relative path *inside* `folder`,
 /// so `"<name>"` names another file resolved against the folder.
 #[test]
 fn a_named_index_is_resolved_under_the_folder() {
@@ -98,7 +98,7 @@ fn a_named_index_is_resolved_under_the_folder() {
     );
 }
 
-/// §FS-config.3.4.2.3: a named `index` must name a **Markdown** file — one the
+/// §FS-config.3.4.2: a named `index` must name a **Markdown** file — one the
 /// cross-reference pass can never run on (§FS-fmt.6.1) would carry an error
 /// class whose one documented fix declines to act, so the name is refused at
 /// config time instead.
@@ -118,7 +118,7 @@ fn index_naming_a_non_markdown_file_is_a_config_error() {
     );
 }
 
-/// §FS-config.3.4.2.3: `index` is joined onto `folder`, so an absolute path or
+/// §FS-config.3.4.2: `index` is joined onto `folder`, so an absolute path or
 /// one that climbs out with `..` replaces the folder rather than naming a file
 /// *in* it — and `check` would then read outside the tree the config
 /// describes.
@@ -148,7 +148,7 @@ fn an_index_outside_its_folder_is_a_config_error() {
     }
 }
 
-/// §FS-config.3.4.2.4: the `index` default is per kind *name*, and a declared
+/// §FS-config.3.4.2: the `index` default is per kind *name*, and a declared
 /// `[[kinds]]` block that omits the key gets the same answer the built-in list
 /// does — `E2E` defaults to `false`, every other citable folder kind to
 /// `README.md`. Without this every config `grund init` wrote before the key existed

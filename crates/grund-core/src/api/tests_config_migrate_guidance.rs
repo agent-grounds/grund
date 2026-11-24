@@ -1,10 +1,10 @@
-//! Test module: the guidance gate's one grammar (§FS-config-migrate.5.3.1) and
+//! Test module: the guidance gate's one grammar (§FS-config-migrate.5.3) and
 //! the report gate's matching drop (§FS-config-migrate.5.2). A citation
 //! directions section that differs only in the grounding setting's spelling
 //! passes, and the root block's stale finding on it, `AGENTS.md`'s or a
 //! companion's, leaves both runs; a scoped block's stays. The byte comparison
 //! itself is `tests_config_migrate_gates.rs`.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::config_migrate::root_directions;
 use super::config_migrate_guidance::{refusals, spelled_apart};
@@ -42,7 +42,7 @@ fn side(grammar: u32, live: &str, compared: &str) -> ComparedGuidance {
     }
 }
 
-/// §FS-config-migrate.5.3.1: a section whose bytes differ only in the
+/// §FS-config-migrate.5.3: a section whose bytes differ only in the
 /// setting's spelling is equal in one grammar, so it is no refusal and the gate
 /// says it passed it in one grammar; a section equal as bytes, or one that still
 /// differs in one grammar, is not reported as passed that way.
@@ -115,7 +115,7 @@ fn ungrounded_tree(name: &str) -> crate::testing::TemporaryRoot {
     root
 }
 
-/// §FS-config-migrate.5.3.1, §FS-config-migrate.5.2: the tree migrates with
+/// §FS-config-migrate.5.3, §FS-config-migrate.5.2: the tree migrates with
 /// both gates equal, though `AGENTS.md` and the `CLAUDE.md` beside it each
 /// spell the setting in version 1 and the candidate's run reports both stale.
 #[test]

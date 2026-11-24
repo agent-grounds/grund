@@ -211,7 +211,7 @@ fn verdict(output: &Output) -> (Verdict, String) {
     let refused = output.status.code() == Some(2);
     let verdict = if stderr.contains("[citations.") && !refused {
         // A pinned target the run cannot accept fails the load since `0.19.0`
-        // (§FS-config.3.9.5.2), so a `[citations]` line on a run that went on
+        // (§FS-config.3.9.5), so a `[citations]` line on a run that went on
         // refused nothing.
         Accepted
     } else if stderr.contains("declares no IDs") || stderr.contains("non-citable target kind") {

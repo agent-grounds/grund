@@ -117,7 +117,7 @@ fn without_the_entry_a_walked_file_whose_extension_is_not_utf8_is_not_read() {
 }
 
 /// Under the entry, a refusal's detail names the files the scan reads, so it names a name whose
-/// extension is not UTF-8 as it names `FACTS.` (§FS-config-migrate.3.1.9). The scan's extension
+/// extension is not UTF-8 as it names `FACTS.` (§FS-config-migrate.3.1.4). The scan's extension
 /// test has to see the path itself: the name a report prints has its bad byte replaced, and what
 /// follows the last dot of that spelling is a valid extension the list does not hold.
 #[test]

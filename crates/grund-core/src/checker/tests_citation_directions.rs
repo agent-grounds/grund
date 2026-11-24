@@ -111,7 +111,7 @@ fn scanner_file_home_source_kind() {
 // and prohibition passes and the suggestions channel.
 /// The matrix exercises `must`, `never` (`must-not`), `should`, and the
 /// implicit `may`, including their gate/suggestion separation (§FS-config.3.9.1).
-/// §FS-config.3.9.1.1: an obligation is asked of each top-level declaration of
+/// §FS-config.3.9.1: an obligation is asked of each top-level declaration of
 /// the citing kind and satisfied anywhere in its body, while a prohibition
 /// fires once per offending citation site, anchored at that site's own
 /// `file:line`.
@@ -204,7 +204,7 @@ must = ["FS"]
     );
 }
 
-// §FS-config.3.9.2.4: Markdown files outside kind homes are still checked for
+// §FS-config.3.9.2: Markdown files outside kind homes are still checked for
 // prohibited citation directions, but they are not `code` obligation units.
 #[test]
 fn citation_directions_code_obligations_exempt_markdown() {
@@ -245,7 +245,7 @@ must = ["FS"]
     );
 }
 
-/// §FS-config.3.9.1.2 / §FS-check.3.11.6: `E2E` obligations are per case, and
+/// §FS-config.3.9.1 / §FS-check.3.11: `E2E` obligations are per case, and
 /// an otherwise empty evidence set fails a `must` entry rather than satisfying
 /// it vacuously — so `[citations.E2E] must = ["FS"]` is a hard gate on a case
 /// with no scanned citations, in a normal root check that skips direct fixture
@@ -291,7 +291,7 @@ must = ["FS"]
     );
 }
 
-/// §FS-config.3.9.1.2: an `E2E` obligation evaluates the case's scanned files
+/// §FS-config.3.9.1: an `E2E` obligation evaluates the case's scanned files
 /// *plus* its manifest's `spec.refs` entries, and such an entry is kind-shaped
 /// evidence rather than an ordinary citation — it satisfies the `must` while
 /// naming an ID that does not resolve locally, and never enters the citation
@@ -359,7 +359,7 @@ fn citation_directions_absent_section_is_inert() {
     );
 }
 
-// §FS-config.3.9.5.1: a `should`/`must-not` pair whose namespaces overlap
+// §FS-config.3.9.5: a `should`/`must-not` pair whose namespaces overlap
 // (`*/AR` covers a bare local `AR`) is rejected; disjoint namespaces are not.
 #[test]
 fn citation_validation_rejects_overlapping_namespace_polarities() {
@@ -403,7 +403,7 @@ fn citation_validation_rejects_malformed_namespace_qualifiers() {
         )
     };
 
-    // §FS-config.3.9.3.1: config diagnostics use citation-target vocabulary,
+    // §FS-config.3.9.3: config diagnostics use citation-target vocabulary,
     // name the kind and identify the first invalid qualifier segment.
     let diagnostic = |target: &str| {
         write(&root.join("grund.toml"), &cfg(target));

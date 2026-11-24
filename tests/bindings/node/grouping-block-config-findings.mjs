@@ -1,4 +1,4 @@
-// §FS-check.4.11.3: at a workspace root, each include_root = false block the workspace
+// §FS-check.4.11: at a workspace root, each include_root = false block the workspace
 // expansion reaches has its config findings named: in check's report.warnings and in
 // validateConfig's runCautions, as a member's are.
 import assert from 'node:assert/strict';

@@ -1,4 +1,4 @@
-//! Shared native ownership and lexical anchors (§FS-check.6.1.1, §FS-check.6.1.3).
+//! Shared native ownership and lexical anchors (§FS-check.6.1).
 #![cfg(any(unix, windows))]
 use crate::support::*;
 use grund::WatchObservation;
@@ -20,7 +20,7 @@ fn link(target: &Path, path: &Path, directory: bool) -> std::io::Result<()> {
     }
 }
 
-/// §FS-check.6.1.1, §FS-check.6.1.3: retiring recursive parent coverage must
+/// §FS-check.6.1: retiring recursive parent coverage must
 /// retain the newly selected descendant's native subscription and mode.
 #[test]
 fn watch_recursive_parent_retirement_preserves_child() {
@@ -109,7 +109,7 @@ fn watch_directory_alias_child() {
     };
     let base = std::path::PathBuf::from(std::env::var_os("GRUND_WATCH_ALIAS_SANDBOX").unwrap());
     let f = Fixture::new();
-    // §FS-check.6.1.3: global patterns anchor at the repository top, the fixture, from any
+    // §FS-check.6.1: global patterns anchor at the repository top, the fixture, from any
     // cwd (§FS-scan.scope.ignore-files); mutate cwd only in this --exact child.
     std::env::set_current_dir(&f.0).unwrap();
     fs::create_dir_all(f.0.join(".git")).unwrap();
@@ -169,7 +169,7 @@ fn watch_directory_alias_child() {
     assert_ne!(after.stdout, repaired.stdout);
     h.matches(&repaired);
     // Retiring the config alias must not remove the real directory's retained
-    // file-link coverage (§FS-check.6.1.3). Check native updates and repair.
+    // file-link coverage (§FS-check.6.1). Check native updates and repair.
     fs::write(base.join("real/retained.rs"), BAD).unwrap();
     let retained = f.ordinary();
     assert_eq!(retained.status, 1);

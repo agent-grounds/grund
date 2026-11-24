@@ -67,7 +67,7 @@ class EngineBoundaryTests(unittest.TestCase):
         )
 
     def test_the_compat_module_and_main_entry_export_are_absent(self):
-        """§FS-distribution.3.1.1: the completed removal has no module and no
+        """§FS-distribution.3.1.2: the completed removal has no module and no
         crate-root spelling through which an embedder can still call it."""
         lib = (CORE / "lib.rs").read_text(encoding="utf-8")
         stale = []

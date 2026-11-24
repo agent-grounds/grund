@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.3.2 — test-only optional payload resolution.
+// §FS-distribution.3.2.3 — test-only optional payload resolution.
 const assert = require('node:assert/strict');
 const Module = require('node:module');
 const original = Module._load;

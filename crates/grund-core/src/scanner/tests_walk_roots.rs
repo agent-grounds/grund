@@ -6,7 +6,7 @@
 //! ordinary scope (§DF-undeclared-blind-spots). The gate also records a file root
 //! the extension filter or the hidden-file rule refuses, with its row, for `check`
 //! to name (§FS-scan.checks.unread-scan-root).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::model::{Refused, RootOrigin};
 use crate::testing::{

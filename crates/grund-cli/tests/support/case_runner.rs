@@ -9,7 +9,7 @@ use std::sync::OnceLock;
 #[path = "case_paths.rs"]
 mod case_paths;
 
-// Invocation ownership and shared output normalization (§FS-examples.5.6.1).
+// Invocation ownership and shared output normalization (§FS-examples.5.6).
 include!("case_copy.rs");
 
 #[cfg(test)]
@@ -216,7 +216,7 @@ pub fn run_case(manifest_dir: &Path, case: &Path, kind: CaseKind) -> CaseOutcome
 }
 
 /// Inspect this invocation's mutable tree after output/tree handling and before
-/// its owner is released (§FS-examples.5.6.1). Skipped and read-only cases have
+/// its owner is released (§FS-examples.5.6). Skipped and read-only cases have
 /// no copy to inspect. An inspector panic also releases the copy.
 pub fn run_case_inspecting(
     manifest_dir: &Path,
@@ -236,7 +236,7 @@ pub fn run_case_inspecting(
     }
     // A case whose fixture needs a symlink cannot run where the platform cannot
     // make one, so the case is skipped rather than compared against a different
-    // tree's output (§FS-workspace.6.1.4).
+    // tree's output (§FS-workspace.2.3).
     if !case_symlinks(case).is_empty() {
         // Links are created in the copy, and only the `{repo_copy}` branch of
         // preparation copies the fixture — so a manifest case written against
@@ -265,7 +265,7 @@ pub fn run_case_inspecting(
     outcome
 }
 
-/// All output and final-tree readers borrow the live owner (§FS-examples.5.6.1).
+/// All output and final-tree readers borrow the live owner (§FS-examples.5.6).
 fn run_prepared_case(
     manifest_dir: &Path,
     case: &Path,
@@ -278,7 +278,7 @@ fn run_prepared_case(
         .unwrap_or_else(|err| panic!("{name}: stdout was not UTF-8: {err}"));
     let actual_stderr = String::from_utf8(output.stderr)
         .unwrap_or_else(|err| panic!("{name}: stderr was not UTF-8: {err}"));
-    // One normalization feeds comparison and refresh (§FS-examples.5.6.2).
+    // One normalization feeds comparison and refresh (§FS-examples.5.6).
     let actual_stdout = execution.normalize(&actual_stdout);
     let actual_stderr = execution.normalize(&actual_stderr);
 
@@ -415,7 +415,7 @@ include!("case_command.rs");
 /// Materializes a fixture tree into an invocation's copy. On Unix one `cp` child
 /// writes every file, so no write descriptor on the copy is ever open in this
 /// process for a sibling invocation's spawn to inherit, and a fixture script the
-/// case executes is never busy because of the runner (§FS-examples.5.6.3).
+/// case executes is never busy because of the runner (§FS-examples.5.6).
 #[cfg(unix)]
 pub fn copy_dir(from: &Path, to: &Path) {
     fs::create_dir_all(to).unwrap_or_else(|err| panic!("create {}: {err}", to.display()));
@@ -435,7 +435,7 @@ pub fn copy_dir(from: &Path, to: &Path) {
     );
 }
 
-/// The same materialization where `ETXTBSY` cannot arise (§FS-examples.5.6.3 holds
+/// The same materialization where `ETXTBSY` cannot arise (§FS-examples.5.6 holds
 /// there by construction): an in-process copy.
 #[cfg(not(unix))]
 pub fn copy_dir(from: &Path, to: &Path) {
@@ -476,7 +476,7 @@ fn assert_spec_refs(case: &Path, name: &str) {
     }
     // `[citations.e2e] must = ["FS"]` in grund.toml, held here because `spec.refs`
     // is a manifest the scanner never reads: a case that proves nothing in the
-    // spec is not an e2e case (§FS-config.3.4.4.2).
+    // spec is not an e2e case (§FS-config.3.4.4).
     assert!(
         refs.iter().any(|reference| reference.starts_with("FS-")),
         "{name}: spec.refs in {} names no FS point; an e2e case cites the spec it proves",

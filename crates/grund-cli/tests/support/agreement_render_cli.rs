@@ -128,7 +128,7 @@ impl View<'_> {
                 } else {
                     row["title"] = e["title"].clone();
                     row["refs"] = e["refs"].clone();
-                    // §FS-list.3.2.2: omitted, not empty, without value roots.
+                    // §FS-list.3.2: omitted, not empty, without value roots.
                     if e["value_roots"].as_array().is_some_and(|r| !r.is_empty()) {
                         row["value_roots"] = e["value_roots"].clone();
                     }

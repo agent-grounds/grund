@@ -92,7 +92,7 @@ fn glob_rows_select_catalog_coordinates() {
     );
 }
 
-/// §FS-coordinate-globs.scope.filters: path, `--kind`, `--unused`, `--selector`, `--summary` and `--size` read the glob's selection.
+/// §FS-coordinate-globs.scope: path, `--kind`, `--unused`, `--selector`, `--summary` and `--size` read the glob's selection.
 #[test]
 fn glob_filters_intersect_and_never_widen() {
     run_cases(
@@ -128,7 +128,7 @@ fn total_counts_the_rows_list_prints() {
     );
 }
 
-/// §FS-coordinate-globs.errors.reasons, §FS-coordinate-globs.errors.marker and §FS-coordinate-globs.errors.flags.
+/// §FS-coordinate-globs.errors.shape and §FS-coordinate-globs.errors.flags.
 #[test]
 fn refused_globs_print_one_line_and_exit_2() {
     run_cases(
@@ -178,7 +178,7 @@ fn notes_and_the_path_hint_leave_stdout_alone() {
     );
 }
 
-/// §FS-coordinate-globs.matching.anchored, §FS-coordinate-globs.grammar.components and §FS-coordinate-globs.workspace.escapes; a check the separator decides waits for it (§FS-coordinate-globs.errors.shape).
+/// §FS-coordinate-globs.matching, §FS-coordinate-globs.grammar and §FS-coordinate-globs.workspace; a check the separator decides waits for it (§FS-coordinate-globs.errors.shape).
 #[test]
 fn code_points_escapes_and_the_hash_separator() {
     run_cases(
@@ -364,7 +364,7 @@ fn own_tree_total_counts_a_chapter_and_its_points() {
     assert_eq!(grund(&["list", "--glob", pattern]).lines().count(), count);
 }
 
-/// §FS-coordinate-globs.grammar.components: an ID atom is matched against the whole ID, so
+/// §FS-coordinate-globs.grammar: an ID atom is matched against the whole ID, so
 /// `FS-c*` lists the FS declarations whose ID starts `FS-c` and none of their sections.
 #[test]
 fn own_tree_id_glob_lists_the_declarations_with_its_prefix() {
@@ -392,7 +392,7 @@ fn own_tree_total_is_the_row_count() {
     );
 }
 
-/// §FS-coordinate-globs.matching.bounded: 24 two-way groups stand for 2^24 alternatives, and
+/// §FS-coordinate-globs.matching: 24 two-way groups stand for 2^24 alternatives, and
 /// the pattern is still answered in seconds, as an empty result.
 #[test]
 fn a_brace_product_is_matched_without_expanding_it() {

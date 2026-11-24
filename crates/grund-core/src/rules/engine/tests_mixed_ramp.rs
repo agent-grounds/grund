@@ -1,5 +1,5 @@
-//! §FS-rules.7.12: a mixed site is an ordinary site, and with the nested-alias
-//! window closed in 0.19.0 (§FS-rules.7.9) no window is left to relieve a count
+//! §FS-rules.5.1: a mixed site is an ordinary site, and with the nested-alias
+//! window closed in 0.19.0 (§FS-rules.2) no window is left to relieve a count
 //! that mixed, plain and pin-matched sites break together: each such count is the
 //! code's ordinary error, through a pinned target as through the bare kind.
 

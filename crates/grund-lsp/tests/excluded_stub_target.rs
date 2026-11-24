@@ -1,6 +1,6 @@
 //! Real-server regression: an excluded stub target is broken at the stub with
 //! error severity (§FS-declarations.stubs.target.3, §FS-lsp.1.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

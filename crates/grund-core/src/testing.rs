@@ -132,7 +132,7 @@ pub(crate) fn test_root(name: &str) -> TemporaryRoot {
         Ok(base) => base,
         Err(reason) => panic!("{reason}"),
     };
-    // §FS-repository-maintenance.4.1: the caller owns setup and use, including unwind.
+    // §FS-repository-maintenance.4: the caller owns setup and use, including unwind.
     TemporaryRoot::new(&base.join("grund-lib-tests"), name)
 }
 
@@ -475,7 +475,7 @@ pub(crate) fn drifted_include_repo(name: &str) -> crate::testing::TemporaryRoot 
     drifted_include_repo_at(test_root(name))
 }
 
-/// Populate a project while retaining its enclosing owner (§FS-repository-maintenance.4.1).
+/// Populate a project while retaining its enclosing owner (§FS-repository-maintenance.4).
 pub(crate) fn drifted_include_repo_at(root: TemporaryRoot) -> TemporaryRoot {
     write(
         &root.join("grund.toml"),

@@ -4,7 +4,7 @@
 //! completion and of the editor snapshot. U01 and U05 closed with #597, U04, U07
 //! and U08 with #651, and Placement, U03a to U03d and U06 with #650, so every tree
 //! here stays to agree (§FS-declarations.stubs.target.5,
-//! §FS-declarations.stubs.pairing.4, §FS-rules.7.10, §FS-rules.7.11).
+//! §FS-declarations.stubs.pairing, §FS-rules.1, §FS-rules.5.1).
 
 use super::agreement_tree::{Tree, Verdict, agree};
 use grund_core::{LspSnapshotOpts, lsp_snapshot};
@@ -157,7 +157,7 @@ pub fn the_selector_selects_the_targets_chapter() -> Verdict {
 }
 
 /// Closed row U05: a RULE target's title that `show --brief` reads is one `check`
-/// reads (§REQ-one-answer.stubs.verdict, §FS-rules.7.10), outside the include as
+/// reads (§REQ-one-answer.stubs.verdict, §FS-rules.1), outside the include as
 /// with the target scanned.
 pub fn a_rule_targets_title_is_read_once() -> Verdict {
     let config = CONFIG.replace("folder = \"docs\"", "folder = \"docs/fs\"").replace(
@@ -271,7 +271,7 @@ fn rule_findings(name: &str, include: &str, rule: &str, sited: bool) -> Vec<Stri
 
 /// Closed row U04, its prohibition: a citation the outside target makes breaks
 /// `must not cite` at its line in the target, as with the target scanned
-/// (§FS-declarations.stubs.target.5, §FS-rules.7.11).
+/// (§FS-declarations.stubs.target.5, §FS-rules.5.1).
 pub fn a_prohibition_is_judged_on_the_target() -> Verdict {
     let rule = "Each FS must not cite any GOAL.";
     agree(

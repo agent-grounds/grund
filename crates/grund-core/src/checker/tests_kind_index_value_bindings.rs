@@ -1,8 +1,8 @@
 //! Test module: what of a folder-owned ID's citations in its own index is the
-//! entry (§FS-check.4.1.2.1). Only a citation of the declaration itself is
+//! entry (§FS-check.4.1). Only a citation of the declaration itself is
 //! navigation; a section citation or a value binding's citation on the same page
 //! is use, for `check` and `list --unused` alike (agent-grounds/grund#645).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 
@@ -67,7 +67,7 @@ fn unused_ids(root: &Path) -> Vec<String> {
         .collect()
 }
 
-/// §FS-check.4.1.2.1 / §FS-values.3.2: a value binding in the kind's own index
+/// §FS-check.4.1 / §FS-values.3.2: a value binding in the kind's own index
 /// is use, beside the entry that is not.
 #[test]
 fn a_value_binding_in_its_own_index_counts_as_use() {
@@ -83,7 +83,7 @@ fn a_value_binding_in_its_own_index_counts_as_use() {
     );
 }
 
-/// §FS-check.4.1.3: the control — the same binding on a page outside the folder.
+/// §FS-check.4.1: the control — the same binding on a page outside the folder.
 #[test]
 fn the_same_value_binding_outside_the_index_counts_as_use() {
     let root = comp_repo(
@@ -98,7 +98,7 @@ fn the_same_value_binding_outside_the_index_counts_as_use() {
     );
 }
 
-/// §FS-check.4.1.2: the exclusion survives — an index holding only the entry
+/// §FS-check.4.1: the exclusion survives — an index holding only the entry
 /// leaves the declaration uncited.
 #[test]
 fn an_index_holding_only_the_entry_still_leaves_the_declaration_unused() {
@@ -114,7 +114,7 @@ fn an_index_holding_only_the_entry_still_leaves_the_declaration_unused() {
     );
 }
 
-/// §FS-check.4.1.2.1: a plain section citation of a folder-owned ID in its
+/// §FS-check.4.1: a plain section citation of a folder-owned ID in its
 /// index, not a binding, names a section and so is not the entry.
 #[test]
 fn a_section_citation_in_its_own_index_counts_as_use() {
@@ -130,7 +130,7 @@ fn a_section_citation_in_its_own_index_counts_as_use() {
     );
 }
 
-/// §FS-check.4.1.2.1 / §FS-values.3.1.2: a binding aimed at a whole-declaration
+/// §FS-check.4.1 / §FS-values.3.1.2: a binding aimed at a whole-declaration
 /// value root names no section, and is still not the entry.
 #[test]
 fn a_root_aimed_binding_without_a_section_in_its_own_index_counts_as_use() {

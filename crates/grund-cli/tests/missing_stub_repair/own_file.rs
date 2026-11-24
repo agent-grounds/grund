@@ -51,7 +51,7 @@ fn missing_stub_same_file_home_explains_why_linking_cannot_pair() {
         let query = query_with_text(&repo, &args, expected_sites.clone());
         assert_eq!(message(&query), format!("{AMBIGUOUS_PREFIX}{suffix}"));
     }
-    // §FS-refs.4.1.1: `refs` sets the stub aside and warns with the same clause.
+    // §FS-refs.4.1: `refs` sets the stub aside and warns with the same clause.
     let refs = repo.run(&["refs", "AR-cache"], 0);
     assert_eq!(utf8(&refs.stdout), "src/main.rs:1: \u{a7}AR-cache\n");
     assert_eq!(
@@ -124,7 +124,7 @@ fn missing_stub_mixed_files_scope_advice_to_the_separate_file_stub() {
             "ambiguous ID: AR-cache (declared at {STUB}:1, {SAME_FILE}:1, {SAME_FILE}:3){suffix}"
         )
     );
-    // §FS-refs.4.1.1: `refs` sets both stubs aside, one warning each, each clause as
+    // §FS-refs.4.1: `refs` sets both stubs aside, one warning each, each clause as
     // the repair writes it for that stub alone beside the one real home.
     let refs = repo.run(&["refs", "AR-cache"], 0);
     assert_eq!(utf8(&refs.stdout), "src/main.rs:1: \u{a7}AR-cache\n");

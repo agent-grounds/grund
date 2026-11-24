@@ -1,5 +1,5 @@
 //! Test module: the source model a binding's effective config publishes
-//! (§FS-config-v2.schema.sources.effective.bindings)
+//! (§FS-config-v2.schema.sources.effective)
 
 use serde_json::{Value, json};
 
@@ -90,7 +90,7 @@ fn a_v1_snapshot_publishes_no_source_model() {
 }
 
 /// `fenced` is published as written, in its order, beside the other source keys
-/// (§FS-config-v2.schema.sources.effective.bindings, §FS-config-v2.schema.sources.fenced).
+/// (§FS-config-v2.schema.sources.effective, §FS-config-v2.schema.sources.fenced).
 #[test]
 fn a_v2_snapshot_publishes_fenced_in_written_order() {
     let root = test_root("a_v2_snapshot_publishes_fenced_in_written_order");

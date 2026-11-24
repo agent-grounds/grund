@@ -1,4 +1,4 @@
-//! Effective input/anchor evidence from shared discovery (§FS-check.6.1.3).
+//! Effective input/anchor evidence from shared discovery (§FS-check.6.1).
 use crate::support::*;
 #[cfg(unix)]
 use grund::WatchObservation;
@@ -152,7 +152,7 @@ fn watch_inventory_ancestor_claims_and_ignore() {
         "child/leaf/docs/functional-spec/FS-target.md",
         "# FS-target: Target\n",
     );
-    // §FS-check.6.1.3: an outer claim prefixes the leaf alias with child/.
+    // §FS-check.6.1: an outer claim prefixes the leaf alias with child/.
     f.write("child/src/claim.rs", "// \u{a7}child/leaf/FS-target\n");
     f.write("child/src/main.rs", BAD);
     let mut opts = f.opts();
@@ -311,7 +311,7 @@ fn watch_inventory_shared_resolver_and_narrowed_scope() {
 
 /// A config that declares no import records the same effective inputs with a sibling
 /// whose `project_name` matches a cited alias present or gone, and nothing under it
-/// (§FS-imports.declaration.none, §FS-check.6.1.3). Holds today.
+/// (§FS-imports.graph.reverse, §FS-check.6.1). Holds today.
 #[test]
 fn watch_inventory_no_imports_never_reads_a_sibling() {
     let _serial = crate::support::serial();

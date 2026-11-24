@@ -1,5 +1,5 @@
 //! Test module: a front-matter coordinate in the binding snapshot's `Section`
-//! record (§FS-fields.front-matter.surfaces, §FS-distribution.3.2.2.3)
+//! record (§FS-fields.front-matter.surfaces, §FS-distribution.3.2.2)
 
 use serde_json::{Value, json};
 

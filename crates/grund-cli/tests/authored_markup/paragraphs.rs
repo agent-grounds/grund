@@ -5,7 +5,7 @@
 //! (§FS-citations.zones.authored-markup). A line that only looks like a definition,
 //! because it interrupts a paragraph or holds more than a title after its
 //! destination, keeps the reading it had before grund#839
-//! (§FS-citations.wrap.enclosing.scope): `fmt` wraps and re-derives there, and
+//! (§FS-citations.wrap.enclosing.shape): `fmt` wraps and re-derives there, and
 //! `check` says "not a link".
 
 use super::*;
@@ -121,7 +121,7 @@ fn a_stale_wrap_after_a_label_that_is_no_definition_is_rederived() {
         );
         let check = grund(&["fmt", "--check"], &dir);
         assert_eq!(check.status.code(), Some(1), "{name}: {}", stdout(&check));
-        // §FS-fmt.3.6.2: the row names the whole wrap before and after.
+        // §FS-fmt.3.6: the row names the whole wrap before and after.
         assert_eq!(
             stdout(&check),
             format!(

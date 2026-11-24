@@ -1,4 +1,4 @@
-//! §FS-config-migrate.4.3: skipping migration capture changes no CLI verdict or bytes.
+//! §AR-config.8.1: skipping migration capture changes no CLI verdict or bytes.
 //! These existing golden cases protect preservation; the failing capture
 //! regression lives beside the v1 reader, and check_large_10k's existing
 //! instruction benchmark remains the performance acceptance test.

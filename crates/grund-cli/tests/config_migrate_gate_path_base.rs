@@ -1,7 +1,7 @@
 //! Review finding R1-01 of #1464: the paths `config migrate`'s report gate prints
 //! follow `--path-base` like the heading above them (§FS-config-migrate.2.2), and
 //! the config's own line keeps the candidate's mark there
-//! (§FS-config-migrate.5.2.1), naming the finding as `grund check` names it from
+//! (§FS-config-migrate.5.2), naming the finding as `grund check` names it from
 //! the same place.
 
 #[path = "support/fixture_cleanup.rs"]
@@ -97,7 +97,7 @@ fn compared(dir: &Path, args: &[&str]) -> Vec<String> {
         .collect()
 }
 
-/// §FS-config-migrate.2.2, §FS-config-migrate.5.2.1: from `docs` under
+/// §FS-config-migrate.2.2, §FS-config-migrate.5.2: from `docs` under
 /// `--path-base invocation`, the finding and the config are spelled from `docs`,
 /// as check spells them there, and the config line keeps the candidate's mark.
 #[test]

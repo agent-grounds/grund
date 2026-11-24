@@ -1,6 +1,6 @@
 //! A binding's scan snapshot says which format a value source member was read
 //! in: `kind` stays `json` for both, and `format` names `json` or `yaml`
-//! (§FS-distribution.3.2.2.3, §FS-values.2.2).
+//! (§FS-distribution.3.2.2, §FS-values.2.2).
 
 use std::fs;
 use std::path::{Path, PathBuf};

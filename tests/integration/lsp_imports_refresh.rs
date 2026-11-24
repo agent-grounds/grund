@@ -3,7 +3,7 @@
 //! buffer under any spelling, a file created and deleted, the target disappearing, a
 //! config that will not load, and folders added and removed. A document under the
 //! import is answered read-only by the import's own project, under one consumer or
-//! two (§FS-lsp.2.2.3), and is offered no edit.
+//! two (§FS-lsp.2.2.2), and is offered no edit.
 
 #[path = "binaries.rs"]
 mod binaries;
@@ -120,7 +120,7 @@ fn without_client_watchers_the_server_watches_the_dependency_itself() {
 }
 
 /// A dependency that keeps changing holds no request behind the server's own watcher,
-/// and the rebuild after it reads the latest bytes (§FS-imports.editor, §FS-check.6.1.2).
+/// and the rebuild after it reads the latest bytes (§FS-imports.editor, §FS-check.6.1).
 #[test]
 fn a_dependency_that_never_settles_holds_no_request() {
     use std::sync::Arc;
@@ -309,7 +309,7 @@ fn a_malformed_dependency_config_keeps_the_last_good_scan() {
     session.shutdown();
 }
 
-/// §FS-lsp.2.2.3: the import's own project answers, whichever consumers hold it and in
+/// §FS-lsp.2.2.2: the import's own project answers, whichever consumers hold it and in
 /// whichever order; it publishes nothing and offers no edit.
 #[test]
 fn an_import_owned_document_answers_read_only_under_one_and_two_consumers() {

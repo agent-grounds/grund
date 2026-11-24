@@ -1,4 +1,4 @@
-// §FS-declarations.line.configured-literals: run the reported list/show fixture
+// §FS-declarations.line: run the reported list/show fixture
 // through the ordinary e2e harness; the full corpus discovers these same cases.
 #[path = "support/case_runner.rs"]
 #[allow(dead_code)]

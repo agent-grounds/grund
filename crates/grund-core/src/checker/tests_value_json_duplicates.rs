@@ -42,7 +42,7 @@ fn every_json_duplicate_shape_reports_all_sites_without_comparing_a_winner() {
         ),
     ];
     for (name, shared, files, expected_sites) in cases {
-        // §FS-repository-maintenance.4.1: canonical spelling retains the owner.
+        // §FS-repository-maintenance.4: canonical spelling retains the owner.
         let root = test_root(&format!("json_duplicate_precedence_{name}")).physical();
         let second_home = if shared {
             "[[kinds]]\nkind = \"RATE\"\nfolder = \"values\"\nindex = false\nvalues = true\n"

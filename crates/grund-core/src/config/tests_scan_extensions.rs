@@ -4,7 +4,7 @@
 //! (§FS-init.2.4.3, §FS-config.4). And what the list says of a file with no extension
 //! (§FS-scan.scope.extensions.empty): the one test's answers, and that every writer of the
 //! list leaves the record's reading following it.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::{Path, PathBuf};
 

@@ -3,7 +3,7 @@
 //! wrote is left with its link (§FS-citations.wrap.enclosing), and an unwrapped
 //! citation is wrapped fresh. The reading has one owner in the grammar; these
 //! cases pin it through the pass that writes, line by line.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::wrap_markdown_links;
 use crate::config::{Config, load_config};
@@ -141,7 +141,7 @@ fn a_citation_in_an_image_description_is_wrapped() {
     );
 }
 
-/// §FS-citations.wrap.enclosing.wrap-wins: on a line an older `fmt` nested, the
+/// §FS-citations.wrap.recognized: on a line an older `fmt` nested, the
 /// inner wrap is still a wrap and is re-derived; the outer brackets are text, so
 /// nothing more is nested and nothing is unwrapped.
 #[test]
@@ -164,7 +164,7 @@ fn an_already_nested_line_rederives_only_its_inner_wrap() {
     );
 }
 
-/// §FS-citations.wrap.enclosing.scope: every form a link is written in encloses, so
+/// §FS-citations.wrap.enclosing.shape: every form a link is written in encloses, so
 /// the pass leaves the text of a reference link, a collapsed reference whether or
 /// not a definition matches it, a definition label, an autolink and a raw HTML `<a>`
 /// as written (§FS-citations.zones.authored-markup, §FS-citations.zones.link-destination),

@@ -8,8 +8,8 @@
 //! root are skipped and counted, never silently, and a floor on the number of
 //! compared cases keeps the sweep from shrinking unnoticed.
 //!
-//! The two run-level `[workspace]` warnings of §FS-lsp.1.1.3 are held the same
-//! way, against the same case's stderr golden: §FS-check.4.10.11 and
+//! The two run-level `[workspace]` warnings of §FS-lsp.1.1 are held the same
+//! way, against the same case's stderr golden: §FS-check.4.10 and
 //! §FS-workspace.6.1.7 travel in the run's warning channel and are rendered by
 //! each frontend, so neither surface may carry one the other does not. They are
 //! compared as their own set because the two shapes differ by design — the CLI
@@ -17,7 +17,7 @@
 //! on the `grund.toml` it anchors at. §FS-check.3.29's unlisted block is not among
 //! them and is not held that way: it is a located error on both surfaces now
 //! (§FS-check.3.29), so the sweep compares it like any other `Finding` — same
-//! path, line, `error` severity, code and message (§FS-lsp.4.1). Every other
+//! path, line, `error` severity, code and message (§FS-lsp.4). Every other
 //! CLI-level `warning:` or `error:` line (§FS-errors.2.2) is stepped over: it is
 //! settled before a report exists and neither surface carries it as a located
 //! diagnostic.
@@ -50,7 +50,7 @@ use support::{file_uri, hover_result, send_message, start_server, test_root, wai
 const MIN_COMPARED_CASES: usize = 80;
 
 /// Fewer cases carrying one of the two run-level `[workspace]` warnings than
-/// this is a sweep that has stopped holding §FS-lsp.1.1.3: the corpus has several,
+/// this is a sweep that has stopped holding §FS-lsp.1.1: the corpus has several,
 /// and a comparison that met none of them would pass on an LSP that publishes
 /// nothing.
 const MIN_RUN_WARNING_CASES: usize = 4;
@@ -63,7 +63,7 @@ const MIN_RUN_WARNING_CASES: usize = 4;
 /// here to be.
 const CLI_LEVEL_PREFIXES: [&str; 2] = ["error: ", "warning: "];
 
-/// The two run-level `[workspace]` warnings §FS-lsp.1.1.3 names, each by a phrase
+/// The two run-level `[workspace]` warnings §FS-lsp.1.1 names, each by a phrase
 /// of its own fixed text (§FS-errors.3): §FS-check.4.10's unread opted-out block
 /// and §FS-workspace.6.1.7's undecidable ancestor claim.
 ///
@@ -100,7 +100,7 @@ struct Finding {
 }
 
 /// `grund check . --format json` from the fixture root: every located finding
-/// on either stream (§FS-output-shapes.7.1), or `None` when the run is refused.
+/// on either stream (§FS-output-shapes.7), or `None` when the run is refused.
 fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSet<String>)> {
     let output = Command::new(grund)
         .args(["check", ".", "--format", "json"])
@@ -117,7 +117,7 @@ fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSe
             let Ok(value) = serde_json::from_str::<Value>(line) else {
                 // §FS-errors.2.2: a CLI-level message is settled before a report
                 // exists, so neither surface carries it as a *located* finding.
-                // §FS-lsp.1.1.3's two arrive here too and are held on their own.
+                // §FS-lsp.1.1's two arrive here too and are held on their own.
                 if let Some(message) = line.strip_prefix("warning: ")
                     && is_run_level_warning(message)
                 {
@@ -244,7 +244,7 @@ fn lsp_findings(root: &Path) -> (BTreeSet<Finding>, BTreeSet<String>) {
                 .as_str()
                 .unwrap_or_default()
                 .to_string();
-            // §FS-lsp.1.1.3: a run-level `[workspace]` warning is not a located
+            // §FS-lsp.1.1: a run-level `[workspace]` warning is not a located
             // finding on either surface — it is held against the CLI's stderr.
             if is_run_level_warning(&message) {
                 run_warnings.insert(message);
@@ -306,7 +306,7 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
                 case.name
             ));
         }
-        // §FS-lsp.1.1.3, §FS-lsp.4: the two run-level `[workspace]` warnings, held against
+        // §FS-lsp.1.1, §FS-lsp.4: the two run-level `[workspace]` warnings, held against
         // the same case's stderr — neither surface may carry one the other does not, and the
         // message is the CLI's byte for byte. The unlisted block is an ordinary `Finding` above.
         if !cli_run_warnings.is_empty() {
@@ -346,7 +346,7 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
         mismatches.join("\n")
     );
     // §FS-lsp.4: a sweep that compared no run-level warning at all would hold
-    // §FS-lsp.1.1.3's promise vacuously, which is the way this guard fails quietly.
+    // §FS-lsp.1.1's promise vacuously, which is the way this guard fails quietly.
     assert!(
         run_warning_cases >= MIN_RUN_WARNING_CASES,
         "only {run_warning_cases} case(s) carried a run-level [workspace] warning; \
@@ -361,9 +361,9 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
 
 /// The declaration-side title hover's clause and the bytes
 /// `grund refs <ID> --total` prints, over one tree, at the three count shapes
-/// §FS-lsp.1.2.4 words differently (§FS-refs.3.4).
+/// §FS-lsp.1.2.3 words differently (§FS-refs.3.4).
 ///
-/// §FS-lsp.1.2.5 says the hover clause carries "the CLI's numbers rendered in
+/// §FS-lsp.1.2.3 says the hover clause carries "the CLI's numbers rendered in
 /// an editor, not a second tally kept beside them", and §FS-lsp.4 promises the
 /// same engine behind a different transport. Until `--total` existed there was
 /// no terminal spelling to hold that against, so the promise was untestable at
@@ -446,7 +446,7 @@ fn title_hover_clause_is_what_refs_total_prints() {
         assert_eq!(
             String::from_utf8_lossy(&total.stdout),
             format!("{clause}\n"),
-            "§FS-lsp.1.2.5: the hover clause and `grund refs {id} --total` are one sentence"
+            "§FS-lsp.1.2.3: the hover clause and `grund refs {id} --total` are one sentence"
         );
         compared += 1;
     }

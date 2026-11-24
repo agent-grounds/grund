@@ -27,7 +27,7 @@ mod stub_extension_diagnostic;
 #[path = "support/case_isolation.rs"]
 mod case_isolation;
 
-// A copied fixture script is never busy because of a sibling spawn (§FS-examples.5.6.3).
+// A copied fixture script is never busy because of a sibling spawn (§FS-examples.5.6).
 // Declared here rather than in the shared runner so it runs in this one binary.
 #[cfg(unix)]
 #[path = "support/case_fixture_exec_tests.rs"]
@@ -44,7 +44,7 @@ mod mixed_path_contract;
 #[path = "support/fmt_cross_refs_sections.rs"]
 mod fmt_cross_refs_sections;
 
-// §FS-check.4.1.2 / §FS-refs.3.1.1 / §FS-refs.3.3.1: issue #909.
+// §FS-check.4.1 / §FS-refs.3.1 / §FS-refs.3.3: issue #909.
 #[path = "support/index_use_explanations.rs"]
 mod index_use_explanations;
 
@@ -52,11 +52,11 @@ mod index_use_explanations;
 #[path = "support/isolated_member_example.rs"]
 mod isolated_member_example;
 
-// §FS-config.4.1.1: issue #1134's workspace config findings, its cases run alone.
+// §FS-config.4.1: issue #1134's workspace config findings, its cases run alone.
 #[path = "support/workspace_config_findings.rs"]
 mod workspace_config_findings;
 
-// §FS-check.4.11.3: issue #1138's grouping block config findings, its cases run alone.
+// §FS-check.4.11: issue #1138's grouping block config findings, its cases run alone.
 #[path = "support/grouping_block_config_findings.rs"]
 mod grouping_block_config_findings;
 
@@ -80,7 +80,7 @@ mod fetch_admission_1205;
 #[path = "support/doc_comment_fenced_heading.rs"]
 mod doc_comment_fenced_heading;
 
-// §FS-config.3.4.5.1: red contracts are explicitly runnable before implementation.
+// §FS-config.3.4.5: red contracts are explicitly runnable before implementation.
 #[path = "support/kind_heads.rs"]
 mod kind_heads;
 
@@ -423,7 +423,7 @@ fn chapter_subject_name_is_its_whole_path() {
 }
 
 /// Completion scripts participate in the same two independent runs as every
-/// immutable case, so their bytes are stable across invocations (§FS-completions.3).
+/// immutable case, so their bytes are stable across invocations (§FS-completions.1).
 #[test]
 fn e2e_output_is_deterministic() {
     let started = Instant::now();
@@ -448,7 +448,7 @@ fn e2e_output_is_deterministic() {
 }
 
 /// Every maintained example runs through the ordinary case runner, goldens and
-/// final tree included. §FS-examples.5.2 travels here: `examples/external-tickets`
+/// final tree included. §FS-examples.2 travels here: `examples/external-tickets`
 /// fetches through its own repo-local stub integration, so the pass needs no
 /// network, and its `expected.repo` is compared byte-for-byte — which is what
 /// holds the snapshot declaration the fetcher printed in the final repository.
@@ -496,9 +496,9 @@ fn goldens_are_in_canonical_form() {
     );
 }
 
-/// §FS-examples.2.1: the first-class-values example is part of the maintained
+/// §FS-examples.2: the first-class-values example is part of the maintained
 /// suite rather than a stray fixture — `discover_examples` finds it, so the
-/// passes above run it — and it still shows every ingredient §FS-examples.2.1 asks a
+/// passes above run it — and it still shows every ingredient §FS-examples.2 asks a
 /// reader to see.
 ///
 /// Asserted beside the runs rather than inside them because deleting the
@@ -548,7 +548,7 @@ fn the_values_example_shows_what_it_is_the_example_of() {
 
     // And the caught mismatch beside the version 1 caution its config earns
     // (§FS-check.checks.config-version-1). The prose binds the root, so the line
-    // names the root and the literal whole (§FS-values.5.2.2).
+    // names the root and the literal whole (§FS-values.5.2).
     assert_eq!(read("expected.exit").trim(), "1");
     assert_eq!(read("expected.stderr"), VERSION_1_CAUTION);
     assert_eq!(

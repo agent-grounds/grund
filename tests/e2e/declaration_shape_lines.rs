@@ -5,8 +5,8 @@
 //! block (A) and in the view (B); a scalar's title as its value (C); a value chapter's named
 //! roots and numbered parts (D); and a value kind's file form with the citation its first element
 //! answers to (E), for a JSON, a YAML and a Markdown file, a folder home and a fetched kind
-//! (§FS-schema.4.1.4), with front matter shown as the block at the top of the file
-//! (§FS-schema.4.1.3). The table's legend says where a field's heading sits (§FS-schema.8.4),
+//! (§FS-schema.4.1), with front matter shown as the block at the top of the file
+//! (§FS-schema.4.1). The table's legend says where a field's heading sits (§FS-schema.8),
 //! Mermaid and DOT label the same lines (§FS-schema.9, §FS-schema.10), and `config migrate`
 //! prints them in its refusal (§FS-config-migrate.5.3). A document written from each rendered
 //! line as shown checks clean. A shape-rendering config renders the v49/v50 pair, sharing the
@@ -20,7 +20,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// The legend line §FS-schema.8.4 adds where some kind prints a field line.
+/// The legend line §FS-schema.8 adds where some kind prints a field line.
 const DEPTH_LINE: &str = "## = under a declaration written # <ID>: … · a field always sits one \
                           level below its declaration's heading";
 
@@ -489,7 +489,7 @@ fn dot_labels_the_shape_lines() {
     assert_eq!(dot.stdout, expected, "{}", dot.report());
 }
 
-/// The table node §FS-schema.4.1.5 shows for the issue's RFC kind, with the case's `drawbacks`.
+/// The table node §FS-schema.4.1 shows for the issue's RFC kind, with the case's `drawbacks`.
 #[test]
 fn schema_table_shows_the_issues_rfc_kind() {
     let tree = Tree::new("table-rfc", RFC_CONFIG);
@@ -687,7 +687,7 @@ enum Piece {
     Code(String),
 }
 
-/// Splits `text` into its plain runs and its code spans (§FS-schema.4.1.2).
+/// Splits `text` into its plain runs and its code spans (§FS-schema.4.1).
 fn pieces(text: &str) -> Vec<Piece> {
     let mut out = Vec::new();
     let mut rest = text;
@@ -714,7 +714,7 @@ fn pieces(text: &str) -> Vec<Piece> {
     out
 }
 
-/// Fills a code span's placeholders as an author would (§FS-schema.4.1.2), refusing one it
+/// Fills a code span's placeholders as an author would (§FS-schema.4.1), refusing one it
 /// does not know.
 fn fill(code: &str, id: &str) -> String {
     let mut text = code.replace(", …", "");

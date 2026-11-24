@@ -1,4 +1,4 @@
-//! Logical copy paths shared by the runner and agreement (§FS-examples.5.6.2).
+//! Logical copy paths shared by the runner and agreement (§FS-examples.5.6).
 use std::path::PathBuf;
 
 pub fn logical_copy(name: &str) -> PathBuf {

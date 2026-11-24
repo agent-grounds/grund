@@ -1,6 +1,6 @@
 //! Behavioral contract compiled beside each temporary-root helper, including
-//! canonicalizing helpers (§FS-repository-maintenance.4.1 and
-//! §FS-repository-maintenance.4.2). No owner is supplied by this test harness:
+//! canonicalizing helpers
+//! (§FS-repository-maintenance.4). No owner is supplied by this test harness:
 //! the helper under test must provide it.
 
 use std::fs;

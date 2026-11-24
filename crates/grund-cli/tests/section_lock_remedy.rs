@@ -1,4 +1,4 @@
-//! §FS-section-lock.checks.remedy: the two lock errors `check` clears with
+//! §FS-section-lock.checks.unrecorded-section-citation: the two lock errors `check` clears with
 //! `fmt --write` name the run that writes a lock, scope and all, because the
 //! same command given a file leaves every lock alone (§FS-section-lock.write.rules),
 //! and a member's own run leaves its entries for a sibling alone
@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// §FS-section-lock.checks.remedy: the remedy, worded once.
+/// §FS-section-lock.checks.unrecorded-section-citation: the remedy, worded once.
 const REMEDY: &str = "run grund fmt --write with no path at the workspace root, \
                       or at the project root outside a workspace";
 const LOCK: &str = ".grund/sections/AR-001-lock.lock";
@@ -189,7 +189,7 @@ fn a_member_lock_names_the_same_run_and_the_workspace_root_writes_it() {
 }
 
 /// §FS-section-lock.file.members: a member's entry for a citation into a sibling is
-/// written by the workspace root's run alone, so §FS-section-lock.checks.remedy names
+/// written by the workspace root's run alone, so §FS-section-lock.checks.unrecorded-section-citation names
 /// that root: the member's own run, from inside it or given its root, writes its own
 /// lock and leaves that entry missing.
 #[test]
