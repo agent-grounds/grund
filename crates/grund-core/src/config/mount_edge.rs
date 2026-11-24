@@ -41,7 +41,7 @@ pub(crate) struct MountEdge {
 /// missing, by the alias path the run spells it with and the path as its config
 /// wrote it. The loader collects one per edge, a transitive one included, onto
 /// every project's run, which is what the report announces and what resolution
-/// asks of a citation into a missing one (§FS-workspace.4.3).
+/// asks of a citation into a missing one (§FS-workspace.4).
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ImportRead {
     pub(crate) alias: String,

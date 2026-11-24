@@ -1,4 +1,4 @@
-//! Shared typed envelope independent of a host runtime (§FS-distribution.3.2.2.1).
+//! Shared typed envelope independent of a host runtime (§FS-distribution.3.2.2).
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 

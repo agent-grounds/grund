@@ -1,7 +1,7 @@
 //! §FS-imports.findings: what a consumer citation earns from a mount whose own findings
 //! are suppressed. A duplicate the mount declares is reported nowhere inside it, so the
 //! citation it breaks fails at the consumer's own site rather than resolving to one of
-//! the two (§FS-remote-projects.differences.consumer-site).
+//! the two (§FS-remote-projects.differences).
 
 use crate::model::{CheckReport, Citation, Code, Diagnostic};
 use crate::resolver::WorkspaceCheckTarget;

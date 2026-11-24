@@ -40,7 +40,7 @@ pub(crate) fn exact_embedded_value_marker(line: &str) -> Option<usize> {
 }
 
 /// A marked root's semantic title: `text` without its tag and the space before
-/// it (§FS-values.2.4.2). Text that does not end in the exact tag is returned
+/// it (§FS-values.6.1). Text that does not end in the exact tag is returned
 /// as it is.
 pub(crate) fn without_value_tag(text: &str) -> &str {
     exact_embedded_value_marker(text).map_or(text, |start| text[..start].trim_end())

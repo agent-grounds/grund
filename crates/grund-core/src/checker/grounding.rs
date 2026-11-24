@@ -34,7 +34,7 @@ struct GroundingUnit {
     subject: GroundingSubject,
 }
 
-/// How a unit is named in its finding (§FS-check.3.6.3). The home, when the unit
+/// How a unit is named in its finding (§FS-check.3.6). The home, when the unit
 /// sits in a non-citable one, is added by the caller — one place decides it, so
 /// every shape reads the same way.
 enum GroundingSubject {
@@ -48,7 +48,7 @@ enum GroundingSubject {
 /// non-citable home, declare one inline (a spec home is grounded in the spec it
 /// *is*).
 ///
-/// §FS-workspace.4.3: a citation into an absent optional namespace grounds its unit.
+/// §FS-workspace.4: a citation into an absent optional namespace grounds its unit.
 /// It cannot be resolved here, but it resolves in the checkout that has the member
 /// — and a unit that lost its grounding to a missing directory would be a finding
 /// at the site the run is required to say nothing about.
@@ -71,7 +71,7 @@ pub(super) fn check_grounding(
     // (§GOAL-fast-feedback).
     let mut cited: BTreeMap<&Path, Vec<usize>> = BTreeMap::new();
     for cite in &findings.citations {
-        // §FS-workspace.4.3: unverified grounds the unit — see this function's docs.
+        // §FS-workspace.4: unverified grounds the unit — see this function's docs.
         let unverified = cite
             .namespace
             .as_deref()
@@ -123,7 +123,7 @@ pub(super) fn check_grounding(
             .map(|home| home.place());
         let none: &[usize] = &[];
         let cited_lines = cited.get(read).map_or(none, Vec::as_slice);
-        // §FS-check.3.6.2.3: no inline-declaration escape in a non-citable home — a declaration
+        // §FS-check.3.6.2: no inline-declaration escape in a non-citable home — a declaration
         // there is already misplaced (§FS-declarations.checks.misplaced-declaration), so the only
         // way to ground a unit is to cite one.
         let declared_lines = match place {
@@ -144,7 +144,7 @@ pub(super) fn check_grounding(
                     continue;
                 }
                 reported.push((unit.start, unit.end));
-                // §FS-check.3.6.2.2: a Lisp doc-comment's `must` finding is an error
+                // §FS-check.3.6.2: a Lisp doc-comment's `must` finding is an error
                 // like any other since grund 0.19.0 (§DF-lisp-doc-grounding-lands-in-0-19).
                 let target = match channel {
                     Strength::Must => &mut report.errors,
@@ -266,7 +266,7 @@ fn grounding_units(structure: Option<&FileStructure>, level: usize) -> Vec<Groun
         });
     }
     for block in &structure.doc_comments {
-        // §FS-check.3.6.2.2: level 2 reaches the unindented blocks — the parse-free
+        // §FS-check.3.6.2: level 2 reaches the unindented blocks — the parse-free
         // stand-in for a top-level item — and any higher level reaches them all.
         if block.indented && level == 2 {
             continue;
@@ -280,7 +280,7 @@ fn grounding_units(structure: Option<&FileStructure>, level: usize) -> Vec<Groun
     units
 }
 
-/// The line spans one file offers as units at `level` (§FS-check.3.11.3) — the
+/// The line spans one file offers as units at `level` (§FS-check.3.11) — the
 /// same cut §FS-check.3.6.2 makes for grounding, because *whether* a place's
 /// files must cite and *what* they must cite are asked of the same thing.
 fn grounding_unit_spans(structure: Option<&FileStructure>, level: usize) -> Vec<(usize, usize)> {
@@ -335,7 +335,7 @@ pub(super) fn file_obligation_units<'a>(
         .collect()
 }
 
-/// How an ungrounded unit is named (§FS-check.3.6.3): the unit, then the
+/// How an ungrounded unit is named (§FS-check.3.6): the unit, then the
 /// non-citable home it sits in when it sits in one. A section unit only ever
 /// arises inside such a home, since that is the only place Markdown is governed.
 fn ungrounded_subject(unit: &GroundingUnit, place: Option<&str>) -> String {

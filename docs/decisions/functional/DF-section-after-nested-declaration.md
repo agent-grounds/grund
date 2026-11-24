@@ -21,7 +21,7 @@ but `grund AR-ci.1` said `section not found` and a citation of it failed with
 ## 2. Decision
 
 The heading is a coordinate of the innermost declaration whose body holds it
-([§FS-declarations.section.map.nested](../../functional-spec/FS-declarations.md#sectionmapnested-after-a-nested-declaration-the-enclosing-body-owns-the-heading)). This holds for numbered, enabled named and relative
+([§FS-declarations.section.map](../../functional-spec/FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)). This holds for numbered, enabled named and relative
 headings alike, at any depth of nesting. That is what [§FS-declarations.section.map](../../functional-spec/FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span) already
 said, so the fix brings the section map into line with it. Making `check` refuse the
 heading, or stop suggesting `AR-ci.1`, would refuse input the specification accepts.

@@ -79,7 +79,7 @@ impl LineOwners {
     /// §AR-scanner.2.4.4, §FS-cover.6.2). A line of the file's front matter
     /// belongs to the file's first declaration, the one whose body starts
     /// earliest, under no section, though no body range covers it
-    /// (§FS-check.1.1.5.2.1). Where the block is that declaration's front-matter
+    /// (§FS-check.1.1.5.2). Where the block is that declaration's front-matter
     /// field, the line is in the key whose slice holds it, and in `front-matter`
     /// outside every key (§FS-fields.front-matter.surfaces).
     pub(super) fn owner_at(&self, line: usize) -> Option<(&Id, Option<String>)> {

@@ -50,7 +50,7 @@ impl ScanDemand {
 }
 
 /// Why `fetch` refuses a home, which picks the refusal's text and `check`'s tail
-/// (§FS-check.3.1.3.1).
+/// (§FS-check.3.1).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum RefusedHome {
     /// A whole-value kind's value source (§FS-fetch.4).
@@ -58,7 +58,7 @@ pub(crate) enum RefusedHome {
     /// A file the text scan reads as source (§FS-fetch.4.2), of a non-value kind.
     SourceFile,
     /// The same file of a whole-value kind, which no comment there can declare, so
-    /// only `check`'s tail differs (§FS-check.3.1.3.1).
+    /// only `check`'s tail differs (§FS-check.3.1).
     SourceFileValue,
     /// A file the scan does not read, with the reason `check`'s unread warning gives
     /// (§FS-fetch.4.2.1): a hidden name, an unlisted extension, or, for a folder home's
@@ -105,8 +105,8 @@ impl Compiled {
 pub(crate) fn compile(project: &Project) -> Result<Compiled> {
     let ids = &project.schema.ids;
     let kinds = grammar_kinds(&project.schema.rows);
-    // §FS-config-v2.defaults.1: only v1 refuses a table with no citable kind, and
-    // not the empty one `kinds = []` declares (§FS-config.3.4.4.5).
+    // §FS-config-v2.defaults: only v1 refuses a table with no citable kind, and
+    // not the empty one `kinds = []` declares (§FS-config.3.4.4).
     if project.version != 2 && !project.schema.rows.is_empty() {
         require_kinds(&kinds)?;
     }

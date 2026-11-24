@@ -11,12 +11,12 @@ use crate::model::remedies;
 use crate::model::{Catalog, CheckReport, Code, Diagnostic};
 
 /// The last release that dropped such a token without a word — the "from" half
-/// of the pair §FS-check.checks.off-format-citation.1 names, in the past tense
+/// of the pair §FS-check.checks.off-format-citation names, in the past tense
 /// §FS-distribution.4.2 closes the vocabulary on.
 pub(super) const OFF_FORMAT_RULE_PRIOR_RELEASE: &str = "0.20.0";
 
 /// The release the verdict moves in — the "to" half of that pair
-/// (§FS-check.checks.off-format-citation.1).
+/// (§FS-check.checks.off-format-citation).
 pub(super) const OFF_FORMAT_RULE_RELEASE: &str = "0.21.0";
 
 /// §FS-check.checks.off-format-citation: one error per record, at its marker's

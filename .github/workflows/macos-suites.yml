@@ -37,13 +37,13 @@ jobs:
         with:
           python-version: "3.x"
 
-      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      # §FS-distribution.3.2.3: acceptance uses a supported Node major.
       - name: Install Node
         uses: actions/setup-node@v6
         with:
           node-version: "22.x"
 
-      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      # §FS-distribution.3.2.3: source builders require this pinned toolchain.
       - name: Install binding Rust toolchain
         run: rustup toolchain install 1.95.0 --profile minimal
 
@@ -87,7 +87,7 @@ jobs:
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
 
-      # §FS-check.6.1.1, §AR-bindings.3: exercise actual native backends and
+      # §FS-check.6.1, §AR-bindings.3: exercise actual native backends and
       # private lifecycle boundaries on Linux, macOS and Windows.
       - name: native watch contract
         run: python scripts/run_cargo_suite.py -p grund --features test-watch --test check_watch_observer --locked

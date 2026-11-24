@@ -8,7 +8,7 @@
 //! `unread_opted_out_blocks` counter sat, which is what a warning channel
 //! answers by construction (§DA-engine-renders-nothing).
 //!
-//! One of the four cannot be answered where it is asked. §FS-check.4.10.2 is a
+//! One of the four cannot be answered where it is asked. §FS-check.4.10 is a
 //! question about a *walk* — would this block have read something, had it been a
 //! project? — and the walker sits above the workspace component
 //! (§AR-resolver.placement). So that one travels as the block it was asked of and
@@ -38,7 +38,7 @@ pub(crate) enum RunWarning {
         /// (§FS-workspace.6).
         block: Box<ProjectRecords>,
         /// Where the *rest* of this run's projects are — the other half of the
-        /// counterfactual (§FS-check.4.10.2). Empty for the block the run is
+        /// counterfactual (§FS-check.4.10). Empty for the block the run is
         /// rooted at, whose own member boundary is already the whole prune.
         project_roots: Vec<PathBuf>,
     },
@@ -51,7 +51,7 @@ impl RunWarning {
     ///
     /// **A block with no member in scope is not this finding.** `include_root =
     /// false` with no members is already a config error at that block's own line
-    /// (§FS-workspace.6.1.3), and a configuration the run refuses is not one it
+    /// (§FS-workspace.6.1.2), and a configuration the run refuses is not one it
     /// also cautions about — the caution's two remedies are not the repair that
     /// block needs.
     ///

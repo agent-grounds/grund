@@ -49,7 +49,7 @@ pub(super) fn parse_config_file(
     let mut parsed_kinds: Vec<ParsedKind> = Vec::new();
     let mut current_kind: Option<ParsedKind> = None;
     let mut kinds_block_seen = false;
-    // §FS-config.3.4.4.5: where `kinds = []` declared the empty kind set.
+    // §FS-config.3.4.4: where `kinds = []` declared the empty kind set.
     let mut empty_kinds_line = None;
     let at = |line: usize| {
         Some(ConfigLocation {
@@ -74,7 +74,7 @@ pub(super) fn parse_config_file(
                     }
                     if section == "workspace" {
                         project.workspace.declared = true;
-                        // §FS-workspace.6.1.3: the block's own anchor, for the
+                        // §FS-workspace.6.1.2: the block's own anchor, for the
                         // errors that are about the block and not about a key.
                         project.workspace.section_source = at(line_no);
                     }
@@ -142,7 +142,7 @@ pub(super) fn parse_config_file(
                     )?;
                 }
             }
-            // §FS-config.3.4.4.5: declared, with no entries — not omitted.
+            // §FS-config.3.4.4: declared, with no entries — not omitted.
             ("", "kinds") => {
                 parse_empty_kinds(path, line_no, value)?;
                 (kinds_block_seen, empty_kinds_line) = (true, Some(line_no));
@@ -192,18 +192,18 @@ pub(super) fn parse_config_file(
             ("reference", "require_grounding") => {
                 project.rules.grounding.require = parse_bool(path, line_no, value)?
             }
-            // §FS-config.3.4.8.2: the default unit inside every governed file; the
+            // §FS-config.3.4.8: the default unit inside every governed file; the
             // key's own rules live in `grounding.rs` with its row twin.
             ("reference", "grounding_level") => {
                 let level = parse_usize(path, line_no, value)?;
                 check_grounding_level(path, line_no, level)?;
                 project.rules.grounding.level = level;
-                // §FS-config.3.4.8.5: where the key was written, so the "nothing
+                // §FS-config.3.4.8: where the key was written, so the "nothing
                 // turns grounding on" rejection anchors at it rather than at line 1.
                 project.rules.grounding.level_source = at(line_no);
             }
             ("reference", "conversation") => {
-                // §FS-config.3.1.6, §DF-repo-conversation-opinion.2.2: closed enum with the
+                // §FS-config.3.1.3, §DF-repo-conversation-opinion.2.2: closed enum with the
                 // single member "link" — `plain` encodes machine state and stays user-scoped.
                 let opinion = parse_string(path, line_no, value)?;
                 if opinion != "link" {
@@ -245,7 +245,7 @@ pub(super) fn parse_config_file(
             ("reference", "inline_note_max_columns") => {
                 project.schema.notes.max_columns = parse_usize(path, line_no, value)?
             }
-            // §FS-inline-citation-style.2.2: two closed enums, rejected on load like
+            // §FS-config.3.1.9: two closed enums, rejected on load like
             // `inline_style` above — a typo must not read as "no house style".
             ("reference", "inline_note_layout") => {
                 let layout = parse_string(path, line_no, value)?;
@@ -371,7 +371,7 @@ pub(super) fn parse_config_file(
             ("output", "relative_paths") => {
                 project.presentation.output.relative_paths = parse_bool(path, line_no, value)?;
             }
-            // §FS-config.3.10.1: validated as it is parsed, so a malformed glob is a
+            // §FS-config.3.10: validated as it is parsed, so a malformed glob is a
             // config error at its own line rather than a surprise at the first
             // `grund fmt` (§FS-config.4.3).
             ("fmt", "exclude") => {
@@ -407,7 +407,7 @@ pub(super) fn parse_config_file(
             }
             ("workspace", "include_root") => {
                 project.workspace.include_root = parse_bool(path, line_no, value)?;
-                // §FS-check.4.10.5: the key that decides is the line to open, so it
+                // §FS-check.4.10: the key that decides is the line to open, so it
                 // is located like `members` above rather than left to the block's
                 // own `[workspace]` header.
                 project.workspace.include_root_source = at(line_no);

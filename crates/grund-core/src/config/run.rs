@@ -61,7 +61,7 @@ pub struct Run {
 pub struct RunScope {
     /// `grund check --full` (§FS-check.1.3).
     pub full: bool,
-    /// An explicit path below the config root (§FS-check.1.3.6.1).
+    /// An explicit path below the config root (§FS-check.1.3.6).
     pub resolution_wide: bool,
     /// Whether the scan classifies citing sides (§AR-scanner.2.4).
     pub classify_citation_sources: bool,
@@ -106,18 +106,18 @@ pub struct RunWorkspace {
     /// Every import edge the run reached, the whole tree's, stamped on each
     /// project's run once the mounts are loaded (§FS-imports.checks).
     pub(crate) imports_read: Vec<ImportRead>,
-    /// The config findings of the set §FS-check.4.11.3 names — the root's config,
+    /// The config findings of the set §FS-check.4.11 names — the root's config,
     /// each project expansion returned and each `include_root = false` block it
     /// reached — in check's report order, which `grund config validate` stores
-    /// once it has expanded the tree (§FS-config.4.1.1, §FS-check.4.11.3); `None`
+    /// once it has expanded the tree (§FS-config.4.1, §FS-check.4.11); `None`
     /// in a run that stored none, whose findings are its one config's.
     pub(crate) config_findings: Option<Vec<Diagnostic>>,
     /// The config of each `include_root = false` block expansion reached below
     /// the run's root, in the order it reached them (§AR-config.1.5). Not a
     /// project, so expansion returns none of them; it loads each to read its
     /// members, and keeps it here for the two questions asked of a block itself:
-    /// its config findings (§FS-check.4.11.3) and whether its tree holds files
-    /// nothing reads (§FS-check.4.10.7).
+    /// its config findings (§FS-check.4.11) and whether its tree holds files
+    /// nothing reads (§FS-check.4.10).
     pub(crate) opted_out_blocks: Vec<Config>,
 }
 
@@ -149,7 +149,7 @@ pub(crate) enum Selection {
     /// `cover`, `fmt` and the editor's lookups.
     Project,
     /// `check`, `show`, `list`, `refs` and `id`: below the root the path bounds the
-    /// report, never resolution (§FS-scan.path, §FS-scan.path.refs, §FS-check.1.3.6.1).
+    /// report, never resolution (§FS-scan.path, §FS-scan.path.refs, §FS-check.1.3.6).
     Check,
     /// The editor snapshot: `Check`'s two scopes in a project with no
     /// `[workspace]` (§AR-lsp.5.1.1), and an explicit zero-config folder is the
@@ -225,7 +225,7 @@ impl Invocation {
     }
 
     /// Whether the walk reads the project's ordinary roots beside the path
-    /// (§FS-check.1.3.6.1, §AR-lsp.5.1.1), for a project at `root` that does
+    /// (§FS-check.1.3.6, §AR-lsp.5.1.1), for a project at `root` that does
     /// or does not declare `[workspace]`.
     pub(super) fn resolution_wide(&self, root: &Path, workspace_declared: bool) -> bool {
         match self.selection {
@@ -280,7 +280,7 @@ impl Run {
 
     /// This run as the managed-block render reads it: without its
     /// `--require-grounding`, so `check` holds a block to the bytes `grund init`
-    /// writes from the config alone (§FS-check.3.5.4). A copy for the render;
+    /// writes from the config alone (§FS-check.3.5). A copy for the render;
     /// the run in use keeps every scope field it was built with.
     pub(crate) fn as_written(&self) -> Self {
         let mut run = self.clone();
@@ -292,7 +292,7 @@ impl Run {
     /// run's classification, `--full`, `--require-grounding`, `--path-base`
     /// and buffers, but neither its path's resolution scope nor its
     /// `cover --lines` ranges, which are the root's (§AR-scanner.2.4.2,
-    /// §FS-check.1.3.8, §FS-check.3.5).
+    /// §FS-check.1.3, §FS-check.3.5).
     pub(crate) fn members(&self) -> Invocation {
         Invocation {
             path: self.root.clone(),

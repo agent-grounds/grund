@@ -43,7 +43,7 @@ pub(crate) fn markdown_never_rewrite_context(
 /// literal an earlier line opened (§FS-languages.multi-line-string), so every
 /// reader that asks "inside a string?" asks it of the line it is actually on.
 ///
-/// §FS-fmt.2.3.1.1: a docstring's delimiters are doc-comment syntax, not quotes, so
+/// §FS-fmt.2.3.1: a docstring's delimiters are doc-comment syntax, not quotes, so
 /// the never-rewrite walk runs over this slice rather than the raw line and a
 /// docstring line is judged exactly like a `#` comment line. This is the one view
 /// the scanner, `fmt`, and the LSP on-type path all hold, which is what keeps
@@ -118,7 +118,7 @@ impl<'a> DocstringContent<'a> {
 }
 
 /// The never-rewrite question for a line whose docstring content `docstring`
-/// describes, at the raw-line offset `marker_start` (§FS-fmt.2.3.1.1). Every surface
+/// describes, at the raw-line offset `marker_start` (§FS-fmt.2.3.1). Every surface
 /// that asks "may `fmt` rewrite here?" goes through this, so all three reach one
 /// verdict per site.
 ///
@@ -144,7 +144,7 @@ pub(crate) fn never_rewrite_context_in(
     }
 }
 
-/// `is_inside_string_literal` asked of the same view (§FS-fmt.2.3.1.1) — what the
+/// `is_inside_string_literal` asked of the same view (§FS-fmt.2.3.1) — what the
 /// two `fmt` passes with no Markdown branch of their own, `replace_trigger` and
 /// `add_markers`, use.
 pub(crate) fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos: usize) -> bool {
@@ -157,7 +157,7 @@ pub(crate) fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos
 
 /// The Python-docstring state a line **begins** in, so a caller that rewrites the
 /// line can ask where its docstring content sits *in the line it is about to
-/// change* (§FS-fmt.2.3.1.1).
+/// change* (§FS-fmt.2.3.1).
 ///
 /// `fmt` re-derives the span per rewrite stage instead of carrying it, because a
 /// stage before it may have changed the line's length: `--marker` splices a `§`

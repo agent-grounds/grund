@@ -1,6 +1,6 @@
 //! What a `value-mismatch` says: the coordinate or root it names, the canonical
-//! text, and the kind clause a mixed-kind pair appends (§FS-values.5.2,
-//! §FS-values.5.2.1, §FS-values.5.2.2).
+//! text, and the kind clause a mixed-kind pair appends
+//! (§FS-values.5.2).
 
 use crate::config::{Display, Schema};
 use crate::model::remedies;
@@ -23,9 +23,9 @@ pub(super) fn rendered_value_path(
 }
 
 /// One `value-mismatch` in the canonical text, carrying the one declaration site
-/// it names in text and in `sites` alike (§FS-values.5.2, §FS-output-shapes.1.1).
+/// it names in text and in `sites` alike (§FS-values.5.2, §FS-output-shapes.1).
 /// The kinds follow only when the two sides differ in kind, because the two
-/// sides can then print the same bytes (§FS-values.5.2.1).
+/// sides can then print the same bytes (§FS-values.5.2).
 pub(super) fn value_mismatch(
     binding: &ValueBinding,
     coordinate: &str,
@@ -47,7 +47,7 @@ pub(super) fn value_mismatch(
 }
 
 /// The canonical mismatch text itself, for a caller that has no pair of
-/// components to take the kinds from (§FS-values.5.2.2).
+/// components to take the kinds from (§FS-values.5.2).
 pub(super) fn value_mismatch_text(
     binding: &ValueBinding,
     coordinate: &str,
@@ -73,7 +73,7 @@ pub(super) fn value_mismatch_text(
 }
 
 /// The root a root-aimed mismatch names and the one component it reports,
-/// each already rendered as a finding names it (§FS-values.5.2.2).
+/// each already rendered as a finding names it (§FS-values.5.2).
 pub(super) struct RootComponent<'a> {
     /// The root as cited, rendered as the part-count branch renders it.
     pub(super) root: &'a str,
@@ -85,9 +85,9 @@ pub(super) struct RootComponent<'a> {
 /// many parts as the root has components: the root as cited and the literal
 /// whole against the joined components, naming the first unequal component by
 /// its section path and carrying that component's one declaration site
-/// (§FS-values.5.2.2). Its kind clause names that component, since the whole
+/// (§FS-values.5.2). Its kind clause names that component, since the whole
 /// literal and the joined components can print the same bytes either way
-/// (§FS-values.5.2.1). The message is §FS-values.5.2.2's template alone.
+/// (§FS-values.5.2). The message is §FS-values.5.2's template alone.
 pub(super) fn root_value_mismatch(
     binding: &ValueBinding,
     at: RootComponent<'_>,
@@ -111,7 +111,7 @@ pub(super) fn root_value_mismatch(
 
 /// The one shape every `value-mismatch` message takes: what it names, both
 /// sides in backticks, and the declaration site, then any kind clause
-/// (§FS-values.5.2, §FS-values.5.2.2).
+/// (§FS-values.5.2).
 fn mismatch_message(
     subject: &str,
     bound: &str,
@@ -127,7 +127,7 @@ fn mismatch_message(
 }
 
 /// What a mismatch of two different kinds appends to the canonical text
-/// (§FS-values.5.2.1). Identical-looking sides are the whole of the inequality
+/// (§FS-values.5.2). Identical-looking sides are the whole of the inequality
 /// there, so the kinds are named in the order the line already named its sides;
 /// a same-kind mismatch appends nothing and keeps that text to the byte. A
 /// root-aimed message passes the component's section path, so the clause says
@@ -150,7 +150,7 @@ fn mixed_kind_clause(
     )
 }
 
-/// The one word a message uses for a component kind (§FS-values.5.2.1).
+/// The one word a message uses for a component kind (§FS-values.5.2).
 fn kind_word(kind: ValueComponentKind) -> &'static str {
     match kind {
         ValueComponentKind::Number => "number",

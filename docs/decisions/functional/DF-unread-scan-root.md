@@ -25,7 +25,7 @@ The rule this settles: a scan root outruns every rule about *descent* — `exclu
 
 ### 2.1 `check` alone says it
 
-`list`, `refs`, `show`, `cover` and `fmt` stay as they are, by the author's ruling on the plan. The fact is about the coverage of `check`'s verdict, the choice [§FS-check.4.9.4](../../functional-spec/FS-check.md#494-a-located-finding-on-stdout-not-a-cli-level-caution) makes for an absent optional member, so `list --kind TXT` stays empty and prints nothing about the root.
+`list`, `refs`, `show`, `cover` and `fmt` stay as they are, by the author's ruling on the plan. The fact is about the coverage of `check`'s verdict, the choice [§FS-check.4.9](../../functional-spec/FS-check.md#49-a-workspace-member-declared-optional-is-absent) makes for an absent optional member, so `list --kind TXT` stays empty and prints nothing about the root.
 
 ### 2.2 A hidden-named file home is decided apart
 

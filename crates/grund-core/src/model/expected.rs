@@ -2,7 +2,7 @@
 //! before the checker's relational half runs (§AR-system.2.11), and the checker
 //! compares it with disk and renders nothing (§AR-checker.2.7, §AR-checker.2.16),
 //! so a presentation-only change can move a drift finding through these bytes
-//! (§FS-check.3.5.4), and no other verdict.
+//! (§FS-check.3.5), and no other verdict.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -36,14 +36,14 @@ pub struct Expected {
     pub non_units: BTreeSet<PathBuf>,
     /// Whether a genuinely invalid rule left every block of the project
     /// uncompared, which carries `invalid-rule` with `--only agents-init`
-    /// (§FS-check.3.5.4).
+    /// (§FS-check.3.5).
     pub blocks_withheld: bool,
 }
 
 /// §AR-checker.1.3: one entrypoint and the sections its managed block should
 /// carry, each rendered for this file's conversation surface (§FS-init.2.3.6):
 /// a root entrypoint's whole block, cut into the parts a stale finding names
-/// (§FS-check.3.5.3, §FS-check.3.5.4), and a scoped one's generated sections.
+/// (§FS-check.3.5), and a scoped one's generated sections.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExpectedEntrypoint {
     pub path: PathBuf,
@@ -67,7 +67,7 @@ pub enum ScopedExpectation {
 }
 
 /// One section of a managed block: its heading, the noun a drift message names
-/// it by, and the bytes `grund init` would write (§FS-check.3.5.3).
+/// it by, and the bytes `grund init` would write (§FS-check.3.5).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExpectedSection {
     pub heading: String,

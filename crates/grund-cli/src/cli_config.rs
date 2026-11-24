@@ -36,8 +36,8 @@ fn command_config(args: &[String]) -> ExitCode {
     match action {
         "validate" => match validate_config(&path) {
             Ok(config) => {
-                // §FS-check.4.10.7, §FS-workspace.6.1.7: validation
-                // loads every member's config (§FS-config.4.1.1), so it resolves a
+                // §FS-check.4.10, §FS-workspace.6.1.7: validation
+                // loads every member's config (§FS-config.4.1), so it resolves a
                 // block's member boundary and carries what that settled.
                 render_run_warnings(&config_run_warnings(&config));
                 print_config_warnings(config_warnings(&config));
@@ -102,7 +102,7 @@ fn command_config_show(path: &Path) -> ExitCode {
     println!("marker = \"{}\"", config.marker);
     println!("trigger = \"{}\"", config.trigger);
     println!("strict = {}", config.strict);
-    // §FS-config.4.2.2: include the effective persisted-form policy, including
+    // §FS-config.4.2: include the effective persisted-form policy, including
     // the absent key's canonical default.
     println!("shorthand = \"{}\"", config.shorthand.as_str());
     println!("require_grounding = {}", config.require_grounding);
@@ -137,7 +137,7 @@ fn command_config_show(path: &Path) -> ExitCode {
     println!("[id]");
     println!("format = \"{}\"", config.id_format);
     println!("section_separator = \"{}\"", config.section_separator);
-    // §FS-config.4.2.3: false is operationally absent; only an enabled gate adds
+    // §FS-config.4.2: false is operationally absent; only an enabled gate adds
     // a line to effective-config output.
     if config.named_sections {
         println!("named_sections = true");
@@ -210,7 +210,7 @@ fn command_config_show(path: &Path) -> ExitCode {
                     if kind.rules {
                         println!("rules = true");
                     }
-                    // §FS-config.3.4.10.4: external snapshot metadata is printed
+                    // §FS-config.3.4.10: external snapshot metadata is printed
                     // in its effective, round-trippable form.
                     if let Some(format) = &kind.format {
                         println!("format = \"{}\"", escape_toml_basic(format));
@@ -225,7 +225,7 @@ fn command_config_show(path: &Path) -> ExitCode {
                     if let Some(fetch) = &kind.fetch {
                         println!("fetch = \"{}\"", escape_toml_basic(fetch));
                     }
-        // §FS-config.3.4.8.6: each grounding key only where the row's effective
+        // §FS-config.4.2: each grounding key only where the row's effective
         // value differs from the effective global printed above, so the shown
         // config loads back as itself.
         for line in config.kind_grounding_toml_lines(kind) {

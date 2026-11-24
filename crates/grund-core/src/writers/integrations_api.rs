@@ -1,5 +1,5 @@
 //! `integrations`, the one engine operation behind every form of
-//! `grund integrations` (§FS-integrations.1.3.1, §FS-distribution.3.1.3): it
+//! `grund integrations` (§FS-integrations.1.3, §FS-distribution.3.1.3): it
 //! refuses, detects, describes and, under `write`, installs, using the
 //! owned-block splices and probes beside it, and answers with the records of
 //! `integrations_output.rs`. No output stream, process argument or cwd mutation
@@ -103,7 +103,7 @@ pub(super) fn event(path: PathBuf, outcome: IntegrationOutcome) -> IntegrationEv
     }
 }
 
-/// Answer `grund integrations` as data (§FS-integrations.1.3.1): refuse a
+/// Answer `grund integrations` as data (§FS-integrations.1.3): refuse a
 /// combination §FS-integrations.6.2 refuses before reading anything, read the
 /// user configuration before any client artifact is written, and plan every
 /// guidance target before writing the first, so a run fails at the point and
@@ -131,7 +131,7 @@ pub fn integrations(opts: IntegrationsOpts) -> Result<IntegrationsOutput, Integr
     if !opts.write {
         return Ok(out);
     }
-    // §FS-integrations.4.3.7: read user configuration before any artifact write.
+    // §FS-integrations.4.3.5: read user configuration before any artifact write.
     let guidance = match integrations_guidance::load() {
         Ok(guidance) => guidance,
         Err(fault) => return Err(fault.into_error(out, false)),
@@ -161,7 +161,7 @@ fn artifact(client: IntegrationClient) -> IntegrationArtifact {
 }
 
 /// The client half of a `write` (§FS-integrations.4.1, §FS-integrations.4.2,
-/// §FS-integrations.3.4.2): the step a manual client leaves to the user, which
+/// §FS-integrations.3.4): the step a manual client leaves to the user, which
 /// a run reaches before anything it can fail on, or its config or extension;
 /// then the resolver a terminal client needs.
 fn install(client: IntegrationClient, out: &mut IntegrationsOutput) -> Result<(), Fault> {
@@ -189,7 +189,7 @@ fn install(client: IntegrationClient, out: &mut IntegrationsOutput) -> Result<()
             if spliced != BlockOutcome::Unchanged {
                 save(&path, &updated)?;
             }
-            // §FS-integrations.4.1.3: reported rather than silent.
+            // §FS-integrations.4.1: reported rather than silent.
             let note =
                 needs_wezterm_wiring(client, &updated).then_some(IntegrationNote::UnwiredWezterm {
                     apply_call: WEZTERM_APPLY_CALL,

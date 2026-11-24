@@ -2,7 +2,7 @@
 //! (§FS-coordinate-globs.matching): an automaton over the positions of the reading
 //! `coordinate_glob_read.rs` gives, stepped one coordinate symbol at a time, so a
 //! match costs time bounded by the pattern's length and the coordinate's
-//! (§FS-coordinate-globs.matching.bounded).
+//! (§FS-coordinate-globs.matching).
 
 use super::coordinate_glob::{CoordinateGlob, Token};
 use super::coordinate_glob_read::{Mode, Read, Reading};
@@ -41,7 +41,7 @@ pub(crate) struct GlobMatcher<'g> {
 
 impl GlobMatcher<'_> {
     /// Whether the coordinate `id` with `section` (a `.`-joined path) matches:
-    /// anchored, case-sensitive and by code point (§FS-coordinate-globs.matching.anchored).
+    /// anchored, case-sensitive and by code point (§FS-coordinate-globs.matching).
     pub(crate) fn matches(&self, id: &str, section: Option<&str>) -> bool {
         let components = section.into_iter().flat_map(|section| section.split('.'));
         let symbols = id

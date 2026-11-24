@@ -346,7 +346,7 @@ impl ShorthandGrammar {
 
 /// The number-only shorthand's element list, or `None` when the format has no
 /// shorthand: without `{number}` nothing is left to name the declaration, and
-/// without `{slug}` there is nothing to omit (§FS-check.1.2.1, §FS-id.4.1).
+/// without `{slug}` there is nothing to omit (§FS-check.1.2.1, §FS-id.4).
 pub(super) fn shorthand_elements(elements: &[IdElement]) -> Option<Vec<IdElement>> {
     let has_both = elements.contains(&IdElement::Number) && elements.contains(&IdElement::Slug);
     has_both.then(|| elements_without(elements, &IdElement::Slug))
@@ -538,7 +538,7 @@ fn bounds_a_construct(ch: char) -> bool {
 /// The end offset of the ID-shaped token starting at exactly `at`, or `None` when
 /// none does — a full ID, or the number-only shorthand where the repo has one
 /// (§FS-check.1.2). One definition of "a real ID follows here", shared by `fmt`'s
-/// trigger pass (§FS-fmt.2.1) and the LSP's live transform (§FS-lsp.1.4.1), so the
+/// trigger pass (§FS-fmt.2.1) and the LSP's live transform (§FS-lsp.1.4), so the
 /// two cannot disagree about which `$$` to consume.
 pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Option<usize> {
     if let Some(found) = grammar
@@ -574,7 +574,7 @@ pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Optio
 
 /// The `[id] format` template with each placeholder replaced by the schematic
 /// name of what it accepts — `{kind}-{number}-{slug}` reads `<KIND>-<NNN>-<slug>`
-/// (§FS-init.2.3.8, §FS-check.4.5.2). A substitution over the template's literal
+/// (§FS-init.2.3.8, §FS-check.4.5). A substitution over the template's literal
 /// text, so it is a fact about the config rather than a guess at what
 /// `[id] number_pattern` and `[id] slug_pattern` accept: an ID assembled from
 /// those patterns would be wrong for every project that narrows them, printed by

@@ -176,7 +176,7 @@ one `resolve_workspace_config` and `effective_config` both enter, to a log of it
 own, so a test holds a refusal to as many resolutions as the same read makes
 without its hint ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The hint travels on the batch's failure record
 beside its message; the JSON envelope does not print it, so it stays hint-free
-([§FS-output-shapes.6.1.2](../functional-spec/FS-output-shapes.md#612-from-0160)).
+([§FS-output-shapes.6.1](../functional-spec/FS-output-shapes.md#61-refs-resolver-rejections)).
 
 ##### 3.1.1.1 A refused `refs --from` source takes its format from the same context
 
@@ -246,7 +246,7 @@ whose file the path does not hold, lent or not ([§FS-refs.from](../functional-s
 ID completion still loads through the `Project` selection, so its walk is the path in one project, and
 each project whole in a workspace run. Its candidates are bounded by `reported_scope`, as `list`'s
 entries are: a candidate the path does not hold is dropped, unless a stub under the path stands for it
-([§FS-completions.2.1](../functional-spec/FS-completions.md#21-arguments-and-candidate-modes), [§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
+([§FS-completions.2](../functional-spec/FS-completions.md#2-internal-dynamic-helper), [§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
 
 So "a scope narrower than the root has to stay narrow" is a statement about which **projects** a walk covers
 and which **files** are reported. It is not a statement about which declarations resolution reads: widening
@@ -254,7 +254,7 @@ that set answers the question the caller asked rather than a wider one, because 
 path is clean and not whether it is self-contained. The narrowing that must stay is `cover`'s and
 `scope_is_config_root`'s — a narrowed member run stays one project ([§FS-workspace.8.6](../functional-spec/FS-workspace.md#86-grund-cover)) — and the
 two are kept at visibly different stages so neither drifts into the other: `retain_findings_in_scope` narrows
-the scan result before any rule runs, which is what `--full` additivity needs ([§FS-check.1.3.4](../functional-spec/FS-check.md#134-purely-additive)), and the
+the scan result before any rule runs, which is what `--full` additivity needs ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)), and the
 path filter narrows the report after every rule has run.
 
 ### 3.4 `grund config show` prints from the one configuration it resolved
@@ -319,7 +319,7 @@ index, and which project to read it in out of section 1.
 
 A stub stands for its target's declaration, so a citation of one of its sections
 resolves where the target declares that section, scanned or not
-([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)). Where the walk reached the target, the target's record is among
+([§FS-check.3.2](../functional-spec/FS-check.md#32-missing-section)). Where the walk reached the target, the target's record is among
 the `Catalog`. Where it did not, the only record of the ID the walk holds is the stub,
 which has no sections of its own, and a lookup that stopped at the walk's records
 would report a section the target plainly declares. It does not stop there, and it
@@ -351,15 +351,15 @@ in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-value
 a link anchors on, the declaration's own for a bare ID as much as a `.<section>`'s:
 `fmt --cross-refs` reads it out of the one declaration's record, the one `show` anchors on,
 not off the stub's title-less line ([§FS-fmt.6.2.1.1](../functional-spec/FS-fmt.md#6211-through-a-stub-the-declarations-heading-is-the-targets)), and a heading that record
-leaves out of the body gives a section no anchor ([§FS-fmt.6.4.1](../functional-spec/FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped)). The size catalog
+leaves out of the body gives a section no anchor ([§FS-fmt.6.4](../functional-spec/FS-fmt.md#64-what-is-never-wrapped)). The size catalog
 of `list --size` measures each declaration's record, so a healthy stub whose target
 the walk missed is measured at the target's declaration, with its sections, and a target declaring the
-ID twice at both ([§FS-list.3.4.6](../functional-spec/FS-list.md#346-a-home-outside-the-scan)). `check`'s lead budget does not: it judges
+ID twice at both ([§FS-list.3.4](../functional-spec/FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements)). `check`'s lead budget does not: it judges
 scanned sites only ([§FS-declarations.checks.oversized-lead](../functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
 
 Nothing here is read after the scan, so nothing here keeps slots, observes an
 input, or carries the editor's text: the one read of a target, its observation
-([§FS-check.6.1.1](../functional-spec/FS-check.md#611-subscribe-before-reading)) and the overlays it takes ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)) are the scanner's
+([§FS-check.6.1](../functional-spec/FS-check.md#61-change-detection)) and the overlays it takes ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)) are the scanner's
 ([§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)). A `--full` run narrows its findings after the scan
 ([§AR-resolver.3.3](AR-resolver.md#33-two-scopes-and-which-narrowness-a-narrow-scope-keeps)), which changes nothing a stub's verdict holds.
 

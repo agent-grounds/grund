@@ -22,8 +22,8 @@ Leans on [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding) and
 ## requirements: What every refusal holds to
 
 Refusals are also held to four requirements stated elsewhere: an offered sentence stays
-accepted as the language grows ([§FS-rules.requirements.addition](FS-rules.md#requirementsaddition-the-language-grows-by-addition--directional)); a sentence that needs a
-phase-1 absence is refused rather than half-parsed ([§FS-rules.requirements.phase-one](FS-rules.md#requirementsphase-one-what-phase-1-leaves-out-is-owed-to-its-own-change--deferred)); a
+accepted as the language grows ([§FS-rules.requirements.addition](FS-rules.md#requirementsaddition-the-language-grows-by-addition)); a sentence that needs a
+phase-1 absence is refused rather than half-parsed ([§FS-rules.requirements.phase-one](FS-rules.md#requirementsphase-one-what-phase-1-leaves-out-is-owed-to-its-own-change)); a
 reason's wording moves only through a window that keeps the old text as a prefix
 ([§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes)); and a rule and a selector refused for one subject
 give one reason ([§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree)), save the case [§REQ-one-answer.differences.identity](../requirements/REQ-one-answer.md#differencesidentity-identity) lists.
@@ -434,7 +434,7 @@ in version 1 ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-ru
 configuration route, never an accepted form, and never recommends making the row citable.
 That entry alone judges only a file there that already cites something ([§FS-check.3.11](FS-check.md#311-missing-required-citation)),
 so where the row grounds nothing at any strength the hint also names the grounding setting
-the Citation directions bullet names ([§FS-init.2.3.5.2.2](FS-init.md#23522-a-home-whose-row-grounds-nothing-says-so)), in the live version, as what
+the Citation directions bullet names ([§FS-init.2.3.5](FS-init.md#235-citation-directions)), in the live version, as what
 makes a file there that cites nothing a finding; where the row grounds, it names the
 citation entry alone. `Each file in PATH must cite at least one KIND.` gets the same
 guidance when `PATH` is exactly one such row's place, compared as complete project-relative

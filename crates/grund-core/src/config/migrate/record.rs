@@ -118,7 +118,7 @@ pub struct ListedComment {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MigrateNotice {
     /// The v1 line of the key, or `None` for the one notice about no key, the
-    /// defaults a compact block leaves unwritten (§FS-config-migrate.8.1.3).
+    /// defaults a compact block leaves unwritten (§FS-config-migrate.8.1).
     pub line: Option<usize>,
     /// `dropped` when nothing is written for it, else `changed`.
     pub dropped: bool,

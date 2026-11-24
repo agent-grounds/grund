@@ -75,7 +75,7 @@ impl Installed {
                     by_uri.entry(uri).or_default().push(diagnostic);
                 }
             }
-            // §FS-lsp.1.1.3: the three run-level `[workspace]` warnings, each on the
+            // §FS-lsp.1.1: the three run-level `[workspace]` warnings, each on the
             // `grund.toml` it anchors at, never a location read back out of the text
             // (§AR-bindings.2). The unlisted block is a `report` error (§FS-check.3.29).
             for finding in project.snapshot.run_warnings.clone() {
@@ -95,7 +95,7 @@ impl Installed {
     /// One `error` on each config that will not load, at the line its load
     /// error names or the file's first line, carrying the error `grund check`
     /// prints and, when the project kept a scan, saying the rest is from it
-    /// (§FS-lsp.2.2.4.1). Every failure on one config is one diagnostic, however
+    /// (§FS-lsp.2.2.4). Every failure on one config is one diagnostic, however
     /// many folders and projects hit it, so the editor sees it once: the failure
     /// that spells the config from its own project, else the first in order.
     /// Recovery needs no publish of its own: a config no longer here is cleared
@@ -261,7 +261,7 @@ impl Installed {
         let path = normalize_path(path);
         // When the finding carries the offending citation's column, anchor on
         // that exact token rather than the first citation on the line — a single
-        // comment can carry several citations (§FS-lsp.1.1.1).
+        // comment can carry several citations (§FS-lsp.1.1).
         if let Some(column) = finding.column
             && let Some(citation) = index
                 .citations
@@ -294,7 +294,7 @@ impl Installed {
             ));
         }
         // Line-anchored diagnostics must not borrow the first citation on their
-        // line (§FS-lsp.1.1.1).
+        // line (§FS-lsp.1.1).
         index
             .declarations
             .on_line(&path, line)

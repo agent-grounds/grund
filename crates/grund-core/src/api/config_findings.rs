@@ -39,7 +39,7 @@ fn redundant_config_warning(config: &Config) -> Option<Diagnostic> {
 
 /// §FS-check.4.11: the warning for a config the run read from the deprecated
 /// `.agents/` location — the file still governs the project, so the message
-/// names the move a reader can type rather than a fault (§FS-config.1.2.1).
+/// names the move a reader can type rather than a fault (§FS-config.1.2).
 /// `line`-less for §FS-check.4.3's reason, which this finding shares whole: the subject
 /// is which file the run read, not a site inside it.
 ///
@@ -148,7 +148,7 @@ pub(super) fn load_warnings(config: &Config, display: Display<'_>) -> Vec<Diagno
 /// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11),
 /// a file read as version 1 (§FS-check.checks.config-version-1) and the version-2
 /// reader's load warnings (§FS-config-v2.checks), in that order, which the report
-/// then sorts (§FS-check.checks.config-version-1.1). All are known from the file the
+/// then sorts (§FS-check.checks.config-version-1). All are known from the file the
 /// run read rather than from the walk, which is why they arrive together. The
 /// version-2 reader's window warnings are spent from grund 0.22.0
 /// (§FS-config-v2.checks.config-not-toml).
@@ -168,14 +168,14 @@ pub(super) fn config_diagnostics<'a>(
         .chain(load_warnings(config, display))
 }
 
-/// The config findings a workspace names (§FS-check.4.11.3): the root's config,
+/// The config findings a workspace names (§FS-check.4.11): the root's config,
 /// each project the workspace expansion returns, a member that is the root itself
 /// counted once, and each `include_root = false` block the expansion reached, which
 /// expansion keeps on the root's run since it returns no project for one
 /// (§AR-config.1.5). All are spelled from the root's report base (§FS-errors.4) and
 /// in check's report order. One config, not one scope, and a workspace may mix the
 /// two discovery forms (§FS-workspace.2). `grund check` and `grund config validate`
-/// both name the set from here (§FS-config.4.1.1), so the two cannot disagree about
+/// both name the set from here (§FS-config.4.1), so the two cannot disagree about
 /// which configs a workspace has.
 pub(super) fn workspace_config_diagnostics<'a>(
     root_config: &Config,
@@ -196,7 +196,7 @@ pub(super) fn workspace_config_diagnostics<'a>(
 }
 
 /// The config findings the config a command holds names: the workspace's set
-/// where `grund config validate` stored one (§FS-config.4.1.1), else its own
+/// where `grund config validate` stored one (§FS-config.4.1), else its own
 /// config's alone, which is all `grund config show` names (§FS-config.4.2).
 pub(super) fn held_config_diagnostics(config: &Config) -> Vec<Diagnostic> {
     match config.workspace_config_findings() {

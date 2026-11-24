@@ -1,5 +1,5 @@
 //! Formatter tree and scope orchestration (§AR-core-module-layout.1.5),
-//! including automatic cross-reference enablement (§FS-fmt.6.6). Per-file and
+//! including automatic cross-reference enablement (§FS-fmt.6.7.2). Per-file and
 //! per-line rewriting remains in `fmt_rewrite.rs`.
 
 use anyhow::Result;
@@ -25,7 +25,7 @@ use crate::scanner::{
     walk_scannable_files_reporting, with_e2e_case_failures,
 };
 
-/// §FS-fmt.6.6: whether this invocation turns the cross-reference pass on by
+/// §FS-fmt.6.7.2: whether this invocation turns the cross-reference pass on by
 /// itself — `[fmt.cross_refs] enabled` and at least one Markdown file in its
 /// scope, identically for dry-run and write mode.
 pub(crate) fn auto_cross_refs_for_scope(
@@ -56,7 +56,7 @@ fn scope_contains_markdown(
 /// hand; the command surface prints them and maps the exit code.
 pub(crate) struct FmtTreeOutcome {
     /// The lines it rewrote — or, in a dry run, would have — each with what it
-    /// did there (§FS-fmt.3.5.1, §FS-fmt.3.7).
+    /// did there (§FS-fmt.3.5, §FS-fmt.3.7).
     pub(crate) changes: Vec<FmtRow>,
     /// The paths it could not read at all (§FS-check.2.4).
     pub(crate) scan_errors: Vec<ApiScanError>,
@@ -65,7 +65,7 @@ pub(crate) struct FmtTreeOutcome {
     /// did not write them, and the dry run is saying `--write` will not.
     pub(crate) refused_writes: Vec<String>,
     /// One warning per file two names read differently, which it leaves alone
-    /// (§FS-fmt.2.3.2.3). The run's warning channel carries them, and the exit code is untouched.
+    /// (§FS-fmt.2.3.2). The run's warning channel carries them, and the exit code is untouched.
     pub(crate) refused_readings: Vec<Diagnostic>,
 }
 
@@ -91,7 +91,7 @@ pub(crate) struct FmtRunOpts<'a> {
     /// `fmt_tree`, whose errors become one structured strict abort rather than
     /// a partial result.
     pub(crate) precomputed_findings: Option<CompleteFindings<'a>>,
-    /// §FS-fmt.6.1.1 / §DF-index-always-linkified: run the cross-reference pass on
+    /// §FS-fmt.6.1 / §DF-index-always-linkified: run the cross-reference pass on
     /// a kind's index file even where `[fmt.cross_refs] enabled = false` turned
     /// `cross_refs` off. It decides *which files* the pass touches when the pass
     /// runs at all; dry-run and write mode both enable this carve-out so the
@@ -99,7 +99,7 @@ pub(crate) struct FmtRunOpts<'a> {
     pub(crate) index_cross_refs: bool,
     /// The heading lines a workspace run leaves in every project, settled before
     /// its first project is walked, since a link crosses into a project its own
-    /// walk has not reached yet (§FS-fmt.6.3.3). `None` settles this walk's own.
+    /// walk has not reached yet (§FS-fmt.6.3). `None` settles this walk's own.
     pub(crate) settled: Option<&'a SettledHeadings>,
 }
 
@@ -136,13 +136,13 @@ pub(crate) struct FmtRunOpts<'a> {
 /// exit `1` on this tree forever and a gate built on it could never pass.
 ///
 /// Why nothing is written until the walk and the lock pass have both returned
-/// (§FS-fmt.7.4.3): the scan a cross-reference, a shorthand or the lock pass
+/// (§FS-fmt.7.4): the scan a cross-reference, a shorthand or the lock pass
 /// needs is taken where the run first needs it, so a refusal can come after the
 /// walk has worked out earlier files. Planning every write first puts each such
 /// refusal, and any a later pass adds, before the first write by construction,
-/// where a guard at each call site is the shape §FS-fmt.7.4.1 records failing.
+/// where a guard at each call site is the shape §FS-fmt.7.4 records failing.
 /// The lock pass then judges the tree the plan leaves, not the one the walk
-/// read (§FS-section-lock.write.same-run).
+/// read (§FS-section-lock.write.rules).
 pub(crate) fn fmt_tree(
     config: &Config,
     scope: Option<&Path>,
@@ -159,10 +159,10 @@ pub(crate) fn fmt_tree(
     plan.write(config, opts.render, locks, opts.write)
 }
 
-/// The walk of [`fmt_tree`], up to the first write (§FS-fmt.7.4.3): every file's
+/// The walk of [`fmt_tree`], up to the first write (§FS-fmt.7.4): every file's
 /// rewrite worked out, in either mode, and nothing written. A workspace run
 /// plans every project this way before it judges any project's locks
-/// (§FS-section-lock.write.same-run).
+/// (§FS-section-lock.write.rules).
 pub(super) fn plan_tree<'a>(
     config: &Config,
     scope: Option<&Path>,
@@ -180,14 +180,14 @@ pub(super) fn plan_tree<'a>(
     let precomputed_findings = opts.precomputed_findings.map(CompleteFindings::findings);
     // §FS-fmt.6.3: the link pass needs the whole project's declarations, because
     // a wrap's URL comes from a home file that may sit outside the rewrite scope.
-    // §FS-fmt.2.4.5's scan is deferred instead, to the first shorthand candidate.
+    // §FS-fmt.2.4's scan is deferred instead, to the first shorthand candidate.
     let mut walked =
         walk_scannable_files_reporting(config.schema(), config.frame(), scope, explicit_scope)?;
     // §FS-fmt.2.5.1: the files this config takes out of every rewrite. The walk
     // above is untouched — only what happens to each file's bytes changes.
     let excluded = fmt_excluded(config)?;
-    // §FS-fmt.6.1.1: where the always-linkify carve-out may fire. Built for every
-    // run that could need it, since §FS-fmt.2.5.3 makes it outrank a suppressed
+    // §FS-fmt.6.1: where the always-linkify carve-out may fire. Built for every
+    // run that could need it, since §FS-fmt.6.1 makes it outrank a suppressed
     // scope too — a handful of configured paths, so nothing is deferred here.
     let index_files = if opts.index_cross_refs {
         KindIndexFiles::new(config.schema(), config.frame())
@@ -207,17 +207,17 @@ pub(super) fn plan_tree<'a>(
     } else {
         precomputed_findings
     };
-    // §FS-fmt.6.1.2: which IDs each index owes an entry for. A pass over the
+    // §FS-fmt.6.1: which IDs each index owes an entry for. A pass over the
     // declarations, so it waits for the first file that asks (§GOAL-fast-feedback)
     // — an index in the walk forced the link pass, so they are there by then.
     let mut index_entries: Option<KindIndexEntries> = None;
     // Holds the scan the shorthand pass triggers, so the borrow in `findings`
     // outlives the file that asked for it, and the plan keeps it for the locks.
     let mut shorthand_findings: Option<CompleteScan> = None;
-    // §FS-fmt.2.4.5: built once for the whole walk, not once per line — see
+    // §FS-fmt.2.4: built once for the whole walk, not once per line — see
     // `ShorthandTargets`. Rebuilt at most once, when the deferred scan lands.
     let mut shorthand_targets = ShorthandTargets::new(config.frame(), findings, workspace);
-    // §FS-fmt.6.3.3: every anchor the link pass writes names its heading as this
+    // §FS-fmt.6.3: every anchor the link pass writes names its heading as this
     // run leaves it, so the heading lines are settled before the first is written.
     let own_settled = match (opts.settled, findings) {
         (None, Some(findings)) if link_pass => settle_headings(
@@ -276,7 +276,7 @@ pub(super) fn plan_tree<'a>(
             refused_writes.push(display_path(opts.render, &path));
             continue;
         }
-        // §FS-fmt.7.4.3: nothing is written yet, so a file the walk cannot read
+        // §FS-fmt.7.4: nothing is written yet, so a file the walk cannot read
         // ends the run with no change to report, in either mode.
         // §AR-system.2.13: the read goes through the run's sources; only the writes are ours.
         let original = config.frame().sources().text(&path).map_err(|error| {
@@ -296,7 +296,7 @@ pub(super) fn plan_tree<'a>(
         // §FS-fmt.2.5.1: an excluded file keeps its bytes, so the ordinary pass
         // is off here — every rewrite with it (§FS-fmt.2.5).
         let file_excluded = excluded.contains(&path);
-        // §FS-fmt.6.1.1, §FS-fmt.2.5.3: an index's entries are linkified whatever
+        // §FS-fmt.6.1: an index's entries are linkified whatever
         // turned the ordinary pass off here — `enabled = false`, the exclude
         // list, or a region the text carries. The entries, not the page.
         let carve_out = index_files.contains(&path)
@@ -326,7 +326,7 @@ pub(super) fn plan_tree<'a>(
             .map(IndexCarveOut::survey);
         let index_entry_ids = carve_out.as_ref();
         let cross_refs = cross_refs && !file_excluded;
-        // §FS-fmt.2.5.3: which citation is an owed ID's entry depends on the whole
+        // §FS-fmt.6.1: which citation is an owed ID's entry depends on the whole
         // file, so a first walk only surveys it, and its rows and text are dropped.
         if let Some(carve_out) = index_entry_ids {
             rewrite_file(
@@ -366,7 +366,7 @@ pub(super) fn plan_tree<'a>(
             },
             &mut changes,
         );
-        // §FS-fmt.2.4.5: a shorthand to expand and no declarations yet. Scan once,
+        // §FS-fmt.2.4: a shorthand to expand and no declarations yet. Scan once,
         // then redo *this* file — every file already walked is final, because
         // having no candidate is exactly why the scan had not happened by then.
         if rewritten.saw_shorthand_candidate && findings.is_none() {
@@ -401,13 +401,13 @@ pub(super) fn plan_tree<'a>(
             }
             text
         });
-        // §FS-section-lock.write.same-run: asked of the text the run leaves.
+        // §FS-section-lock.write.rules: asked of the text the run leaves.
         let markdown = |target: &Path| config.reading(target).markdown;
         let left = text.as_deref().unwrap_or(&original);
         relative_seen = relative_seen
             || is_md && may_give_locked_heading(config.frame(), &path, left, &markdown);
         if let Some(text) = text {
-            // §FS-fmt.7.4.3: planned here, written once every refusal is behind the run.
+            // §FS-fmt.7.4: planned here, written once every refusal is behind the run.
             planned.push(PlannedFile {
                 path,
                 text,
@@ -415,8 +415,8 @@ pub(super) fn plan_tree<'a>(
             });
         }
     }
-    // §FS-fmt.7.4.4: after the whole walk, so the refusal names every project it
-    // needed, and before any write (§FS-fmt.7.4.3).
+    // §FS-fmt.7.4: after the whole walk, so the refusal names every project it
+    // needed, and before any write (§FS-fmt.7.4).
     if let Some(workspace) = workspace
         && !unproven_aliases.is_empty()
     {
@@ -443,7 +443,7 @@ pub(super) fn plan_tree<'a>(
     })
 }
 
-/// `fmt`'s one line about a file two names read differently (§FS-fmt.2.3.2.3): it replaces the
+/// `fmt`'s one line about a file two names read differently (§FS-fmt.2.3.2): it replaces the
 /// outward-link warning where both hold, because a refused file is gone from the walk's list.
 fn reading_refusal(render: &Config, conflict: &ReadingConflict) -> Diagnostic {
     let names: Vec<String> = conflict

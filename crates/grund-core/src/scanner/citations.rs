@@ -365,7 +365,7 @@ pub(super) fn scan_shorthand_citations(
         if !line.frame.grammar().id_token_ends_cleanly(rest, match_end) {
             continue;
         }
-        // §FS-fmt.2.4.1.1: the token ended, which does not make it a citation.
+        // §FS-fmt.2.4.1: the token ended, which does not make it a citation.
         let numeric_run = line.frame.grammar().shorthand_sits_in_numeric_run(
             &line.schema.citation.marker,
             rest,

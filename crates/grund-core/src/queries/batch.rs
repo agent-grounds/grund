@@ -24,7 +24,7 @@ pub struct BatchShowQuery {
 /// does not stop the rest (§FS-output-shapes.4.1, §FS-show.3.3.2). `hints` are the
 /// `hint:` lines the single read prints below the same failure, built from the
 /// batch's one loaded context; a `json` envelope does not print them
-/// (§AR-resolver.3.1.1, §FS-output-shapes.6.1.2).
+/// (§AR-resolver.3.1.1, §FS-output-shapes.6.1).
 #[doc(hidden)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BatchShowFailure {

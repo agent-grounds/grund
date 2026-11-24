@@ -3,7 +3,7 @@
 A Markdown file may open with the YAML or TOML block that Jekyll, Hugo, Zola, Pandoc and
 Docusaurus read. grund reads that block as a region of its own
 ([§FS-check.1.1.5.2](../../docs/functional-spec/FS-check.md#1152-front-matter-holds-no-heading)): no line of it is a heading, its `§` citations are live and belong to the
-file's first declaration ([§FS-check.1.1.5.2.1](../../docs/functional-spec/FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)), and `grund fmt` rewrites nothing in it. This
+file's first declaration ([§FS-check.1.1.5.2](../../docs/functional-spec/FS-check.md#1152-front-matter-holds-no-heading)), and `grund fmt` rewrites nothing in it. This
 example is for a repository whose documents already carry front matter, in the Open
 Knowledge Format's shape or a static-site generator's, and that wants the relationships it
 writes there checked without repeating each one in the body.

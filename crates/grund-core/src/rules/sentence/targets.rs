@@ -1,5 +1,5 @@
 //! Namespace-aware object-target recognition (§FS-rules.2,
-//! §FS-config.3.9.3.1). Sentence parsing owns this vocabulary check; it reads no
+//! §FS-config.3.9.3). Sentence parsing owns this vocabulary check; it reads no
 //! facts and performs no evaluation.
 
 use super::forms::{Form, Refusal, refuse};
@@ -45,7 +45,7 @@ fn known_target(
     let legacy = format!("unknown kind \"{kind}\"{qualifier}");
     let reason = match vocab.objects.verdict(scope, kind) {
         KindVerdict::Citable => return Ok(render_citation_target(&parsed)),
-        // §FS-rules.4.1.1: a namespaced object kind the run holds no workspace
+        // §FS-rules.4.1: a namespaced object kind the run holds no workspace
         // vocabulary for is one this scope cannot judge either way; §FS-errors.3.7
         // gives the true clause alone, the final template.
         KindVerdict::Unverifiable => {

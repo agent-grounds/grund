@@ -1,4 +1,4 @@
-//! Refs transport folds preserve the CLI's path order and unique lines (§FS-distribution.3.2.2.2),
+//! Refs transport folds preserve the CLI's path order and unique lines (§FS-distribution.3.2.2),
 //! and the host's `globs` and `from_` select the sites `refs --glob` and `refs --from` list
 //! (§FS-coordinate-globs.bindings.options).
 use super::embedding::EmbeddingRequest;
@@ -67,7 +67,7 @@ pub(super) fn refs_sites_data(r: &EmbeddingRequest, sites: RefsSites) -> Result<
 }
 
 /// One `refs` result with its per-file folds, whichever mode listed its hits
-/// (§FS-distribution.3.2.2.2).
+/// (§FS-distribution.3.2.2).
 pub(super) fn refs_result(out: &RefsOutput, kind_title: Option<String>) -> Value {
     let mut files = BTreeMap::<(Option<String>, String), usize>::new();
     for hit in &out.hits {

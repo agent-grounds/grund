@@ -52,14 +52,14 @@ pub struct FmtChange {
     /// The rewrite class, and — for a line that expanded a number-only shorthand
     /// — the text it wrote (§FS-fmt.3). A `String` rather than one of four fixed
     /// labels because that detail is per-site. It carries the same text the CLI
-    /// row appends — every other kind that fired on the line (§FS-fmt.3.5.1) and
+    /// row appends — every other kind that fired on the line (§FS-fmt.3.5) and
     /// a lock file's `; creates the file` or `; deletes the file`
     /// (§FS-section-lock.write.report) — so a caller comparing it exactly breaks as
     /// an exact-line script does; read the per-kind counts and the lock-file flag
-    /// instead (§FS-distribution.3.2.2.2).
+    /// instead (§FS-distribution.3.2.2).
     pub label: String,
     /// How many rewrites of each kind the change made — the numbers the
-    /// `--write` totals sum (§FS-fmt.3.7, §FS-distribution.3.2.2.2).
+    /// `--write` totals sum (§FS-fmt.3.7, §FS-distribution.3.2.2).
     pub counts: FmtCounts,
     /// On a lock row, whether the write creates or deletes the lock file;
     /// `None` elsewhere (§FS-section-lock.write.report).
@@ -78,13 +78,13 @@ pub struct FmtOutput {
     /// exit code is untouched, because the refusal is the intended behavior.
     pub refused_writes: Vec<String>,
     /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
-    /// cautions of §FS-check.3.29, §FS-check.4.10.11 and
+    /// cautions of §FS-check.3.29, §FS-check.4.10 and
     /// §FS-workspace.6.1.7. A frontend renders each as one CLI-level `warning:`
     /// on stderr (§FS-check.2.1.1).
     ///
     /// Three keep the anchor the engine gave them — the `grund.toml` line their
     /// own message already names — and an editor publishes those on that line
-    /// (§FS-lsp.1.1.3). §FS-check.3.29's is the exception: it carries no
+    /// (§FS-lsp.1.1). §FS-check.3.29's is the exception: it carries no
     /// location field at all, states its location inside its own text
     /// (§FS-check.3.29), and reaches an editor off `check`'s report instead,
     /// located and as an error (§FS-check.3.29).
@@ -162,7 +162,7 @@ fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<F
             render: &config,
             workspace: workspace_for_wrap,
             precomputed_findings: reusable_findings,
-            // §FS-fmt.6.1.3: check previews the same index carve-out write applies.
+            // §FS-fmt.6.1: check previews the same index carve-out write applies.
             index_cross_refs: true,
             settled: None,
         };
@@ -188,7 +188,7 @@ fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<F
             .collect(),
         scan_errors,
         refused_writes,
-        // §FS-fmt.2.3.2.3: a refused reading is one of the run's warnings, once per file.
+        // §FS-fmt.2.3.2: a refused reading is one of the run's warnings, once per file.
         warnings: context_run_warnings(&context)
             .into_iter()
             .chain(public_run_warnings(&config, refused_readings))

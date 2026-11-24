@@ -25,7 +25,7 @@ use crate::sources::{
 
 /// The tree walk for the callers that ask a yes/no question about the tree and
 /// nothing else — today the `--cross-refs` auto-enable probe, which wants to know
-/// whether the scope holds any Markdown (§FS-fmt.6.6). Every caller that *reports*
+/// whether the scope holds any Markdown (§FS-fmt.6.7.2). Every caller that *reports*
 /// takes `walk_scannable_files_reporting`, so an unresolvable link reaches the
 /// report rather than being dropped here (§FS-config.3.5.5, §FS-check.2.4): this one
 /// is walking a tree that the reporting walk is about to walk again and account
@@ -162,13 +162,13 @@ pub(crate) fn walk_scannable_files_with_sources(
     // §FS-declarations.e2e-case.excluded: the case directories every root's walk met.
     let met_cases = MetCases::default();
     for (position, scan_root) in roots.iter().cloned().enumerate() {
-        // §FS-check.1.3.6.1: a widened walk starts at the path, so what the list holds at the
+        // §FS-check.1.3.6: a widened walk starts at the path, so what the list holds at the
         // second root is what the run was handed: a file, a directory's files, or nothing.
         if widened && position == 1 {
             handed = files.len();
             handed_failures = errors.len();
         }
-        // §FS-check.6.1.1: the actual walk roots are covered before traversal.
+        // §FS-check.6.1: the actual walk roots are covered before traversal.
         if !crate::config::observe_input(&scan_root, true) {
             return Err(anyhow!("watch input coverage failed"));
         }
@@ -214,12 +214,12 @@ pub(crate) fn walk_scannable_files_with_sources(
             continue;
         }
         // A root that resolves elsewhere reaches every one of its files under a
-        // spelling that is not the file's own, so all of them can alias (§FS-check.1.3.2).
+        // spelling that is not the file's own, so all of them can alias (§FS-check.1.3).
         let root_is_aliased = canonical_scan_root != scan_root;
         if path_is_file(&scan_root) {
             match name_refusal(&scan_root, schema) {
                 None => {
-                    // §FS-check.1.3.6.1: a file handed as the path is walked beside roots
+                    // §FS-check.1.3.6: a file handed as the path is walked beside roots
                     // that reach it under its own name, so a link's spelling has to
                     // resolve to the same one read (§FS-config.3.5.4).
                     if root_is_aliased {
@@ -363,7 +363,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         sort_failures(&mut root_errors);
         errors.append(&mut root_errors);
     }
-    // One file, one read (§FS-check.1.3.2, §FS-config.3.5.4). Two spellings first,
+    // One file, one read (§FS-check.1.3, §FS-config.3.5.4). Two spellings first,
     // while the list is still in walk order and first-seen wins; then the
     // byte-identical ones, which the sort has just brought together.
     let resolved = resolve_aliasable(&aliasable);
@@ -406,7 +406,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     sort_paths(&mut files);
     // The roots may overlap — `include = ["docs", "docs/api"]` names one subtree
     // twice, and under `--full` every `include` root is walked beside the config root
-    // containing it (§FS-check.1.3.2). A file read twice duplicates its own declaration.
+    // containing it (§FS-check.1.3). A file read twice duplicates its own declaration.
     files.dedup();
     // §FS-check.2.4.2: choose ordinary-root names while keeping encounter-time classification.
     let failure_names = if errors.is_empty() {
@@ -506,7 +506,7 @@ fn resolve_aliasable(aliasable: &BTreeSet<PathBuf>) -> AliasTargets {
 }
 
 /// Collapse the files reached under two spellings, keeping the **first**
-/// (§FS-check.1.3.2, §FS-config.3.5.4). `root_scope_roots` walks the `include` roots
+/// (§FS-check.1.3, §FS-config.3.5.4). `root_scope_roots` walks the `include` roots
 /// before the config root `--full` adds, so the surviving spelling is the one the
 /// plain run reports, and `--full` stays purely additive: it appends out-of-scope
 /// lines and never restates an in-scope one under a second name. Within a single

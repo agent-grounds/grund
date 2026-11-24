@@ -1,9 +1,9 @@
 //! Install one rendering-layer integration the way an embedder does: ask
 //! `grund_core::integrations` once and read its answer
 //! (§FS-distribution.3.1.3). Each event is printed as its outcome verb and the
-//! path it touched (§FS-integrations.1.3.2), and its note, if it has one, on
+//! path it touched (§FS-integrations.1.3), and its note, if it has one, on
 //! stderr; a refusal is printed as one `error:` line and exit `2`
-//! (§FS-integrations.1.3.3).
+//! (§FS-integrations.1.3).
 //!
 //! ```sh
 //! cargo run -p grund-rust-api-example -- kitty --write

@@ -269,7 +269,7 @@ fn fault_hint(
 /// in a value declaration (`value`, §FS-values.2.1); otherwise the outermost proper
 /// prefix of `corrected` that is a value root of `decl`, embedded (§FS-values.2.4)
 /// or by a declared chapter (§FS-values.2.5). Outermost, because a root nested in
-/// another is refused anyway (§FS-values.2.4.4) and the outer one is the stricter.
+/// another is refused anyway (§FS-values.2.4) and the outer one is the stricter.
 fn value_run<'a>(decl: &Declaration, corrected: &'a str, value: bool) -> Option<&'a str> {
     if value {
         return Some("");

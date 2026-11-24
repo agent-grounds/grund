@@ -32,7 +32,7 @@ coordinate a `--glob` matches ([§FS-refs.globs](FS-refs.md#globs---glob-lists-w
 ([§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites)). `--summary` folds that set to a row per file and `--total` to one row
 ([§FS-refs.3.3](FS-refs.md#33---summary), [§FS-refs.3.4](FS-refs.md#34---total)), and neither adds a refusal or an exit status: each inherits the
 result of the operand that fixed the set ([§FS-refs.4](FS-refs.md#4-exit-codes)). So `--section <s> --descendants --total`
-is the count an editor shows on that section's heading ([§FS-lsp.1.2.6](FS-lsp.md#126-what-a-section-heading-counts)). A flag added to `refs`
+is the count an editor shows on that section's heading ([§FS-lsp.1.2.3](FS-lsp.md#123-title-hover)). A flag added to `refs`
 narrows or widens that set, or folds over it, and inherits the operand's result. Serves
 [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
 
@@ -64,7 +64,7 @@ grund refs --from <coordinate> [<path>] [--summary] [--total] [--format text|jso
 - `<path>` — what it scans is [§FS-scan.path.refs](FS-scan.md#pathrefs-refs-scans-the-paths-tree), in every mode.
 - `--glob <pattern>` — list every site whose cited coordinate the pattern matches, instead of
   one ID's ([§FS-refs.globs](FS-refs.md#globs---glob-lists-who-cites-a-set)). Repeatable, and the patterns union
-  ([§FS-coordinate-globs.matching.union](FS-coordinate-globs.md#matchingunion-repeated-globs-union)).
+  ([§FS-coordinate-globs.matching](FS-coordinate-globs.md#matching-matching)).
 - `--from <coordinate>` — list the sites the coordinate's own body holds, instead of the ones
   that cite it ([§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites)). Given once, spelled as for `grund <coordinate>`, its value the next
   argument or after `=`.
@@ -92,7 +92,7 @@ wherever it stands on the line, and with none the run covers the project
 ### 1.2 Refusals
 
 Each is a usage error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)), answered before config discovery, so a broken `grund.toml`
-hides none of them ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read--realized-directional-for-the-next-flag)). A missing value is reported where the
+hides none of them ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read)). A missing value is reported where the
 command line reads it; once the whole line is read, a bad `--format` is answered first
 ([§FS-cli.3.5](FS-cli.md#35-a-bad-run-flag-is-answered-before-the-load)), then the first row of this table that applies, and only then a pattern's own
 refusal ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)).
@@ -183,7 +183,7 @@ note: <alias>/<ID> is neither declared nor cited in scan path `<path>` — run `
 ```
 
 The text after `note: ` of either note is also the `note` of the result the Rust API and both
-bindings return ([§FS-distribution.3.2.2.2](FS-distribution.md#3222-result-fields)).
+bindings return ([§FS-distribution.3.2.2](FS-distribution.md#322-typed-readonly-host-records)).
 
 #### 2.1.1 A declared ID nothing cites points at `list --unused`
 
@@ -211,13 +211,13 @@ The note is withheld where that listing answers another question: when the query
 section, inline or by `--section`; when a path is given, `.` included; when the scan is
 incomplete, which exits `2` ([§FS-refs.4](FS-refs.md#4-exit-codes)); under `--glob` or `--from`; and when the answer has a
 site. So an ID whose only site is its kind's index entry is listed with that site labelled
-([§FS-refs.3.1](FS-refs.md#31---format-text-default)) and earns no note, though `--unused` lists it ([§FS-list.3.2.1](FS-list.md#321-refs-counts-citations)). Decided in
+([§FS-refs.3.1](FS-refs.md#31---format-text-default)) and earns no note, though `--unused` lists it ([§FS-list.3.2](FS-list.md#32---format-json)). Decided in
 [§DF-refs-unused-note](../decisions/functional/DF-refs-unused-note.md#df-refs-unused-note-an-uncited-declarations-empty-refs-answer-points-at-grund-list---unused).
 
 ## globs: `--glob` lists who cites a set
 
 `grund refs --glob <pattern>` lists every site whose cited coordinate a pattern matches, as
-[§FS-coordinate-globs.matching.citations](FS-coordinate-globs.md#matchingcitations-on-refs-and-cover-a-glob-selects-citation-sites) matches it, from the set ID mode lists from
+[§FS-coordinate-globs.matching](FS-coordinate-globs.md#matching-matching) matches it, from the set ID mode lists from
 ([§FS-refs.2](FS-refs.md#2-behaviour)), in its order and shapes ([§FS-refs.3](FS-refs.md#3-outputs)), each site once however many patterns match
 it:
 
@@ -298,10 +298,10 @@ docs/functional-spec/README.md:5: §FS-login (index entry)
 docs/guide.md:3: FS-login
 ```
 
-A line whose exact site is an index entry that [§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count) excludes from use ends in the
+A line whose exact site is an index entry that [§FS-check.4.1](FS-check.md#41-unused-declaration) excludes from use ends in the
 `index entry` annotation shown above, after the complete `<path>:<line>: <token>`, in every
 mode and even beside ordinary uses of the ID. Which sites carry it is that rule applied to the
-exact site, never the file's name ([§FS-check.4.1.2.1](FS-check.md#4121-a-section-citation-or-a-value-binding-in-the-index-is-not-the-entry)). The annotation is text alone: JSON
+exact site, never the file's name ([§FS-check.4.1](FS-check.md#41-unused-declaration)). The annotation is text alone: JSON
 records, counts and exits carry none.
 
 ### 3.2 `--format json`
@@ -357,7 +357,7 @@ $ grund refs FS-001-alpha --section 1 --descendants --total
 cited at 4 sites across 2 files
 ```
 
-The sentence is [§FS-lsp.1.2.4](FS-lsp.md#124-the-title-hovers-text)'s clause word for word, `across` at every count and `site` and
+The sentence is [§FS-lsp.1.2.3](FS-lsp.md#123-title-hover)'s clause word for word, `across` at every count and `site` and
 `file` plural at every count but one, and an empty set reads `not cited`, because the terminal
 and the editor state one fact ([§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli)). `--glob` prints the same sentence, and `--from` its
 own ([§FS-refs.from.records](FS-refs.md#fromrecords-what-a-record-and-a-total-say)). `--summary` beside `--total` is ignored rather than refused, and
@@ -381,7 +381,7 @@ distinct ([§FS-workspace.8.2](FS-workspace.md#82-grund-refs)).
 
 Text prints `show`'s bare query-failure line ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)): `invalid ID` with the
 configured-format `hint:`, or, where a loaded member declares the ID, with a qualified command
-([§FS-workspace.8.2.2.1](FS-workspace.md#8221-a-member-only-kind-replaces-the-text-format-hint)); or an ambiguity naming its candidates or every claimant's path and
+([§FS-workspace.8.2.2](FS-workspace.md#822-an-unqualified-query-at-the-workspace-root)); or an ambiguity naming its candidates or every claimant's path and
 line in `show`'s order, with no hint. JSON prints one failed-query object on stderr instead,
 with no hint ([§FS-errors.5](FS-errors.md#5-json-format)): `invalid-id`, or `ambiguous` for a shorthand, with `sites` `null`;
 `ambiguous` for independent homes or `ambiguous-section` for a colliding section, with `sites`

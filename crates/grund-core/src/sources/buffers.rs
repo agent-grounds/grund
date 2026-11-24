@@ -55,7 +55,7 @@ impl Buffers {
 
     /// These buffers with `texts` in front of them, each the file at its path:
     /// the tree as a `fmt` walk leaves it, which its lock pass judges
-    /// (§FS-section-lock.write.same-run). What a recording run keeps stays
+    /// (§FS-section-lock.write.rules). What a recording run keeps stays
     /// shared, since a text in front of the disk is never what it read there.
     pub(crate) fn in_front(&self, texts: impl IntoIterator<Item = (PathBuf, String)>) -> Self {
         let mut open = BTreeMap::clone(&self.open);
@@ -216,13 +216,13 @@ impl<'a> Sources<'a> {
         Ok(FileText::Disk(Arc::new(text)))
     }
 
-    /// The directory's entries on disk, observed first (§FS-check.6.1.3); the
+    /// The directory's entries on disk, observed first (§FS-check.6.1); the
     /// buffers with no file behind them are `buffer_only_files`.
     pub(crate) fn read_dir(self, path: impl AsRef<Path>) -> std::io::Result<std::fs::ReadDir> {
         input_read_dir(path)
     }
 
-    /// The directory's entries on disk, observed first (§FS-check.6.1.3), as one listing.
+    /// The directory's entries on disk, observed first (§FS-check.6.1), as one listing.
     /// Opening the directory and reading it are one step, so a failure partway through is
     /// the directory's, as a failure to open it is: the listing's one failure, which ends
     /// it, since nothing promises a `ReadDir` moves on after an error. The entries read
@@ -257,7 +257,7 @@ impl<'a> Sources<'a> {
     }
 
     /// Whether `path` is an effective file, retaining metadata failures for value
-    /// candidate discovery (§FS-values.5.3.1). An open buffer is a file without
+    /// candidate discovery (§FS-values.5.3). An open buffer is a file without
     /// consulting the disk (§FS-scan.text.buffer, §FS-scan.identity.buffers).
     pub(crate) fn try_is_file(self, path: &Path) -> std::io::Result<bool> {
         if self.buffer(path).is_some() {
@@ -282,11 +282,11 @@ impl<'a> Sources<'a> {
             .unwrap_or_default()
     }
 
-    /// The file a stub's link names (§FS-check.6.1.1): relative to the stub's
+    /// The file a stub's link names (§FS-check.6.1): relative to the stub's
     /// own directory where that file is there, and to the config root where it
     /// is not, a buffer counting as there (§FS-scan.text.buffer-only). Both
     /// candidates are observed before one is chosen, missing directories and
-    /// followed links included (§FS-check.6.1.3).
+    /// followed links included (§FS-check.6.1).
     pub(crate) fn stub_target(self, root: &Path, stub_file: &Path, target: &Path) -> PathBuf {
         let [markdown_relative, root_relative] = stub_target_candidates(root, stub_file, target);
         if target.is_absolute() {
@@ -303,7 +303,7 @@ impl<'a> Sources<'a> {
     }
 }
 
-/// The two files a stub's link can name, before either is looked at (§FS-check.6.1.1): the one
+/// The two files a stub's link can name, before either is looked at (§FS-check.6.1): the one
 /// beside the stub, then the one under the config root. An absolute link names one file, given
 /// twice. The editor keeps both so that an edit to either is judged without reading the tree
 /// (§AR-lsp.3.2).

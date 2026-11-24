@@ -97,7 +97,7 @@ export type SizeResult = Cautions & { readonly outputFormat: string; readonly wo
 export type CoverResult = Cautions & { readonly outputFormat: string; readonly scanErrors: readonly ScanError[];
   readonly entries: readonly { readonly project: string | null; readonly path: string; readonly citations: readonly RefHit[] }[];
   readonly note: string | null };
-// §FS-distribution.3.2.2.2: the per-kind occurrences behind fmt's `--write` totals.
+// §FS-distribution.3.2.2: the per-kind occurrences behind fmt's `--write` totals.
 export type FmtCounts = { readonly triggersMarked: number; readonly citationsMarked: number;
   readonly localSectionsExpanded: number; readonly shorthandsExpanded: number;
   readonly linksWritten: number; readonly sectionLockEntries: number };

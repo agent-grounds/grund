@@ -52,7 +52,7 @@ pub(super) fn validate_embedded_value_roots(
 
         // Root claims include resolver entries and later duplicate headings.
         // Resolve every pair by coordinate, independent of source order
-        // (§FS-values.2.4.4).
+        // (§FS-values.2.4).
         let mut claims = decl
             .sections
             .iter()
@@ -141,7 +141,7 @@ pub(super) fn validate_embedded_value_roots(
             }
             // The nested marker is the complete overlap finding; do not also
             // reinterpret its subtree as malformed outer-root children
-            // (§FS-values.2.4.4).
+            // (§FS-values.2.4).
             if roots_with_descendants.contains(&root_path) {
                 invalid.extend(reasons.into_iter().map(|(line, column, message)| {
                     InvalidValueSite {
@@ -181,7 +181,7 @@ pub(super) fn validate_embedded_value_roots(
                         .strip_suffix(&format!(" {EMBEDDED_VALUE_MARKER}"))
                 })
                 .is_some_and(|title| !title.is_empty());
-            // §FS-values.2.4.4: both are statements about the marker's own
+            // §FS-values.2.4: both are statements about the marker's own
             // placement, which a chapter root has not made (§FS-values.2.5).
             if marked && !(decl.body_start..=decl.body_end).contains(&root_line) {
                 reasons.push((

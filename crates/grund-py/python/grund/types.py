@@ -335,7 +335,7 @@ class CoverLinesResult(Cautioned):
 
 @dataclass(frozen=True)
 class FmtCounts:
-    """How many rewrites of each kind one change made (§FS-distribution.3.2.2.2)."""
+    """How many rewrites of each kind one change made (§FS-distribution.3.2.2)."""
     triggers_marked: int
     citations_marked: int
     local_sections_expanded: int

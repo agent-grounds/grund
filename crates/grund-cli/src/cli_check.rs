@@ -158,7 +158,7 @@ fn prepare_check_run(
         status: 2,
         format: format_override.unwrap_or("text").to_string(),
     };
-    // §FS-check.4.10.8: render root warnings once, before the report
+    // §FS-check.4.10: render root warnings once, before the report
     // or later refusal. They remain data until this frontend chooses their stream
     // and shape (§FS-distribution.3.1).
     for warning in &run_warnings {
@@ -276,7 +276,7 @@ fn sorted_json_findings(report: &Report) -> Vec<(&'static str, &Finding)> {
 }
 
 /// `run_warnings` is how many `[workspace]` cautions this run already printed on
-/// stderr, before this report existed (§FS-check.4.10.11, §FS-workspace.6.1.7). They are not report findings, so nothing in `report`
+/// stderr, before this report existed (§FS-check.4.10, §FS-workspace.6.1.7). They are not report findings, so nothing in `report`
 /// records them — and a run that says part of its tree is unchecked must not also
 /// say `success` (§FS-check.2.1.3).
 fn render_check_text(report: &Report, run_warnings: usize, prepared: &mut PreparedCheckRun) {

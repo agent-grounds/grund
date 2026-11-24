@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.3.3: installed fallback uses only its bundled source closure.
+// §FS-distribution.3.2.3: installed fallback uses only its bundled source closure.
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';

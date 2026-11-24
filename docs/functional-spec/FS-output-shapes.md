@@ -80,11 +80,11 @@ Fields, in this order:
 - `project`, in a workspace only ([§FS-workspace.8.3.5](FS-workspace.md#835---format-json)).
 - `id`, the rendered ID, then `section`, the exact section path, on a section row only ([§FS-rules.8](FS-rules.md#8-command-surfaces)).
 - `kind`, then `path` and `line` of the declaration or section heading.
-- `title`, [§FS-list.3.1](FS-list.md#31---format-text-default)'s title; `null` where the text form's title column is empty or shows `→ <target>` ([§FS-list.3.1.1](FS-list.md#311-row-notes)).
-- `stub`, true only for a broken stub, and `defines`, a stub's target path, otherwise `null` ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)).
-- `refs`, [§FS-list.3.2.1](FS-list.md#321-refs-counts-citations)'s count.
+- `title`, [§FS-list.3.1](FS-list.md#31---format-text-default)'s title; `null` where the text form's title column is empty or shows `→ <target>` ([§FS-list.3.1](FS-list.md#31---format-text-default)).
+- `stub`, true only for a broken stub, and `defines`, a stub's target path, otherwise `null` ([§FS-list.2](FS-list.md#2-behaviour)).
+- `refs`, [§FS-list.3.2](FS-list.md#32---format-json)'s count.
 - `duplicate`, true when this ID has more than one independent declaration home.
-- `value_roots`, only on a row that has them ([§FS-list.3.2.2](FS-list.md#322-value_roots)).
+- `value_roots`, only on a row that has them ([§FS-list.3.2](FS-list.md#32---format-json)).
 
 `list --summary --format=json` prints one object per summary line, in [§FS-list.3.3](FS-list.md#33---summary)'s order: `project` in a workspace only, `kind`, `title`, `home`, `count`. `title` is the kind's title, left out when the kind has none ([§FS-config.3.4.3](FS-config.md#343-title)); `home` and `count` are [§FS-list.3.3](FS-list.md#33---summary)'s columns.
 

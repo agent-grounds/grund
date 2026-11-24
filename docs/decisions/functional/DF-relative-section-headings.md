@@ -32,11 +32,11 @@ The parent is the nearest shallower heading, which must be exactly one level up 
 
 ### decision.where: Markdown declaration bodies only
 
-The form is recognised only where today's verdict on it is already an error: inside a Markdown declaration body ([§FS-declarations.section.relative.where](../../functional-spec/FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)). In a source doc-comment the same dotted line is prose today and passes, so giving it a meaning would move a verdict; that follow-up takes the warning route on its own, tracked under #643.
+The form is recognised only where today's verdict on it is already an error: inside a Markdown declaration body ([§FS-declarations.section.relative.form](../../functional-spec/FS-declarations.md#sectionrelativeform-the-form)). In a source doc-comment the same dotted line is prose today and passes, so giving it a meaning would move a verdict; that follow-up takes the warning route on its own, tracked under #643.
 
 ### decision.shown: Canonical where a coordinate is copied, bytes everywhere else
 
-`--toc` and the title hover print the canonical path in place of the relative one and keep the title ([§FS-declarations.section.relative.shown](../../functional-spec/FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown), [§FS-lsp.1.2.4](../../functional-spec/FS-lsp.md#124-the-title-hovers-text)), because those are where a reader copies a coordinate from. Every read of the text prints the file's bytes, and no command rewrites a heading between the two forms ([§FS-fmt.2.3](../../functional-spec/FS-fmt.md#23-what-is-never-rewritten)).
+`--toc` and the title hover print the canonical path in place of the relative one and keep the title ([§FS-declarations.section.relative.shown](../../functional-spec/FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown), [§FS-lsp.1.2.3](../../functional-spec/FS-lsp.md#123-title-hover)), because those are where a reader copies a coordinate from. Every read of the text prints the file's bytes, and no command rewrites a heading between the two forms ([§FS-fmt.2.3](../../functional-spec/FS-fmt.md#23-what-is-never-rewritten)).
 
 For one line that choice was replaced: a read of a selected section prints its own heading, the slice's first line, with the canonical path as well ([§DF-show-selected-relative-heading](DF-show-selected-relative-heading.md#df-show-selected-relative-heading-a-read-of-a-selected-section-names-the-section-it-read)). Every other heading of a body read, the map and the hover stand as decided here.
 

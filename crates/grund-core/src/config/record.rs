@@ -39,7 +39,7 @@ pub struct ConfigLocation {
 
 /// One `[workspace] optional_members` entry whose directory this checkout does
 /// not have, and therefore one namespace this run did not read
-/// (§FS-workspace.2.2, §FS-workspace.2.2.1).
+/// (§FS-workspace.2.2).
 ///
 /// A record rather than a rule: it sits beside the `workspace_absent_optional`
 /// field that carries it, because a `Config` the run loaded is what every reader
@@ -53,7 +53,7 @@ pub struct AbsentOptionalNamespace {
     pub written: String,
     /// The whole alias path this run spells the namespace with: one segment per
     /// workspace level, so an entry one `[workspace]` block down is `sub/vendored`
-    /// while the entry itself stays `vendored` (§FS-check.4.9.2). Expansion sets it
+    /// while the entry itself stays `vendored` (§FS-check.4.9). Expansion sets it
     /// to the bare segment; the walk that knows the enclosing path composes the
     /// rest.
     pub alias_path: String,
@@ -122,7 +122,7 @@ pub struct Config {
     /// source file that carries no resolving citation (and declares no ID inline).
     /// `--require-grounding` on `grund check` forces it on for one run.
     pub require_grounding: bool,
-    /// `[reference] grounding_level` (§FS-config.3.4.8.2, §FS-check.3.6.2) — the
+    /// `[reference] grounding_level` (§FS-config.3.4.8, §FS-check.3.6.2) — the
     /// default unit inside each governed file, in Markdown heading levels, for
     /// every `[[kinds]]` row that does not set its own. `1` is the file.
     pub grounding_level: usize,
@@ -163,7 +163,7 @@ pub struct Config {
     /// widens `include`, and a second knob describing one scope is how two
     /// installs come to disagree (§FS-non-goals.13).
     pub scan_full: bool,
-    /// §FS-check.1.3.6.1: this run was given an explicit path below the config
+    /// §FS-check.1.3.6: this run was given an explicit path below the config
     /// root, so the walk reads the project's ordinary roots *as well as* that
     /// path — the path sets the report scope and not the resolution one. Like
     /// `scan_full` it is a per-run fact rather than a `grund.toml` key and is
@@ -213,11 +213,11 @@ pub struct Config {
     /// Where the `[workspace]` table header itself was written (§FS-config.4.3).
     /// The anchor for an error about the *block* rather than about one key — a
     /// block with no `members` key at all still has to say which of a tree's many
-    /// blocks it is (§FS-workspace.6.1.3).
+    /// blocks it is (§FS-workspace.6.1.2).
     pub workspace_section_source: Option<ConfigLocation>,
     pub workspace_include_root: bool,
     /// Where `include_root` was written (§FS-config.4.3). The breadcrumb
-    /// §FS-check.4.10.5 wears: the key that took the block's files out of every
+    /// §FS-check.4.10 wears: the key that took the block's files out of every
     /// scan is the line the reader should open, which neither the `members` line
     /// nor the `[workspace]` header is. `None` where the key is absent, and the
     /// default `true` makes that unreachable for the one finding that reads it.
@@ -242,14 +242,14 @@ pub struct Config {
     /// leaf member has none; this says where the *others* are, which is how a
     /// member's walk tells a link into a sibling — or back up into the root
     /// project — from a link into ordinary outside content. Empty for a run that
-    /// loaded no workspace, a member checked on its own included (§FS-workspace.6.3).
+    /// loaded no workspace, a member checked on its own included (§FS-workspace.6.2).
     pub workspace_project_roots: Vec<PathBuf>,
     /// §FS-workspace.6.1.5: the alias path of the *run's* own workspace root, read
     /// from the outermost workspace and stamped onto every project the run loaded.
     /// Empty at the outermost root and for a single-project run; non-empty exactly
     /// when the run is narrowed to a subtree. Not a `grund.toml` key and never read
     /// from one (like `workspace_boundary_roots`, it is what expansion learned
-    /// about this run): §FS-check.3.8.3 reads it to know that a path it cannot
+    /// about this run): §FS-check.3.8 reads it to know that a path it cannot
     /// resolve may still be correct at the workspace root.
     pub workspace_scope_path: String,
     /// Parsed `[citations]` direction rules (§FS-config.3.9). Empty/absent unless
@@ -274,17 +274,17 @@ pub struct Config {
 }
 
 /// The **default** name of the homeless kind — the citing kind of every site
-/// outside every configured home (§AR-scanner.2.4.2, §FS-config.3.9.2.2). It is a
+/// outside every configured home (§AR-scanner.2.4.2, §FS-config.3.9.2). It is a
 /// default and not a fixed name: `code` is the right word for most
 /// repositories and the wrong one for a Terraform, SQL, or prose tree, so a
 /// project may declare the homeless kind itself and name it (`src`,
 /// `modules`, …). See [`Config::homeless_kind`].
 pub(super) const CODE_SOURCE_KIND: &str = "code";
-/// The default `grounding_level` (§FS-config.3.4.8.2): the file — the H1's own
+/// The default `grounding_level` (§FS-config.3.4.8): the file — the H1's own
 /// subtree, so one citation anywhere under it. It is the unit every config had
 /// before the key existed, which is what keeps the key additive.
 pub(crate) const DEFAULT_GROUNDING_LEVEL: usize = 1;
-/// The heading levels a `grounding_level` may name (§FS-config.3.4.8.2). Markdown
+/// The heading levels a `grounding_level` may name (§FS-config.3.4.8). Markdown
 /// has six, and a value outside them names no heading.
 pub(super) const GROUNDING_LEVELS: std::ops::RangeInclusive<usize> = 1..=6;
 
@@ -299,7 +299,7 @@ impl Config {
     }
 
     /// The defaults with the empty kind set `kinds = []` declares
-    /// (§FS-config.3.4.4.5): what the `none` template's config means
+    /// (§FS-config.3.4.4): what the `none` template's config means
     /// (§FS-init.2.4.9).
     #[cfg(test)]
     pub(crate) fn without_kinds_for(root: PathBuf) -> Self {

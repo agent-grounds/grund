@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.2.4: closed host inputs copied before dispatch.
+// §FS-distribution.3.2.1: closed host inputs copied before dispatch.
 'use strict';
 const path = require('node:path');
 const { GrundError } = require('./errors.cjs');

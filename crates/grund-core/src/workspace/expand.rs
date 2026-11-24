@@ -114,7 +114,7 @@ fn enclosing_alias_prefix(config: &mut Config) -> Result<String> {
         // and located exactly as the outer run derives and locates it — the same
         // error text, from the same line (§AR-workspace.5.3).
 
-        // §FS-workspace.2.2.2: which of the two lists claimed it decides where the
+        // §FS-workspace.2.2: which of the two lists claimed it decides where the
         // alias comes from — a present optional member reads its own segment here,
         // the same answer the outer run reads for it.
         let alias = match optional_entry_naming(&parent, &child_config.root) {
@@ -140,7 +140,7 @@ fn enclosing_alias_prefix(config: &mut Config) -> Result<String> {
 /// The **outermost** ancestor workspace that declares `child` a member, or
 /// `None`. Each step moves strictly upward, so the caller's climb terminates.
 ///
-/// Outermost rather than nearest (§FS-workspace.6.1.6): a multi-segment `members`
+/// Outermost rather than nearest (§FS-workspace.6.1.5): a multi-segment `members`
 /// entry (`grp/inner`) hops the directories between, and a hopped directory may
 /// declare `[workspace]` and list the same child. Stopping at the nearer of the
 /// two claims would name `inner` from a directory nothing lists and lose every
@@ -167,7 +167,7 @@ pub(crate) fn enclosing_workspace_of(
 ) -> Result<Option<Config>> {
     // The claim is compared canonically: a `members` entry may reach this
     // directory through a symlink, and then only the resolved paths agree
-    // (§FS-workspace.6.1.4).
+    // (§FS-workspace.2.3).
     let canonical_child = canonical_workspace_path(child);
     let mut claiming = None;
     let mut cursor = child.parent();
@@ -211,10 +211,10 @@ pub(super) fn qualify_alias(prefix: &str, alias: &str) -> String {
 /// and the canonical-root check that both rejects a member cycle and bounds the
 /// walk.
 ///
-/// §FS-workspace.2.2.10: "at least one project in scope" is read from the config
+/// §FS-workspace.2.2: "at least one project in scope" is read from the config
 /// *text* — a non-empty `optional_members` list names members, and whether they are
 /// present is a fact about the checkout rather than about the config. So a block
-/// that loses its last project to an absence is not the empty block §FS-workspace.6.1.3
+/// that loses its last project to an absence is not the empty block §FS-workspace.6.1.2
 /// refuses; failing on a checkout is the verdict that key exists to remove.
 ///
 /// The tree is rendered against its own root, which is what a walking command
@@ -247,7 +247,7 @@ pub(crate) fn expand_workspace_tree(
 /// narrowed directory a *different* `grund.toml` exists, so that spelling names a
 /// real file that is the wrong one.
 ///
-/// §FS-check.4.10.7 is asked at the end rather than where each block is met, because
+/// §FS-check.4.10 is asked at the end rather than where each block is met, because
 /// the answer depends on `workspace_project_roots` and this is where the run first
 /// has it: a probe that did not stop where the scan stops would report a directory
 /// another project of this run reads, which is the false positive the finding's
@@ -256,7 +256,7 @@ pub(crate) fn expand_workspace_tree(
 /// the run is rooted at has already had its turn in `apply_workspace_boundary`. Two
 /// consequences worth stating: the count reaches `check` on the run's own config
 /// either way (§FS-check.2.1), and a tree whose expansion fails is never cautioned
-/// about, which is the same line §FS-check.4.10.8 already draws around a block the
+/// about, which is the same line §FS-check.4.10 already draws around a block the
 /// run refuses outright.
 pub(crate) fn expand_workspace_tree_with_report_base(
     root_config: &mut Config,
@@ -268,7 +268,7 @@ pub(crate) fn expand_workspace_tree_with_report_base(
         let mut entries = expand_workspace_projects(root_config, report_base)?;
         // §AR-config.1.5: the run's one reading of every project's kinds, made here as the
         // first point that holds them all, and the pinned `[citations]` targets judged
-        // against it once (§AR-workspace.5.2, §FS-config.3.9.5.2).
+        // against it once (§AR-workspace.5.2, §FS-config.3.9.5).
         install_kind_table(
             root_config,
             entries
@@ -303,7 +303,7 @@ pub(super) fn expand_workspace_projects(
     // the outermost workspace. Empty unless the run was narrowed to a subtree — and
     // that is what keeps a narrowed run resolving a subset of the same paths.
     let self_path = enclosing_alias_prefix(root_config)?;
-    // §FS-check.4.9.2: the namespaces this walk did not read, gathered as it goes and
+    // §FS-check.4.9: the namespaces this walk did not read, gathered as it goes and
     // named by the whole alias path the run spells them with — this block's under
     // the run's own path, each nested block's under that block's.
     let mut absent_optional = qualify_absent_optional(expanded.absent, &self_path);
@@ -342,7 +342,7 @@ pub(super) fn expand_workspace_projects(
         &absent_optional,
         &mut siblings,
     )?;
-    // §FS-check.4.10.7: every block below the run's root is posed the question down
+    // §FS-check.4.10: every block below the run's root is posed the question down
     // there and answered below, once this run knows where its projects are.
     let mut mounts = Vec::new();
     let opted_out_blocks = collect_workspace_members(
@@ -371,7 +371,7 @@ pub(super) fn expand_workspace_projects(
     if !mounts.is_empty() {
         root_config.set_mount_edges(mounts);
     }
-    // §FS-workspace.2.2.10: read from the config text — see this function's docs.
+    // §FS-workspace.2.2: read from the config text — see this function's docs.
     if entries.is_empty() && root_config.workspace_optional_members.is_empty() {
         return Err(empty_workspace_error(root_config));
     }
@@ -382,11 +382,11 @@ pub(super) fn expand_workspace_projects(
         .iter()
         .map(|entry| entry.config.root.clone())
         .collect();
-    // §FS-check.3.8.3: every project the run loaded carries the run's own scope, so
+    // §FS-check.3.8: every project the run loaded carries the run's own scope, so
     // the diagnostic that would re-spell a citation knows whether it is looking at
     // the whole tree or a slice of it.
 
-    // §FS-workspace.4.3: and the namespaces it did not read, because resolution asks
+    // §FS-workspace.4: and the namespaces it did not read, because resolution asks
     // that of the project the citing file belongs to, wherever in the tree that is.
     for entry in &mut entries {
         // The run's warning channel belongs to the run and not to a project of it
@@ -406,7 +406,7 @@ pub(super) fn expand_workspace_projects(
     // where the announcement is read back off (`run_workspace_check`).
     root_config.set_workspace_absent_optional(absent_optional);
     root_config.set_workspace_lists_optional(lists_optional);
-    // §FS-check.4.10.7: the blocks with a present member, posed now that `project_roots`
+    // §FS-check.4.10: the blocks with a present member, posed now that `project_roots`
     // exists — see this function's docs. The walk that answers one is the
     // resolver's, so the channel carries the block (§AR-resolver.placement).
     let project_roots = root_config.workspace_project_roots.clone();
@@ -416,7 +416,7 @@ pub(super) fn expand_workspace_projects(
             .filter(|block| !block.workspace_boundary_roots.is_empty())
             .filter_map(|block| RunWarning::unread_block(block, project_roots.clone())),
     );
-    // §FS-check.4.11.3: every block that opted out, the run's to name the findings of.
+    // §FS-check.4.11: every block that opted out, the run's to name the findings of.
     root_config.set_workspace_opted_out_blocks(opted_out_blocks);
     Ok(entries)
 }
@@ -439,13 +439,13 @@ pub(super) fn expand_workspace_projects(
 /// introduced it, named as the entry was written and beside the root it lands on,
 /// since those are two different strings and the author wrote only one of them.
 ///
-/// §FS-workspace.2.2.2: an optional entry's alias is its own last path segment, and
+/// §FS-workspace.2.2: an optional entry's alias is its own last path segment, and
 /// a `project_name` that disagrees with it is refused rather than accepted as a
 /// second name — one citation text has to name one namespace in a full checkout and
 /// in a partial one.
 ///
 /// Returns every `include_root = false` block this subtree reached, in the order it
-/// reached them: the run names each one's config findings (§FS-check.4.11.3), and
+/// reached them: the run names each one's config findings (§FS-check.4.11), and
 /// poses §FS-check.4.10 to those with a present member once it knows where the run's
 /// projects are (§FS-check.2.1). A block whose own members swallow its scan is
 /// refused here instead, at its own `members` line (§FS-check.3.30).
@@ -466,7 +466,7 @@ fn collect_workspace_members(
     let mut opted_out = Vec::new();
     for member in members {
         let member_root = &member.root;
-        // §FS-workspace.6.1.4: an **unreachable backstop**, kept because it is the one
+        // §FS-workspace.2.3: an **unreachable backstop**, kept because it is the one
         // that would name the line if the containment rule that bounds this recursion
         // (see the fn docs) ever stopped holding.
         if visited.iter().any(|seen| seen == member_root) {
@@ -481,7 +481,7 @@ fn collect_workspace_members(
         }
         visited.push(member_root.clone());
         // §AR-config.1.5: a member's run is built once, from what the run's own
-        // invocation hands its members (§AR-scanner.2.4.2, §FS-check.1.3.8).
+        // invocation hands its members (§AR-scanner.2.4.2, §FS-check.1.3).
         let invocation = top_config.run().members();
         let mut member_config = config_at(
             member_root,
@@ -497,7 +497,7 @@ fn collect_workspace_members(
         // project: a member that is itself a workspace still contributes its
         // segment to every alias path below it (§FS-workspace.6.1.2).
 
-        // §FS-workspace.2.2.2: which list claimed it decides where the alias comes
+        // §FS-workspace.2.2: which list claimed it decides where the alias comes
         // from — see this function's docs.
         let alias = if member.optional {
             optional_member_alias(&member_config, parent_config, &member.written)?
@@ -541,7 +541,7 @@ fn collect_workspace_members(
         reject_absorbed_scan(&member_config, &nested.members)?;
         member_config
             .set_workspace_boundary_roots(nested.members.iter().map(|m| m.root.clone()).collect());
-        // §FS-check.4.11.3, §FS-check.4.10.7: a block that is not a project is kept for
+        // §FS-check.4.11, §FS-check.4.10: a block that is not a project is kept for
         // its config findings and its tree's unread files, no outermost-block privilege
         // either way. The boundary above is set first: the block is what both travel as.
         if !member_config.workspace_include_root {
@@ -591,7 +591,7 @@ fn collect_workspace_members(
             &mut nested_siblings,
             mounts,
         )?;
-        // §FS-workspace.2.2.10: the same reading one block down — a nested block whose
+        // §FS-workspace.2.2: the same reading one block down — a nested block whose
         // only members may be absent named members, so it is not an empty block.
         if entries.len() == before && member_config.workspace_optional_members.is_empty() {
             return Err(empty_workspace_error(&member_config));
@@ -619,7 +619,7 @@ fn member_alias(
     })
 }
 
-/// §FS-workspace.6.1.3: every `[workspace]` block must put at least one project
+/// §FS-workspace.6.1.2: every `[workspace]` block must put at least one project
 /// in scope — a block that contributes nothing would silently drop its whole
 /// subtree from the check.
 ///
@@ -628,7 +628,7 @@ fn member_alias(
 /// back to its own `[workspace]` line. Without the fallback the message carried no
 /// location at all, in a tree that may hold many blocks (§FS-errors.4). A
 /// non-empty list can reach here only when every entry is a glob that matched no
-/// directories; §FS-workspace.6.1.3 names the first in config order instead of
+/// directories; §FS-workspace.6.1.2 names the first in config order instead of
 /// falsely claiming there were no members.
 fn empty_workspace_error(config: &Config) -> anyhow::Error {
     let source = config

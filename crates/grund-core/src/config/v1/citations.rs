@@ -107,7 +107,7 @@ fn parse_citation_disjunction(
 }
 
 /// Locate a target-grammar refusal at the config line that contains it, retaining
-/// that location for editor publication (§FS-lsp.2.2.4.1).
+/// that location for editor publication (§FS-lsp.2.2.4).
 fn parse_citation_target(path: &Path, line_no: usize, token: &str) -> Result<CitationTarget> {
     parse_citation_target_entry(token).or_else(|message| bail_config(path, line_no, message))
 }

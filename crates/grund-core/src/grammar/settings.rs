@@ -88,7 +88,7 @@ impl Grammar {
 /// (§FS-config.3.1, §FS-config.3.4.8): the citation marker, `[reference]
 /// strict`, the comment prefixes a comment line opens with, whether Python
 /// docstrings are scanned, and the three `[reference]` keys that say what an
-/// inline note may look like (§FS-inline-citation-style.2.2,
+/// inline note may look like (§FS-config.3.1,
 /// §FS-inline-citation-style.3.3).
 ///
 /// A **borrowed view**, built on demand from the live `Config` rather than
@@ -123,7 +123,7 @@ pub(crate) struct AliasGrammar<'a> {
 }
 
 /// §FS-config.3.4: a v1 table must leave at least one citable kind for the ID
-/// grammar to recognize. A v2 file may have none (§FS-config-v2.defaults.1).
+/// grammar to recognize. A v2 file may have none (§FS-config-v2.defaults).
 pub(crate) fn require_kinds(kinds: &[GrammarKind]) -> Result<()> {
     if kinds.is_empty() {
         return Err(anyhow!("[id] grammar needs at least one [[kinds]] entry"));

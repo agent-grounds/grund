@@ -152,7 +152,7 @@ must hold for *every* shape of config the loader can return:
   other projects, whose kinds the loader of one config does not hold, so it is
   judged once, where the run's kind table is built: at workspace expansion,
   or over the declared workspace in a narrowed `cover` run
-  ([§AR-config.1.5](AR-config.md#15-run-and-compiled), [§FS-config.3.9.5.2](../functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)), and never also at load.
+  ([§AR-config.1.5](AR-config.md#15-run-and-compiled), [§FS-config.3.9.5](../functional-spec/FS-config.md#395-validation)), and never also at load.
 - `project_name` is *not* universal. [§FS-config.3](../functional-spec/FS-config.md#3-keys-version-1) makes it free-form metadata
   when the project is standalone, and only an alias when it participates in a
   workspace. The slug check therefore lives in `derive_alias`
@@ -177,7 +177,7 @@ their own. Alias errors still obey [§GOAL-friendliness-first.1](../goals.md#1-h
 member alias points at the workspace `members` line that introduced the member.
 An optional member takes its alias from its entry's last segment, so a segment
 that is not a valid alias, or a `project_name` that disagrees with it, points at
-the `optional_members` line instead ([§FS-workspace.2.2.2](../functional-spec/FS-workspace.md#222-the-alias-of-an-optional-member)).
+the `optional_members` line instead ([§FS-workspace.2.2](../functional-spec/FS-workspace.md#22-a-member-that-may-be-legitimately-absent)).
 
 ## 6. The workspace boundary
 
@@ -270,7 +270,7 @@ The chain of mutual claims ([§AR-workspace.6.1.1](AR-workspace.md#611-an-alias-
 
 What a run now *says* about such a block is one pass of its own, `workspace/unlisted.rs`, and it sits **above** the walk rather than inside it ([§AR-workspace.1](AR-workspace.md#1-layering), [§FS-check.3.29](../functional-spec/FS-check.md#329-unlisted-workspace-block)). `walk_scannable_files_reporting` carries out the directories it descended into, scan roots included, and asks nothing of them; the rule then probes each one for a config (`config_file_in`, which is what finds the `.agents/` form in a directory the walk never descends into), reads the `[workspace]` header line out of that file's text without loading it, and asks the same `enclosing_workspace_of` climb the alias prefix asks — one `AncestorWorkspaces` cache for the whole pass, for the same reason one climb shares one ([§AR-workspace.6.1.5](AR-workspace.md#615-the-climb-caches-the-blocks-it-reads)), built by `quiet_for_run_at` so the undecidable-claim warning stays with the climb that spells an alias path out of the answer.
 
-This rule spells none: it treats a claim it cannot decide as no finding — one named and not answered, which the climb raises, and one an ancestor whose `members` text cannot be obtained may make, which the climb answers with the same "no claiming block" as a directory that declares nothing, so the cache records that directory and the rule asks `has_undecidable_ancestor` before reading the answer as "listed by nobody" ([§FS-workspace.6.1.7.5](../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable)) — and printing that warning from here put the sentence into single-project runs that had never asked the chain anything, and a second, wrongly based copy of it into workspace runs that had ([§FS-check.3.29](../functional-spec/FS-check.md#329-unlisted-workspace-block)).
+This rule spells none: it treats a claim it cannot decide as no finding — one named and not answered, which the climb raises, and one an ancestor whose `members` text cannot be obtained may make, which the climb answers with the same "no claiming block" as a directory that declares nothing, so the cache records that directory and the rule asks `has_undecidable_ancestor` before reading the answer as "listed by nobody" ([§FS-workspace.6.1.7](../functional-spec/FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run)) — and printing that warning from here put the sentence into single-project runs that had never asked the chain anything, and a second, wrongly based copy of it into workspace runs that had ([§FS-check.3.29](../functional-spec/FS-check.md#329-unlisted-workspace-block)).
 
 Candidates are deduplicated by canonical root *after* the header read and beside the project-root exemption, which already canonicalizes: a block the walk reached through a directory symlink as well as under its own path is one edit, so it is one finding, and the cheap path still pays no canonicalize.
 

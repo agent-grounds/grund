@@ -25,7 +25,7 @@ FS; in another, empty JSON sent it to inspect the binary with `strings` instead
 of adding the missing table. Reported as
 [issue #829](https://github.com/agent-grounds/grund/issues/829).
 
-[§FS-check.requirements.success-earned](../../functional-spec/FS-check.md#requirementssuccess-earned-success-is-earned-never-a-default--realized)
+[§FS-check.requirements.success-earned](../../functional-spec/FS-check.md#requirementssuccess-earned-success-is-earned-never-a-default)
 already refused `success` for "an obligation with no unit to judge" and for "a
 rule that could not run under a narrowing `--only`", but realized the first
 only for a `[citations]` table, and dropped even that line under `--only`.

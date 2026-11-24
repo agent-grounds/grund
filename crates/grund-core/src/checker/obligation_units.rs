@@ -18,7 +18,7 @@ use crate::model::{Catalog, Citation, Declaration, E2eSpecRef, Id, paired_declar
 /// `id` (a declaration) or `None` (a `code` source file).
 pub(super) struct ObligationUnit<'a> {
     pub(super) declaration: Option<&'a Declaration>,
-    /// The place a non-citable kind's unit is named by (§FS-check.3.11.2) — its
+    /// The place a non-citable kind's unit is named by (§FS-check.3.11) — its
     /// home, since the unit is a file in it and the kind has no ID to print.
     pub(super) place: Option<String>,
     pub(super) path: PathBuf,
@@ -52,7 +52,7 @@ impl ObligationUnit<'_> {
 /// obligation to, and both answer with the file:
 ///
 /// * the **homeless kind** (`code`, or whatever the project named it,
-///   §FS-config.3.9.2.4) — every citation outside a configured home, source files
+///   §FS-config.3.9.2) — every citation outside a configured home, source files
 ///   only. A README or a changelog is a document, and §FS-check.3.6 exempts it
 ///   for the same reason.
 /// * a **homed non-citable kind** — every scanned file in its home, those read
@@ -91,7 +91,7 @@ pub(super) fn non_citable_kind_names(schema: &Schema) -> BTreeSet<&str> {
 /// scanned-file citations) for `E2E`, per non-stub declaration otherwise, and per
 /// declaration a stub stands for in a target outside the walk, at its line in the
 /// target, over the citations that target lends (§FS-check.3.11,
-/// §FS-declarations.stubs.pairing.4). Reads
+/// §FS-declarations.stubs.pairing). Reads
 /// the citation indexes built once in [`check_citation_obligations`] rather than
 /// rescanning.
 ///
@@ -111,7 +111,7 @@ pub(super) fn obligation_units<'a>(
     if citing_kind == schema.complement_name()
         || non_citable_kind_names(schema).contains(citing_kind)
     {
-        // §FS-check.3.11.3: a kind with no declarations answers with its files,
+        // §FS-check.3.11: a kind with no declarations answers with its files,
         // cut by the row's `grounding_level` — the same unit §FS-check.3.6 asks
         // for grounding, in `grounding.rs`.
         return file_obligation_units(citing_kind, rules, owners, findings, by_file);
@@ -156,7 +156,7 @@ pub(super) fn obligation_units<'a>(
             }
         }
         // §FS-check.3.11: a declaration a stub's target outside the walk supplies is a
-        // unit of its own, at its line in the target (§FS-declarations.stubs.pairing.4).
+        // unit of its own, at its line in the target (§FS-declarations.stubs.pairing).
         for paired in paired_declarations(decls).iter() {
             if paired.stand_in.is_stub && !std::ptr::eq(paired.record, paired.stand_in) {
                 units.push(ObligationUnit {

@@ -72,10 +72,10 @@ being treated as the root project's name.
 member's, and names the config findings of the root's config, of each project
 the workspace expansion returns, and of each `include_root = false` block it
 reaches, which is no project but whose config the run reads
-([§FS-check.4.11.3](../functional-spec/FS-check.md#4113-once-per-config-not-once-per-scope)) — the set `grund check` names and in its words: an `.agents/grund.toml` that a `grund.toml` beside it outranks.
+([§FS-check.4.11](../functional-spec/FS-check.md#411-config-read-from-the-deprecated-agents-location)) — the set `grund check` names and in its words: an `.agents/grund.toml` that a `grund.toml` beside it outranks.
 `grund config show` prints one config, the root's, and names only that config's
 findings; for the set above, run `grund config validate`
-([§FS-config.4.1.1](../functional-spec/FS-config.md#411-at-a-workspace-root), [§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)).
+([§FS-config.4.1](../functional-spec/FS-config.md#41-grund-config-validate-path), [§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)).
 
 Inside a member with neither config form, or when given a path into it,
 `grund config show` reports that member's canonical version-1 defaults,
@@ -216,7 +216,7 @@ from `ee` but the names of points the open tree already declares.
 
 1. **List the citations, on the closed side.** `grund cover --format json` keeps
    a cross-project citation's alias even where the alias does not resolve
-   ([§FS-cover.2.1](../functional-spec/FS-cover.md#21-a-cross-project-citation-counts)), so `ee` can list its citations into `substratevm` alone.
+   ([§FS-cover.2](../functional-spec/FS-cover.md#2-behaviour)), so `ee` can list its citations into `substratevm` alone.
    Keep the ones into `substratevm` and drop the alias with `jq`:
 
    ```bash
@@ -238,7 +238,7 @@ from `ee` but the names of points the open tree already declares.
    steps 1 and 2 on the closed side's schedule — on each `ee` release, or in its
    CI — and replace the list rather than editing it.
 
-A citation counts wherever the run reads it ([§FS-check.4.1.4](../functional-spec/FS-check.md#414-a-citation-anywhere-in-the-resolution-scope-counts)), so the page is an
+A citation counts wherever the run reads it ([§FS-check.4.1](../functional-spec/FS-check.md#41-unused-declaration)), so the page is an
 ordinary citing file. From then on `substratevm`'s `check` warns only where
 nothing cites, deleting a listed point is an error at the page —
 `docs/downstream-citers.md:9: error: unknown reference FS-sec; did you mean FS-rel?`

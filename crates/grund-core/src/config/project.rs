@@ -73,7 +73,7 @@ impl PartialEq for LoadWarnings {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Members {
     pub declared: bool,
-    /// Where the `[workspace]` header was written (§FS-workspace.6.1.3).
+    /// Where the `[workspace]` header was written (§FS-workspace.6.1.2).
     pub section_source: Option<ConfigLocation>,
     pub members: Vec<String>,
     pub members_source: Option<ConfigLocation>,
@@ -309,7 +309,7 @@ pub struct Rules {
 pub struct Grounding {
     pub require: bool,
     pub level: usize,
-    /// Where `[reference] grounding_level` was written (§FS-config.3.4.8.5).
+    /// Where `[reference] grounding_level` was written (§FS-config.3.4.8).
     pub level_source: Option<ConfigLocation>,
     pub kinds: BTreeMap<String, KindGrounding>,
     /// The project's v2 ladder as written, `None` in v1 and where v2 wrote none

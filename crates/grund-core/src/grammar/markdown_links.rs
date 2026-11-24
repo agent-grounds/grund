@@ -1,5 +1,5 @@
 //! The document reading of §FS-citations.wrap: which link, in which of the forms
-//! §FS-citations.wrap.enclosing.scope lists, holds each span of a Markdown file,
+//! §FS-citations.wrap.enclosing.shape lists, holds each span of a Markdown file,
 //! and which bytes no pass rewrites (§FS-citations.zones.authored-markup,
 //! §FS-citations.zones.link-destination).
 //!

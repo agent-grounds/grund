@@ -70,7 +70,7 @@ pub struct CitationTarget {
 }
 
 /// One `[citations]` array entry — a disjunction of targets joined by `|`
-/// (§FS-config.3.9.1.1). Satisfied by a citation matching any one target.
+/// (§FS-config.3.9.1). Satisfied by a citation matching any one target.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CitationDisjunction {
     pub targets: Vec<CitationTarget>,
@@ -119,7 +119,7 @@ pub struct CitationRules {
     pub global_default: Option<CitationLevel>,
     pub per_kind: BTreeMap<String, KindCitationRules>,
     /// The `per_kind` names in the order a v2 file wrote their tables, which
-    /// `config show` keeps for a name that is no row (§FS-config.4.2.4).
+    /// `config show` keeps for a name that is no row (§FS-config.4.2).
     pub written: WrittenOrder,
     /// Where a v2 file wrote each table and its lists, which its refusals name
     /// (§FS-config-v2.rules.citations); empty in v1.
@@ -172,7 +172,7 @@ impl std::fmt::Debug for CitationLines {
 
 /// The order a file wrote some keyed tables in. It is how the file was laid
 /// out, not what it means, so two orders always compare equal: a file and its
-/// `config show` output load to the same rules (§FS-config.4.2.4). For the same
+/// `config show` output load to the same rules (§FS-config.4.2). For the same
 /// reason its `Debug` prints no order, so a record compared by `Debug` agrees.
 #[derive(Clone, Default)]
 pub struct WrittenOrder(pub Vec<String>);
@@ -190,7 +190,7 @@ impl std::fmt::Debug for WrittenOrder {
 }
 /// Parse the released namespace-aware target-entry grammar without attaching a
 /// config-file location. Chapter-rule object targets reuse this exact lexical
-/// boundary (§FS-rules.2, §FS-config.3.9.3.1).
+/// boundary (§FS-rules.2, §FS-config.3.9.3).
 pub(crate) fn parse_citation_target_entry(token: &str) -> Result<CitationTarget, String> {
     // §FS-config.3.9: the kind is the last segment, so a nested member is pinned
     // by its whole alias path (`group/api/AR`) exactly as it is cited
@@ -200,7 +200,7 @@ pub(crate) fn parse_citation_target_entry(token: &str) -> Result<CitationTarget,
             let namespace = if qualifier == "*" {
                 NamespaceMatch::Any
             } else {
-                // §FS-config.3.9.3.1: config diagnostics name the citation target's
+                // §FS-config.3.9.3: config diagnostics name the citation target's
                 // qualifier and kind, while the CLI keeps its own `<alias>/<ID>`
                 // vocabulary. Both surfaces use the same segment validation.
                 if let Some(message) = invalid_citation_target_message(token, qualifier, kind) {
@@ -222,7 +222,7 @@ pub(crate) fn parse_citation_target_entry(token: &str) -> Result<CitationTarget,
 }
 
 /// Render the `[citations]` form of an invalid namespace qualifier
-/// (§FS-config.3.9.3.1). This is intentionally separate from the CLI alias-path
+/// (§FS-config.3.9.3). This is intentionally separate from the CLI alias-path
 /// message: the final segment here is a citation kind, not an ID.
 fn invalid_citation_target_message(token: &str, qualifier: &str, kind: &str) -> Option<String> {
     let bad = invalid_alias_path_segment(qualifier)?;
@@ -269,7 +269,7 @@ pub(super) fn validate_citation_rules(
             let message = format!("[{table}.{citing}] names an unknown kind `{citing}`");
             return refuse(path, header, message);
         }
-        // §FS-config.3.4.7.6: a rule on a kind whose home is not walked could
+        // §FS-config.3.4.7: a rule on a kind whose home is not walked could
         // never fire — the vacuous pass §DF-non-citable-kinds.2.5 refused, one
         // level up — so the config is refused where it makes the promise.
         if kinds.iter().any(|k| k.kind == *citing && !k.scan) {
@@ -285,7 +285,7 @@ pub(super) fn validate_citation_rules(
             let level_name = level.as_str();
             for disjunction in disjunctions {
                 for target in &disjunction.targets {
-                    // §FS-config.3.9.5.2: a pinned or `*/` target names other
+                    // §FS-config.3.9.5: a pinned or `*/` target names other
                     // projects' kinds, which this config does not hold, so it is
                     // judged by `unaccepted_pinned_target` and never here.
                     let why = match target.namespace {
@@ -311,7 +311,7 @@ pub(super) fn validate_citation_rules(
         }
         // Two targets of one kind whose matchers can match the same citation (e.g.
         // bare `AR` and `*/AR`) must not sit at different levels — such a citation
-        // would have no single level (§FS-config.3.9.5.1). Identical entries are fine.
+        // would have no single level (§FS-config.3.9.5). Identical entries are fine.
         for (index, (level_a, a)) in targets.iter().enumerate() {
             for (level_b, b) in targets.iter().skip(index + 1) {
                 if level_a != level_b
@@ -340,7 +340,7 @@ fn refuse(path: &Path, line: Option<usize>, message: String) -> Result<()> {
     }
 }
 
-/// §FS-config.3.9.5.2: judge the pinned and `*/` targets of `citations`
+/// §FS-config.3.9.5: judge the pinned and `*/` targets of `citations`
 /// against the kinds of the projects each qualifier names, as `kinds` reads
 /// them, and return the load error of the first one the run cannot accept,
 /// in the order they are judged: the citing tables by kind, each table's

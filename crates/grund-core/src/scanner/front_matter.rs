@@ -4,7 +4,7 @@
 //! or, for a `+++` block, the one TOML span tree (§DA-toml-front-matter-reader),
 //! and give its keys their coordinates in that declaration's section map
 //! (§FS-fields.front-matter.coordinates). Every other declaration of such a kind
-//! is told why it has no front matter (§FS-fields.front-matter.placement).
+//! is told why it has no front matter (§FS-fields.front-matter.reading).
 
 use super::toml::{TomlKey, parse_toml};
 use super::yaml::{ScalarStyle, YamlKind, YamlNode, YamlStream, parse_yaml};
@@ -41,7 +41,7 @@ pub(super) fn read_front_matter(
     is_md: bool,
     front_matter: Option<usize>,
 ) {
-    // §FS-check.1.1.5.2.1: the file's first declaration, the one starting earliest.
+    // §FS-check.1.1.5.2: the file's first declaration, the one starting earliest.
     let first = findings
         .declarations
         .values()

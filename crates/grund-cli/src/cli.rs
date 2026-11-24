@@ -144,14 +144,14 @@ fn with_path_base(args: &[String], command: impl FnOnce(&[String]) -> ExitCode) 
 
 /// The run's `[workspace]` warnings, in §FS-check.2.1.1's CLI-level shape: one
 /// `warning: ` line each on **stderr**, ahead of whatever the command itself
-/// prints, exit code untouched here (§FS-check.3.29, §FS-check.4.10.11,
+/// prints, exit code untouched here (§FS-check.3.29, §FS-check.4.10,
 /// §FS-workspace.6.1.7).
 ///
 /// The engine settles these before any report exists and hands them back as
 /// diagnostics; this is the terminal's rendering of them, and it is the same text
 /// under `--format json`, because the shape is fixed by each finding's own spec
 /// section rather than read off the channel it travels in (§FS-errors.5.2). Two
-/// of them carry an anchor, and it is for an editor (§FS-lsp.1.1.3);
+/// of them carry an anchor, and it is for an editor (§FS-lsp.1.1);
 /// §FS-check.3.29's carries none here, because the message names the line
 /// itself and the editor takes that finding off `check`'s report instead
 /// (§FS-check.3.29). Either way the message already names the line, so a
@@ -336,7 +336,7 @@ fn cli_entry(args: Vec<std::ffi::OsString>) -> ExitCode {
         Some("id") => with_path_base(&args[1..], command_id),
         Some("init") => command_init(&args[1..]),
         Some("config") => with_path_base(&args[1..], command_config),
-        // §FS-schema.1.1: a subcommand, so it wins over the default ID query.
+        // §FS-schema.1: a subcommand, so it wins over the default ID query.
         Some("schema") => with_path_base(&args[1..], command_schema),
         Some("guide") => command_guide(&args[1..]),
         Some("completions") => command_completions(&args[1..]),

@@ -43,7 +43,7 @@ written and fails as a spawn failure if nothing is there. The test is of the str
 version 2 refuses a key that names nothing when the config loads, even where a file of that
 very name exists at the config root ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)). A
 version 1 row loads ([§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)). Under it, a whitespace-only value that names a file at
-the config root is run, and `grund check` asks the disk the same question ([§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for));
+the config root is run, and `grund check` asks the disk the same question ([§FS-check.3.1](FS-check.md#31-dangling-citation));
 any other value that names nothing runs nothing, and `grund fetch` prints the spawn failure's
 line with the key's location and repair where the operating system's reason would stand:
 
@@ -54,7 +54,7 @@ error: cannot run fetch integration `` for AR-001-power: grund.toml:6: [[kinds]]
 The location is the config file that holds the key, a member's own in a workspace, and the
 value is quoted as written. The repair is the sentence every surface that reports the key
 prints, in the spelling of the project's config version ([§FS-config-migrate.3.1.10](FS-config-migrate.md#3110-a-fetch-that-names-no-executable),
-[§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for), [§DF-fetch-names-an-executable.2.5](../decisions/functional/DF-fetch-names-an-executable.md#25-one-repair-true-of-every-tree)). The test comes immediately before the spawn
+[§FS-check.3.1](FS-check.md#31-dangling-citation), [§DF-fetch-names-an-executable.2.5](../decisions/functional/DF-fetch-names-an-executable.md#25-one-repair-true-of-every-tree)). The test comes immediately before the spawn
 would, so every other refusal made before the fetcher runs comes first.
 
 ### 2.2 Captured stderr explains an unsuccessful integration
@@ -187,7 +187,7 @@ Any other absent home inside the project root gets
 it, by `..` or an absolute path as written, gets
 `hint: a value kind's home must be inside the project root; name a path inside it`, whether or
 not the kind sets `fetch` ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)); version 2 refuses such a place earlier
-([§FS-config-v2.schema.places.boundaries.1](FS-config-v2.md#schemaplacesboundaries1-normalized-before-compared)).
+([§FS-config-v2.schema.places.boundaries](FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name)).
 
 ### 4.2. A home read as source is refused
 
@@ -208,7 +208,7 @@ is written whatever its name, and one not read at all is [§FS-fetch.4.2.1](FS-f
 
 The refusal is `fetch`'s alone: the configuration loads, and `check`, `list`, `show` and
 `refs` keep their verdicts on what the file declares, `check` naming another remedy
-([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)).
+([§FS-check.3.1](FS-check.md#31-dangling-citation)).
 
 #### 4.2.1. A home the scan does not read is refused
 
@@ -216,14 +216,14 @@ A `file` home the text scan does not read, such as `fs.dat` or a hidden `.fs.py`
 ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), holds nothing any command reads, and no reading says where a
 declaration there ends ([§DF-fetch-unread-home](../decisions/functional/DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs)). `fetch` refuses it before the fetcher runs,
 the first write included, whatever it holds, and does not create an absent one; `check` stops
-offering `run grund fetch` there ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)):
+offering `run grund fetch` there ([§FS-check.3.1](FS-check.md#31-dangling-citation)):
 
 ```text
 error: kind `<KIND>` cannot fetch into <home>: <reason>, so the scan would not read what fetch writes; give the file a name a listed document language reads, or remove its `fetch`
 ```
 
 `<reason>` is the one `check`'s unread warning gives for that name
-([§FS-scan.checks.unread-scan-root.message](FS-scan.md#checksunread-scan-rootmessage-the-message)), such as
+([§FS-scan.checks.unread-scan-root](FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)), such as
 ``no language in [schema.sources] languages reads `.dat` ``. Under version 1 the repair says
 `a name the scan reads as Markdown` instead.
 
@@ -321,7 +321,7 @@ own contents, and with an absent home left absent.
 
 Stubs count as every command pairs them ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)): a healthy stub
 counts at its target, whether or not the scan reaches it, and is named there
-([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)), while a broken one pairs with nothing and declares where it
+([§FS-declarations.stubs.pairing](FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at)), while a broken one pairs with nothing and declares where it
 stands. Of several declarations outside, the first in `path:line` order is named.
 
 What the scan does not read refuses nothing, and in a workspace only the selected project's
@@ -514,7 +514,7 @@ is; until they land, `--remote` is refused as an unknown flag with exit 2.
 ### remote.selector: `--remote <alias>` projects one declared remote
 
 `grund fetch --remote <alias>` reads the repository that the config root's
-`[workspace.remotes.<alias>]` table declares ([§FS-remote-projects.declaration.table](FS-remote-projects.md#declarationtable-the-remote-table)). It
+`[workspace.remotes.<alias>]` table declares ([§FS-remote-projects.declaration](FS-remote-projects.md#declaration-declaration-and-registration)). It
 resolves the declared `ref` at the declared `source` to a full commit with the user's `git`,
 reads that commit's complete tracked tree from git objects without checking it out, validates
 it, writes it to `.grund/remotes/<alias>/` ([§FS-remote-projects.projection](FS-remote-projects.md#projection-the-projection)), and rewrites that
@@ -529,7 +529,7 @@ The new projection is validated completely, entry types and byte protection incl
 ([§FS-remote-projects.bytes](FS-remote-projects.md#bytes-exact-bytes)), before anything is replaced. Only then are the projection and its
 lock entry replaced together, and the fetch exits 0; a fetch refused at any step exits 2 and
 leaves both exactly as they were. Fetch owns only `.grund/remotes/<alias>/` and that remote's
-lock entry ([§FS-remote-projects.lock.ownership](FS-remote-projects.md#lockownership-the-lock-is-grunds)).
+lock entry ([§FS-remote-projects.lock](FS-remote-projects.md#lock-the-lock)).
 
 ### remote.findings: Refuse only what this grund cannot load
 

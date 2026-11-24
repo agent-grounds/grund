@@ -60,7 +60,7 @@ pub(crate) fn root_citation_directions(
 
 /// [`root_citation_directions`] with the grounding sentence's setting spelled in
 /// config `grammar` rather than the live version: `config migrate` compares the
-/// section in the candidate's grammar on both sides (§FS-config-migrate.5.3.1).
+/// section in the candidate's grammar on both sides (§FS-config-migrate.5.3).
 pub(crate) fn root_citation_directions_in(
     project: &Project,
     run: &Run,
@@ -200,7 +200,7 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
 /// something an agent can never write. The homeless kind has no place, so it
 /// keeps its name and says what it covers: its `title` where the project wrote
 /// one. Its unit is narrower again — a *source* file (not read as Markdown, §FS-fmt.2.3.1) that already
-/// cites something (§FS-config.3.9.2.4) — because the obligation constrains what a
+/// cites something (§FS-config.3.9.1) — because the obligation constrains what a
 /// file cites and never whether it cites at all; a util that cites nothing is
 /// not a unit. In a non-citable home the opposite holds — a skill without a spec
 /// is the defect — so the subject is unnarrowed exactly when the row's grounding
@@ -265,7 +265,7 @@ fn citation_direction_subject(
         return (subject, None);
     }
     // §FS-init.2.3.5: the one setting that closes the hole, in `grammar`: the
-    // live version, but for `config migrate`'s comparison (§FS-config-migrate.5.3.1).
+    // live version, but for `config migrate`'s comparison (§FS-config-migrate.5.3).
     let setting = grounding_setting(kind, grammar, |fragment| format!("`{fragment}`"));
     (
         format!("{subject}{narrowed}"),

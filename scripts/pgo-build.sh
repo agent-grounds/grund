@@ -82,7 +82,7 @@ cargo_target="$target_dir"
 [ -z "$container" ] || cargo_target="$target_dir/container"
 
 # Runs one command where the payload is built: here, or in the pinned image.
-# §FS-distribution-candidate.6.1.1: keep Docker argv nonempty under Bash 3.2 nounset.
+# §FS-distribution-candidate.6.1: keep Docker argv nonempty under Bash 3.2 nounset.
 in_build() {
   if [ -z "$container" ]; then
     "$@"

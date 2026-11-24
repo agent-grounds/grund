@@ -40,7 +40,7 @@ impl SchemaTableLine {
 
 /// §FS-schema.8: the default format — the header, `kinds and places`, `citations`
 /// with the grounding badges, the unscanned rows, the legend, and at a workspace
-/// root the members line (§FS-schema.2.1). Columns are two spaces apart, and the
+/// root the members line (§FS-schema.2). Columns are two spaces apart, and the
 /// last column starts at one offset in both sections.
 fn schema_table(view: &SchemaView) -> String {
     let text = |raw: &str| schema_text(raw);
@@ -64,7 +64,7 @@ fn schema_table(view: &SchemaView) -> String {
             last: Some(text(&schema_places(node))),
         });
         // §FS-schema.4.1: each shape line in the last column; what nests under a
-        // front-matter field two columns deeper (§FS-schema.4.1.3).
+        // front-matter field two columns deeper (§FS-schema.4.1).
         for line in node.shape_lines() {
             kinds.push(SchemaTableLine {
                 cells: vec![(field_at + 2 * line.depth, text(&line.key))],
@@ -160,7 +160,7 @@ fn schema_table(view: &SchemaView) -> String {
     out
 }
 
-/// §FS-schema.8.2: the no-config note — what the defaults are, and the version
+/// §FS-schema.8: the no-config note — what the defaults are, and the version
 /// and added kinds of the config `grund init --scaffold` writes, each kind's places
 /// spelled as the `kinds and places` section spells them.
 fn schema_scaffold_note(note: &ScaffoldNote) -> String {
@@ -181,7 +181,7 @@ fn schema_scaffold_note(note: &ScaffoldNote) -> String {
     line
 }
 
-/// §FS-schema.5.1, §FS-schema.5.3: a direction's target as written — an any-of
+/// §FS-schema.5.1, §FS-schema.5: a direction's target as written — an any-of
 /// entry as one cell, a kind citing its own kind marked `(itself)`.
 fn schema_table_target(edge: &SchemaEdge) -> String {
     let labels: Vec<&str> = edge.targets.iter().map(|t| t.label.as_str()).collect();

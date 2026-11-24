@@ -240,7 +240,7 @@ pub(crate) fn judge(
 /// index entry is not an inbound citation (§DF-index-not-an-inbound-citation).
 /// The warning sits at the first of the ID's declarations once its stubs are
 /// paired by their verdicts (§AR-scanner.4.6), at its line in a stub's target
-/// wherever that target sits (§FS-declarations.stubs.pairing.4), and a citation a
+/// wherever that target sits (§FS-declarations.stubs.pairing), and a citation a
 /// stub's target lends is use (§FS-refs.2, §FS-declarations.stubs.target.5).
 fn check_unused(
     findings: &Catalog,
@@ -251,7 +251,7 @@ fn check_unused(
     report: &mut CheckReport,
 ) {
     let spellings = PlaceNames::new(schema, frame);
-    // §FS-check.4.1.2: retain the discounted sites for the warning's explanation.
+    // §FS-check.4.1: retain the discounted sites for the warning's explanation.
     let mut excluded: BTreeMap<&Id, Vec<_>> = BTreeMap::new();
     let mut cited = BTreeSet::new();
     for citation in findings.edges().filter(|cite| cite.namespace.is_none()) {
@@ -289,7 +289,7 @@ fn check_unused(
                         "declared but never cited: {}",
                         render_catalog_id(frame.grammar(), &findings.declarations, id)
                     );
-                    // §FS-check.4.1.2 / §FS-errors.3: bounded, deterministic sites,
+                    // §FS-check.4.1 / §FS-errors.3: bounded, deterministic sites,
                     // spelled against the same report base as the finding's anchor.
                     if let Some(sites) = excluded.get_mut(id) {
                         sites.sort_by_key(|cite| {

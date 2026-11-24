@@ -31,7 +31,7 @@ Consumers are not stranded: `code` is the contract, no consumer acts on `message
 - A script filtering `code == "io"` no longer sees parse failures; one grepping `make the path readable` no longer matches a parse line.
 - `root`, `passed` and `value` lines gain words at the end and lose none.
 - `--ignore unparsable-file` is accepted and hides nothing, as `--ignore io` behaves ([§FS-check.1.4](../../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore)).
-- The caution of [§FS-check.1.3.6.3](../../functional-spec/FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud) wears the code of the failure behind it, so a parse failure outside the report scope is `unparsable-file` there too.
+- The caution of [§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows) wears the code of the failure behind it, so a parse failure outside the report scope is `unparsable-file` there too.
 - `ApiScanError` and the Python and Node records gain `code`, one field and no new public type ([§AR-bindings.2](../../architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives)).
 
 ## 4. Alternatives considered

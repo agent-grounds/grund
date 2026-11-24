@@ -132,7 +132,7 @@ pub struct SectionInfo {
 
 impl SectionInfo {
     /// Whether this heading is a marked root's, the one question every semantic
-    /// title reader asks before it drops the tag (§FS-values.2.4.2).
+    /// title reader asks before it drops the tag (§FS-values.6.1).
     pub fn marked(&self) -> bool {
         self.value_root
             .as_ref()
@@ -203,7 +203,7 @@ pub struct Citation {
     pub inline_site: Option<InlineCitationSite>,
     /// The resolved *citing* kind for this site (§AR-scanner.2.4.2): the kind of
     /// the enclosing declaration, else the file's unique kind home, else the
-    /// homeless kind (`code` by default, §FS-config.3.9.2.2). Drives the citation-direction
+    /// homeless kind (`code` by default, §FS-config.3.9.2). Drives the citation-direction
     /// checks (§FS-config.3.9, §AR-checker.2.9, §AR-checker.2.10).
     pub source_kind: String,
     /// The nearest preceding declaration whose body range contains this site
@@ -289,11 +289,11 @@ pub struct InlineCitationSite {
     /// Each physical line's width by §FS-inline-citation-style.2.3.2, in source
     /// order: entry `i` belongs to `first_line + i` (§AR-scanner.3.1).
     /// Shared across the block's sites and citations so retaining the complete
-    /// measurements for §FS-inline-citation-style.4.1.1.1 costs one allocation.
+    /// measurements for §FS-inline-citation-style.4.1 costs one allocation.
     pub line_columns: std::sync::Arc<[usize]>,
     pub has_note: bool,
     /// The site's judged lines that deviate from
-    /// `[reference] inline_note_layout` (§FS-inline-citation-style.3.3.1), 1-based
+    /// `[reference] inline_note_layout` (§FS-inline-citation-style.3.3), 1-based
     /// and ascending. Judged is rule 1's set, not every line carrying a citation:
     /// the line that opens the note, and any later line that opens with a
     /// citation of its own.
@@ -398,7 +398,7 @@ pub struct Catalog {
     /// (§FS-fetch.links), so no link is resolved a second time.
     pub(crate) outside_root: std::collections::BTreeSet<PathBuf>,
     /// The names each of the walk's surviving failures also answered to, for the one
-    /// question a narrowed run asks of them (§AR-scanner.1.entry, §FS-check.1.3.6.3).
+    /// question a narrowed run asks of them (§AR-scanner.1.entry, §FS-check.1.3.6).
     pub(crate) failure_names: FailureNames,
     /// Per-file heading and doc-comment structure, for the files a grounding
     /// unit finer than the file is asked of (§AR-scanner.2.7, §FS-check.3.6.2).
@@ -423,7 +423,7 @@ pub struct Catalog {
     /// not a declaration, so the rule costs one regex on heading-shaped lines
     /// rather than a second read of the tree.
     pub near_miss_headings: Vec<NearMissHeading>,
-    /// The conflict blocks found where §FS-declarations.body.conflict.where looks,
+    /// The conflict blocks found where §FS-declarations.body.conflict.block looks,
     /// each with its owners, recorded by the file pass on every run (§AR-scanner.2.9):
     /// `check` reports each one and `fmt` refuses on any (§FS-fmt.7.4).
     pub(crate) conflict_blocks: Vec<ConflictBlock>,
@@ -499,7 +499,7 @@ pub struct ShowOutput {
 
 /// One Markdown heading outside a fence (§AR-scanner.2.7): its line, its level,
 /// and its text without the leading `#`s, which is what a section finding quotes
-/// back (§FS-check.3.6.3).
+/// back (§FS-check.3.6).
 #[non_exhaustive]
 #[derive(Clone)]
 pub struct FileHeading {
@@ -511,7 +511,7 @@ pub struct FileHeading {
 /// One doc-comment block in a source file (§AR-scanner.2.7): its 1-indexed
 /// inclusive line span, and whether its first line starts at column 0.
 /// Indentation is the parse-free stand-in for "top-level item" that
-/// §FS-check.3.6.2.2 reads at level 2 — it holds across Rust, Python, Java, Go, and
+/// §FS-check.3.6.2 reads at level 2 — it holds across Rust, Python, Java, Go, and
 /// Kotlin without knowing any of them (§FS-non-goals.3).
 #[non_exhaustive]
 #[derive(Clone)]

@@ -1,7 +1,7 @@
 //! Which of a run's loaded projects report their own findings, decided once for
 //! `grund check`'s workspace arm (`run.rs`) and the editor's report
 //! (`lsp_report.rs`), so a terminal and an editor over one tree cannot disagree
-//! about whose lint a run shows (§FS-lsp.4.1). A mounted project, an import, is
+//! about whose lint a run shows (§FS-lsp.4). A mounted project, an import, is
 //! read for what the run's own citations need, and its own findings are its
 //! standalone run's (§FS-imports.findings): it reports no lint, no caution and no
 //! member of a block here.

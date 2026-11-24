@@ -80,7 +80,7 @@ impl Language {
         }
     }
 
-    /// §FS-config-v2.schema.sources.declarations.eligible: whether a comment block
+    /// §FS-config-v2.schema.sources.declarations: whether a comment block
     /// of this language may declare, given whether its profile calls it a doc
     /// comment. A profile of `none` has no notion of documentation, so every block
     /// behind its hosts may.

@@ -185,7 +185,7 @@ impl Code {
     pub const UNUSED: Code = Code("unused");
     /// §FS-check.3.22
     pub const VALUE_MISMATCH: Code = Code("value-mismatch");
-    /// §FS-values.2.2.4
+    /// §FS-values.2.2.3
     pub const YAML_VALUE_SOURCE_DEFERRED: Code = Code("yaml-value-source-deferred");
 
     /// Every selectable code, sorted: the selector vocabulary of §FS-check.1.

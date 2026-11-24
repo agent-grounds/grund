@@ -1,5 +1,5 @@
 //! Node's show and batch records: the shared query, plus the metadata Node's
-//! records carry, read from the same loaded context (§FS-distribution.3.2.2.2).
+//! records carry, read from the same loaded context (§FS-distribution.3.2.2).
 //! The shared delegate keeps Python's records exactly as they are.
 
 use super::embedding::EmbeddingRequest;

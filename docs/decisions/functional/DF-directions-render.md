@@ -159,7 +159,7 @@ should = ["FS|AR"]
 members = ["api"]
 ```
 
-The member `api` is an empty project whose own `grund.toml` declares one row, `AR`. Without it the pinned `api/AR` names a project the run does not hold, which grund `0.18.x` loaded with a warning and `0.19.0` refuses ([§FS-config.3.9.5.2](../../functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)); the workspace was added in that release rather than the pin dropped, so the rendered section above is unchanged. The whole file is `tests/e2e/cases/init-citation-directions-canonical/repo/grund.toml`; three sibling cases pin the branches it cannot hold at once — a homeless kind without a `title`, a closed global default, and grounding off.
+The member `api` is an empty project whose own `grund.toml` declares one row, `AR`. Without it the pinned `api/AR` names a project the run does not hold, which grund `0.18.x` loaded with a warning and `0.19.0` refuses ([§FS-config.3.9.5](../../functional-spec/FS-config.md#395-validation)); the workspace was added in that release rather than the pin dropped, so the rendered section above is unchanged. The whole file is `tests/e2e/cases/init-citation-directions-canonical/repo/grund.toml`; three sibling cases pin the branches it cannot hold at once — a homeless kind without a `title`, a closed global default, and grounding off.
 
 ## 4. Consequences
 
@@ -194,7 +194,7 @@ The subject is unnarrowed exactly when the row grounds. A row that grounds nothi
 
 | Option | Why rejected |
 |---|---|
-| Make `check` fail an uncited file in a home with a `must` rule and no grounding | Moves a verdict every repository with such a row would meet at once, and makes a direction rule decide *whether* a file cites, which grounding is for ([§FS-config.3.4.8.1](../../functional-spec/FS-config.md#3481-why-grounding-is-asked-per-place)). |
+| Make `check` fail an uncited file in a home with a `must` rule and no grounding | Moves a verdict every repository with such a row would meet at once, and makes a direction rule decide *whether* a file cites, which grounding is for ([§FS-config.3.4.8](../../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). |
 | Keep the bullet and only add the grounding key to the legend | The bullet would still claim an obligation no check enforces, and the legend would have to name every home. |
 
 ## release-note: Release note

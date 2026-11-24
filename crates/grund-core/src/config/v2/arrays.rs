@@ -4,7 +4,7 @@
 //! array's last, and the array is refused there (§FS-config-v2.reader.5.strings);
 //! the quote-at-a-time reading of the readers before 0.22.0 is kept only to tell whether
 //! their window loaded it. The ancestor climb reads `[workspace] members` through this
-//! too (§FS-workspace.6.1.7.5). Apart from `walk.rs` so the line walk stays one pass and
+//! too (§FS-workspace.6.1.7). Apart from `walk.rs` so the line walk stays one pass and
 //! how an array's lines are read is one file.
 
 use crate::config::v1::{list_elements, string_close, strip_comment};
@@ -60,7 +60,7 @@ impl OpenLine {
 /// element (§FS-config-v2.reader.5.commas). `line` is the key's line, 1-based, and `lines`
 /// yields each line after it with its 0-based index, as `str::lines().enumerate()` does.
 /// The ancestor climb reads `[workspace] members` through this too, so a value the
-/// config loads is never one the climb cannot read (§FS-workspace.6.1.7.5).
+/// config loads is never one the climb cannot read (§FS-workspace.6.1.7).
 ///
 /// A line that ends inside a string is the array's open line and its last, so the array
 /// is refused there, and `lines` is left after it (§FS-config-v2.reader.5.strings).

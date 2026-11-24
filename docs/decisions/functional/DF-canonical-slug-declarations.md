@@ -3,7 +3,7 @@
 **Date:** 2026-10-07
 
 Honor the configured slug grammar throughout declaration discovery and exact
-reads ([§FS-declarations.line.configured-slug](../../functional-spec/FS-declarations.md#lineconfigured-slug-characters-admitted-by-the-slug-pattern-belong-to-the-canonical-id)).
+reads ([§FS-declarations.line](../../functional-spec/FS-declarations.md#line-what-a-line-in-declaration-position-declares)).
 
 ## status: Accepted
 
@@ -55,7 +55,7 @@ or a prohibition invented by this change. The configured grammar and genuine off
 
 ## release-note: Release note
 
-- [§DF-canonical-slug-declarations](DF-canonical-slug-declarations.md#df-canonical-slug-declarations-configured-slug-punctuation-retains-its-canonical-declaration-identity), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms), [§FS-declarations.line.configured-slug](../../functional-spec/FS-declarations.md#lineconfigured-slug-characters-admitted-by-the-slug-pattern-belong-to-the-canonical-id): **configured slug punctuation retains its canonical declaration identity.**
+- [§DF-canonical-slug-declarations](DF-canonical-slug-declarations.md#df-canonical-slug-declarations-configured-slug-punctuation-retains-its-canonical-declaration-identity), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms), [§FS-declarations.line](../../functional-spec/FS-declarations.md#line-what-a-line-in-declaration-position-declares): **configured slug punctuation retains its canonical declaration identity.**
   Before the correction, a valid repository declaring and citing `FS-*` or `FS-tail*`,
   with Markdown-link index entries, failed `check` at exit `1` with off-format,
   unknown-reference and missing-index-entry errors. After the correction it prints

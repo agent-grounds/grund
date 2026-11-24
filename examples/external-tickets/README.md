@@ -6,7 +6,7 @@ The repository uses ordinary slug IDs by default and a numeric `GR` override
 beside `GRUND`. `repo/docs/guide.md` declares `GRUND-why` and cites a committed
 ticket snapshot; the fetched ticket cites `GRUND-why` back. Their `GR-` and
 `GRUND-` heads distinguish the IDs in one project
-([§FS-config.3.4.5.1](../../docs/functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens)).
+([§FS-config.3.4.5](../../docs/functional-spec/FS-config.md#345-name-rules)).
 A `GR-X` kind beside `GR` still needs a rename because punctuation follows the
 shorter name, even with distinct separators. `repo/scripts/fetch-ticket` is a
 deterministic local stand-in for a GitHub, Jira, or Linear integration.

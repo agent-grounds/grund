@@ -1,6 +1,6 @@
 //! Discovery and one-read enrollment of a value home's value sources
 //! (§FS-values.2.2, §AR-scanner.2.1.3, §AR-scanner.3): one loop reads a source of
-//! either format, its format picking only the reader (§FS-values.2.2.4), and both
+//! either format, its format picking only the reader (§FS-values.2.2.3), and both
 //! enroll through `value_json_enrollment.rs`.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -54,7 +54,7 @@ fn home_failure(version: u32) -> ScanFailure {
 
 /// Full-catalog enrollment through the same readers fetch uses for a selected
 /// home (§FS-values.2.2, §FS-fetch.5.1), retaining readable sources alongside
-/// candidate classification failures (§FS-values.5.3.1).
+/// candidate classification failures (§FS-values.5.3).
 pub(super) fn scan_value_sources(
     schema: &Schema,
     frame: Frame<'_>,
@@ -85,7 +85,7 @@ pub(super) fn scan_value_sources(
 /// (§FS-fetch.5.1). Alias metadata from other homes preserves the catalog's
 /// reader and ownership decisions, but unrelated bodies are not read. Content
 /// findings stay in the catalog; selected-home discovery/read failures prevent installation.
-/// Candidate classification failures have the same scope (§FS-values.5.3.1).
+/// Candidate classification failures have the same scope (§FS-values.5.3).
 pub(crate) fn folder_value_declarations(
     schema: &Schema,
     frame: Frame<'_>,
@@ -105,7 +105,7 @@ pub(crate) fn folder_value_declarations(
 }
 
 /// One enrollment path for catalog scans and folder-home fetch discovery
-/// (§FS-values.2.2, §FS-fetch.5.1), in either format (§FS-values.2.2.4).
+/// (§FS-values.2.2, §FS-fetch.5.1), in either format (§FS-values.2.2.3).
 fn scan_sources(
     schema: &Schema,
     frame: Frame<'_>,
@@ -135,7 +135,7 @@ fn scan_sources(
         owners.sort();
     }
     grouped.sort_by_key(|(_, (paths, _))| sort_path_key(&paths[0]));
-    // §FS-values.2.2.4: one path for either format, which picks only the reader.
+    // §FS-values.2.2.3: one path for either format, which picks only the reader.
     for (physical, (paths, owners)) in grouped {
         // A name that is the file's own, alone, has nothing to judge, so a linkless tree pays
         // nothing here. A link alone can have moved (§FS-scan.checks.reading-moved).
@@ -196,7 +196,7 @@ fn scan_sources(
     coverage
 }
 
-/// A value source's read or classification failure (§FS-values.5.3.1), with
+/// A value source's read or classification failure (§FS-values.5.3), with
 /// format context around the shared I/O reason (§FS-check.2.4.1).
 fn value_source_error(
     path: &Path,
@@ -219,7 +219,7 @@ fn value_source_error(
 }
 
 /// A source's root by its format's reader, or the line a stream the reader
-/// rejects stops the scan on (§FS-values.2.2.4, §FS-values.5.3).
+/// rejects stops the scan on (§FS-values.2.2.3, §FS-values.5.3).
 fn read_value_root(text: &str, format: ValueFormat) -> std::result::Result<JsonNode, String> {
     match format {
         ValueFormat::Json => {
@@ -282,7 +282,7 @@ pub(super) fn value_sources<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
 ) -> std::result::Result<Vec<ValueSource<'a>>, ScanError> {
-    // §FS-values.5.3.1: enrollment publishes classification failures; callers here
+    // §FS-values.5.3: enrollment publishes classification failures; callers here
     // need the readable source paths for the ordinary walk's source exclusions.
     value_sources_in(schema, frame, None, &mut Vec::new())
         .map_err(|home| home.into_scan_error(frame.version))
@@ -292,7 +292,7 @@ pub(super) fn value_sources<'a>(
 /// retains all spellings and owners of its physical inputs before shared grouping
 /// chooses a reader. Failures discovering unrelated homes do not gate fetch.
 /// Failed candidate metadata is reported while readable sources remain available
-/// (§FS-values.5.3.1); confirmed non-files stay outside the source set.
+/// (§FS-values.5.3); confirmed non-files stay outside the source set.
 fn value_sources_in<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
@@ -322,13 +322,13 @@ fn value_sources_in<'a>(
             let selected_home = selected
                 .is_some_and(|(owner, home)| owner == kind && paths_same_location(home, &folder));
             let required = selected.is_none() || selected_home;
-            // §FS-check.6.1.1: cover this effective input before its shared read.
+            // §FS-check.6.1: cover this effective input before its shared read.
             let disk = frame.sources();
             let listing = disk.list_dir(&folder);
             if required && let Some(error) = listing.failure {
                 return Err(UnreadHome { folder, error });
             }
-            // §FS-values.5.3.1: classification failures have a deterministic path order too.
+            // §FS-values.5.3: classification failures have a deterministic path order too.
             let mut entries = listing.entries;
             entries.sort_by_key(|path| sort_path_key(path));
             // §FS-fetch.5.1: a home fetch does not select is read as far as it lists.
@@ -339,7 +339,7 @@ fn value_sources_in<'a>(
                         Ok(true) => {}
                         Ok(false) => continue,
                         Err(error) => {
-                            // §FS-values.5.3.1: one failed candidate, even if two homes own it;
+                            // §FS-values.5.3: one failed candidate, even if two homes own it;
                             // unrelated homes do not gate selected fetch. Named as it entered,
                             // whatever its target reads as.
                             if required && failed_sources.insert(physical_path_key(&path)) {

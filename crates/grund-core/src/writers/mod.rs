@@ -41,10 +41,10 @@
 //! its version — as `grammar/managed_block.rs`, which the checker's
 //! agent-entrypoint rule (§FS-check.3.5) now reads downward and which this
 //! component had implemented twice, once for §FS-init.2.3 and once for
-//! §FS-integrations.4.1. The `[fmt] exclude` glob grammar of §FS-config.3.10.1 and
+//! §FS-integrations.4.1. The `[fmt] exclude` glob grammar of §FS-config.3.10 and
 //! the TOML basic-string escaper went down into `config/`, and `plural` — by way
 //! of `checker/` — into `model/text.rs`, each to the lowest component that reads
-//! it. What came the other way is the §FS-fmt.6.6 auto-enable pair from the
+//! it. What came the other way is the §FS-fmt.6.7.2 auto-enable pair from the
 //! former command adapter: both current callers are data-returning engine
 //! functions (§AR-system.2.9.1).
 //!
@@ -157,7 +157,7 @@ pub use integrations_output::{
     IntegrationNote, IntegrationOutcome, IntegrationsError, IntegrationsFailure, IntegrationsOpts,
     IntegrationsOutput,
 };
-// What the Node projection reads of the originals (§FS-distribution.3.2.2.2).
+// What the Node projection reads of the originals (§FS-distribution.3.2.2).
 pub(crate) use integrations_clients::{
     GRUND_OPEN_RESOLVER, RESOLVER_TARGET, VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON,
 };

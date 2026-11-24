@@ -8,7 +8,7 @@
 /// on stdout.
 ///
 /// Where a manual client's step is reported: after the resolver its snippet
-/// depends on, and before the guidance (§FS-integrations.3.4.2).
+/// depends on, and before the guidance (§FS-integrations.3.4).
 fn report_integrations_write(out: &IntegrationsOutput) {
     for warning in &out.warnings {
         eprintln!(
@@ -54,13 +54,13 @@ fn report_integration_events(events: &[IntegrationEvent]) {
 }
 
 /// One event's lines on stderr: `<verb> <path>`, with what its note adds
-/// (§FS-integrations.1.3.2). A note this release does not name annotates a write
+/// (§FS-integrations.1.3). A note this release does not name annotates a write
 /// that already happened, so its event prints the bare line, as a note-less one
 /// does (§AR-bindings.2.1).
 fn event_lines(verb: &str, path: &Path, note: Option<&IntegrationNote>) -> String {
     let path = path.display();
     match note {
-        // Reported rather than silent (§FS-integrations.4.1.3): the install
+        // Reported rather than silent (§FS-integrations.4.1): the install
         // is otherwise indistinguishable from one that works.
         Some(IntegrationNote::UnwiredWezterm { apply_call }) => format!(
             "{verb} {path}\nnote: {path} does not call `{apply_call}config)` on the config it returns, so WezTerm reads the block and registers nothing; add that line where you build your config\n"
@@ -81,7 +81,7 @@ fn event_lines(verb: &str, path: &Path, note: Option<&IntegrationNote>) -> Strin
 }
 
 /// What one agent's block ended up teaching, and why it is not what was asked
-/// for when it is not (§FS-integrations.4.4.4). Reported per target, because
+/// for when it is not (§FS-integrations.4.4). Reported per target, because
 /// unreported an override, a gate downgrade, and an unread key are
 /// indistinguishable from the outside.
 fn describe_guidance(
@@ -106,7 +106,7 @@ fn describe_guidance(
 /// the target and why, exit `2`. A client whose home cannot be resolved is named
 /// by the client rather than by its `~`-rooted target, and a manual client's
 /// step is not printed when the resolver it depends on is what failed
-/// (§FS-integrations.3.4.2).
+/// (§FS-integrations.3.4).
 fn report_integrations_failure(
     error: &IntegrationsError,
     client: Option<IntegrationClient>,

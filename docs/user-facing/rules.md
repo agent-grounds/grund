@@ -37,7 +37,7 @@ expanded shorthand into it. The rationale remains ordinary grounded Markdown.
 
 The shared guide below explains handle selection ([§FS-rules.2](../functional-spec/FS-rules.md#2-subject-selectors)),
 display-name matching ([§FS-rules.3.1](../functional-spec/FS-rules.md#31-chapter-presence)),
-comparison diagnostics ([§FS-rules.7.2.1](../functional-spec/FS-rules.md#721-display-name-comparison-context))
+comparison diagnostics ([§FS-rules.7.2](../functional-spec/FS-rules.md#72-chapter-cardinality))
 and whitespace guidance ([§FS-rules.3.5.1](../functional-spec/FS-rules.md#351-presence-name-whitespace-refusal)).
 Its shipped skill copies use public links ([§REQ-shipped-surfaces.2](../requirements/REQ-shipped-surfaces.md#2-the-grounding-moves-it-is-not-deleted)).
 A subject is also a query: [Querying grund](querying.md) feeds the units
@@ -70,7 +70,7 @@ Subjects select local units only:
 - `The evidence chapter of each SWR whose verification is Test` selects that
   named chapter in those SWR alone.
 
-Named chapter subjects select handles: `The goal chapter of each FS` reaches `## goal: Goal and hypothesis` by `goal` ([chapter subjects](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#2-subject-selectors)). Presence rules compare direct chapter display names case-insensitively: `Each FS must have exactly one goal chapter.` counts zero for that heading and one for `## goal: Goal` ([presence matching](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#31-chapter-presence)). The finding appends the expected display name and observed pairs such as `"goal: Goal and hypothesis"`, or `none` ([comparison context](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#721-display-name-comparison-context)). Presence `NAME` must be one non-empty token: `Goal and hypothesis` is refused with `NAME forbids whitespace anywhere.` appended to the existing guidance; authored display titles may still contain spaces ([whitespace refusal](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#351-presence-name-whitespace-refusal)).
+Named chapter subjects select handles: `The goal chapter of each FS` reaches `## goal: Goal and hypothesis` by `goal` ([chapter subjects](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#2-subject-selectors)). Presence rules compare direct chapter display names case-insensitively: `Each FS must have exactly one goal chapter.` counts zero for that heading and one for `## goal: Goal` ([presence matching](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#31-chapter-presence)). The finding appends the expected display name and observed pairs such as `"goal: Goal and hypothesis"`, or `none` ([comparison context](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#72-chapter-cardinality)). Presence `NAME` must be one non-empty token: `Goal and hypothesis` is refused with `NAME forbids whitespace anywhere.` appended to the existing guidance; authored display titles may still contain spaces ([whitespace refusal](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#351-presence-name-whitespace-refusal)).
 
 Chapter subjects and presence rules count named sections only; numbered
 sections do not count as chapters. For a `Terms` chapter rule, change
@@ -265,7 +265,7 @@ must = ["FS"]
 
 Where the row already grounds, the hint names the citation entry alone.
 This is configuration guidance; it offers no accepted sentence rewrite. See the
-[place-subject guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-row-or-path-subject-names-its-citation-configuration)
+[place-subject guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)
 for the exact matching boundary, and the [runnable example](https://github.com/agent-grounds/grund/tree/main/examples/rules)
 for the refusal and its citation-direction finding.
 
@@ -387,7 +387,7 @@ authored. That last part is what lets a member complete a `grund` upgrade: the
 block it writes is byte-for-byte what a run holding the whole workspace would
 write for it. One genuinely invalid rule beside it and nothing is written at
 all, which is the ordinary refusal
-([§FS-rules.4.1.2](../functional-spec/FS-rules.md#412-what-init-writes-anyway)).
+([§FS-rules.4.1](../functional-spec/FS-rules.md#41-a-rule-this-scope-cannot-verify)).
 
 That finding still earns `1` when the member's block is already current,
 including under `init --check` and `init --dry-run`. Located rule errors go to
@@ -413,7 +413,7 @@ count since grund 0.16.1. In 0.16.1 and 0.17.0 a finding that only such a
 citation produced — a forbidden citation, or an `at most` or `exactly` count
 it pushed out of bounds — was a warning; from 0.18.0 it is an ordinary error
 and fails the run. Move or remove the citation, loosen the count, or
-`--ignore` the code. [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity) [§FS-rules.3.4](../functional-spec/FS-rules.md#34-inbound-citation-count-and-prohibition) [§FS-rules.7.8](../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)
+`--ignore` the code. [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity) [§FS-rules.3.4](../functional-spec/FS-rules.md#34-inbound-citation-count-and-prohibition) [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)
 
 So a count can read a citation you do not think of as a second one, and the
 row says which. A `citation-cardinality` or `uncited-unit` row whose count is
@@ -429,7 +429,7 @@ zero count names nothing and keeps `"sites":null`. Because the row names its
 sites, `grund check <citing file>` reports, and exits `1` on, every count that
 file's citations are part of, anchored at the subject's title as a whole run
 anchors it, so a narrowed run never passes a count the whole run fails.
-[§FS-rules.7.3.1](../functional-spec/FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)
+[§FS-rules.7.3](../functional-spec/FS-rules.md#73-outbound-citation-cardinality)
 
 A rule reads a declaration written behind a stub on what its target says, even
 where the target is outside the configured source scope: the target's citations count, its
@@ -437,13 +437,13 @@ chapters are counted, and a forbidden citation there is reported at its line in
 the target. A count or chapter count the declaration fails is reported at its
 line in the target too. In 0.18.0 a finding only those citations and chapters
 produced was a warning; from 0.19.0 it is an ordinary error and fails the run.
-[§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged) [§FS-declarations.stubs.pairing.4](../functional-spec/FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target) [§FS-rules.7.11](../functional-spec/FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)
+[§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged) [§FS-declarations.stubs.pairing](../functional-spec/FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at) [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)
 
 From grund 0.19.0, a citation of a name under a number is ordinary for required
 rules too. A forbidden citation, or an outbound, per-target or inbound upper
 count that only such a site breaks, is an error. Recommended findings remain
 opt-in suggestions; explicit `warn` and `warn-not` strengths remain warnings
-([§FS-rules.7.12](../functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)).
+([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity), [§FS-config-v2.rules.strengths](../functional-spec/FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)).
 Repair or remove the citation, adjust the constraint, or filter the finding's
 code with `--ignore`.
 
@@ -453,7 +453,7 @@ the member's own alias path, such as `group/api/AR` in a rule of member
 match produced — a forbidden citation, an upper count it pushed out of bounds,
 or a per-target finding for a declaration the pin brought in — was a warning;
 from 0.19.0 it is an ordinary error and fails the run.
-[§FS-config.3.9.3](../functional-spec/FS-config.md#393-alias-matching) [§FS-rules.7.9](../functional-spec/FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)
+[§FS-config.3.9.3](../functional-spec/FS-config.md#393-alias-matching) [§FS-rules.2](../functional-spec/FS-rules.md#2-subject-selectors)
 
 The runnable [`examples/rules/`](../../examples/rules/) repository includes a
 passing and violated instance of all five families, shared-prefix coverage

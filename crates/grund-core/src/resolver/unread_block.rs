@@ -25,7 +25,7 @@ use crate::workspace::{block_relative_root, uncovered_block_scope_roots, unread_
 /// block would have read as a project, named under the block root — or `None`,
 /// which is every configuration this finding stays silent about.
 ///
-/// **One root, not every root.** §FS-workspace.2.1.1's claim is universal and its
+/// **One root, not every root.** §FS-workspace.2.1's claim is universal and its
 /// list is the evidence for it; this claim is existential, one edit clears every
 /// root at once, and probing the rest would buy nothing the answer depends on. The
 /// one named is the first in *scope order* — `[scan] include` in config order,
@@ -43,7 +43,7 @@ use crate::workspace::{block_relative_root, uncovered_block_scope_roots, unread_
 /// run rooted at the block does not know the projects above it, and neither would
 /// the scan it is standing in for. `scan_full` is off for the same reason
 /// [`block_scope_roots`] asks the default scope — this is a property of the
-/// configuration rather than of one walk (§FS-check.1.3.10).
+/// configuration rather than of one walk (§FS-check.1.3).
 pub(crate) fn unread_block_scope_root(
     block: &ProjectRecords,
     project_roots: &[PathBuf],
@@ -61,12 +61,12 @@ pub(crate) fn unread_block_scope_root(
         .map(|root| block_relative_root(block, &root))
 }
 
-/// §FS-check.4.10.11, §FS-workspace.6.1, §FS-distribution.3.1: the
+/// §FS-check.4.10, §FS-workspace.6.1, §FS-distribution.3.1: the
 /// run's warning channel, settled — every caution the workspace pass already had
 /// in full, and every opted-out block it could only pose, in the one order the
 /// reader sees them in.
 ///
-/// This is the lowest component that can answer all four, because §FS-check.4.10.2's
+/// This is the lowest component that can answer all four, because §FS-check.4.10's
 /// question is about a walk and the walker sits above the workspace pass
 /// (§AR-resolver.placement). Nothing here renders: what comes back is a
 /// `Diagnostic` per warning, for whichever frontend asked (§AR-bindings.2).

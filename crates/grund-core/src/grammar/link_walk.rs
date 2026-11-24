@@ -1,12 +1,12 @@
 //! The byte walk under the document reading of §FS-citations.wrap: one Markdown
 //! line read left to right for the brackets, the destinations, the autolinks and
-//! the raw HTML tags every form of §FS-citations.wrap.enclosing.scope is spelled
+//! the raw HTML tags every form of §FS-citations.wrap.enclosing.shape is spelled
 //! with. It decides no reading itself. `markdown_links.rs` runs it twice, once
 //! over the document to settle what each `[` turns out to be and once over the
 //! line a caller holds to say where those spans fall in its bytes, so the two
 //! runs cannot find different brackets (§AR-system.principle).
 //!
-//! Not a Markdown parser (§FS-citations.wrap.enclosing.scope): it reads only the
+//! Not a Markdown parser (§FS-citations.wrap.enclosing.shape): it reads only the
 //! extents §FS-citations.wrap.enclosing.shape and §FS-citations.zones name, and
 //! reuses the one code-span and destination extent every other pass reads.
 
@@ -303,7 +303,7 @@ fn key_close(bytes: &[u8], from: usize) -> Option<usize> {
 }
 
 /// Past the `-->` of an HTML comment opened at `at`, or the line's end: a
-/// comment opens no element (§FS-citations.wrap.enclosing.scope).
+/// comment opens no element (§FS-citations.wrap.enclosing.shape).
 fn html_comment_end(bytes: &[u8], at: usize) -> Option<usize> {
     if !bytes[at..].starts_with(b"<!--") {
         return None;
@@ -343,7 +343,7 @@ fn autolink_end(bytes: &[u8], at: usize) -> Option<usize> {
 /// A raw HTML tag opened at `at`: past its `>`, the first outside a quoted
 /// attribute value on the line, and whether it opens (`Some(true)`) or closes
 /// (`Some(false)`) an `<a>` element, its name matched without regard to case
-/// (§FS-citations.wrap.enclosing.scope, §FS-citations.zones.authored-markup).
+/// (§FS-citations.wrap.enclosing.shape, §FS-citations.zones.authored-markup).
 fn html_tag(bytes: &[u8], at: usize) -> Option<(usize, Option<bool>)> {
     let closing = bytes.get(at + 1) == Some(&b'/');
     let name_start = at + 1 + usize::from(closing);

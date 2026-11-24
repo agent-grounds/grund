@@ -23,7 +23,7 @@ use crate::rules::engine::one_rules_authority;
 use crate::scanner::file_home_kind;
 use crate::sources::paths_same_location;
 
-/// How a citing kind is named in a finding (§FS-check.3.11, §FS-check.3.12.1): a
+/// How a citing kind is named in a finding (§FS-check.3.11, §FS-check.3.12): a
 /// citable kind by its name, which is the prefix of every ID in it; a
 /// non-citable one by its home, which is all a reader of the message could go
 /// and look at. `code` keeps its own name — it is the complement of every home

@@ -41,7 +41,7 @@ enum HeldKind {
     /// Answered against the text it was sent with (§FS-lsp.responsiveness.4).
     Typing(Option<String>),
     /// A request no snapshot answers, refused once the edits before it are checked, so its
-    /// error never overtakes their publishes (§FS-lsp.1.6.4). It seals nothing: a later edit
+    /// error never overtakes their publishes (§FS-lsp.1.6). It seals nothing: a later edit
     /// may still merge into the rebuild it waits on.
     Unsupported,
     Shutdown,

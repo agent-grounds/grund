@@ -58,9 +58,9 @@ The later format-aware rule replaces the bare-name restriction
 this paragraph records the older rationale rather than requiring `DA`/`DAT`
 to remain refused.
 
-The cost is a stutter — `[[kinds]] kind = "skill"`. `name` avoids it and was the runner-up, but it is generic where `kind` is the term the schema is already committed to: the stutter is paid once at authoring time, the mismatch on every read of the three surfaces above. `prefix` still loads through the deprecation window of [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) ([§FS-config.3.4.6](../../functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130)) — one match arm and a "both set" error, which is cheaper than invoking the pre-1.0 licence of [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise).
+The cost is a stutter — `[[kinds]] kind = "skill"`. `name` avoids it and was the runner-up, but it is generic where `kind` is the term the schema is already committed to: the stutter is paid once at authoring time, the mismatch on every read of the three surfaces above. `prefix` still loads through the deprecation window of [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) ([§FS-config.3.4.6](../../functional-spec/FS-config.md#346-prefix--refused-in-favor-of-kind)) — one match arm and a "both set" error, which is cheaper than invoking the pre-1.0 licence of [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise).
 
-Consequence: that window closed. `prefix` stopped loading in 0.13.0, the match arm and the "both set" error went with it, and [§FS-config.3.4.6](../../functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130) is now the record of a removed key.
+Consequence: that window closed. `prefix` stopped loading in 0.13.0, the match arm and the "both set" error went with it, and [§FS-config.3.4.6](../../functional-spec/FS-config.md#346-prefix--refused-in-favor-of-kind) is now the record of a removed key.
 
 ### 2.5 Obligations get a per-file unit, and grounding follows the home
 

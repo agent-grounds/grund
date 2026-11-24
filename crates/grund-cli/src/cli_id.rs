@@ -79,7 +79,7 @@ fn command_id(args: &[String]) -> ExitCode {
     match outcome {
         IdProposalOutcome::UnknownKind { headline, known } => {
             eprintln!("error: {headline}");
-            // §FS-list.1.1.1: core renders the line, `none` included.
+            // §FS-list.1.1: core renders the line, `none` included.
             eprintln!("{}", IdProposalOutcome::known_kinds_line(&known));
             ExitCode::from(2)
         }

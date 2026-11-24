@@ -50,7 +50,7 @@ pub(crate) fn spelled_under_root(path: &Path, root: &Path) -> Option<PathBuf> {
 /// the config root is. Starting only at the root would therefore read *fewer*
 /// files than the plain walk whenever an `include` entry is gitignored, excluded,
 /// or hidden — and `--full` would turn a red run green, which is exactly what
-/// §FS-check.1.3.4 promises it can never do. `walk_scannable_files` deduplicates
+/// §FS-check.1.3 promises it can never do. `walk_scannable_files` deduplicates
 /// the file list, so an `include` root the root walk already covers is read once.
 /// Collecting each root through `components()` folds away the `./` and trailing
 /// separator an entry may be written with, so two roots naming one directory
@@ -75,7 +75,7 @@ pub(crate) fn spelled_under_root(path: &Path, root: &Path) -> Option<PathBuf> {
 /// ways is still `include`'s, which keeps the dedup and `--full`'s additivity
 /// unchanged.
 pub(crate) fn root_scope_roots(schema: &Schema, root: &Path, full: bool) -> Vec<PathBuf> {
-    // §FS-config.3.4.7.2: an `include` entry at or inside an unwalked home is the one
+    // §FS-config.3.4.7: an `include` entry at or inside an unwalked home is the one
     // way such a home is still a *root*, where the walk's own prune cannot reach it.
     // The narrower key, the one written on the kind itself, wins.
     let unwalked = if full {
@@ -108,8 +108,8 @@ pub(crate) fn root_scope_roots(schema: &Schema, root: &Path, full: bool) -> Vec<
             vec![root.to_path_buf()]
         }
         // v2, complement at the root: each place stays a root, ahead of the root so a
-        // file reached twice keeps its spelling (§FS-config-v2.schema.sources.exclude.roots,
-        // §FS-config-v2.schema.places.boundaries.6).
+        // file reached twice keeps its spelling (§FS-config-v2.schema.sources.exclude,
+        // §FS-config-v2.schema.places.boundaries).
         (false, false) => homes.chain(std::iter::once(root.to_path_buf())).collect(),
     }
 }

@@ -8,7 +8,7 @@ Settles how the managed block's first grounding rung describes what `grund <ID>`
 
 ## 1. Context
 
-A text read of a selected section prints that section's own heading line first, in every format ([§FS-show.2.2](../../functional-spec/FS-show.md#22-section)). The block called every default read "heading-less", which is true only of a whole declaration, and `show --help` said only md "keeps the heading" ([§FS-cli.2.3.4](../../functional-spec/FS-cli.md#234-show-says-a-section-read-opens-with-its-heading)). An agent that trusted either wrote a check that failed on the section's heading line.
+A text read of a selected section prints that section's own heading line first, in every format ([§FS-show.2.2](../../functional-spec/FS-show.md#22-section)). The block called every default read "heading-less", which is true only of a whole declaration, and `show --help` said only md "keeps the heading" ([§FS-cli.2.3](../../functional-spec/FS-cli.md#23-a-subcommands-help-page)). An agent that trusted either wrote a check that failed on the section's heading line.
 
 ## 2. Decision
 

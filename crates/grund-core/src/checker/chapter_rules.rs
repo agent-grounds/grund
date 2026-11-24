@@ -1,4 +1,4 @@
-//! Checker orchestration for chapter rules (§FS-rules.4, §FS-rules.11,
+//! Checker orchestration for chapter rules (§FS-rules.4, §AR-rules.1,
 //! §AR-checker.1). Grammar, facts, evaluation, and deduplication stay owned by
 //! the rules component; this module only sequences and merges their results.
 
@@ -49,7 +49,7 @@ fn rule_kinds(schema: &Schema) -> BTreeSet<&str> {
         .collect()
 }
 
-/// One rule as the loader reads it (§FS-rules.7.10): the record its ID pairs with
+/// One rule as the loader reads it (§FS-rules.1): the record its ID pairs with
 /// (§FS-declarations.stubs.pairing.1), whose title and body are the sentence and
 /// rationale `grund <ID> --brief` prints, and the declaration it is reported at —
 /// the record itself, or the stub standing for a target the scan does not read.
@@ -80,7 +80,7 @@ impl RuleDeclaration<'_> {
 
 /// Every rule `findings` declares, each paired declaration once, so a stub and the
 /// scanned target it points at are one rule and a stub to an unscanned target is
-/// its target's rule (§FS-rules.7.10, §AR-scanner.4.6). `check` and `init` both
+/// its target's rule (§FS-rules.1, §AR-scanner.4.6). `check` and `init` both
 /// read rules from here.
 fn rule_declarations<'a>(
     findings: &'a Catalog,
@@ -201,7 +201,7 @@ fn add_workspace_targets(
     vocabulary: &mut RuleVocabulary,
     projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) {
-    // §FS-rules.4.1.1: one namespace per project the run loaded; holding any at
+    // §FS-rules.4.1: one namespace per project the run loaded; holding any at
     // all is what separates a scope that judged an alias and said no from one
     // that could not judge it.
     vocabulary.objects.add_projects(
@@ -239,7 +239,7 @@ pub(crate) fn workspace_vocabulary(
 /// The workspace component reads it (`declared_member_schemas`), stage 1 only and
 /// best-effort, so the alias set is `check`'s by construction, and a project
 /// that declares `[workspace]` holds at least its own namespace whatever its
-/// member list expands to (§FS-rules.4.1.1).
+/// member list expands to (§FS-rules.4.1).
 pub(crate) fn declared_workspace_vocabulary(
     schema: &Schema,
     rules: &Rules,
@@ -256,7 +256,7 @@ pub(crate) fn declared_workspace_vocabulary(
 }
 
 /// What one validation of a project's configured rules yields: the bullets to
-/// render, and the rules this scope could not verify (§FS-rules.4.1.2).
+/// render, and the rules this scope could not verify (§FS-rules.4.1).
 pub(crate) struct ConfiguredRules {
     /// `(qualified rule ID, authored sentence)` in qualified-rule-ID order, one
     /// per rendered rule — every valid rule and every rule unverifiable here
@@ -277,7 +277,7 @@ pub(crate) struct ConfiguredRules {
 /// authored sentences in qualified-rule-ID order (§FS-rules.4, §FS-rules.9).
 ///
 /// `Err` is the genuinely invalid rule and nothing else: the caller withholds
-/// the managed-block write for it and for no other failure (§FS-rules.4.1.2).
+/// the managed-block write for it and for no other failure (§FS-rules.4.1).
 /// A rule that is only unverifiable here still earns its row, because the
 /// bullet is the authored sentence and one tree must render one block
 /// (§FS-rules.9.1).
@@ -309,7 +309,7 @@ pub(crate) fn configured_rule_sentences(
         if let Some(diagnostic) = unresolved_subject_diagnostic(&parsed, &facts) {
             return Err(diagnostic);
         }
-        // §FS-rules.4.1.2: reported, rendered, and not a reason to withhold
+        // §FS-rules.4.1: reported, rendered, and not a reason to withhold
         // the write.
         if let Some(message) = unverifiable_here {
             unverifiable.push(rule.invalid(&message));
@@ -438,11 +438,11 @@ pub(crate) fn check_chapter_rules_with_non_units(
         &parsed_rules,
     ));
     let precedence = directions(findings, rules, schema, frame, non_units, &parsed_rules);
-    // §FS-rules.7.3.1: a count above zero names what it read, on every channel.
+    // §FS-rules.7.3: a count above zero names what it read, on every channel.
     let spellings = PlaceNames::new(schema, frame);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
-    // §FS-rules.7.10: a rule declared through a stub reports on the ordinary channels.
+    // §FS-rules.1: a rule declared through a stub reports on the ordinary channels.
     let (errors, mut shown) = evaluate_with(&parsed_rules, &precedence, &facts, &headings);
     let (suggestions, also) =
         evaluate_suggestions_with(&parsed_rules, &precedence, &facts, &headings);

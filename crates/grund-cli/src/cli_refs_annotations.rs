@@ -1,4 +1,4 @@
-/// §FS-refs.3.1.1: every text mode appends the same semantic annotation after
+/// §FS-refs.3.1: every text mode appends the same semantic annotation after
 /// the existing row, leaving ordinary uses untouched.
 fn render_refs_text(hits: &[RefHit], index_entries: &BTreeSet<(String, usize, usize)>) {
     for hit in hits {
@@ -11,13 +11,13 @@ fn render_refs_text(hits: &[RefHit], index_entries: &BTreeSet<(String, usize, us
     }
 }
 
-/// §FS-refs.3.1.1: look up the exact site classified by core; the frontend
+/// §FS-refs.3.1: look up the exact site classified by core; the frontend
 /// never guesses membership from a filename or a citation's spelling.
 fn ref_is_index_entry(hit: &RefHit, entries: &BTreeSet<(String, usize, usize)>) -> bool {
     entries.contains(&(hit.path.clone(), hit.line, hit.column))
 }
 
-/// §FS-refs.3.3.1: identify only excluded lines in each file. If an ordinary
+/// §FS-refs.3.3: identify only excluded lines in each file. If an ordinary
 /// use shares a line, identify each excluded column on that line too.
 fn refs_summary_annotations<'a>(
     hits: &'a [RefHit],

@@ -39,9 +39,9 @@ use crate::sources::{canonical_path, physical_path_key};
 /// home (a stub's target) and the `none` profile both get a bare file link.
 /// `None` if the ID does not resolve (§FS-fmt.6.4), `None` for a broken stub and
 /// for an ID with more than one declaration once its stubs are paired
-/// (§FS-fmt.6.4.2, §AR-scanner.4.6), and `None` for a `.<section>`
+/// (§FS-fmt.6.4, §AR-scanner.4.6), and `None` for a `.<section>`
 /// citation of a section the declaration does not have, whether or not the link
-/// takes a heading anchor (§FS-fmt.6.4.1).
+/// takes a heading anchor (§FS-fmt.6.4).
 ///
 /// The anchor profile is presentation's, so the record is handed in rather than
 /// read off the project (§AR-resolver.6).
@@ -78,8 +78,8 @@ pub(crate) fn markdown_link_target(
 /// a folder that index lists, the only ones the finding can call not listed
 /// there. Linking every declaration of the kind from every index instead costs
 /// folders × declarations under a per-folder layout (§GOAL-fast-feedback). An
-/// ID `fmt` would not link (§FS-fmt.6.4.2) has no entry. `settled` is the
-/// heading lines a `fmt` run leaves (§FS-fmt.6.3.3), empty for every other caller.
+/// ID `fmt` would not link (§FS-fmt.6.4) has no entry. `settled` is the
+/// heading lines a `fmt` run leaves (§FS-fmt.6.3), empty for every other caller.
 pub(crate) fn index_link_targets<'c>(
     presentation: &Presentation,
     schema: &Schema,
@@ -91,7 +91,7 @@ pub(crate) fn index_link_targets<'c>(
 }
 
 /// `index_link_targets`, linking only the IDs in `only` when it is given: the
-/// entries a classifier restricted to those IDs compares (§FS-refs.3.1.1).
+/// entries a classifier restricted to those IDs compares (§FS-refs.3.1).
 pub(crate) fn index_link_targets_for<'c>(
     presentation: &Presentation,
     schema: &Schema,
@@ -235,7 +235,7 @@ pub(crate) fn index_link_targets_for<'c>(
 /// stub verdicts, but the link path is anchored at `path_root` (the workspace
 /// root) when the citing file and the target's home live in different projects.
 /// The anchor names the heading as `settled` says the run leaves it
-/// (§FS-fmt.6.3.3), and as the scan read it where `settled` is silent.
+/// (§FS-fmt.6.3), and as the scan read it where `settled` is silent.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn markdown_link_target_with_root(
     from_file: &Path,
@@ -247,7 +247,7 @@ pub(crate) fn markdown_link_target_with_root(
     path_root: Option<&Path>,
     settled: &SettledHeadings,
 ) -> Option<String> {
-    // §FS-fmt.6.4.2: only an ID with one declaration, not a broken stub, is linked, read
+    // §FS-fmt.6.4: only an ID with one declaration, not a broken stub, is linked, read
     // off the verdict the scan recorded on each stub (§AR-scanner.4.6).
     let sole = paired_declarations(findings.declarations.get(id)?).sole()?;
     if sole.is_broken_stub() {
@@ -258,8 +258,8 @@ pub(crate) fn markdown_link_target_with_root(
         Some(root) => relative_url_under(from_file, &record.file, root),
         None => relative_url(from_file, &record.file, frame.root()),
     };
-    // §FS-fmt.6.4.1: a cited section is one the scan records, in a stub's target
-    // outside the walk too (§FS-check.3.2.1); one it lacks gets no link, anchor or not.
+    // §FS-fmt.6.4: a cited section is one the scan records, in a stub's target
+    // outside the walk too (§FS-check.3.2); one it lacks gets no link, anchor or not.
     if section.is_some_and(|sec| !record.sections.contains_key(sec)) {
         return None;
     }
@@ -308,10 +308,10 @@ pub(crate) fn takes_heading_anchor(markdown: bool, presentation: &Presentation) 
 /// `None` when `decl`'s section map holds no section at that path: which headings
 /// are sections, and where the body ends, are the scan's answer, the one `check`
 /// reports against, so a heading the scan leaves out of the body gives no anchor
-/// (§FS-fmt.6.4.1, §AR-scanner.2.4.1). The caller has already checked
+/// (§FS-fmt.6.4, §AR-scanner.2.4.1). The caller has already checked
 /// `takes_heading_anchor` and passes the record the scan made of the home. A
 /// section heading `settled` says the run rewrites is anchored as the run leaves
-/// it (§FS-fmt.6.3.3); a declaration heading is one `fmt` never rewrites.
+/// it (§FS-fmt.6.3); a declaration heading is one `fmt` never rewrites.
 pub(crate) fn heading_anchor(
     decl: &Declaration,
     section: Option<&str>,
@@ -353,7 +353,7 @@ pub(crate) fn numbered_heading_anchor(
 
 /// [`numbered_heading_anchor`] of the tree as a `fmt` run leaves it: the anchor
 /// `fmt --cross-refs` writes, with every heading of the home read as `settled`
-/// says the run writes it (§FS-fmt.6.3.3).
+/// says the run writes it (§FS-fmt.6.3).
 fn anchor_as_left(
     decl: &Declaration,
     section: Option<&str>,

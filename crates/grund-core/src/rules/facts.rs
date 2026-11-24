@@ -27,7 +27,7 @@ pub(crate) struct NodeMeta {
     pub(crate) label: String,
     pub(crate) anchor: RuleAnchor,
 }
-/// A site's display metadata. Mixed paths need no separate mark (§FS-rules.7.12).
+/// A site's display metadata. Mixed paths need no separate mark (§FS-rules.5.1).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct SiteMeta {
     pub(crate) label: String,
@@ -53,7 +53,7 @@ pub(crate) struct RuleFacts {
 
 /// A direct heading of a declaration that is not a chapter: a numbered section or an
 /// unmarked heading. No rule counts it; a too-low chapter count shows the named form
-/// that would count it (§FS-rules.7.2.1).
+/// that would count it (§FS-rules.7.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct NonChapter {
     pub(crate) line: usize,

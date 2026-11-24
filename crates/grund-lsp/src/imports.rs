@@ -18,7 +18,7 @@ struct ImportWatch {
         crossbeam_channel::Receiver<()>,
     ),
     /// The burst of native events not yet rebuilt, on `check --watch`'s debounce
-    /// (§FS-check.6.1.2), timed against `clock`.
+    /// (§FS-check.6.1), timed against `clock`.
     debounce: grund_core::native_watch::Debounce,
     clock: std::time::Instant,
 }
@@ -75,7 +75,7 @@ fn deepest_root<'a>(
 impl Server {
     /// The next thing the event loop acts on. A finished rebuild comes first, so
     /// it is installed before the next message is read (§AR-lsp.2.1.3). A native
-    /// event opens a burst that `check --watch`'s debounce ends (§FS-check.6.1.2),
+    /// event opens a burst that `check --watch`'s debounce ends (§FS-check.6.1),
     /// so events that never stop still rebuild; while it runs the client is read as
     /// ever (§FS-imports.editor).
     fn wake(&mut self) -> Wake {

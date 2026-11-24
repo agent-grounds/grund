@@ -20,7 +20,7 @@ kind by value, which writes the method twice and renames a requirement whenever 
 changes, or to leave the rule to review.
 
 [§DF-chapter-rules.2](DF-chapter-rules.md#2-decision) deferred "broader selectors" rather than rejecting them, and
-[§FS-rules.requirements.addition](../../functional-spec/FS-rules.md#requirementsaddition-the-language-grows-by-addition--directional) says what an addition must keep. This record is that
+[§FS-rules.requirements.addition](../../functional-spec/FS-rules.md#requirementsaddition-the-language-grows-by-addition) says what an addition must keep. This record is that
 addition, for one selector.
 
 ## 2. Decision
@@ -45,7 +45,7 @@ subject it states. It selects positively, by a value grund already checks, and e
 declaration it selects is held to the rule in full. A declaration it leaves out is not
 excused from anything either: its field holds another valid value, or is absent where the
 field allows absence, or is reported on its own as `missing-field` or
-`invalid-field-value` ([§FS-rules.requirements.unseen](../../functional-spec/FS-rules.md#requirementsunseen-nothing-a-rule-governs-passes-unseen--realized-one-case-deferred)).
+`invalid-field-value` ([§FS-rules.requirements.unseen](../../functional-spec/FS-rules.md#requirementsunseen-nothing-a-rule-governs-passes-unseen)).
 
 ### 2.3 Targets stay out of scope
 

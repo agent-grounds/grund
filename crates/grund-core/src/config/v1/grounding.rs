@@ -23,7 +23,7 @@ pub(super) struct ParsedGrounding {
 }
 
 /// Read one `[[kinds]]` grounding key into the row being parsed
-/// (§FS-config.3.4.8.3). Both keys are booleans-and-integers with no defaulting of
+/// (§FS-config.3.4.8). Both keys are booleans-and-integers with no defaulting of
 /// their own: an absent key stays `None` and inherits `[reference]` later.
 pub(super) fn parse_kind_grounding_key(
     path: &Path,
@@ -48,7 +48,7 @@ pub(super) fn parse_kind_grounding_key(
     Ok(())
 }
 
-/// §FS-config.3.4.8.2: a level outside `1..=6` names no heading Markdown can have,
+/// §FS-config.3.4.8: a level outside `1..=6` names no heading Markdown can have,
 /// wherever it is written.
 pub(super) fn check_grounding_level(path: &Path, line_no: usize, level: usize) -> Result<()> {
     if !GROUNDING_LEVELS.contains(&level) {

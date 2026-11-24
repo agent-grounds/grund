@@ -1,7 +1,7 @@
 # Read grounding data in Python
 
 This workflow embeds the engine through the locally installed Python package
-([§FS-distribution.3.3.7](../../docs/functional-spec/FS-distribution.md#337-local-source-and-typing-handoff)).
+([§FS-distribution.3.3.7](../../docs/functional-spec/FS-distribution.md#337-interpreters-source-installs-and-typing)).
 From the repository root:
 
 ```sh

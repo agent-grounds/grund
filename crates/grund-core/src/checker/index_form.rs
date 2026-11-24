@@ -13,7 +13,7 @@ use crate::grammar::{
 pub(super) enum IndexCitationForm {
     /// A link a reader can follow, which is what the entry has to be
     /// (§FS-citations.wrap.shape): wrapped as `[§<ID>…](<target>)`, the form
-    /// `grund fmt --cross-refs` writes in a kind's index (§FS-fmt.6.1.1), or in the
+    /// `grund fmt --cross-refs` writes in a kind's index (§FS-fmt.6.1), or in the
     /// text of a link its author wrote whose destination is not empty
     /// (§FS-citations.wrap.enclosing).
     Link,
@@ -47,7 +47,7 @@ pub(super) enum IndexCitationForm {
 /// §FS-check.3.13.1 out of.
 ///
 /// `line` is Markdown: `kind_index_targets` keeps only an index read as Markdown
-/// (§FS-config.3.4.2.3, §FS-fmt.2.3.1), whatever its name, which is what lets the
+/// (§FS-config.3.4.2, §FS-fmt.2.3.1), whatever its name, which is what lets the
 /// never-rewrite test below be asked in its Markdown form.
 ///
 /// Where the marker is looked for: it may be part of the recorded citation text or
@@ -79,7 +79,7 @@ pub(super) fn index_citation_form(
 }
 
 /// The same entry-form judgment for one exact occurrence (§FS-check.3.18),
-/// also used by §FS-check.3.12.2's repair so another link on the line cannot
+/// also used by §FS-check.3.12's repair so another link on the line cannot
 /// turn an ordinary citation into a required marked entry. `links` places `line`
 /// in the index, so a reference or a link spanning lines is read as `fmt` reads it.
 pub(super) fn index_citation_form_at(

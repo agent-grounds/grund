@@ -96,7 +96,7 @@ The shorthand shape is the configured `[id] format` with the `{slug}` placeholde
 - `{kind}-{slug}` (the format `grund` itself uses) has no number to stand in for the ID. No shorthand; nothing in this record applies.
 - `{kind}-{number}` has no slug to omit. The "shorthand" would be the full ID.
 
-A repository on the number-less form is entirely unaffected by this decision, which is why `grund`'s own tree gains no new findings from it ([§FS-id.4.1](../../functional-spec/FS-id.md#41-number-less-id-formats)).
+A repository on the number-less form is entirely unaffected by this decision, which is why `grund`'s own tree gains no new findings from it ([§FS-id.4](../../functional-spec/FS-id.md#4-next-number-derivation)).
 
 ### 2.6 The full ID always wins, and only a whole token is a shorthand
 

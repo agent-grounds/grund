@@ -8,18 +8,18 @@ use super::fields::{FieldContent, FrontMatterKey, FrontMatterShape, Placement};
 use super::project::Strength;
 use crate::model::{ValueFormat, schema_text};
 
-/// §FS-schema.4.1.1: the declaration form every heading a shape line shows is
+/// §FS-schema.4.1: the declaration form every heading a shape line shows is
 /// written under, which the block's lead and the table's legend name.
 pub const SHAPE_DECLARATION: &str = "# <ID>: …";
 
-/// §FS-schema.4.1.1: where a field's heading sits, said once by the block's lead
-/// and once by the table's legend (§FS-schema.8.4) rather than on every line.
+/// §FS-schema.4.1: where a field's heading sits, said once by the block's lead
+/// and once by the table's legend (§FS-schema.8) rather than on every line.
 pub const FIELD_DEPTH: &str = "a field always sits one level below its declaration's heading";
 
-/// §FS-schema.4.1.2: the placeholder a value part is shown as.
+/// §FS-schema.4.1: the placeholder a value part is shown as.
 const PART: &str = "<number or word>";
 
-/// §FS-schema.4.1.2: where a value part's unit goes.
+/// §FS-schema.4.1: where a value part's unit goes.
 const UNIT: &str = "a unit is a part of its own";
 
 /// §FS-schema.4.1: one slot of a kind's shape (§AR-config.6.2), owned.
@@ -31,14 +31,14 @@ pub struct SchemaSlot {
     pub placement: Option<Placement>,
     pub content: FieldContent,
     /// The heading title the field's chapter must carry, where it sets one
-    /// (§FS-schema.4.1.2, §FS-fields.identity.match).
+    /// (§FS-schema.4.1, §FS-fields.identity.match).
     pub title: Option<String>,
     /// The files a value kind's numbered children are written in; `None` for a
-    /// named field (§FS-schema.4.1.4).
+    /// named field (§FS-schema.4.1).
     pub files: Option<ValueFiles>,
 }
 
-/// §FS-schema.4.1.4: where a value kind's values are written — by `grund fetch`,
+/// §FS-schema.4.1: where a value kind's values are written — by `grund fetch`,
 /// or by hand in each home in the forms the scan reads there.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ValueFiles {
@@ -47,7 +47,7 @@ pub struct ValueFiles {
     pub homes: Vec<ValueHome>,
 }
 
-/// §FS-schema.4.1.4: one value home and the forms its files take.
+/// §FS-schema.4.1: one value home and the forms its files take.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ValueHome {
     /// The home as the view spells a place: a folder with a trailing `/`.
@@ -57,7 +57,7 @@ pub struct ValueHome {
     pub forms: Vec<ValueForm>,
 }
 
-/// §FS-schema.4.1.4: the form one value file takes, by the reader the scan picks
+/// §FS-schema.4.1: the form one value file takes, by the reader the scan picks
 /// for it (§FS-values.2.2): a value source's reader, or the text scan's Markdown.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum ValueForm {
@@ -72,7 +72,7 @@ impl From<Option<ValueFormat>> for ValueForm {
 }
 
 impl ValueForm {
-    /// The language's name in `in a <name> file in` (§FS-schema.4.1.4).
+    /// The language's name in `in a <name> file in` (§FS-schema.4.1).
     fn name(self) -> &'static str {
         match self {
             Self::Markdown => "Markdown",
@@ -101,7 +101,7 @@ impl ValueForm {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ShapeLine {
     /// 0 for a field line and the kind's `closed`, 1 for what nests under a
-    /// front-matter field (§FS-schema.4.1.3).
+    /// front-matter field (§FS-schema.4.1).
     pub depth: usize,
     /// What a view prints before the text: `field <name>`, `key <name>` or `closed`.
     pub key: String,
@@ -117,7 +117,7 @@ impl ShapeLine {
 
 impl SchemaSlot {
     /// §FS-schema.4.1: the slot's shape lines — its own, then, for a front-matter
-    /// field, one per key and its own `closed` one level deeper (§FS-schema.4.1.3).
+    /// field, one per key and its own `closed` one level deeper (§FS-schema.4.1).
     pub fn shape_lines(&self) -> Vec<ShapeLine> {
         let Some(name) = &self.name else {
             let text = value_text(self.files.as_ref());
@@ -173,7 +173,7 @@ pub(crate) fn kind_closed_line(closed: Strength) -> ShapeLine {
     ShapeLine::new(0, "closed".to_string(), text)
 }
 
-/// §FS-schema.4.1.3: front matter is the block at the top of the file and no
+/// §FS-schema.4.1: front matter is the block at the top of the file and no
 /// heading; each key follows as the line to write, then its own `closed` where
 /// it is not `may` (§FS-fields.front-matter.record).
 fn front_matter_lines(key: String, parentheses: &str, shape: &FrontMatterShape) -> Vec<ShapeLine> {
@@ -197,7 +197,7 @@ fn front_matter_lines(key: String, parentheses: &str, shape: &FrontMatterShape) 
     lines
 }
 
-/// §FS-schema.4.1.4: a value kind's line — the form each home holds and where,
+/// §FS-schema.4.1: a value kind's line — the form each home holds and where,
 /// joined by `, ` and by `, or ` before the last, then the citation its first
 /// element answers to; a fetched kind's names the file `grund fetch` writes. A
 /// homeless kind's values are Markdown declarations, which need no home.
@@ -228,13 +228,13 @@ fn value_text(files: Option<&ValueFiles>) -> String {
     format!("{forms}: {cite}; {UNIT}")
 }
 
-/// §FS-schema.4.1.2: the placeholder of a scalar's values, `<one of A, B>`.
+/// §FS-schema.4.1: the placeholder of a scalar's values, `<one of A, B>`.
 fn one_of(values: &[String]) -> String {
     let values: Vec<String> = values.iter().map(|value| schema_text(value)).collect();
     format!("<one of {}>", values.join(", "))
 }
 
-/// §FS-schema.4.1.2: `text` as a Markdown code span — fences one backtick longer
+/// §FS-schema.4.1: `text` as a Markdown code span — fences one backtick longer
 /// than its longest run of backticks, and one space inside each fence where it
 /// begins or ends with a backtick, so the span shows its bytes as they are.
 fn code_span(text: &str) -> String {

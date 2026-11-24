@@ -73,7 +73,7 @@ pub(crate) fn written_language<'s>(sources: &'s Sources, name: &Path) -> Option<
     model_language(sources.model.as_ref()?, name)
 }
 
-/// §FS-schema.4.1.4: the format a value home would read a name the config writes in, asked as
+/// §FS-schema.4.1: the format a value home would read a name the config writes in, asked as
 /// a file of that spelling is (§AR-config.1.6), so the schema view names only a form the scan
 /// reads. `None` is no value source: the text scan's Markdown declaration.
 pub(crate) fn written_value_format(sources: &Sources, name: &Path) -> Option<ValueFormat> {
@@ -241,7 +241,7 @@ impl<'a> FileReading<'a> {
         self.language.map(|language| language.doc_comments.rule())
     }
 
-    /// §FS-config-v2.schema.sources.declarations.eligible: whether a comment block
+    /// §FS-config-v2.schema.sources.declarations: whether a comment block
     /// the declaration rule calls `doc`, or not, may declare. Every v1 block may.
     pub(crate) fn declares(&self, doc: bool) -> bool {
         match (self.declarations, self.language) {
@@ -250,7 +250,7 @@ impl<'a> FileReading<'a> {
         }
     }
 
-    /// §FS-config-v2.schema.sources.declarations.gate: whether a line in declaration
+    /// §FS-config-v2.schema.sources.declarations: whether a line in declaration
     /// position may declare, given whether the comment block it sits in may
     /// (`None` outside every block). A Markdown heading and every ungated line may.
     pub(crate) fn line_may_declare(&self, block_declares: Option<bool>) -> bool {

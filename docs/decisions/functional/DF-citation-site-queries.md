@@ -15,7 +15,7 @@ once `refs` takes no ID, and whether `cover` may filter at all.
 
 This change answers both and ships the three. The glob that selects catalog coordinates on
 `list` and `show` selects citation sites on `refs` and `cover`, by the coordinate each site
-cites ([§FS-coordinate-globs.matching.citations](../../functional-spec/FS-coordinate-globs.md#matchingcitations-on-refs-and-cover-a-glob-selects-citation-sites)): `refs --glob` lists who cites a set
+cites ([§FS-coordinate-globs.matching](../../functional-spec/FS-coordinate-globs.md#matching-matching)): `refs --glob` lists who cites a set
 ([§FS-refs.globs](../../functional-spec/FS-refs.md#globs---glob-lists-who-cites-a-set)), `cover --glob` keeps only those sites in its per-file view
 ([§FS-cover.globs](../../functional-spec/FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)), and `refs --from` lists what one point's own body cites
 ([§FS-refs.from](../../functional-spec/FS-refs.md#from---from-lists-what-one-point-cites)). The bindings take the same `globs`, and `refs` takes the source as
@@ -29,8 +29,8 @@ cites ([§FS-coordinate-globs.matching.citations](../../functional-spec/FS-coord
   ID typed where the path goes, gets a hint ([§FS-refs.1.3](../../functional-spec/FS-refs.md#13-an-id-typed-as-the-path-gets-a-hint)).
 - **A glob matches what a site cites, declared or not.** Rejected: selecting catalog
   coordinates and listing their citations, which drops the dangling sites, exactly the ones a
-  rename breaks ([§FS-refs.requirements.unresolved](../../functional-spec/FS-refs.md#requirementsunresolved-a-citation-is-listed-whether-or-not-it-resolves--realized)). The qualifier names the project the
-  citation targets, never the one it sits in ([§FS-coordinate-globs.scope.targets](../../functional-spec/FS-coordinate-globs.md#scopetargets-on-a-citation-the-qualifier-names-the-project-it-targets)).
+  rename breaks ([§FS-refs.requirements.unresolved](../../functional-spec/FS-refs.md#requirementsunresolved-a-citation-is-listed-whether-or-not-it-resolves)). The qualifier names the project the
+  citation targets, never the one it sits in ([§FS-coordinate-globs.scope](../../functional-spec/FS-coordinate-globs.md#scope-scope)).
 - **A pattern's bare ID is not ID mode's.** `refs X` is `--glob 'X{,.**}'`; `--glob 'X'` is
   only the citations of `X` with no section. Both are pinned beside the `--descendants`
   equivalence ([§FS-refs.globs.descendants](../../functional-spec/FS-refs.md#globsdescendants-one-id-asked-both-ways-gives-one-answer)).

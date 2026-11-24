@@ -1,4 +1,4 @@
-//! The v1 file's keys as the reader's line pass recorded them (§FS-config-migrate.4.3):
+//! The v1 file's keys as the reader's line pass recorded them (§AR-config.8.1):
 //! where each authored key sits, and which `[[kinds]]` row each row key belongs
 //! to. Migration reads lines from here and never parses the file again.
 

@@ -76,7 +76,7 @@ impl ParsedKind {
     }
 }
 
-/// §FS-config.3.4.4.5: the top-level `kinds = []`, the one v1 spelling of an
+/// §FS-config.3.4.4: the top-level `kinds = []`, the one v1 spelling of an
 /// empty kind set. Only the empty array is accepted: a non-empty one is a kind
 /// table written the wrong way, and the refusal says how to write it.
 pub(super) fn parse_empty_kinds(path: &Path, line_no: usize, value: &str) -> Result<()> {
@@ -93,7 +93,7 @@ pub(super) fn parse_empty_kinds(path: &Path, line_no: usize, value: &str) -> Res
     )
 }
 
-/// §FS-config.3.4.4.5: a `[[kinds]]` table after `kinds = []` would append to a
+/// §FS-config.3.4.4: a `[[kinds]]` table after `kinds = []` would append to a
 /// static array, which TOML refuses, so it is refused at the table's header.
 pub(super) fn refuse_kinds_after_empty(
     path: &Path,
@@ -405,7 +405,7 @@ fn kind_index_name_error(name: &str) -> Option<String> {
             "[[kinds]] `index` must be a relative path inside `folder` (`{name}` is not)"
         ));
     }
-    // §FS-config.3.4.2.3: asked of the one reading, whose version-1 half is the name `.md`.
+    // §FS-config.3.4.2: asked of the one reading, whose version-1 half is the name `.md`.
     if !Readings::of(false, None, file_extension(Path::new(name))).markdown {
         return Some(format!(
             "[[kinds]] `index` must name a Markdown file (`{name}` is not a `.md` file)"

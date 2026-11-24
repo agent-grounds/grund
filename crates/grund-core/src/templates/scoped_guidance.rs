@@ -101,7 +101,7 @@ impl Layout {
     }
 
     /// [`Self::root_citation_directions`] with the grounding setting spelled in
-    /// config `grammar`, for `config migrate`'s comparison (§FS-config-migrate.5.3.1).
+    /// config `grammar`, for `config migrate`'s comparison (§FS-config-migrate.5.3).
     pub(crate) fn root_citation_directions_in(
         &self,
         project: &Project,
@@ -252,7 +252,7 @@ fn shaped_kinds(project: &Project) -> Vec<String> {
 /// beneath that kind's node, without the `field <name>`, `key <name>` or `closed`
 /// the view prints before it, a front-matter field's nested one level deeper
 /// (§FS-init.2.3.5). The lead places every heading a bullet shows
-/// (§FS-schema.4.1.1). `None` when none of the kinds has a shape.
+/// (§FS-schema.4.1). `None` when none of the kinds has a shape.
 pub(crate) fn declaration_shapes_section(
     project: &Project,
     here: &dyn Fn(&str) -> bool,

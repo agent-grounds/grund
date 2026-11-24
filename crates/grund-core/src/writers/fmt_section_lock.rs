@@ -3,7 +3,7 @@
 //! read — from the one judgement `check` reports from, so the write that clears a
 //! finding is the finding's own answer. Run only over a whole project, and against
 //! the tree as the run leaves it rather than as it read it
-//! (§FS-section-lock.write.same-run); the tree pass writes what it returns, as it
+//! (§FS-section-lock.write.rules); the tree pass writes what it returns, as it
 //! writes every file `fmt` rewrites.
 
 use anyhow::Result;
@@ -25,7 +25,7 @@ pub(super) struct LockChange {
     pub(super) rows: Vec<(usize, String)>,
 }
 
-/// The tree a project's lock pass judges (§FS-section-lock.write.same-run): the
+/// The tree a project's lock pass judges (§FS-section-lock.write.rules): the
 /// project's findings as the run leaves it, and the config that reads it so.
 pub(super) struct JudgedTree<'a> {
     config: Cow<'a, Config>,
@@ -40,7 +40,7 @@ enum JudgedFindings<'a> {
 impl<'a> JudgedTree<'a> {
     /// The tree the lock pass judges `config`'s project by, once its walk has
     /// worked out `left`, the new text of every file it rewrites
-    /// (§FS-section-lock.write.same-run). Where it rewrites one, the project is
+    /// (§FS-section-lock.write.rules). Where it rewrites one, the project is
     /// scanned again under a run whose buffers hold those texts in front of its
     /// own (§AR-system.2.13), so a citation the run writes is entered in that run
     /// and a section it rewrites is fingerprinted as rewritten. Where it rewrites
@@ -48,7 +48,7 @@ impl<'a> JudgedTree<'a> {
     /// holds, or a scan taken now where it holds none, so a run with nothing to
     /// rewrite scans no more than it did (§GOAL-fast-feedback). Either scan
     /// refuses as the cross-reference pass does (§FS-fmt.3.2), and is taken before
-    /// anything is written (§FS-fmt.7.4.3).
+    /// anything is written (§FS-fmt.7.4).
     pub(super) fn of(
         config: &'a Config,
         render: &Config,
@@ -84,7 +84,7 @@ impl<'a> JudgedTree<'a> {
 /// Every project of `workspace` a citation into it is judged against, under its
 /// alias (§FS-section-lock.file.members): as this run leaves it where `judged`
 /// holds the tree at the project's index, and as it was loaded where the run
-/// judges none of its locks (§FS-section-lock.write.same-run).
+/// judges none of its locks (§FS-section-lock.write.rules).
 pub(super) fn lock_targets<'a>(
     workspace: Option<&'a WorkspaceContext>,
     judged: &'a [Option<JudgedTree<'_>>],

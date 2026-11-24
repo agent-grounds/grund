@@ -53,7 +53,7 @@ pub fn embedding_call(request: EmbeddingRequest) -> Value {
 }
 
 /// The read/query delegate a host projection may replace; every other step is
-/// shared, so Node's show metadata never reaches Python (§FS-distribution.3.2.2.2).
+/// shared, so Node's show metadata never reaches Python (§FS-distribution.3.2.2).
 pub(super) type Query = fn(&EmbeddingRequest) -> Result<Value, Value>;
 
 pub(super) fn run(r: &EmbeddingRequest, query: Query) -> Result<Value, Value> {

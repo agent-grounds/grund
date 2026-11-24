@@ -7,13 +7,13 @@
 /// The release whose `fmt --cross-refs` first numbers a repeated heading's anchor.
 const NUMBERED_SINCE: &str = "0.18";
 
-/// The repeated-anchor note of a line's `markdown link` (§FS-fmt.3.6.2), from the
+/// The repeated-anchor note of a line's `markdown link` (§FS-fmt.3.6), from the
 /// destinations its link pass re-pointed, `(old, new)`: the repeated-anchor note when every
 /// one of them only gained a repeat's number — `#1-overview` → `#1-overview-1`,
 /// or `_1` under mkdocs — and `None` when there is none or any other moved. A
 /// wrap the pass made fresh has no old anchor and does not decide it, so the note
 /// stands whether the link leads its row or trails another kind
-/// (§FS-fmt.3.5.1).
+/// (§FS-fmt.3.5).
 pub(super) fn anchor_detail<'a>(
     repointed: impl IntoIterator<Item = (&'a str, &'a str)>,
 ) -> Option<String> {

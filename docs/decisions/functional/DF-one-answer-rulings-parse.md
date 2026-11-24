@@ -31,7 +31,7 @@ verdict, and then the record names that requirement.
   `show`, `refs` and `list --size` print. Route: the warning release,
   [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), because no requirement forbids today's extents.
 - **D17e** (V-A18, amended). Anchors come from the complete rendered text of the authored
-  heading, under its renderer profile, with no generic trailing-hyphen trim ([§FS-fmt.6.2.3](../../functional-spec/FS-fmt.md#623-the-github-profile-reproduces-github-slugger)).
+  heading, under its renderer profile, with no generic trailing-hyphen trim ([§FS-fmt.6.2.2](../../functional-spec/FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)).
   The fragment `fmt` persists for a heading with closing hashes, `#1-steps-` for
   `## 1. Steps ##`, names no heading the file carries. Its fix is a candidate for
   <§>REQ-backwards-compatibility.5 under [§REQ-no-wrong-citation.3](../../requirements/REQ-no-wrong-citation.md#3-no-wrong-write), read through

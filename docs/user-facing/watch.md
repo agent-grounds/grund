@@ -32,21 +32,20 @@ resolution-wide source roots and kind homes, catalogs, indexes, checker probes,
 followed file targets and effective ignore/Git discovery inputs. Missing paths
 keep parent anchors so creation or replacement can restore coverage. Narrowing
 the report does not narrow these necessary inputs
-([§FS-check.6.1.3](../functional-spec/FS-check.md#613-effective-input-inventory)).
+([§FS-check.6.1](../functional-spec/FS-check.md#61-change-detection)).
 
 The idle debounce waits for 100 ms of quiet, with a maximum of 500 ms from the
 first pending event. Write bursts and atomic saves can coalesce; a save lasting
 longer can expose intermediate states. Scans and publication are serialized,
 and changes during work arrange another run. Read/access events do not cause
-runs ([§FS-check.6.1.2](../functional-spec/FS-check.md#612-bounded-debounce-and-serialized-work)).
+runs ([§FS-check.6.1](../functional-spec/FS-check.md#61-change-detection)).
 
 There is no polling fallback or polling setting. Network mounts and pseudo-filesystems
 that do not deliver notifications are unsupported. Backend permissions and native
 watch-resource limits can prevent setup; broad recursive roots can consume watches
 for ignored descendants. Reported lost events, overflow and queue saturation force
 full rediscovery and rescanning. Replacement reattaches subscriptions
-([§FS-check.6.1](../functional-spec/FS-check.md#61-change-detection),
-[§FS-check.6.1.4](../functional-spec/FS-check.md#614-uncertain-notifications-and-recovery)).
+([§FS-check.6.1](../functional-spec/FS-check.md#61-change-detection)).
 
 **Repair and shutdown.** Ordinary findings, invalid configuration, read failures
 and config-dependent trial refusals remain resident. Fix the input and watch

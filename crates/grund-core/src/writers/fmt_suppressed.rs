@@ -1,6 +1,6 @@
 //! A line of a suppressed scope (§FS-fmt.2.5): the answer the walk in
 //! `fmt_rewrite.rs` gets when every rewrite is off, which is the line as it
-//! stands unless the index carve-out (§FS-fmt.2.5.3) has to reach it.
+//! stands unless the index carve-out (§FS-fmt.6.1) has to reach it.
 
 use std::path::Path;
 
@@ -16,7 +16,7 @@ use crate::grammar::LineLinks;
 /// upgrade, the shorthand expansion, and the ordinary wrap alike — so the line
 /// keeps its bytes and the report says nothing about it.
 ///
-/// The one survivor is the always-linkify carve-out (§FS-fmt.2.5.3): one entry per
+/// The one survivor is the always-linkify carve-out (§FS-fmt.6.1): one entry per
 /// ID a kind's index owes is written in a suppressed scope, and no other mention,
 /// because a suppression that could leave an index in a state §FS-check.3.17
 /// reports and `fmt` refuses to repair would reopen the hole
@@ -52,7 +52,7 @@ pub(super) fn suppressed_line(
     if wrapped.line == line {
         return unchanged();
     }
-    // §FS-fmt.3.5.1, §FS-fmt.3.6.2: the index link is accounted for like any other.
+    // §FS-fmt.3.5, §FS-fmt.3.6: the index link is accounted for like any other.
     let mut rewrite = LineRewrite::default();
     wrapped.account(line, &mut rewrite);
     (wrapped.line, rewrite)

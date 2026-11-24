@@ -160,10 +160,10 @@ fn read_v1(text: &str, report: &Path, root: &Path) -> Result<(Project, Vec<LineR
 /// run's printed commands are spelled from, `None` for a process with none
 /// (§FS-config-migrate.6.5.1). `scope_on_disk` says whether a root
 /// of the file's version-1 default scope exists outside its member roots, which
-/// only the surface above config can answer (§FS-config-migrate.8.1.2 item 1).
+/// only the surface above config can answer (§FS-config-migrate.8.1 item 1).
 /// `v1_walk` is the scan's walk of the version 1 façade, which only that surface
-/// can run, for the files a refusal's detail names (§FS-config-migrate.3.1.4.1,
-/// §FS-config-migrate.3.1.5.1).
+/// can run, for the files a refusal's detail names (§FS-config-migrate.3.1.4,
+/// §FS-config-migrate.3.1.5).
 pub(crate) fn translate(
     located: &Located,
     cwd: Option<&Path>,
@@ -201,15 +201,15 @@ pub(crate) fn translate(
     // §AR-config.8.4: the one answer every step below reads.
     let block = opted_out::Block::of(&project, &keys, root, scope_on_disk);
     let settings_include = places::include(&project, &keys, root);
-    // §FS-config-migrate.3.1.4.1: a block's settings read as a project's, compact or not.
+    // §FS-config-migrate.3.1.4: a block's settings read as a project's, compact or not.
     let scan_roots = places::scan_roots(&project, &settings_include, root);
-    // §FS-config-migrate.8.1.2: a compact block's include counts as omitted.
+    // §FS-config-migrate.8.1: a compact block's include counts as omitted.
     let include = if block.compact() {
         places::Include::default()
     } else {
         settings_include
     };
-    // §FS-config-migrate.8.1.3: a compact block's candidate is its envelope.
+    // §FS-config-migrate.8.1: a compact block's candidate is its envelope.
     let emission = if block.compact() {
         Emission::Envelope
     } else {
@@ -282,7 +282,7 @@ pub(crate) fn translate(
     };
     let carried = comments::carry(&body, &lines, &keys, &guidance, &mut report);
     report.mapped = keymap::map(&keys, &shown, &include, block).0;
-    // §FS-config-migrate.8.1.3: a compact block writes no default out.
+    // §FS-config-migrate.8.1: a compact block writes no default out.
     if !block.compact() {
         report.written = keymap::written(&keys, &project, &body);
     }

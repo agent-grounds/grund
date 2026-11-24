@@ -14,7 +14,7 @@ use std::process::Command;
 
 /// A fresh `HOME` and `XDG_CONFIG_HOME` with one agent in use, so the run
 /// writes a client block, the resolver, the preference file and one agent's
-/// instruction block (§FS-integrations.4.3.9).
+/// instruction block (§FS-integrations.4.3.8).
 fn sandbox(name: &str) -> PathBuf {
     let root = binaries::repo_root()
         .join("target/integration-work/rust-api")

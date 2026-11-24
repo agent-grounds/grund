@@ -33,7 +33,7 @@ impl<'a> UnlistedProjects<'a> {
 
     /// Whether `dir` holds a config no enclosing workspace lists: not a project root of
     /// this run, and claimed by no ancestor. Absence holds only where every ancestor's
-    /// member text was obtained (§FS-workspace.6.1.7.5): a named claim that cannot
+    /// member text was obtained (§FS-workspace.6.1.7): a named claim that cannot
     /// expand, or an ancestor whose `members` or `optional_members` cannot be read,
     /// leaves the claim undecidable, and undecidable is not unlisted. The standalone
     /// unlisted-workspace finding (§FS-check.3.29) and the placement context
@@ -152,7 +152,7 @@ fn enclosing_config(frame: Frame<'_>) -> String {
     frame.display_path(&enclosing)
 }
 
-/// §FS-check.3.8.5: a bare unknown-alias `message` of an un-narrowed run, ended in
+/// §FS-check.3.8: a bare unknown-alias `message` of an un-narrowed run, ended in
 /// the members entry its alias path needs when it names a directory beneath the
 /// run's root whose config no workspace lists. An undecidable claim is not
 /// unlisted, so it keeps the message bare (§FS-check.3.29).

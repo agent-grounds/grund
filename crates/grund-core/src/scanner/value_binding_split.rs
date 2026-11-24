@@ -1,7 +1,7 @@
 //! The one line of look-behind the value-binding recovery pass carries: a
 //! literal that closes its line onto a value citation opening the next line of
 //! the same run of text is an invalid attempted binding, not prose
-//! (§FS-values.3.1.1.1, §AR-scanner.2.3.5).
+//! (§FS-values.3.1.1, §AR-scanner.2.3.5).
 
 use super::citation_line::CitationLine;
 use super::context::markdown_heading_level;
@@ -22,7 +22,7 @@ pub(super) struct SplitLiteral {
     run: TextRun,
 }
 
-/// What makes two consecutive lines one run of text (§FS-values.3.1.1.1): one
+/// What makes two consecutive lines one run of text (§FS-values.3.1.1): one
 /// Markdown paragraph at one blockquote depth, one Python docstring, or one
 /// comment block of the shared block walk (§FS-inline-citation-style.1.2).
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -35,7 +35,7 @@ enum TextRun {
 /// Report the literal held from the line before when this line continues its
 /// run and its first text after the continuation prefix is `(` and a
 /// marker-prefixed citation aimed at value authority, then hold this line's own
-/// literal if its closing backtick ends the line (§FS-values.3.1.1.1).
+/// literal if its closing backtick ends the line (§FS-values.3.1.1).
 ///
 /// The citation stays the ordinary citation the line pass already recorded;
 /// this adds the attempt and takes nothing away. A line that neither ends in a
@@ -80,7 +80,7 @@ pub(super) fn scan_split_binding(
             ));
     }
     // A heading's literal ends its paragraph rather than running on into the
-    // next line (§FS-values.3.1.1.1); a raw-text HTML block holds none (§FS-check.1.1.5.1).
+    // next line (§FS-values.3.1.1); a raw-text HTML block holds none (§FS-check.1.1.5.1).
     if line.is_md && line.may_be_heading && markdown_heading_level(text).is_some() {
         return;
     }

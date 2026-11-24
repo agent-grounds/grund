@@ -33,7 +33,7 @@ values. `--format json` is refused like any unknown value ([§FS-schema.13](../.
 ### 2.3 A workspace root shows the root, and names its members
 
 At a workspace root the view is the root project, with one line naming the members
-and how to see each ([§FS-schema.2.1](../../functional-spec/FS-schema.md#21-a-workspace-root-shows-the-root-and-names-its-members)). Rendering every member in turn has no single
+and how to see each ([§FS-schema.2](../../functional-spec/FS-schema.md#2-selection)). Rendering every member in turn has no single
 meaning for a Mermaid or DOT consumer, which expects one graph, and would load every
 member's configuration for a view meant to be quick.
 
@@ -47,7 +47,7 @@ exactly the misreading the view exists to prevent.
 ## 3. Consequences
 
 - The subcommand surface grows by one verb, `schema`, which takes the bare word from
-  the default ID query by the precedence already written ([§FS-cli.requirements.as-written](../../functional-spec/FS-cli.md#requirementsas-written-an-invocation-runs-as-written-or-is-refused--realized-directional-for-the-next-subcommand)).
+  the default ID query by the precedence already written ([§FS-cli.requirements.as-written](../../functional-spec/FS-cli.md#requirementsas-written-an-invocation-runs-as-written-or-is-refused)).
 - The view and `grund check` read one record, so the view cannot describe a schema
   the checks do not enforce ([§REQ-one-answer](../../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree)).
 - A later `--format json`, a per-member workspace view, or a different drawing of

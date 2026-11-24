@@ -34,7 +34,7 @@ Directive text is fixed rather than configured, for the reason [§FS-config.6](.
 
 ### 2.3 The index carve-out outranks both
 
-[§DF-index-always-linkified](DF-index-always-linkified.md#df-index-always-linkified-the-cross-reference-pass-always-runs-on-a-kinds-index-file) makes a kind's index entries wrapped in every configuration, which is what lets [§FS-check.3.17](../../functional-spec/FS-check.md#317-index-entry-is-not-a-link) demand a link and name `grund fmt --write` as the fix. That carve-out outranks both scopes here ([§FS-fmt.2.5.3](../../functional-spec/FS-fmt.md#253-a-kinds-index-is-still-linkified)), exactly as it already outranks `[fmt.cross_refs] enabled = false`.
+[§DF-index-always-linkified](DF-index-always-linkified.md#df-index-always-linkified-the-cross-reference-pass-always-runs-on-a-kinds-index-file) makes a kind's index entries wrapped in every configuration, which is what lets [§FS-check.3.17](../../functional-spec/FS-check.md#317-index-entry-is-not-a-link) demand a link and name `grund fmt --write` as the fix. That carve-out outranks both scopes here ([§FS-fmt.6.1](../../functional-spec/FS-fmt.md#61-scope)), exactly as it already outranks `[fmt.cross_refs] enabled = false`.
 
 Without this, excluding an index file — or opening a region in one — would produce a state `check` reports and the named fix refuses to repair, which is the precise hole [§DF-index-always-linkified](DF-index-always-linkified.md#df-index-always-linkified-the-cross-reference-pass-always-runs-on-a-kinds-index-file) was written to close. The carve-out stays scoped to the entries, so everything else in a suppressed index file is suppressed like anywhere else.
 

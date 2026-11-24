@@ -526,7 +526,7 @@ fn init_run(
     notes.extend(absent_optional_member_notes(&absent, &members, dry_run));
     Ok(InitOutput {
         events,
-        // §FS-rules.4.1.2: it is the write that is not withheld, not the failure
+        // §FS-rules.4.1: it is the write that is not withheld, not the failure
         // that is forgiven — these errors still carry the run to exit 1.
         errors: rule_errors,
         notes,

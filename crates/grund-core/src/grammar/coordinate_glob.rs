@@ -1,8 +1,8 @@
 //! Coordinate globs (§FS-coordinate-globs): a pattern read once into tokens over the
 //! operator table the citation guard reads (§FS-coordinate-globs.grammar), and every
-//! refusal with its column and the rewrite it offers (§FS-coordinate-globs.errors.reasons).
+//! refusal with its column and the rewrite it offers (§FS-coordinate-globs.errors.shape).
 //! Where a pattern's ID atom ends depends on the project's outer separator
-//! (§FS-coordinate-globs.grammar.components), so the separator-dependent checks and the
+//! (§FS-coordinate-globs.grammar), so the separator-dependent checks and the
 //! matcher take it as an argument and live beside this file, in `coordinate_glob_read.rs`
 //! and `coordinate_glob_match.rs`; the body's tokenizer is `coordinate_glob_tokens.rs`.
 
@@ -188,7 +188,7 @@ impl CoordinateGlob {
     }
 
     /// Refuse a pattern that opens with the citation marker
-    /// (§FS-coordinate-globs.errors.marker).
+    /// (§FS-coordinate-globs.errors.shape).
     fn check_marker(&self, marker: &str, offer: Option<GlobStage<'_>>) -> Result<(), GlobRefusal> {
         let body = &self.text[self.body..];
         let Some(rest) = body.strip_prefix(marker).filter(|_| !marker.is_empty()) else {
@@ -202,7 +202,7 @@ impl CoordinateGlob {
         ))
     }
 
-    /// The refusal of a qualifier naming no loaded project (§FS-coordinate-globs.errors.reasons).
+    /// The refusal of a qualifier naming no loaded project (§FS-coordinate-globs.errors.shape).
     pub(crate) fn unknown_alias(&self, alias: &str, known: &[&str]) -> GlobRefusal {
         let mut reason = format!("unknown project alias \"{alias}\"");
         if !known.is_empty() {
@@ -283,7 +283,7 @@ fn last_unescaped_slash(text: &str) -> Option<usize> {
     last
 }
 
-/// `*` or one exact alias, unescaped (§FS-coordinate-globs.grammar.components).
+/// `*` or one exact alias, unescaped (§FS-coordinate-globs.grammar).
 fn read_qualifier(
     text: &str,
     slash: usize,

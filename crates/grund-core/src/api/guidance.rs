@@ -53,7 +53,7 @@ pub(crate) fn query_failure_hints(
         vec![invalid_id_hint(config, id_arg, selected)]
     } else if message.starts_with("ID not found:") {
         // §FS-show.3.5: the hint gives way where the line already names the
-        // project that declares the ID (§FS-workspace.8.1.1.7).
+        // project that declares the ID (§FS-workspace.8.1.1).
         match names_member_id_candidate(message) {
             true => Vec::new(),
             false => vec![

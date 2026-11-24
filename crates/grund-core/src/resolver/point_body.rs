@@ -29,10 +29,10 @@ use crate::scanner::SliceSink;
 /// cases already carry their canonical show bodies in scanner records; text
 /// declarations are sliced out of the file record the scan kept, lead and full in
 /// one walk (§AR-scanner.2.8). A stub that reaches it has no body to
-/// measure: either it is broken (§FS-list.2.5, §FS-list.3.4), or its home lies
+/// measure: either it is broken (§FS-list.2, §FS-list.3.4), or its home lies
 /// outside the walk and the caller is `check`'s lead budget, which judges scanned
 /// sites only (§FS-declarations.checks.oversized-lead). The size catalog passes
-/// such a stub's home instead (§FS-list.3.4.6).
+/// such a stub's home instead (§FS-list.3.4).
 pub(crate) fn point_body_pair(
     files: &FileRecords,
     schema: &Schema,

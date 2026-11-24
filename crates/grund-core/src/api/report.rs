@@ -101,7 +101,7 @@ fn public_finding(
 }
 
 /// The absolute path an editor is told a finding stands at. A relative location is a config row's,
-/// joined where the load spelled it, never at the editor's working directory (§FS-lsp.4.1). A file
+/// joined where the load spelled it, never at the editor's working directory (§FS-lsp.4). A file
 /// keeps the chosen descendant spelling under its resolved owning root, even when its only name
 /// is a link. Only paths outside all owning roots are resolved whole (§FS-lsp.1.1).
 fn editor_path(config: &Config, projects: &[&Config], path: &Path) -> PathBuf {
@@ -127,11 +127,11 @@ fn editor_path(config: &Config, projects: &[&Config], path: &Path) -> PathBuf {
 
 /// The run's warning channel, published (§FS-distribution.3.1): every
 /// `[workspace]` caution the run settled, as the `Finding`s a frontend renders
-/// (§FS-check.3.29, §FS-check.4.10.11, §FS-workspace.6.1.7).
+/// (§FS-check.3.29, §FS-check.4.10, §FS-workspace.6.1.7).
 ///
 /// Two of them keep the anchor the engine gave it — the `grund.toml` line its
 /// own message already names — so an editor publishes those without reading a
-/// location back out of the text (§FS-lsp.1.1.3, §AR-bindings.2). A terminal
+/// location back out of the text (§FS-lsp.1.1, §AR-bindings.2). A terminal
 /// renders the message alone, in §FS-check.2.1.1's CLI-level shape: the render
 /// shape is a property of the finding rather than a consequence of whether a
 /// location is known, which is why the anchor rides along unused there.

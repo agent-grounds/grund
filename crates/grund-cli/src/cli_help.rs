@@ -22,7 +22,7 @@ fn print_help() {
     println!("  init          Scaffold agent instructions + grund.toml.               grund init --scaffold");
     println!("  config        Validate or show grund.toml; explain a key or a code.   grund config show");
     println!("  schema        Kinds, places, shapes and citation rules at a glance.   grund schema");
-    // The row names grund-lsp for LSP editors (§FS-integrations.2.3).
+    // The row names grund-lsp for LSP editors (§FS-integrations.2).
     println!("  integrations  Clickable-citation clients; LSP editors use grund-lsp.  grund integrations wezterm");
     println!("  completions   Print shell completion scripts.                         grund completions bash");
     println!();
@@ -41,7 +41,7 @@ fn print_guide_links(guides: &[&str], examples: &[&str]) {
     }
 }
 
-/// §FS-cli.2.3.2: the one line, worded once, that each page whose PATH narrows the run
+/// §FS-cli.2.3: the one line, worded once, that each page whose PATH narrows the run
 /// (`check`, `fmt`, `cover`, `list`, `refs`) prints below its usage: what a run given no
 /// path covers, in place of a default of `.` that is false below the root.
 fn print_no_path_scope_help() {
@@ -54,7 +54,7 @@ fn print_no_path_scope_help() {
 /// the flag that replaces each `[output]` key; the commands that honour
 /// `[output] format` also name `--format json` as its replacement (§FS-cli.3).
 /// `invocation` is the page's own command line the flag's example extends, so each
-/// page shows the flag on the command it documents (§FS-cli.2.3.1).
+/// page shows the flag on the command it documents (§FS-cli.2.3).
 fn print_run_flag_help(invocation: &str, honours_format: bool) {
     println!("  --path-base project|invocation");
     println!("                       project (default) spells report paths from the config root;");
@@ -73,7 +73,7 @@ fn print_run_flag_help(invocation: &str, honours_format: bool) {
 }
 
 /// Per-subcommand `--help` / `help <subcommand>` page (§FS-cli.2.3, §FS-cli.3): what
-/// it takes, every flag with a one-line example (§FS-cli.2.3.1), the exit codes, and the common
+/// it takes, every flag with a one-line example (§FS-cli.2.3), the exit codes, and the common
 /// recovery path. Goes to stdout, exit 0 — help is never an error.
 fn print_subcommand_help(cmd: &str) {
     match cmd {
@@ -131,7 +131,7 @@ fn print_subcommand_help(cmd: &str) {
                 "grund init — scaffold agent instructions + a template's `grund.toml` (and, with --scaffold, its starter files)."
             );
             // §FS-init.2.4.3: the file holds only what differs from a default;
-            // §FS-config.4.2.3.1: what sends a reader to `show` names `explain`.
+            // §FS-config.4.2: what sends a reader to `show` names `explain`.
             println!(
                 "The `grund.toml` it writes is a minimal version-2 file; `grund config show` prints what applies, `grund config explain` every setting."
             );
@@ -285,7 +285,7 @@ fn print_subcommand_help(cmd: &str) {
             println!("addresses its declaration; --agent scopes that choice to one agent instead");
             println!("of the machine. --format json emits a plan.");
             println!();
-            // Editor navigation is grund-lsp's, not these clients' (§FS-integrations.2.3).
+            // Editor navigation is grund-lsp's, not these clients' (§FS-integrations.2).
             println!(
                 "Go-to-definition, hover and completion in an editor come from grund-lsp, not"
             );
@@ -311,10 +311,10 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "Exit:  0 printed or installed · 2 invalid options, missing write target, or a newer block."
             );
-            // The setup guide, then the LSP guide, as detection names them (§FS-integrations.2.3).
+            // The setup guide, then the LSP guide, as detection names them (§FS-integrations.2).
             print_guide_links(&[SETUP_GUIDE_URL, LSP_GUIDE_URL], &[]);
         }
-        // §FS-init.5, §FS-cli.2.3.1: the section names are read from the one table.
+        // §FS-init.5, §FS-cli.2.3: the section names are read from the one table.
         "guide" => {
             println!("grund guide — how to set up and use grund, one section at a time.");
             println!();

@@ -13,11 +13,11 @@ use crate::config::{Project, Row, Run, homeless_row_grounding, row_grounding};
 /// source file grounds by citing a declared ID **or** by declaring one inline,
 /// while a file in a non-citable home can only cite, because a declaration there
 /// is misplaced (§FS-declarations.checks.misplaced-declaration). An unwalked
-/// home (§FS-config.3.4.7.4) is left out — nothing in it is scanned, so the rule
+/// home (§FS-config.3.4.7) is left out — nothing in it is scanned, so the rule
 /// never reaches it. Per-row grounding *levels* (§FS-config.3.4.8) are not this
 /// sentence's. Each row's pair is read through [`row_grounding`] — the row's key
-/// or v2 ladder, else the default (§FS-config.3.4.8.3); the block render hands
-/// it a run without `--require-grounding` (§FS-check.3.5.4).
+/// or v2 ladder, else the default (§FS-config.3.4.8); the block render hands
+/// it a run without `--require-grounding` (§FS-check.3.5).
 pub(super) fn citation_grounding_sentence(
     project: &Project,
     run: &Run,

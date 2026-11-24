@@ -8,7 +8,7 @@ Settles whether the managed block's cheap-grounding list names `grund list --unu
 
 ## 1. Context
 
-`grund list --unused` lists the declarations no citation points at, the set `check` warns on ([§FS-list.1.3](../../functional-spec/FS-list.md#13---unused)), and the list spec already tells a tool looking for them to pass it rather than threshold on `refs` ([§FS-list.3.2.1](../../functional-spec/FS-list.md#321-refs-counts-citations)). The block, which an agent reads before anything else, taught `grund list --kind` and the `--size` sweep but not this flag. Asked which specs nothing cites, agents ran `grund list` and then `grund refs` once per row ([grund#905](https://github.com/agent-grounds/grund/issues/905)). #925 taught the flag in `grund --help` and left the block alone, because a change to the block moves its version.
+`grund list --unused` lists the declarations no citation points at, the set `check` warns on ([§FS-list.1.3](../../functional-spec/FS-list.md#13---unused)), and the list spec already tells a tool looking for them to pass it rather than threshold on `refs` ([§FS-list.3.2](../../functional-spec/FS-list.md#32---format-json)). The block, which an agent reads before anything else, taught `grund list --kind` and the `--size` sweep but not this flag. Asked which specs nothing cites, agents ran `grund list` and then `grund refs` once per row ([grund#905](https://github.com/agent-grounds/grund/issues/905)). #925 taught the flag in `grund --help` and left the block alone, because a change to the block moves its version.
 
 ## 2. Decision
 

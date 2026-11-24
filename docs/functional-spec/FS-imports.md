@@ -112,7 +112,7 @@ the fix is an ignore file at or below the dependency's root.
 A dependency's own imports are loaded beneath its alias, as its members are: `native-image`
 importing `org` gives `native-image/org`. Two different trees that share a `project_name`
 under two importers are two projects, `a/shared` and `b/shared`
-([§FS-remote-projects.mount.nested](FS-remote-projects.md#mountnested-nested-pins-stay-isolated)).
+([§FS-remote-projects.mount.rule](FS-remote-projects.md#mountrule-a-mounted-root-resolves-natively-and-is-shown-under-its-alias)).
 
 ### graph.cycle: A cycle is a config error
 
@@ -146,17 +146,17 @@ the member's findings are reported, and the import's are suppressed.
 A dependency's standalone run reads nothing of any consumer and answers exactly as it does
 when no consumer exists. A directory no import names is never searched for a matching alias,
 ID or `project_name`, and a missing import never falls back to one ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)),
-so a run's effective inputs ([§FS-check.6.1.3](FS-check.md#613-effective-input-inventory)) are the same whether a directory no import names
+so a run's effective inputs ([§FS-check.6.1](FS-check.md#61-change-detection)) are the same whether a directory no import names
 is present or gone.
 
 ## findings: Dependency findings are suppressed, consumer citations are not
 
 In a consumer run, a content finding located inside an import is suppressed in every channel,
-text, JSON and the editor ([§FS-remote-projects.differences.suppression](FS-remote-projects.md#differencessuppression-remote-owned-content-findings-are-suppressed)), and so is every
+text, JSON and the editor ([§FS-remote-projects.differences](FS-remote-projects.md#differences-the-closed-list-of-differences)), and so is every
 caution the dependency's own config earns, such as `config-version-1` or
 `deprecated-config-location`; its standalone run reports them. Suppression removes no data:
 `list`, `refs`, `cover` and their counts include each import. It lets no consumer citation
-pass ([§FS-remote-projects.differences.consumer-site](FS-remote-projects.md#differencesconsumer-site-suppression-never-lets-a-consumer-citation-pass)): a dependency defect that breaks one,
+pass ([§FS-remote-projects.differences](FS-remote-projects.md#differences-the-closed-list-of-differences)): a dependency defect that breaks one,
 such as a duplicate ID the consumer cites, fails at the consumer's citation site. And
 `import-live` and `import-missing` are never suppressed, even where a transitive import puts
 them in a dependency's config.
@@ -185,7 +185,7 @@ error: `native-image/TICKET-1` is in import `native-image`, read-only here — r
 
 ### writes.answer: Where a qualified ID is fetched has one answer
 
-`grund fetch`'s refusal and the fetch tails of `grund check` ([§FS-check.3.1.3](FS-check.md#313-a-kind-that-fetches),
+`grund fetch`'s refusal and the fetch tails of `grund check` ([§FS-check.3.1](FS-check.md#31-dangling-citation),
 [§FS-check.4.12](FS-check.md#412-missing-snapshot)) render from one answer to where the fetch of a qualified ID runs, so
 following either takes one command. The project is selected as the ID query selects it
 ([§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)), reading the import edges on the alias path, nested ones and a member's
@@ -196,7 +196,7 @@ not fail it. The first of these that holds is the answer:
 - **An alias path no project has** gets the refusal `grund show` prints for it, and **one
   into a missing import** the query refusal of [§FS-imports.checks.import-missing](FS-imports.md#checksimport-missing-an-import-names-no-directory). Neither
   names a command or says read-only, and both exit 2.
-- **A workspace member's ID** is fetched from the root ([§FS-check.4.12.2](FS-check.md#4122-in-a-workspace)).
+- **A workspace member's ID** is fetched from the root ([§FS-check.4.12](FS-check.md#412-missing-snapshot)).
 - **An ID reached through an import** is fetched in the target of the last import edge on
   its alias path, spelled from the run's report base ([§FS-errors.4](FS-errors.md#4-determinism)), as the alias path below
   that edge: where `lb/in` is the last import, `lb/in/alpha/FS-a` is
@@ -208,10 +208,10 @@ refuses the fetch itself, neither surface names one. An ID it cannot parse, one 
 does not declare among them, is `invalid ID`, exit 1, and a kind with no `fetch` is
 ``kind `<KIND>` has no fetch integration``, exit 2 ([§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)). At a home `fetch` refuses,
 `grund fetch` prints the refusal of [§FS-fetch.4](FS-fetch.md#4-file-home-write) or [§FS-fetch.4.2](FS-fetch.md#42-a-home-read-as-source-is-refused), exit 2, and `grund check`
-the tail of [§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses).
+the tail of [§FS-check.3.1](FS-check.md#31-dangling-citation).
 
 One named command is refused. For a kind whose key has nothing to run in the target
-([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)), `grund check` gives the tail of [§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for), which names no command, but
+([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)), `grund check` gives the tail of [§FS-check.3.1](FS-check.md#31-dangling-citation), which names no command, but
 `grund fetch` keeps its read-only refusal, which stands in front of the key's test, so the
 target refuses the command that refusal names, with the repair ([§DF-blank-fetch-check-tail.3](../decisions/functional/DF-blank-fetch-check-tail.md#3-consequences)).
 
@@ -226,20 +226,20 @@ consumer's config, answers through every import, and an unsaved buffer of an imp
 that file's text for the consumer, as any buffer is ([§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)).
 
 - **Watching.** The server follows each import's tree, config and ignore files outside every
-  open folder, the effective inputs `check --watch` follows ([§FS-check.6.1.3](FS-check.md#613-effective-input-inventory)), through
+  open folder, the effective inputs `check --watch` follows ([§FS-check.6.1](FS-check.md#61-change-detection)), through
   watchers it registers with the client where the client can and its own where it cannot.
   Its own watcher makes a burst of changes one rebuild, bounded as `check --watch` bounds its
-  debounce ([§FS-check.6.1.2](FS-check.md#612-bounded-debounce-and-serialized-work)), and the server answers a request that arrives meanwhile from the
+  debounce ([§FS-check.6.1](FS-check.md#61-change-detection)), and the server answers a request that arrives meanwhile from the
   current snapshot, so a tree that never stops changing neither postpones the rebuild nor
   holds a request in any project.
 - **Ownership.** A document under an import root that no folder's project owns is answered by
   that import's own project, read-only, with no diagnostics and no edits, loaded once per
   canonical root and shared by every consumer that imports it, so two consumers in one session
-  are not two claims ([§FS-lsp.2.2.3](FS-lsp.md#223-a-document-no-project-answers)).
+  are not two claims ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)).
 - **Failures.** A dependency that disappears rebuilds the consumer without it, with
   `import-missing` on the import line. A dependency config that will not load leaves the
   consumer on its last good scan, with the error on the import line
-  ([§FS-lsp.requirements.config-errors](FS-lsp.md#requirementsconfig-errors-a-config-mistake-reaches-the-editor-as-loudly-as-the-command-line--realized)).
+  ([§FS-lsp.requirements.config-errors](FS-lsp.md#requirementsconfig-errors-a-config-mistake-reaches-the-editor-as-loudly-as-the-command-line)).
 
 ## checks: Checks
 
@@ -259,7 +259,7 @@ grund.toml:4: warning: import `native-image` is read live from `../graal/substra
 It names the import by the alias path the run spells it with and the path as its config wrote
 it, and nothing else: no output of `check`, a query, `list`, `refs`, `cover`, `fmt` or `id`
 carries a commit, a dirty state, a clock or any other provenance. It is a located finding on
-stdout rather than a CLI-level line, for the reason [§FS-check.4.9.5](FS-check.md#495-the-exit-code-forces-the-shape) gives an absent optional
+stdout rather than a CLI-level line, for the reason [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) gives an absent optional
 member, and no selector hides it ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)), so a run that read an import always says
 so and never prints `success` ([§DF-imports.3](../decisions/functional/DF-imports.md#3-consequences)); the exit code is the one the rest of the report
 gives.
@@ -274,8 +274,8 @@ grund.toml:4: error: import `native-image` is missing: `../graal/substratevm` is
 ```
 
 Every citation into it is unverified, as one into an absent optional member is
-([§FS-workspace.4.3](FS-workspace.md#43-unverified-is-reported-once-per-member)), and it absorbs every alias path that begins with its own
-([§FS-workspace.2.2.2.3](FS-workspace.md#2223-an-absent-member-absorbs-the-alias-paths-beneath-it)), so no finding is reported at those sites. No selector hides it
+([§FS-workspace.4](FS-workspace.md#4-resolution)), and it absorbs every alias path that begins with its own
+([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)), so no finding is reported at those sites. No selector hides it
 ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)), so a run whose import is missing never exits `0` ([§DF-imports.2.3](../decisions/functional/DF-imports.md#23-what-an-absent-import-gives)). A
 query into it fails with exit 2:
 

@@ -61,7 +61,7 @@ pub(crate) enum Unread {
     E2eCase,
     /// Behind a directory link that loops back over the scan root (§AR-scanner.1.9).
     LoopingLink,
-    /// A link the run's input observer refused to cover (§FS-check.6.1.1).
+    /// A link the run's input observer refused to cover (§FS-check.6.1).
     Unobserved,
 }
 
@@ -185,7 +185,7 @@ fn excluding_rule_under(
     for (depth, name) in names.iter().enumerate() {
         path.push(name);
         let is_dir = depth + 1 < names.len();
-        // §FS-config-v2.schema.sources.exclude.stubs: a pattern, at a directory or the target.
+        // §FS-config-v2.schema.sources.exclude: a pattern, at a directory or the target.
         if let Some(pattern) = globs.and_then(|globs| globs.excluding(config_root, &path, is_dir)) {
             return Some(ExcludingRule::Pattern(pattern.to_string()));
         }

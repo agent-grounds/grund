@@ -63,7 +63,7 @@ pub(super) struct Reading<'t> {
 
 /// Read a sentence, or refuse it with what its refusing production offers in
 /// place of what it read, wrapped back into the whole sentence
-/// (§FS-rule-refusals.sentences.rewrite.replaced), at the first of [`STAGES`]
+/// (§FS-rule-refusals.sentences.rewrite), at the first of [`STAGES`]
 /// it fails.
 pub(super) fn read(
     title: &str,

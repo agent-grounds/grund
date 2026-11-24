@@ -97,7 +97,7 @@ pub(crate) fn refuse_init_target(target: &Path, no_vcs: bool) -> Option<String> 
 /// home rule has nothing to say about — and one whose dotfiles are a repository,
 /// which is the usual case, satisfies the version-control rule too. So this rule
 /// is load-bearing on its own, and it takes every planned path rather than a
-/// target. The division is the one §FS-integrations.4.3.10 already states: the
+/// target. The division is the one §FS-integrations.requirements.any-repository already states: the
 /// user-global files carry machine-wide policy and are `grund integrations
 /// --write`'s to manage, the repository entrypoint carries this project's syntax
 /// and is `init`'s.

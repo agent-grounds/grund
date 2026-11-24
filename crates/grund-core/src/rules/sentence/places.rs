@@ -1,5 +1,5 @@
 //! Sentence-specific configuration guidance, separate from shared kind errors
-//! (§FS-rule-refusals.sentences.rewrite.no-form.place).
+//! (§FS-rule-refusals.sentences.rewrite.no-form).
 
 use crate::model::remedies;
 use std::collections::BTreeMap;
@@ -12,7 +12,7 @@ use crate::config::{
 
 /// Non-citable subject kinds and their optional place routes. Selectors keep
 /// only the kind entries; rules add their project's routes once
-/// (§FS-rule-refusals.sentences.rewrite.no-form.place).
+/// (§FS-rule-refusals.sentences.rewrite.no-form).
 #[derive(Clone, Default)]
 pub(crate) struct SubjectKinds {
     pub(super) entries: BTreeMap<String, KindEntry>,
@@ -24,7 +24,7 @@ pub(crate) struct SubjectKinds {
 
 impl From<BTreeMap<String, KindEntry>> for SubjectKinds {
     /// Selectors share the kind reasons without a sentence obligation
-    /// (§FS-rule-refusals.sentences.rewrite.no-form.place).
+    /// (§FS-rule-refusals.sentences.rewrite.no-form).
     fn from(entries: BTreeMap<String, KindEntry>) -> Self {
         Self {
             entries,
@@ -37,7 +37,7 @@ impl From<BTreeMap<String, KindEntry>> for SubjectKinds {
 impl SubjectKinds {
     /// Attach only this rule project's configured routes, never workspace
     /// object routes, and the grounding each route lacks
-    /// (§FS-rule-refusals.sentences.rewrite.no-form.place).
+    /// (§FS-rule-refusals.sentences.rewrite.no-form).
     pub(crate) fn for_rules(
         entries: BTreeMap<String, KindEntry>,
         schema: &Schema,
@@ -63,7 +63,7 @@ impl SubjectKinds {
 
     /// Recognize only a complete canonical place obligation. Exact lexical
     /// matching deliberately avoids path normalization and predicate recovery
-    /// (§FS-rule-refusals.sentences.rewrite.no-form.place).
+    /// (§FS-rule-refusals.sentences.rewrite.no-form).
     pub(super) fn guidance(&self, title: &str, vocabulary: &RuleVocabulary) -> Option<String> {
         let sentence = title.strip_suffix('.')?;
         let (subject, target) = sentence.split_once(" must cite at least one ")?;

@@ -1,4 +1,4 @@
-//! The front-matter field's findings (§FS-fields.front-matter.findings): the
+//! The front-matter field's findings (§FS-fields.checks): the
 //! four field codes at front-matter sites, `unreadable-front-matter` and
 //! `front-matter-heading`, judged from what the scan recorded of the block
 //! (§FS-fields.front-matter.reading), never from a second read of it. A sibling
@@ -13,7 +13,7 @@ use crate::model::{
 };
 
 impl<'a> Shape<'a> {
-    /// §FS-fields.front-matter.findings: every finding of the front-matter
+    /// §FS-fields.checks: every finding of the front-matter
     /// `field`, whose shape is `shape`, on this declaration.
     pub(super) fn front_matter(
         &self,
@@ -60,7 +60,7 @@ impl<'a> Shape<'a> {
         )
     }
 
-    /// §FS-fields.front-matter.findings: no front matter, at the title line, the
+    /// §FS-fields.checks.missing-field: no front matter, at the title line, the
     /// remedy saying why there is none.
     fn absent(
         &self,
@@ -113,10 +113,10 @@ impl<'a> Shape<'a> {
         out.push(self.finding(Some(field), Channel::Error, code, 1, message));
     }
 
-    /// §FS-fields.front-matter.findings: each declared key, absent at the opening
+    /// §FS-fields.checks: each declared key, absent at the opening
     /// delimiter on its own presence, or present and held to its `one_of` at its
     /// first occurrence, a `may` key's violation an error
-    /// (§FS-fields.strengths.may).
+    /// (§FS-fields.strengths).
     fn keys(
         &self,
         field: &'a Field,

@@ -73,7 +73,7 @@ impl<'a> Frame<'a> {
     /// says which ID that is, and `None` asks nothing of a folder. The path and the kind decide,
     /// and no file is read. The walk's own predicate, which reads ignore files, is asked after
     /// this by `scanner::fetch_refused_home`, the one function the refusal and the remedy that
-    /// must not name the refused command both ask (§FS-check.3.1.3.1).
+    /// must not name the refused command both ask (§FS-check.3.1).
     pub(crate) fn fetch_refused_by_name(
         &self,
         schema: &Schema,

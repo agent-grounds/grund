@@ -1,4 +1,4 @@
-//! §FS-schema.4.1.4: where a value kind's values are written, lowered from its row
+//! §FS-schema.4.1: where a value kind's values are written, lowered from its row
 //! for the schema view (§AR-config.6.3): the one home `grund fetch` writes, or each
 //! home with the forms the scan reads there, asked by the rule the scan reads a value
 //! home by (§FS-values.2.2), so the view names no form the scan does not read.
@@ -10,7 +10,7 @@ use super::project::Project;
 use super::rows::{Extent, Row};
 use super::schema_slot::{ValueFiles, ValueForm, ValueHome};
 
-/// §FS-schema.4.1.4: where a value kind's values are written — the one home
+/// §FS-schema.4.1: where a value kind's values are written — the one home
 /// `grund fetch` writes, or each home with the forms the scan reads there, a
 /// folder's asked of a Markdown, a JSON and a YAML name inside it by the rule the
 /// scan reads a value home by.

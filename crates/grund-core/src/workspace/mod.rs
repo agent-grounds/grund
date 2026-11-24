@@ -26,7 +26,7 @@
 //! needs loaded findings rather than configs: `context.rs` with the loaded
 //! project set and its loaders, `id_candidates.rs` with the candidate clause
 //! that searches them — `join_alternatives` went with it, the checker still
-//! reading it downward — and the walk half of §FS-check.4.10.2's answer, which
+//! reading it downward — and the walk half of §FS-check.4.10's answer, which
 //! the boundary passes below only pose, on the run's warning channel. `WorkspaceCitationTarget` stayed,
 //! beside the expansion whose two facts it carries, and the qualified
 //! ID-argument split stayed as `id_arg.rs`: both read config text and no scan.

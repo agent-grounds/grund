@@ -99,7 +99,7 @@ fn command_show_batch(
 }
 
 /// One record as its NDJSON envelope, a failure kept inside it with no hint
-/// (§FS-output-shapes.4.1, §FS-output-shapes.6.1.2).
+/// (§FS-output-shapes.4.1, §FS-output-shapes.6.1).
 fn print_batch_envelope(record: BatchShowRecord) {
     let section = record
         .query

@@ -86,7 +86,7 @@ once, per member, in the file the member is listed in.
 An absent member has no config, so [§FS-workspace.3](../../functional-spec/FS-workspace.md#3-aliases)'s rule — the alias is the
 member's `project_name`, or the directory basename when omitted — has nothing to
 read. The only name the block can recover is the entry's last path segment, so
-that is the alias ([§FS-workspace.2.2.2](../../functional-spec/FS-workspace.md#222-the-alias-of-an-optional-member)).
+that is the alias ([§FS-workspace.2.2](../../functional-spec/FS-workspace.md#22-a-member-that-may-be-legitimately-absent)).
 
 The consequence is the important half, and it is the reason the decision is not
 simply "skip it". If a *present* optional member's `project_name` were allowed to
@@ -140,7 +140,7 @@ missing; that cost is real and was accepted knowingly, because the alternative i
 a key that silently contributes nothing.
 
 **Widening "absent" to cover an empty directory.** Rejected in
-[§FS-workspace.2.2.1](../../functional-spec/FS-workspace.md#221-what-absent-means). An uninitialized submodule materializes as an empty
+[§FS-workspace.2.2](../../functional-spec/FS-workspace.md#22-a-member-that-may-be-legitimately-absent). An uninitialized submodule materializes as an empty
 directory, so this looks like the more helpful rule; it would put a typo'd or
 half-created directory on the unverified path and move the boundary of the blind
 spot somewhere no line of the repository records. The repository meeting that
@@ -172,4 +172,4 @@ than checked against a cached catalog of what it used to hold, which is the
 shape [§FS-workspace.7](../../functional-spec/FS-workspace.md#7-neighboring-repos) would need for neighbouring repositories and is a different
 feature, now decided in [§DF-remote-projects](DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root) as a committed projection rather than a catalog.
 An absent optional member inside a remote reuses this decision's announcement
-([§FS-remote-projects.differences.consumer-site](../../functional-spec/FS-remote-projects.md#differencesconsumer-site-suppression-never-lets-a-consumer-citation-pass)).
+([§FS-remote-projects.differences](../../functional-spec/FS-remote-projects.md#differences-the-closed-list-of-differences)).

@@ -1,8 +1,8 @@
 //! The declaration lines of a file as the scan reads them, for the readers that
 //! hold its text but not its record: the formatter's protection of declaration
-//! lines and the editor's on-type rule (§FS-fmt.2.3, §FS-lsp.1.4.3). Each line
+//! lines and the editor's on-type rule (§FS-fmt.2.3, §FS-lsp.1.4). Each line
 //! is asked the scan's own questions in the scan's order: whether the gate lets
-//! it declare (§FS-config-v2.schema.sources.declarations.gate), and whether it is
+//! it declare (§FS-config-v2.schema.sources.declarations), and whether it is
 //! a bare line of a closed `/* … */` block (§FS-declarations.line.block-comment).
 //! Both are read off the one block walk the scan records, so a line the scan
 //! declares nothing on is never protected as a declaration.

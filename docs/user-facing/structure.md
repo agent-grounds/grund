@@ -22,7 +22,7 @@ A place is a path from the config root, not a pattern: `files = ["specs/*/spec.m
 nothing, and a missing place is quiet, so what you see is each citation of the kind reported as
 `unknown reference <ID>; no place of kind <KIND> exists: specs/*/spec.md (grund.toml:4)`, with a
 reminder to list each file or name the folder
-([§FS-check.3.1.4](../functional-spec/FS-check.md#314-a-kind-none-of-whose-places-exists)).
+([§FS-check.3.1](../functional-spec/FS-check.md#31-dangling-citation)).
 
 | Kind | What it is | Where it lives |
 | --- | --- | --- |
@@ -156,7 +156,7 @@ pub struct EventBus { /* … */ }
 
 Only that canonical link enrolls a declaration that lives in source. A link you wrote around the ID and a title is an entry for a declaration in the kind's folder, but it enrolls nothing, and the index's citation of a source declaration through it is an ordinary citation ([§FS-check.3.18](../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)).
 
-A stub is a heading whose title is one link, `# AR-event-bus: [bus](../../src/bus.rs)`, at any heading level ([§FS-declarations.stubs.shape](../functional-spec/FS-declarations.md#stubsshape-what-a-stub-looks-like)). It is a stub only in a Markdown file of some kind's home, wherever the checkout sits; a heading of that shape anywhere else is a declaration titled with a link. Before grund 0.19.0 any Markdown file with a directory named `docs` on its path held stubs, and 0.18.0 warned as `stub-shape` at every heading the two readings tell apart ([§FS-declarations.checks.stub-shape](../functional-spec/FS-declarations.md#checksstub-shape-stub-shape-read-two-ways-a-spent-check)). `grund list` shows a stubbed declaration at its target, with the target's title. The target need not be scanned: one outside the configured source scope still gives the stub its declaration, its sections, its citations and its chapters, so rules, `refs` and `unused` read it as if it were scanned, and a section it declares twice is reported where it is written; nothing else about the target file is judged ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). The target must declare the ID itself: a stub there declares nothing, so a chain of stubs is broken ([§FS-declarations.stubs.target.4](../functional-spec/FS-declarations.md#stubstarget4-a-stub-in-the-target-declares-nothing)).
+A stub is a heading whose title is one link, `# AR-event-bus: [bus](../../src/bus.rs)`, at any heading level ([§FS-declarations.stubs.shape](../functional-spec/FS-declarations.md#stubsshape-what-a-stub-looks-like)). It is a stub only in a Markdown file of some kind's home, wherever the checkout sits; a heading of that shape anywhere else is a declaration titled with a link. Before grund 0.19.0 any Markdown file with a directory named `docs` on its path held stubs, and 0.18.0 warned as `stub-shape` at every heading the two readings tell apart ([§FS-declarations.checks.stub-shape](../functional-spec/FS-declarations.md#checksstub-shape-stub-shape-read-two-ways-a-spent-check)). `grund list` shows a stubbed declaration at its target, with the target's title. The target need not be scanned: one outside the configured source scope still gives the stub its declaration, its sections, its citations and its chapters, so rules, `refs` and `unused` read it as if it were scanned, and a section it declares twice is reported where it is written; nothing else about the target file is judged ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). The target must declare the ID itself: a stub there declares nothing, so a chain of stubs is broken ([§FS-declarations.stubs.target](../functional-spec/FS-declarations.md#stubstarget-what-a-stubs-target-gives-it)).
 
 From grund 0.19.0, exclude and enabled ignore rules also refuse a stub's target
 ([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)). With `include = ["docs"]`, a stub pointing at
@@ -188,7 +188,7 @@ guidance lists them without choosing one.
 `grund refs AR-event-bus` does not refuse while you plan the repair: the broken stub
 is no home for it, so it lists every citation — the sites that follow the move — and
 names the stub in one `warning:` line carrying the same repair
-([§FS-refs.4.1.1](../functional-spec/FS-refs.md#411-a-broken-stub-beside-a-real-home-is-set-aside-with-a-warning)).
+([§FS-refs.4.1](../functional-spec/FS-refs.md#41-a-stubs-homes-are-found-in-its-target)).
 If the sole real declaration is in a missing stub's own file, the guidance instead
 explains that linking to that same file will not pair the stub: it remains a duplicate
 ([§FS-declarations.stubs.repair](../functional-spec/FS-declarations.md#stubsrepair-a-missing-target-beside-another-declaration-explains-the-repair)).
@@ -208,7 +208,7 @@ sources:
 # METRIC-net-revenue: Net revenue, monthly
 ```
 
-No line of it is a heading, so the `#` comment declares nothing. Its citations are live and belong to the file's first declaration, here `METRIC-net-revenue`, under no section, so `refs --from`, rules and citation directions count them ([§FS-check.1.1.5.2.1](../functional-spec/FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)). `grund fmt` rewrites nothing in the block, because a Markdown link is no valid YAML or TOML value. The declaration's body still starts at its heading, so `show` prints what it printed before. The runnable [`examples/front-matter/`](../../examples/front-matter/) shows the citation counting for its metric.
+No line of it is a heading, so the `#` comment declares nothing. Its citations are live and belong to the file's first declaration, here `METRIC-net-revenue`, under no section, so `refs --from`, rules and citation directions count them ([§FS-check.1.1.5.2](../functional-spec/FS-check.md#1152-front-matter-holds-no-heading)). `grund fmt` rewrites nothing in the block, because a Markdown link is no valid YAML or TOML value. The declaration's body still starts at its heading, so `show` prints what it printed before. The runnable [`examples/front-matter/`](../../examples/front-matter/) shows the citation counting for its metric.
 
 In a kind that declares the `front-matter` field, grund reads the block as well: it parses the YAML, or the TOML between `+++` lines, and each top-level key becomes a section of the file's first declaration, `METRIC-net-revenue.front-matter.sources` here. A citation inside a key then belongs to that key rather than to no section, and `check` holds the keys to the shape the kind declares ([§FS-fields.front-matter](../functional-spec/FS-fields.md#front-matter-front-matter-is-a-field)). A kind that declares no such field reads the block exactly as above. [Front matter is a field](fields.md#front-matter-is-a-field) walks through it.
 
@@ -224,10 +224,10 @@ With named sections on, a name may also follow a number in a Markdown declaratio
 
 From grund 0.19.0, a marked citation of that address fails the check if its
 section or declaration is absent, just like any other broken reference. The
-0.18.0 warning window has ended ([§FS-citations.checks.mixed-path](../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190)).
+0.18.0 warning window has ended ([§FS-citations.checks.mixed-path](../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked)).
 After adding a resolving citation, run `grund fmt --write` with no path at the
 workspace root, or at the project root outside a workspace, and commit the lock
-([§FS-section-lock.checks.remedy](../functional-spec/FS-section-lock.md#checksremedy-the-run-that-writes-the-lock));
+([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold));
 an unrecorded mixed address still produces an immediate
 `unrecorded-section-citation` error ([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)).
 
@@ -241,7 +241,7 @@ A deep path repeats its parent in every heading below it. A **relative heading**
 ### .1: Username
 ```
 
-`### .1:` takes its parent's path and declares `FS-login.format.1`. The parent is the nearest shallower heading, and it must sit exactly one level up. It is the declaration heading or a section that is neither an orphan nor a duplicate. Relative headings chain, so `#### .1:` under `### .user:` under `## format:` is `format.user.1`. A relative heading with no such parent declares nothing, and `check` reports `relative-section-parent` with the parent it needed. Every place that prints a coordinate uses the full path: citations, `refs`, `list`, completion, JSON, diagnostics, `--toc` and the editor hover. A read of the section itself opens with its own heading at the full path, so `grund FS-login.format.1` prints `### format.1: Username` in every mode, `md` and the JSON `body` ([§FS-declarations.section.relative.shown.selected](../functional-spec/FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)). Every other heading of the read, those inside the slice and those of a whole-declaration read, prints as written, and the anchor stays the written heading's. The form works in Markdown declaration bodies and in source doc-comment declaration bodies alike: `/// ### .1: Username` under `/// ## format: Formatting` declares `FS-login.format.1`, and so does a name under a number, complete like `/// ### 1.goals: Goals` or relative like `/// ### .goals: Goals` under `/// ## 1. Overview` ([§FS-declarations.section.relative.where](../functional-spec/FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)). grund 0.18.0 read these doc-comment lines as prose and warned `parse-moves`; from 0.19.0 they are sections.
+`### .1:` takes its parent's path and declares `FS-login.format.1`. The parent is the nearest shallower heading, and it must sit exactly one level up. It is the declaration heading or a section that is neither an orphan nor a duplicate. Relative headings chain, so `#### .1:` under `### .user:` under `## format:` is `format.user.1`. A relative heading with no such parent declares nothing, and `check` reports `relative-section-parent` with the parent it needed. Every place that prints a coordinate uses the full path: citations, `refs`, `list`, completion, JSON, diagnostics, `--toc` and the editor hover. A read of the section itself opens with its own heading at the full path, so `grund FS-login.format.1` prints `### format.1: Username` in every mode, `md` and the JSON `body` ([§FS-declarations.section.relative.shown](../functional-spec/FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown)). Every other heading of the read, those inside the slice and those of a whole-declaration read, prints as written, and the anchor stays the written heading's. The form works in Markdown declaration bodies and in source doc-comment declaration bodies alike: `/// ### .1: Username` under `/// ## format: Formatting` declares `FS-login.format.1`, and so does a name under a number, complete like `/// ### 1.goals: Goals` or relative like `/// ### .goals: Goals` under `/// ## 1. Overview` ([§FS-declarations.section.relative.form](../functional-spec/FS-declarations.md#sectionrelativeform-the-form)). grund 0.18.0 read these doc-comment lines as prose and warned `parse-moves`; from 0.19.0 they are sections.
 
 A relative address depends on where its block sits. Move `### .1:` from `## format:` to `## parse:` and the same words answer to `FS-login.parse.1`, while a citation of `FS-login.format.1` now reads other text. So each cited relative section is recorded in a committed **section lock**, `.grund/sections/<ID>.lock`. A lock line holds the address and a fingerprint of the section's text ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)):
 
@@ -268,7 +268,7 @@ for a member's declaration, which lists its citations across the whole workspace
 declaration and affected authored citation IDs yourself, then run these commands
 from the same place, the workspace root in a workspace and the project root
 outside one, because only that run writes every lock entry the citations need
-([§FS-section-lock.checks.remedy](../functional-spec/FS-section-lock.md#checksremedy-the-run-that-writes-the-lock)):
+([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)):
 
 ```bash
 grund fmt --write    # after the authored rename or move
@@ -301,11 +301,11 @@ copy with [`examples/relative-sections-lock/`](../../examples/relative-sections-
 Read the preview before you write, and describe the change from the write's
 report. A preview row names every kind of rewrite its line gets: the first kind
 leads, with the text an expansion writes, and the others follow
-([§FS-fmt.3.5.1](../functional-spec/FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)). A `markdown link` names each link before and after, so you can
+([§FS-fmt.3.5](../functional-spec/FS-fmt.md#35-the-dry-run-report)). A `markdown link` names each link before and after, so you can
 apply one line by hand when the file holds other changes you are not ready to
 write, and it is the only review an anchor gets before it is written: `grund
 check` does not read anchors
-([§FS-fmt.3.6.2](../functional-spec/FS-fmt.md#362-a-written-link-names-the-link-before-and-after)). Under `--marker` a Markdown line is marked and then linked:
+([§FS-fmt.3.6](../functional-spec/FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes)). Under `--marker` a Markdown line is marked and then linked:
 
 ```text
 $ grund fmt --marker
@@ -389,7 +389,7 @@ writes, and `grund check` holds it to the rule after.
 
 A marked kind-index entry also follows citation directions. If it is forbidden,
 keep the entry and use the finding's rule repair rather than removing the
-marker ([§FS-check.3.12.2](../functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry),
+marker ([§FS-check.3.12](../functional-spec/FS-check.md#312-forbidden-citation),
 [guide](citation-directions.md)).
 
 ### Link rules: which citations must exist
@@ -450,7 +450,7 @@ catalog lists every finding code, its severity, and the setting that turns it on
   Every form a link is written in counts: an inline link whose text runs onto
   the next line of its paragraph, a reference link `[text][key]`, a collapsed
   `[text][]` or shortcut `[text]` reference, a definition `[key]: url`, an
-  autolink `<https://…>` and a raw HTML `<a>` element ([§FS-citations.wrap.enclosing.scope](../functional-spec/FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in)).
+  autolink `<https://…>` and a raw HTML `<a>` element ([§FS-citations.wrap.enclosing.shape](../functional-spec/FS-citations.md#wrapenclosingshape-which-links-enclose)).
   A reference key, and every byte of a raw HTML tag, is yours too: no pass writes
   into one, so a collapsed reference and its definition keep spelling the same
   key ([§FS-citations.zones.authored-markup](../functional-spec/FS-citations.md#zonesauthored-markup-a-reference-key-and-an-html-tag-keep-their-bytes)). A citation that is an image's whole

@@ -172,7 +172,7 @@ fn block_diagnostics(
 /// absorption costs, the two config edits that clear it, and the release the
 /// finding became an error in (§FS-check.3.29). The second remedy is stated as an outcome rather
 /// than as a key on purpose — `[scan] exclude` prunes descendants and never the
-/// directory a walk starts at (§FS-check.1.3.2), so a block that is itself an
+/// directory a walk starts at (§FS-check.1.3), so a block that is itself an
 /// `include` root takes `include` and one below it takes `exclude`.
 fn unlisted_workspace_block_message(
     config: &Config,
@@ -246,7 +246,7 @@ fn absorbing_project_name(config: &Config, alias: Option<&str>) -> String {
 /// rejects, and two readers of one file that disagreed about what a section header
 /// is would be the worse bug (§FS-workspace.6.1.7).
 fn workspace_table_line(config_path: &Path) -> Option<usize> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
+    // §FS-check.6.1: cover this effective input before its shared read.
     let text = Sources::on_disk().text(config_path).ok()?;
     text.lines().enumerate().find_map(|(idx, raw_line)| {
         let line = strip_comment(raw_line).trim();

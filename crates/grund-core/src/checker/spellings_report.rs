@@ -19,7 +19,7 @@ use crate::scanner::file_home_kind;
 use crate::sources::Spellings;
 
 /// The names of a file a report may speak of: those the plain run reaches, so that `--full` stays
-/// additive (§FS-check.1.3.2, §FS-scan.identity.findings.content).
+/// additive (§FS-check.1.3, §FS-scan.identity.findings.content).
 pub(super) struct PlaceNames<'a> {
     spellings: &'a Spellings,
     active: bool,
@@ -30,7 +30,7 @@ impl<'a> PlaceNames<'a> {
     pub(super) fn new(schema: &Schema, frame: Frame<'a>) -> Self {
         let spellings = &frame.run.spellings;
         let active = spellings.has_second_names();
-        // §FS-check.1.3.2: the configured roots, whichever path this run was handed.
+        // §FS-check.1.3: the configured roots, whichever path this run was handed.
         let plain = active.then(|| WalkBounds::plain(schema, frame.root()));
         Self {
             spellings,
@@ -252,7 +252,7 @@ fn moved_finding(moved: &ReadingMove) -> Diagnostic {
 
 /// The one pass where the report is finished (§FS-scan.identity.findings.content, §AR-scanner.1.8),
 /// after every rule and before the path narrows, so a rule's finding is named like any other and
-/// a site it gains here keeps it in scope (§FS-check.1.3.6.2): a finding about what the file holds
+/// a site it gains here keeps it in scope (§FS-check.1.3.6): a finding about what the file holds
 /// becomes one line at the name listed first, the others in a closing clause and all of them in
 /// `sites`. A finding about where the file sits, and one judged from its directory, gets neither
 /// (§FS-scan.identity.findings.place, §FS-scan.identity.findings.judged).
@@ -298,11 +298,11 @@ fn finish_channel(channel: &mut Vec<Diagnostic>, names: &PlaceNames<'_>, frame: 
 /// The clause names the other spellings of the line the finding stands at, except one its rule
 /// already has as a site of that line, and `sites` holds every spelling of every line it speaks of,
 /// once. A finding's own sites are kept: they are other lines of the same text, or other files
-/// (§FS-check.1.3.6.2). The rule wrote its message from first names ([`PlaceNames::settle`]), so
+/// (§FS-check.1.3.6). The rule wrote its message from first names ([`PlaceNames::settle`]), so
 /// this pass reads no message and edits none of it but the clause it adds. The clause closes the
 /// line, except on a count row that names the citations it counted: there it goes before that
 /// list, found by the one marker the rules module exports, [`COUNTED_AT`], and nothing else of
-/// the message is read (§FS-scan.identity.findings.content, §FS-rules.7.3.1).
+/// the message is read (§FS-scan.identity.findings.content, §FS-rules.7.3).
 fn name_every_site(
     finding: &mut Diagnostic,
     reached: &[PathBuf],

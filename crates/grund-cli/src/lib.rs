@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 // §FS-check.6.1: the native backend `check --watch` subscribes through, and the one
-// debounce its events are coalesced by (§FS-check.6.1.2).
+// debounce its events are coalesced by (§FS-check.6.1).
 use grund_core::native_watch::{Debounce, notify};
 use grund_core::{
     ApiScanError, BatchShowQuery, BatchShowRecord, CheckOpts, CitationDisjunction, CitationLevel,

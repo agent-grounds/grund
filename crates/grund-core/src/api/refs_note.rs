@@ -2,7 +2,7 @@
 //! note for an ID the scanned tree declares nowhere, or the pointer to the
 //! `list --unused` call that answers for every declaration at once
 //! (§FS-refs.2.1.1). Decided once, as the `note` of the result, so the CLI, the
-//! Rust API and both bindings carry the same text (§FS-distribution.3.2.2.2).
+//! Rust API and both bindings carry the same text (§FS-distribution.3.2.2).
 
 use std::collections::BTreeSet;
 use std::path::Path;

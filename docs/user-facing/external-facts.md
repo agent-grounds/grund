@@ -35,7 +35,7 @@ needed. Their heads, `GR-` and `GRUND-`, cannot prefix each other. `GR` beside
 the longer name could give a malformed token two owners. Rename a kind in that
 case; a separator-free `GR` format beside `GRUND` instead needs formats whose
 heads do not overlap
-([§FS-config.3.4.5.1](../functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens),
+([§FS-config.3.4.5](../functional-spec/FS-config.md#345-name-rules),
 [§FS-config.3.2.9](../functional-spec/FS-config.md#329-kind-head)).
 
 For the `GH` configuration above, the executable receives exactly one argument,
@@ -132,7 +132,7 @@ replace the link with the file it points to, create the target, or remove it
 The `fetch` key must name a program: an empty or whitespace-only value names none. From grund 0.23.0, the config refuses it when loaded, at the key's line, on every command that loads the config. Name the program, or, if the kind is not fetched, remove the key and any `[rules.resolution] <KIND>`. A setting of `warn` needs the key, so removing the key alone is a load error, and with both gone the kind's missing IDs are errors
 ([§FS-fetch.2.1](../functional-spec/FS-fetch.md#21-a-value-that-names-no-executable),
 [§FS-config-v2.checks.config-fetch-names-nothing](../functional-spec/FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)).
-([§FS-check.3.1.3.2](../functional-spec/FS-check.md#3132-a-key-fetch-has-nothing-to-run-for)).
+([§FS-check.3.1](../functional-spec/FS-check.md#31-dangling-citation)).
 
 For a folder home, fetch replaces the one snapshot the scan reads as Markdown,
 even in a nested directory or when its filename differs from the ID. For example,

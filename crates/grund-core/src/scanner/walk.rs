@@ -110,7 +110,7 @@ pub(super) fn scannable_walk_builder(
     looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
     met: Met,
 ) -> Result<WalkBuilder> {
-    // §FS-check.6.1.3: include ignore discovery outside the source roots.
+    // §FS-check.6.1: include ignore discovery outside the source roots.
     if schema.sources.respect_gitignore && !crate::config::observe_ignore_inputs(scan_root) {
         return Err(anyhow!("watch ignore coverage failed"));
     }
@@ -194,7 +194,7 @@ pub(super) struct WalkDirFilter {
     /// `None` for v1 and for an empty list.
     globs: Option<ExcludeGlobs>,
     /// The `scan = false` homes this walk prunes, as home path keys
-    /// (§FS-config.3.4.7.2). Empty under `--full`, and empty in the tree that
+    /// (§FS-config.3.4.7). Empty under `--full`, and empty in the tree that
     /// configures no such kind — which is every tree that never pays for the
     /// test below (§GOAL-fast-feedback).
     unwalked_homes: Vec<PathBuf>,
@@ -341,14 +341,14 @@ impl WalkDirFilter {
     /// directory by `is_dir`, or, for a directory, a hidden name or a name a version 1
     /// `[scan] exclude` lists. These are the same tests `refusal` asks, and the ones a
     /// looping or dangling link's report asks, which the walker never filters
-    /// (§FS-config-v2.schema.sources.exclude.roots).
+    /// (§FS-config-v2.schema.sources.exclude).
     pub(super) fn kept_out_by_exclude(&self, path: &Path, is_dir: bool) -> bool {
         self.excluded_by_pattern(path, is_dir)
             || (is_dir && directory_refusal(path, &self.excluded).is_some())
     }
 
     /// Whether a v2 `exclude` pattern matches `path`, by the spelling the walk reached it under
-    /// (§FS-config-v2.schema.sources.exclude.roots).
+    /// (§FS-config-v2.schema.sources.exclude).
     fn excluded_by_pattern(&self, path: &Path, is_dir: bool) -> bool {
         self.globs
             .as_ref()
@@ -380,14 +380,14 @@ impl WalkDirFilter {
         is_dir: bool,
         is_link: bool,
     ) -> Option<Unread> {
-        // §FS-check.6.1.1: linked files/dirs expose targets before descent/read.
+        // §FS-check.6.1: linked files/dirs expose targets before descent/read.
         if is_link && !crate::config::observe_input(path, is_dir) {
             return Some(Unread::Unobserved);
         }
         if depth == 0 {
             return None;
         }
-        // §FS-config.3.4.7.2: a home the config lists without walking is pruned here as
+        // §FS-config.3.4.7: a home the config lists without walking is pruned here as
         // well as left out of `kind_home_roots`, on the in-tree path the way
         // §AR-scanner.2.4.2 decides which home a file is in (§GOAL-fast-feedback).
         if !self.unwalked_homes.is_empty()
@@ -400,7 +400,7 @@ impl WalkDirFilter {
         {
             return Some(Unread::UnwalkedHome);
         }
-        // §FS-config-v2.schema.sources.exclude.roots: below a root, a glob prunes a
+        // §FS-config-v2.schema.sources.exclude: below a root, a glob prunes a
         // file or a directory by the spelling the walk reached it under.
         if self.excluded_by_pattern(path, is_dir) {
             return Some(Unread::ExcludedPath);
@@ -523,7 +523,7 @@ impl WalkDirFilter {
 /// it like any directory nobody configured (§FS-check.1.3). And a walk whose own
 /// root is at or inside one is a path a user typed — `grund check docs/templates`
 /// — which reads the directory it names the way an explicit argument already
-/// reads past `[scan] include` (§FS-config.3.4.7.3); the key describes the default
+/// reads past `[scan] include` (§FS-config.3.4.7); the key describes the default
 /// scope, and `grund check .` resolves to that scope rather than to this branch.
 fn walk_pruned_home_keys(
     schema: &Schema,

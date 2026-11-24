@@ -200,7 +200,7 @@ fn schema_graph(view: &SchemaView, graph: SchemaGraph) -> String {
             SchemaGraph::Dot => format!("  x{index} [label=\"{label}\"];\n"),
         });
     }
-    // §FS-schema.4.2: one box for every node no direction rule names.
+    // §FS-schema.4: one box for every node no direction rule names.
     if view.nodes.iter().any(|n| !n.ruled) {
         out.push_str(match graph {
             SchemaGraph::Mermaid => "  subgraph unruled[\"no direction rule names these\"]\n",

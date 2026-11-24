@@ -291,7 +291,7 @@ Every site that leaned on the change is reported, in two ways:
   `.check-out-a-book.copy-on-shelf`.
 - **The delta is an unknown reference.** It now lives in the archive, which
   is not scanned. No place of kind `DELTA` exists any more, so each finding
-  names the `grund.toml` line of the place that moved ([§FS-check.3.1.4](../../docs/functional-spec/FS-check.md#314-a-kind-none-of-whose-places-exists)).
+  names the `grund.toml` line of the place that moved ([§FS-check.3.1](../../docs/functional-spec/FS-check.md#31-dangling-citation)).
   What the delta said is in the living spec, at the addresses its sections
   would take there.
 
@@ -377,7 +377,7 @@ the change.
 A requirement reads on its own. From `2-check/repo`,
 `grund SPEC-loans.requirements.renew-a-loan` prints it, its heading written
 with the whole path rather than the handle alone
-([§FS-declarations.section.relative.shown.selected](../../docs/functional-spec/FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)):
+([§FS-declarations.section.relative.shown](../../docs/functional-spec/FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown)):
 
 ```text
 ### requirements.renew-a-loan: Requirement: Renew a Loan

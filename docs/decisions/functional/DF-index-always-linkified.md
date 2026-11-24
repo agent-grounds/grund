@@ -6,7 +6,7 @@
 
 ## 1. Context
 
-[§FS-check.3.17](../../functional-spec/FS-check.md#317-index-entry-is-not-a-link) makes a bare index entry an error in the release it arrives, under the [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) licence for a migration one shipped command completes. The command is `grund fmt --write`, which runs the cross-reference pass by itself on any scope holding Markdown ([§FS-fmt.6.6](../../functional-spec/FS-fmt.md#66-why-generated-configs-enable-cross-references)).
+[§FS-check.3.17](../../functional-spec/FS-check.md#317-index-entry-is-not-a-link) makes a bare index entry an error in the release it arrives, under the [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) licence for a migration one shipped command completes. The command is `grund fmt --write`, which runs the cross-reference pass by itself on any scope holding Markdown ([§FS-fmt.6.7.2](../../functional-spec/FS-fmt.md#672-what-enabled-decides)).
 
 That claim has one hole. `[fmt.cross_refs] enabled = false` ([§FS-fmt.6.7](../../functional-spec/FS-fmt.md#67-configurability)) turns the pass off, and in a repository that set it the fix becomes `grund fmt --cross-refs --write` — a command that linkifies the entire tree to repair one file, in a repository whose maintainers said in their config that they do not want generated links. The [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) licence weakens with it: "one documented command the tool ships" is not the same promise when the command also rewrites every other document.
 

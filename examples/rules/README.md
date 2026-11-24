@@ -70,7 +70,7 @@ produced by each family.
 The separate [`place-obligations/repo`](place-obligations/repo) fixture configures
 a scanned non-citable `e2e` row at `tests/e2e/`.
 Both subject spellings remain refused, with supplementary configuration
-guidance ([§FS-rule-refusals.sentences.rewrite.no-form.place](../../docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-row-or-path-subject-names-its-citation-configuration)):
+guidance ([§FS-rule-refusals.sentences.rewrite.no-form](../../docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)):
 
 ```bash
 grund check examples/rules/place-obligations/repo --rule 'Each e2e must cite at least one FS.' --only-rule
@@ -120,7 +120,7 @@ PY
 ```
 
 Files with no citations remain exempt until the grounding setting the hint
-names requires evidence in every file ([§FS-config.3.9.2.4](../../docs/functional-spec/FS-config.md#3924-obligations-apply-per-source-file)).
+names requires evidence in every file ([§FS-config.3.9.1](../../docs/functional-spec/FS-config.md#391-levels)).
 The hint names the supported configuration route and offers no accepted
 sentence rewrite. The unrelated `vendor/` refusal below still has no hint.
 
@@ -190,7 +190,7 @@ therefore has no rewrite.
 
 Each left-hand sentence is refused; the right-hand text describes the refusal
 and any accepted rewrite grund reports. Some refusals offer no rewrite
-([§FS-rules.10.1](../../docs/functional-spec/FS-rules.md#101-example-refusal-inventory)):
+([§FS-rules.10](../../docs/functional-spec/FS-rules.md#10-documentation-and-executable-examples)):
 
 - `Each FS may not cite any AR.` → `Each FS must not cite any AR.`
 - `Each FS must cite no AR.` → `Each FS must not cite any AR.`

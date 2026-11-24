@@ -1,5 +1,5 @@
 //! Companion entrypoint writes and their partial failures (§FS-init.2.3.6,
-//! §FS-distribution.3.2.2.1).
+//! §FS-distribution.3.2.2).
 use super::init::verb_wrote;
 use super::init_block::{AgentsUpdateResult, MembersSection, update_agents_block};
 use super::init_output::{InitError, InitEvent};

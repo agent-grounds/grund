@@ -78,7 +78,7 @@ violated rule, which is the harm.
   direction's finding, with empty `authority` and no rule ID appended. A trial
   sentence duplicating it therefore still authors nothing there, and
   `--only-rule` still prints `success` for that unit; that case stays deferred
-  ([§FS-rules.requirements.unseen](../../functional-spec/FS-rules.md#requirementsunseen-nothing-a-rule-governs-passes-unseen--realized-one-case-deferred)).
+  ([§FS-rules.requirements.unseen](../../functional-spec/FS-rules.md#requirementsunseen-nothing-a-rule-governs-passes-unseen)).
 - A repository that declares no rule is unaffected: `[citations]` is evaluated
   and rendered as before.
 

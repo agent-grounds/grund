@@ -57,7 +57,7 @@ fn homes(v1: &Project) -> Vec<(&str, &str, bool)> {
         .collect()
 }
 
-/// §FS-config-migrate.3.1.4.1: decide whether an include becomes a place using
+/// §FS-config-migrate.3.1.4: decide whether an include becomes a place using
 /// lexical home containment, before selecting roots; retain authored spellings
 /// for mapping and emission. The records gate uses this same decision.
 pub(super) fn inside_home(path: &str, home: &str, root: &Path) -> bool {
@@ -73,7 +73,7 @@ fn inside_member(path: &str, member: &str) -> bool {
             .is_some_and(|rest| rest.starts_with('/'))
 }
 
-/// §FS-config-migrate.3.1.4.1: the places version 1's homes and include entries
+/// §FS-config-migrate.3.1.4: the places version 1's homes and include entries
 /// become, under `root`, so a refused run, which has no candidate, can name a file's
 /// scan root. An include entry inside a home becomes no place, and `include` says so.
 pub(super) fn scan_roots(v1: &Project, include: &Include, root: &Path) -> Vec<PathBuf> {
@@ -196,7 +196,7 @@ fn missing_defaults(entries: &[String], missing: &[String]) -> MigrateRefusal {
 
 /// §FS-config-migrate.3.1.5: a home inside another row's folder home, with
 /// every file whose owner would change: the ones version 1 reads in the inner
-/// home (§FS-config-migrate.3.1.5.1). The refusal stands when it names none.
+/// home (§FS-config-migrate.3.1.5). The refusal stands when it names none.
 pub(super) fn nested_homes(
     v1: &Project,
     keys: &Keys,

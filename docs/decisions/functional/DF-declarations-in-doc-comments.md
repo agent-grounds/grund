@@ -27,17 +27,17 @@ pub fn example() {
 
 ### 2.2 Applicability is the classifier's, frozen per profile
 
-A block is eligible when its language's doc profile classifies it as documentation, or, for a language whose profile is `none`, when it is any comment behind the language's hosts ([§FS-config-v2.schema.sources.declarations.eligible](../../functional-spec/FS-config-v2.md#schemasourcesdeclarationseligible-which-blocks-are-eligible)). The profile's corners become stated rules for declarations: a dangling dedicated doc marker qualifies, a Go local `var` qualifies, a Ruby `private def` does not, and blank lines and lookalike markers break eligibility ([§FS-inline-citation-style.1.1.4](../../functional-spec/FS-inline-citation-style.md#114-declaration-applicability)). A module doc such as Rust `//!`, and a position language's leading block, qualify, so the roadmap's *immediately following definition* does not discard file documentation.
+A block is eligible when its language's doc profile classifies it as documentation, or, for a language whose profile is `none`, when it is any comment behind the language's hosts ([§FS-config-v2.schema.sources.declarations](../../functional-spec/FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare)). The profile's corners become stated rules for declarations: a dangling dedicated doc marker qualifies, a Go local `var` qualifies, a Ruby `private def` does not, and blank lines and lookalike markers break eligibility ([§FS-inline-citation-style.1.1.4](../../functional-spec/FS-inline-citation-style.md#114-declaration-applicability)). A module doc such as Rust `//!`, and a position language's leading block, qualify, so the roadmap's *immediately following definition* does not discard file documentation.
 
 These limits are fixed at the v2 epoch. A widening that was harmless for measurement, where a miss only decides whether a note is measured, would change which IDs a tree declares, so a profile that needs to move is a new profile or a new version.
 
 ### 2.3 One gate, before every recognizer
 
-Eligibility is decided before canonical, near-miss and legacy fallback recognition, and with or without a citation in the block ([§FS-config-v2.schema.sources.declarations.gate](../../functional-spec/FS-config-v2.md#schemasourcesdeclarationsgate-one-gate-before-every-recognizer)). Bodies, anchors, stubs, the formatter and the editor read the same answer. An ineligible line therefore cannot come back as an off-grammar declaration or a near miss.
+Eligibility is decided before canonical, near-miss and legacy fallback recognition, and with or without a citation in the block ([§FS-config-v2.schema.sources.declarations](../../functional-spec/FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare)). Bodies, anchors, stubs, the formatter and the editor read the same answer. An ineligible line therefore cannot come back as an off-grammar declaration or a near miss.
 
 ### 2.4 No new diagnostic
 
-A declaration-shaped line in an ineligible block is prose and draws nothing ([§FS-config-v2.schema.sources.declarations.prose](../../functional-spec/FS-config-v2.md#schemasourcesdeclarationsprose-an-ineligible-declaration-shaped-line-draws-no-new-finding)). A warning would fire on every note that names the point it grounds, which is the note the inline style asks for. A marked citation on that line is still a citation.
+A declaration-shaped line in an ineligible block is prose and draws nothing ([§FS-config-v2.schema.sources.declarations](../../functional-spec/FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare)). A warning would fire on every note that names the point it grounds, which is the note the inline style asks for. A marked citation on that line is still a citation.
 
 ## 3. Alternatives rejected
 

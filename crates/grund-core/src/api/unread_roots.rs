@@ -1,7 +1,7 @@
 //! The warning a configured root earns when no file in it is read: the recorded file-name
 //! refusal or folder evidence (§FS-scan.checks.unread-scan-root), explained by the
 //! configuration's one reading (§FS-scan.checks.unread-scan-root). `grund check`
-//! and the LSP snapshot both build it here (§FS-lsp.4.1).
+//! and the LSP snapshot both build it here (§FS-lsp.4).
 
 use crate::model::remedies;
 use std::path::Path;

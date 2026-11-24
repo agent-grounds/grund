@@ -12,7 +12,7 @@ use crate::grammar::DocProfile;
 
 /// §FS-config-v2.schema.sources: the judged drafts as the source model, and the
 /// v1-shaped fields the walk reads lowered from it: the suffixes the text scan
-/// reads and no v1 component exclusion (§FS-config-v2.defaults.1). No prefix list
+/// reads and no v1 component exclusion (§FS-config-v2.defaults). No prefix list
 /// and no docstring reading are lowered: a v2 file has no global prefix list, and
 /// each file reads through its own language's (§FS-languages.prefixes).
 pub(super) fn lower(r: &mut Reader) {

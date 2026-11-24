@@ -96,7 +96,7 @@ impl<'a> MissingStubRepair<'a> {
     /// The located clause of one missing stub, `broken stub: …` with the homes and
     /// the repair after it, as [`Self::located_suffix`] writes it when that stub is
     /// the only missing one beside the same homes: the line `refs` warns with for a
-    /// stub it set aside (§FS-refs.4.1.1). `None` for a stub whose target is not
+    /// stub it set aside (§FS-refs.4.1). `None` for a stub whose target is not
     /// missing, which this guidance does not cover.
     pub(crate) fn stub_clause(
         &self,

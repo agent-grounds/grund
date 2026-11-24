@@ -28,7 +28,7 @@ With no `grund.toml` at or above `PATH`, the header reads `defaults, no grund.to
 and the view is the built-in defaults a config-less tree is held to. The line
 under it says so, and names the version and the kinds the config
 `grund init --scaffold` would write adds to them, so a schema read before `init`
-does not look like a preview of what `init` lays down ([§FS-schema.8.2](../functional-spec/FS-schema.md#82-with-no-grundtoml-a-note-names-what-grund-init---scaffold-writes)).
+does not look like a preview of what `init` lays down ([§FS-schema.8](../functional-spec/FS-schema.md#8-the-table)).
 
 ## The table
 
@@ -109,13 +109,13 @@ must/warn/should skip an uncited file of a place or the complement · [rules.cit
 
 grounds both its place and the complement, so it has no such line;
 [`examples/places/`](../../examples/places/) shows one
-([§FS-schema.8.3](../functional-spec/FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file)).
+([§FS-schema.8](../functional-spec/FS-schema.md#8-the-table)).
 
 Where some kind prints a field line, the legend's last line says where each
 heading sits. A field line shows its heading under a declaration written
 `# <ID>: …`, so as `##`; a declaration written `## SWR-001: …` writes the same
 field at `###`, since a field always sits one level below its declaration's
-heading ([§FS-schema.8.4](../functional-spec/FS-schema.md#84-the-legend-says-where-a-fields-heading-sits)):
+heading ([§FS-schema.8](../functional-spec/FS-schema.md#8-the-table)):
 
 ```text
 ## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading

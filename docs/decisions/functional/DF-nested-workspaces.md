@@ -193,7 +193,7 @@ not name the offending line.
 - A remote's own nested pins stay isolated under the remote's alias: if `org` and
   `policy` each pin a `payments`, they are `org/payments` and `policy/payments`,
   two projects, with no version solver and no rebinding
-  ([§FS-remote-projects.mount.nested](../../functional-spec/FS-remote-projects.md#mountnested-nested-pins-stay-isolated), [§DF-remote-projects](DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root)).
+  ([§FS-remote-projects.mount.rule](../../functional-spec/FS-remote-projects.md#mountrule-a-mounted-root-resolves-natively-and-is-shown-under-its-alias), [§DF-remote-projects](DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root)).
 
 ## 5. Alternatives considered
 

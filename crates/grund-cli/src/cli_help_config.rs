@@ -11,7 +11,7 @@ fn print_config_help() {
     println!(
         "  show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set)."
     );
-    // §FS-config.4.2.3.1: `show` leaves out an opt-in table that is off; `explain` answers.
+    // §FS-config.4.2: `show` leaves out an opt-in table that is off; `explain` answers.
     println!(
         "             It prints what applies, not an opt-in table that is off; `grund config explain` answers for every setting."
     );
@@ -22,7 +22,7 @@ fn print_config_help() {
     println!(
         "  validate   parse the discovered config and report the first error; exit 0 if it's well-formed."
     );
-    // §FS-config.4.1.1: at a workspace root, the §FS-check.4.11.3 set is named, blocks included.
+    // §FS-config.4.1: at a workspace root, the §FS-check.4.11 set is named, blocks included.
     println!(
         "             At a workspace root it loads every member's config too, and warns about every config the workspace reads, `include_root = false` blocks included, as `grund check` does."
     );

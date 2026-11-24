@@ -17,7 +17,7 @@ use crate::sources::{canonical_path, path_lookup, refuse_missing_path};
 /// resolved against the repo root, otherwise the whole root — and, for a run
 /// given a `[path]` argument below that root, the path beside them, because the
 /// path narrows the report and not the walk (§FS-config.3.5.7, §AR-scanner.1.6,
-/// §FS-check.1.3.6.1).
+/// §FS-check.1.3.6).
 ///
 /// Beside the roots, whether the scope is the whole project: no path, or one that
 /// resolves to the config root — the one resolution of the scope, which the lock
@@ -38,13 +38,13 @@ pub(super) fn scan_roots(
     )
 }
 
-/// §FS-check.1.3.1: `full` cancels `[scan] include` for this walk and nothing else
+/// §FS-check.1.3: `full` cancels `[scan] include` for this walk and nothing else
 /// — an explicit path argument still narrows the report, and `exclude`, the ignore
 /// files, and `extensions` are untouched. `check --full` asks both ways: once with
 /// `true` to walk the whole root, and once with `false` to learn which of what it
 /// read was inside the configured scope (§FS-check.3.14).
 ///
-/// §FS-check.1.3.6.1: `widen` is the other axis, and the walk is the one caller
+/// §FS-check.1.3.6: `widen` is the other axis, and the walk is the one caller
 /// that passes it. It says the explicit path is this run's *report* scope, so the
 /// roots returned are the ordinary ones union the path; `full` is then irrelevant,
 /// since a path leaves the flag nothing to cancel (§FS-check.1.3.6). The two scope
@@ -63,7 +63,7 @@ pub(crate) fn scan_roots_for(
 
 /// The scan failure at a `<path>` whose lookup failed for a reason other than absence, for a run
 /// no walk of which starts at the path (§FS-scan.scope.homes.lookup). A workspace run walks
-/// each project whole and narrows its report to the path afterwards (§FS-check.1.3.6.1), so
+/// each project whole and narrows its report to the path afterwards (§FS-check.1.3.6), so
 /// nothing would say the path went unread, and a run over a tree it never read would pass. It is
 /// the failure the walk raises at such a root (§AR-scanner.1.9), placed `passed`
 /// (§FS-check.2.4.3), so both routes print one line. `None` for no path, the config root, a path
@@ -129,8 +129,8 @@ fn resolve_scan_roots(
         if resolved == canonical_config_root(frame.root()) {
             return Ok((root_scope_roots(schema, frame.root(), full), true));
         }
-        // §FS-check.1.3.6.1: the ordinary roots union the path, the path first so its
-        // spelling wins for the files it names (§FS-check.1.3.2). `full` is no part of
+        // §FS-check.1.3.6: the ordinary roots union the path, the path first so its
+        // spelling wins for the files it names (§FS-check.1.3). `full` is no part of
         // it — an explicit path leaves the flag nothing to cancel (§FS-check.1.3.6).
         if widen {
             let mut roots = vec![scope];

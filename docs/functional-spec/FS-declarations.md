@@ -4,7 +4,7 @@ A declaration is the line that introduces an ID, and every citation addresses on
 declared exactly once, where its kind's home allows it, and every ATX heading inside its body
 in a Markdown file is either a coordinate a citation can reach or a finding `check` reports;
 source doc-comment and setext text stay outside that rule
-([§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate)). The checks enforce that sentence, save three, which hold
+([§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)). The checks enforce that sentence, save three, which hold
 what an address is worth once it resolves: that the declaration has the form its ID grammar
 gives it ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), that its leads stay inside the size
 its project budgets where the project asks for one ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)),
@@ -35,7 +35,7 @@ followed by a section path, whose token with a declaration colon after it is the
 never a declaration of the shorter ID ([§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing)); a heading inside
 a fence or a raw-text HTML block, and a `#` line in front matter ([§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is),
 [§FS-declarations.stubs.target](FS-declarations.md#stubstarget-what-a-stubs-target-gives-it), [§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)); and an ID in inline code or Markdown prose,
-which is no near miss either ([§FS-declarations.checks.declaration-near-miss.3](FS-declarations.md#checksdeclaration-near-miss3-never-in-inline-code-prose-or-a-fenced-block)). One case is
+which is no near miss either ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). One case is
 deferred to [§RM-doc-comment-declarations](../roadmap.md#rm-doc-comment-declarations-declarations-only-in-classmethod-doc-comments): every comment-prefixed line of a source file is a
 declaration position ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)), so `// FS-x: …` inside a function body, a
 citation whose marker was dropped, declares `FS-x` and makes the real declaration a duplicate.
@@ -49,11 +49,11 @@ declaration reached through stubs is named at its target ([§FS-declarations.stu
 every other site listed in the message ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration),
 [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)). The message states what is true and the author's
 choices, and no command applies one: no corrected ID is proposed
-([§FS-declarations.checks.declaration-near-miss.4](FS-declarations.md#checksdeclaration-near-miss4-facts-not-a-guessed-rename), [§FS-declarations.checks.declaration-near-miss.6](FS-declarations.md#checksdeclaration-near-miss6-no-opt-out-no-rewrite)),
-a suggested coordinate is guidance `fmt` never writes ([§FS-declarations.checks.unmarked-heading.3](FS-declarations.md#checksunmarked-heading3-the-suggested-coordinate),
-[§FS-declarations.checks.unmarked-heading.6](FS-declarations.md#checksunmarked-heading6-no-command-numbers-the-heading)), a non-citable home is named as a place, not mapped
-to a kind ([§FS-declarations.checks.misplaced-declaration.3](FS-declarations.md#checksmisplaced-declaration3-a-non-citable-home)), and an oversized lead gets remedies
-that keep its citations ([§FS-declarations.checks.oversized-lead.1](FS-declarations.md#checksoversized-lead1-the-message)). It is a direction for every
+([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)),
+a suggested coordinate is guidance `fmt` never writes ([§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)),
+a non-citable home is named as a place, not mapped
+to a kind ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)), and an oversized lead gets remedies
+that keep its citations ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)). It is a direction for every
 check added here. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 
 ## line: What a line in declaration position declares
@@ -80,7 +80,7 @@ inside it declares; a comment line after line 1 still declares.
 
 A block comment opens on a line whose first non-blank characters are `/*`, `/**` or `/*!`, and
 closes at the first `*/` after its opener, on that line or a later one; it is read where `/*` is
-among `[scan] comment_prefixes` ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks), [§FS-languages.prefixes](FS-languages.md#prefixes-comment_prefixes-compose-with-extensions)).
+among `[scan] comment_prefixes` ([§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block), [§FS-languages.prefixes](FS-languages.md#prefixes-comment_prefixes-compose-with-extensions)).
 Once the wrapper of [§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper) is read off, three lines in it are in
 declaration position:
 
@@ -108,11 +108,11 @@ no other: `FS-042-user-login.2` is the shape of a coordinate, never of a declara
 docstring line `FS-042-user-login.2 is named here`, a `// FS-042-user-login.2 / a note` and the
 heading `# FS-042-user-login.2 and what a session must outlive` declare nothing; such a line is
 prose, or a citation where it carries the marker ([§FS-check.1.1](FS-check.md#11-recognized-citations)). Without the declaration colon
-it is no `declaration-near-miss` either ([§FS-declarations.checks.declaration-near-miss.2](FS-declarations.md#checksdeclaration-near-miss2-the-declaration-colon-is-the-discriminator)), and
+it is no `declaration-near-miss` either ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), and
 `check` reports nothing about it. With the colon, `# FS-042-user-login.2: the session` has a
 token that runs to the colon, section included, so the line is the off-grammar declaration
 [§FS-config.3.2.5](FS-config.md#325-off-grammar-declarations-stay-readable) keeps under its exact spelling and
-[§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts) reports, never a declaration of
+[§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss) reports, never a declaration of
 `FS-042-user-login`. Under `section_separator = ":"`, `FS-042-user-login:2 is named here`
 declares nothing and is no near miss. The section is a numbered path, or a named one such as
 `FS-042-user-login.goals` only where `named_sections = true` ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names)).
@@ -203,7 +203,7 @@ listed language or listing a language that reads it under version 2
 
 A target is refused too by a directory on its path that `[scan] exclude` names
 ([§FS-config.3.5.16](FS-config.md#3516-an-exclude-entry-containing--is-refused)), by a version-2 exclusion pattern
-([§FS-config-v2.schema.sources.exclude.stubs](FS-config-v2.md#schemasourcesexcludestubs-a-pattern-is-the-exclude-reason-a-stubs-target-is-not-read)), and by an enabled ignore rule
+([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)), and by an enabled ignore rule
 ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)), before the stub pairs or lends any of its content
 ([§DF-stub-target-exclusions](../decisions/functional/DF-stub-target-exclusions.md#df-stub-target-exclusions-excluded-and-ignored-stub-targets-are-broken-from-grund-0190)). They are asked as the walk asks them, from each scan root the run
 walks and from the config root in place of `include`, on the target's lexical link spelling
@@ -217,7 +217,7 @@ project's boundary, an unwalked home or a target outside the config root.
 The hidden-name refusal comes first and, like a target that is read and lacks the ID, reads
 `stub link target lacks <ID>: <path>`. Every other refusal says the target is not scanned and
 never that it lacks the ID, naming the link as the stub wrote it ([§FS-errors.3](FS-errors.md#3-message-text)). For the
-extension the reason is the cell of the reason table in [§FS-scan.checks.unread-scan-root.message](FS-scan.md#checksunread-scan-rootmessage-the-message),
+extension the reason is the cell of the reason table in [§FS-scan.checks.unread-scan-root](FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read),
 the data row for a listed `data` language, with no remedy clause, as the first line below
 shows. For `exclude` and ignore it is `[scan] exclude names <entry>`,
 `[schema.sources] exclude matches it by <pattern>` or `<file> ignores it by <pattern>`, entries
@@ -236,7 +236,7 @@ A target outside `[scan] include` gives the stub what the same tree with the tar
 gives it ([§REQ-one-answer.stubs.outside-include](../requirements/REQ-one-answer.md#stubsoutside-include-a-target-outside-the-include-answers-as-if-scanned)):
 
 - its declarations of the ID, counted as [§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned) counts them, and their
-  sections, so a citation into one reads as it would were the target scanned ([§FS-check.3.2.1](FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)),
+  sections, so a citation into one reads as it would were the target scanned ([§FS-check.3.2](FS-check.md#32-missing-section)),
   and so does every reader that enumerates a declaration's sections
   ([§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)). No target of an ID with more than one declaration lends a
   section, a target that declares the ID twice included ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments), [§FS-show.2.2.1](FS-show.md#221-ambiguous-id));
@@ -285,11 +285,11 @@ them, and stubs whose links resolve to different files, each declaring the ID, m
 duplicate. A surface that shows such a declaration at a stub rather than at its target — `list`,
 where the target is outside the scan — shows it once, at the first of its stubs in `path:line`
 order, and once for a target that declares the ID twice too, a row that carries the note every
-line of a duplicated ID carries ([§FS-list.3.1.1](FS-list.md#311-row-notes)).
+line of a duplicated ID carries ([§FS-list.3.1](FS-list.md#31---format-text-default)).
 
 A surface that says where a paired declaration is names the target's declaration, its
 `<path>:<line>` and its title, as the same tree with the target scanned names it: `show`
-([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)), plain `list` ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)), `list --size` ([§FS-list.3.4.6](FS-list.md#346-a-home-outside-the-scan)), and every finding
+([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)), plain `list` ([§FS-list.2](FS-list.md#2-behaviour)), `list --size` ([§FS-list.3.4](FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements)), and every finding
 about the declaration itself — `unused` ([§FS-check.4.1](FS-check.md#41-unused-declaration)), and a count or chapter count it fails
 ([§FS-rules.7.2](FS-rules.md#72-chapter-cardinality), [§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality), [§FS-rules.7.4](FS-rules.md#74-inbound-citation-cardinality)). A duplicate error or an ambiguity refusal
 ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)) names each of the target's declarations of the ID, never a stub's own line, which
@@ -338,7 +338,7 @@ declaration, owns the coordinate: a same-or-higher Markdown heading, the end of 
 source doc-comment or docstring, the next declaration in a shared comment block, and a
 stub's single declaration line each end ownership. The file's front matter, which no span
 reaches, still belongs to its first declaration without growing its body
-([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)), and in a kind that declares a `front-matter` field it is that
+([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)), and in a kind that declares a `front-matter` field it is that
 declaration's front-matter sections, outside the body ([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)).
 
 ### body.conflict: A body still in the middle of a merge
@@ -356,7 +356,7 @@ A conflict block opens at a `<<<<<<<` line and closes at the next `>>>>>>>` line
 Blocks are read off a file's raw lines, top to bottom, in two places:
 
 - **Every line of a Markdown file that declares an ID**: its preamble, its fences, and the lines after a heading that closed every body. Whether the file declares ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)) is read with fences ignored ([§DF-conflicted-declaration](../decisions/functional/DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing)).
-- **In a source file, the raw lines of each declaration's body** ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)), a docstring or `/** */` comment as much as a line-style run, and a block that opens on the line right after a line-style run ends ([§FS-languages.comment-block.close](FS-languages.md#comment-blockclose-find-the-close-boundary)), through its last line: a marker line is not a comment line, so a conflict inside a `///` or `#` run cuts the run at its opening marker.
+- **In a source file, the raw lines of each declaration's body** ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)), a docstring or `/** */` comment as much as a line-style run, and a block that opens on the line right after a line-style run ends ([§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block)), through its last line: a marker line is not a comment line, so a conflict inside a `///` or `#` run cuts the run at its opening marker.
 
 A marker line anywhere else is not looked at: in code outside those places, in a Markdown file that declares no ID, or in a file the scan does not read. A target a stub pairs with outside `[scan] include` is looked at as if it were scanned, and its blocks are reported at its own lines ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
 
@@ -433,22 +433,22 @@ A relative heading writes one `.` and exactly one component, a number `[0-9]+` o
 | the declaration | `## .format: Formatting` | `format` | `## format: Formatting` |
 | the declaration | `## .3 Third` | `3` | `## 3 Third` |
 
-A relative heading is refused for everything the complete-path heading would be: a name with `named_sections` off, the colon form on a purely numeric path, and a numeric path without its space or period; only a name needs `named_sections`, so with it off `### .1 Username` under `## 3. Third` is still `3.1`. A dotted heading not of this form — two components (`#### .a.b: Deep`), an empty one (`### .: Title`), or any refusal — declares nothing and stays an [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) error, whose message also shows the relative form ([§FS-declarations.checks.unmarked-heading.2.1](FS-declarations.md#checksunmarked-heading21-a-dotted-heading-is-also-shown-the-relative-form)).
+A relative heading is refused for everything the complete-path heading would be: a name with `named_sections` off, the colon form on a purely numeric path, and a numeric path without its space or period; only a name needs `named_sections`, so with it off `### .1 Username` under `## 3. Third` is still `3.1`. A dotted heading not of this form — two components (`#### .a.b: Deep`), an empty one (`### .: Title`), or any refusal — declares nothing and stays an [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) error, whose message also shows the relative form ([§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)).
 
-The form is read on the ATX headings of a Markdown declaration body that [§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate) judges, and on the headings a source doc-comment's section reading sees ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)), under the same form, parent, lock and display rules, the citations below it belonging to its section. In a doc-comment the parent is read from the section map the record gives that body, and a mixed canonical path ([§FS-config.3.3.1](FS-config.md#331-named-components)) is declared in both spellings, a complete `/// ### 1.goals: Goals` and a relative `/// ### .goals: Goals` under `/// ## 1. Overview` ([§DF-number-name-sections.decision.doc-comments](../decisions/functional/DF-number-name-sections.md#decisiondoc-comments-doc-comments-wait-for-639), [§DF-doc-comment-relative-headings](../decisions/functional/DF-doc-comment-relative-headings.md#df-doc-comment-relative-headings-a-relative-heading-in-a-doc-comment-warns-in-0180-and-is-a-section-from-0190)). Everywhere else a dotted line keeps the meaning it has without this form: in a file title before the first declaration, after a heading that closed the body, in a file or comment block with no declaration, and in a fence or raw HTML block.
+The form is read on the ATX headings of a Markdown declaration body that [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) judges, and on the headings a source doc-comment's section reading sees ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)), under the same form, parent, lock and display rules, the citations below it belonging to its section. In a doc-comment the parent is read from the section map the record gives that body, and a mixed canonical path ([§FS-config.3.3.1](FS-config.md#331-named-components)) is declared in both spellings, a complete `/// ### 1.goals: Goals` and a relative `/// ### .goals: Goals` under `/// ## 1. Overview` ([§DF-number-name-sections.decision.doc-comments](../decisions/functional/DF-number-name-sections.md#decisiondoc-comments-doc-comments-wait-for-639), [§DF-doc-comment-relative-headings](../decisions/functional/DF-doc-comment-relative-headings.md#df-doc-comment-relative-headings-a-relative-heading-in-a-doc-comment-warns-in-0180-and-is-a-section-from-0190)). Everywhere else a dotted line keeps the meaning it has without this form: in a file title before the first declaration, after a heading that closed the body, in a file or comment block with no declaration, and in a fence or raw HTML block.
 
 #### section.relative.parent: The parent
 
 A relative heading at level N takes as its parent the nearest heading before it in the same body that is shallower than N, a heading inside a fence being no candidate. That heading must be exactly level N−1 and be the declaration heading or a **usable** section: one the scan recorded, whose path is not an orphan ([§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path)), and which is not any claimant of a path claimed twice ([§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)). A parent with its own depth finding ([§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)) is usable, and its child does not repeat the finding. Otherwise — a skipped level, a plain heading, an orphan, a duplicate, a failed relative heading, a would-be parent inside a fence — the relative heading declares nothing and is a [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent) error naming the parent it needed.
 
-Relative headings chain: `#### .1:` under `### .user:` under `## format:` is `format.user.1`. A relative and a complete-path heading that resolve to one canonical path, or two relative ones that do, are a [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path) like any two claimants. A relative heading is one level below its parent by construction, so it never carries a depth finding of its own ([§FS-config.3.3.2](FS-config.md#332-section_heading_levels--heading-depth-against-path-depth)). A relative heading always needs its actual parent, even where a complete-path heading's numeric prefix need not be recorded ([§FS-config.3.3.3](FS-config.md#333-every-prefix-of-a-name-bearing-path-is-recorded)).
+Relative headings chain: `#### .1:` under `### .user:` under `## format:` is `format.user.1`. A relative and a complete-path heading that resolve to one canonical path, or two relative ones that do, are a [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path) like any two claimants. A relative heading is one level below its parent by construction, so it never carries a depth finding of its own ([§FS-config.3.3.2](FS-config.md#332-section_heading_levels--heading-depth-against-path-depth)). A relative heading always needs its actual parent, even where a complete-path heading's numeric prefix need not be recorded ([§FS-config.3.3.1](FS-config.md#331-named-components)).
 
 #### section.relative.shown: How a relative heading is shown
 
 Every surface that reports a coordinate reports the canonical path. Three surfaces print a heading line for the reader to copy a coordinate from, and print a relative heading with its canonical path in place of the relative one, at its written depth and with everything after the path kept:
 
 - the section map ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)): `### .1: Username` under `## format: Formatting` maps as `### format.1: Username`, and `### .1. Username` under `## 3. Third` as `### 3.1. Username`;
-- the title hover, `` `format.1: Username` `` ([§FS-lsp.1.2.4](FS-lsp.md#124-the-title-hovers-text));
+- the title hover, `` `format.1: Username` `` ([§FS-lsp.1.2.3](FS-lsp.md#123-title-hover));
 - a read that selects a section, by its coordinate or by `--section`, on the slice's first line, the section's own heading, in all four modes — the default read, `--brief`, `--toc` and `--full` — for a Markdown and a doc-comment body alike: with `### .2: Ceiling` under `## retry: Retry schedule` in `FS-billing`, `grund FS-billing.retry.2` and `grund FS-billing --section retry.2` both open with `### retry.2: Ceiling`, the slice's self-label ([§FS-show.2.2](FS-show.md#22-section), [§DF-show-selected-relative-heading](../decisions/functional/DF-show-selected-relative-heading.md#df-show-selected-relative-heading-a-read-of-a-selected-section-names-the-section-it-read)). `md` and the JSON `body` carry the same line as `text`, and `list --size` measures it ([§FS-list.3.4.1](FS-list.md#341-measured-strings)).
 
 Every other heading line a read prints, a fenced one among them, shows a relative heading as written, in the JSON `body` of those reads too. A `--toc` read's JSON carries the map's lines in `body`, and each `sections[]` entry's `path` is the canonical path, its `title` and `anchor` those of the heading as written. A link anchor follows the heading as written and rendered, so `### .2: Ceiling` keeps `2-ceiling` ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)), and a doc-comment section's anchor stays null. No command rewrites a relative heading into its complete form or back in the file ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten)), and the expansion, from the recorded parent, is a structural slice, not a summary ([§FS-non-goals.14](FS-non-goals.md#14-generated-summaries-token-saving-inside-check)).
@@ -497,9 +497,9 @@ specified here.
 A case declaration is located at its directory, line 1. It is never a stub and has no sections,
 so a citation of it with a section suffix names a section that does not exist ([§FS-show.2.4](FS-show.md#24-e2e-cases)),
 and no title, which grund does not make up from the name: `grund list` leaves its title column
-empty and its JSON title is `null` ([§FS-list.3.1.1](FS-list.md#311-row-notes), [§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)). Its body is the
+empty and its JSON title is `null` ([§FS-list.3.1](FS-list.md#31---format-text-default), [§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)). Its body is the
 manifest `grund E2E-<name>` prints ([§FS-show.2.4](FS-show.md#24-e2e-cases)), and a case nothing cites is not reported as
-unused ([§FS-check.4.1.3](FS-check.md#413-e2e-declarations-are-exempt)).
+unused ([§FS-check.4.1](FS-check.md#41-unused-declaration)).
 
 ### e2e-case.walk: The walk stops at a case directory
 
@@ -507,7 +507,7 @@ A case directory is a boundary of the ordinary walk: the case is registered thro
 manifest, and the walk does not descend into it, so nothing of the fixture repository it
 carries — its own `grund.toml`, its specs, its nested cases — is read as a declaration or a
 citation of this project. The boundary holds wherever the walk would enter the directory, under
-its own name or through a symlink that resolves to it, and `--full` keeps it ([§FS-check.1.3.1](FS-check.md#131-the-scan-covers-the-whole-config-root)).
+its own name or through a symlink that resolves to it, and `--full` keeps it ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)).
 It stops a walk that would enter a case, not one that starts below it: a path argument naming a
 file or directory inside a case directory is where that run's walk starts
 ([§FS-scan.path.discovery](FS-scan.md#pathdiscovery-a-path-is-where-discovery-starts)), and it is read.
@@ -517,7 +517,7 @@ file or directory inside a case directory is where that run's walk starts
 A case is found by the ordinary walk and its read predicate, with no exception: below a scan
 root, a case directory that `exclude` or an ignore file matches, a `[scan] exclude` name in a
 version 1 configuration, is not read, `--full` or not
-([§FS-config-v2.schema.sources.exclude.roots](FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters), item 2), wherever the cases folder lies, listed by the
+([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list), item 2), wherever the cases folder lies, listed by the
 walk or a link out of the project the walk skips. An excluded case declares no ID, so a citation of it dangles,
 `grund list` does not name it, and nothing in it can fail the run. No other reason the walk
 has not to enter a directory, such as a link out of the project or another project's tree,
@@ -548,7 +548,7 @@ Each failing file or directory is its own report, in one case or two, and the ru
 
 A run narrowed to a path holds the failure exactly when the path holds that file as the tree
 spells it, through a link that resolves to that spelling included, and otherwise cautions, as
-[§FS-check.1.3.6.3](FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud) says. A file reported at several spellings is one failure and one line
+[§FS-check.1.3.6](FS-check.md#136-an-explicit-path-still-narrows) says. A file reported at several spellings is one failure and one line
 ([§FS-check.2.4.2](FS-check.md#242-one-failure-one-line)). A fixture directory reported at another spelling is one line only where the
 report kept this spelling as a name of the failure, and a run holding this spelling still holds
 that line; otherwise each spelling reported is a line of its own. What
@@ -572,11 +572,11 @@ Moved to [§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-
 
 #### checks.duplicate.2: Stubs to one target stand for its declarations once
 
-Moved to [§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once).
+Moved to [§FS-declarations.stubs.pairing](FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at).
 
 #### checks.duplicate.3: A declaration reached through stubs is named at its target
 
-Moved to [§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target).
+Moved to [§FS-declarations.stubs.pairing](FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at).
 
 ### checks.declaration-near-miss: Declaration near miss
 
@@ -595,17 +595,17 @@ A stub ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stu
 link resolves to, when the target is a file the scan does not read, one an exclude or an
 enabled ignore file keeps out among them ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)), and when the target, read
 as [§FS-declarations.stubs.target](FS-declarations.md#stubstarget-what-a-stubs-target-gives-it) reads it, does not declare the ID. A heading of the ID inside a
-fence of the target ([§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)) or a stub in it
-([§FS-declarations.stubs.target.4](FS-declarations.md#stubstarget4-a-stub-in-the-target-declares-nothing)) declares nothing, so a chain of stubs is broken at its first
+fence of the target ([§FS-declarations.stubs.target](FS-declarations.md#stubstarget-what-a-stubs-target-gives-it)) or a stub in it
+([§FS-declarations.stubs.target](FS-declarations.md#stubstarget-what-a-stubs-target-gives-it)) declares nothing, so a chain of stubs is broken at its first
 link.
 
 #### checks.broken-stub.1: The target is read as a save would write it
 
-Moved to [§FS-declarations.stubs.target.1](FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it).
+Moved to [§FS-declarations.stubs.target](FS-declarations.md#stubstarget-what-a-stubs-target-gives-it).
 
 #### checks.broken-stub.2: A heading inside a fence of the target declares nothing
 
-Moved to [§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing).
+Moved to [§FS-declarations.stubs.target](FS-declarations.md#stubstarget-what-a-stubs-target-gives-it).
 
 #### checks.broken-stub.3: A target the scan does not read declares nothing
 
@@ -647,13 +647,13 @@ skills/review/SKILL.md:1: error: FS-002-review must not be declared in skills/ (
 
 Each path that reaches a file is judged at its own path, a value source or Markdown file linked into another kind's home included ([§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling), [§FS-values.2.3](FS-values.md#23-duplicates-and-ownership)). In version 1, a file that no configured home holds, or that several hold because homes overlap or nest, belongs to the complement ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), so the other-kind and non-citable placements do not judge it, while a single-file kind's declaration there is refused as anywhere else. In version 2 every scanned file has one owner ([§FS-config-v2.schema.places.ownership](FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder), [§DF-v2-place-ownership](../decisions/functional/DF-v2-place-ownership.md#df-v2-place-ownership-in-v2-the-row-named-code-is-the-complement-and-a-file-belongs-to-its-listed-row-or-else-its-deepest-folder)): a declaration of `K` stands in a file `K` owns, or in one the complement owns unless `K` is a single-file kind, and the message names the owning place.
 
-Beneath a nested project config that no `[workspace] members` entry lists, and that is therefore not read, the message says why the enclosing project's homes apply, and its repair is the row's `unlisted` case, with `roots` where the directory is itself a scan root, because an exclusion does not prune a root ([§FS-check.1.3.2](FS-check.md#132-the-wider-scan-reads-a-superset-each-file-once)):
+Beneath a nested project config that no `[workspace] members` entry lists, and that is therefore not read, the message says why the enclosing project's homes apply, and its repair is the row's `unlisted` case, with `roots` where the directory is itself a scan root, because an exclusion does not prune a root ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)):
 
 ```text
 packages/notify/requirements.md:3: error: FS-email must be declared in requirements.md (single-file kind) — packages/notify/grund.toml (project notify) is not read: no [workspace] members entry lists packages/notify; kind homes from grund.toml (project shop) apply; add "packages/notify" to [workspace] members in grund.toml, or exclude "packages/notify/" with [schema.sources] exclude in grund.toml
 ```
 
-The nested config is named as discovery finds it, `.agents/grund.toml` included ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), with its project name where that can be read. Its directory stays ordinary tree to the enclosing scan ([§FS-check.1.3.1](FS-check.md#131-the-scan-covers-the-whole-config-root)). A plain nested config, one with no `[workspace]` table, gets no finding of its own ([§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)), and an unlisted nested `[workspace]` block is reported as [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) says. Where an ancestor's `members` or `optional_members` value cannot be read, the context is left out ([§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable)).
+The nested config is named as discovery finds it, `.agents/grund.toml` included ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), with its project name where that can be read. Its directory stays ordinary tree to the enclosing scan ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)). A plain nested config, one with no `[workspace]` table, gets no finding of its own ([§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)), and an unlisted nested `[workspace]` block is reported as [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) says. Where an ancestor's `members` or `optional_members` value cannot be read, the context is left out ([§FS-workspace.6.1.7](FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run)).
 
 ### checks.duplicate-section: Duplicate section path
 
@@ -671,7 +671,7 @@ That this rule and `show` read one section record is [§REQ-one-answer.sections.
 
 ### checks.orphan-section: Orphan name-bearing section path
 
-A name-bearing section heading is an orphan when some proper prefix of its path is not recorded in the same declaration ([§FS-config.3.3.3](FS-config.md#333-every-prefix-of-a-name-bearing-path-is-recorded)), even where another heading visually contains it, and it is one error at its line; purely numeric paths are never judged:
+A name-bearing section heading is an orphan when some proper prefix of its path is not recorded in the same declaration ([§FS-config.3.3.1](FS-config.md#331-named-components)), even where another heading visually contains it, and it is one error at its line; purely numeric paths are never judged:
 
 ```text
 docs/functional-spec/FS-parents.md:13: error: orphan section FS-orphan.missing.x: missing prefix FS-orphan.missing; declare the prefix as a heading above it
@@ -712,7 +712,7 @@ A plain same-or-higher heading ends a body as a declaration does, and a stub's b
 
 ### checks.unmarked-heading: Unmarked Markdown heading
 
-An ATX heading in a scanned Markdown file that lies inside a declaration's body, deeper than its heading, and is neither a declaration nor a numeric or enabled named section, written with its complete path or as a relative heading ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)), is one error at its line. It names the innermost declaration whose body holds it ([§FS-declarations.section.map.nested](FS-declarations.md#sectionmapnested-after-a-nested-declaration-the-enclosing-body-owns-the-heading)). A heading inside a fence is content and outside the rule ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)). A well-formed relative heading without a usable parent is [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent) instead, while a dotted heading not in the relative form ([§FS-declarations.section.relative.form](FS-declarations.md#sectionrelativeform-the-form)) is judged here. `--full` does not take the rule past the configured scope ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)). No command numbers the heading ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)), and in the editor the finding's range is the complete authored ATX heading ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+An ATX heading in a scanned Markdown file that lies inside a declaration's body, deeper than its heading, and is neither a declaration nor a numeric or enabled named section, written with its complete path or as a relative heading ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)), is one error at its line. It names the innermost declaration whose body holds it ([§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)). A heading inside a fence is content and outside the rule ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)). A well-formed relative heading without a usable parent is [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent) instead, while a dotted heading not in the relative form ([§FS-declarations.section.relative.form](FS-declarations.md#sectionrelativeform-the-form)) is judged here. `--full` does not take the rule past the configured scope ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)). No command numbers the heading ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)), and in the editor the finding's range is the complete authored ATX heading ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
 
 ```text
 docs/FS-heading-policy.md:5: error: unmarked heading inside FS-heading-policy; number it (### 1. Origin of the fails queues) as FS-heading-policy.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
@@ -738,7 +738,7 @@ The relative and path clauses appear only where the heading they show would decl
 - **Relative.** A heading whose text begins with `.` is shown the relative heading for the suggested coordinate, under that coordinate less its last component, which must be the declaration or a usable section ([§FS-declarations.section.relative.parent](FS-declarations.md#sectionrelativeparent-the-parent)). The relative heading is the authored `#` run, a space, `.` and the last component, the title syntax the suggested heading uses, and the authored title less its leading dotted token, its first run of non-space characters, or `Untitled` where nothing is left.
 - **Field.** In a version-2 project, a heading one ATX level below its declaration's heading whose text equals a field's configured `title` or name, byte for byte, is shown the first such field in configuration order ([§FS-fields.declare.field](FS-fields.md#declarefield-a-field-is-a-table-under-its-kind)): the authored `#` run, a space, the field's name, `: `, and its title, or the heading text where it has none. Numbering that heading leaves the field missing; only the named form declares it ([§FS-fields.identity.name](FS-fields.md#identityname-a-field-is-the-direct-section-of-its-name)).
 - **Path.** A heading not beginning with `.` whose path is written in place but lacks a title (`### requirements.1`, `### requirements.3:`, `## 1.`), has a `_` in a named component, or puts a `:` after a purely numeric path (`## 1: Embedded`) gets the path clause naming its faults. `<path>` is the authored path without a trailing `:` or `.`, and `<shown heading>` is the authored `#` run, a space, that path with each `_` made `-`, then `: ` on a name-bearing path or `. ` on a numeric one, then the authored title, or `Untitled`. A lone component with nothing after it (`## background`) reads as a title, and a corrected name outside `[a-z][a-z0-9-]*` gets no clause. The shown path must have as many components as the heading sits levels below its declaration, a usable parent section where it has two or more, and named sections enabled where it is name-bearing, and be neither declared nor already shown in that body.
-- **Chapter.** Where a chapter rule counts the heading in its named form, the clause shows that form ([§FS-rules.7.2.1](FS-rules.md#721-display-name-comparison-context)).
+- **Chapter.** Where a chapter rule counts the heading in its named form, the clause shows that form ([§FS-rules.7.2](FS-rules.md#72-chapter-cardinality)).
 
 ### checks.oversized-lead: Oversized lead *(opt-in)*
 
@@ -752,13 +752,13 @@ The message gives the lead's measure in the configured unit, `2 words` above, an
 
 ### checks.conflict-marker: Unresolved merge conflict
 
-Each conflict block found where [§FS-declarations.body.conflict.where](FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for) looks is one error at the block's first line:
+Each conflict block found where [§FS-declarations.body.conflict.block](FS-declarations.md#bodyconflictblock-a-conflict-block) looks is one error at the block's first line:
 
 ```text
 docs/login.md:7: error: unresolved merge conflict in FS-login, lines 7–11: resolve it by hand
 ```
 
-The owners are the IDs the block names ([§FS-declarations.body.conflict.owners](FS-declarations.md#bodyconflictowners-which-declarations-a-block-names)), each spelled as its own project spells it, in a workspace-root run too, joined by `, ` and a final ` and `, or `outside any declaration` where it names none; a block of one line reads `line 7` in place of `lines 7–11`. In JSON, `sites` holds the block's first and last lines, in that order, or its one line. The message names no side and no command, because which text is the declaration's is the author's call ([§FS-declarations.requirements.actionable](FS-declarations.md#requirementsactionable-a-finding-is-located-at-the-fault-and-no-command-makes-the-fix--realized-directional-for-the-next-check)). A declaration line or heading inside the block raises its own findings too, beside this one. `--ignore conflict-marker` unlocks nothing, because `fmt` reads the block from the model ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model), [§DF-conflicted-declaration](../decisions/functional/DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing)).
+The owners are the IDs the block names ([§FS-declarations.body.conflict.block](FS-declarations.md#bodyconflictblock-a-conflict-block)), each spelled as its own project spells it, in a workspace-root run too, joined by `, ` and a final ` and `, or `outside any declaration` where it names none; a block of one line reads `line 7` in place of `lines 7–11`. In JSON, `sites` holds the block's first and last lines, in that order, or its one line. The message names no side and no command, because which text is the declaration's is the author's call ([§FS-declarations.requirements.actionable](FS-declarations.md#requirementsactionable-a-finding-is-located-at-the-fault-and-no-command-makes-the-fix)). A declaration line or heading inside the block raises its own findings too, beside this one. `--ignore conflict-marker` unlocks nothing, because `fmt` reads the block from the model ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model), [§DF-conflicted-declaration](../decisions/functional/DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing)).
 
 ### checks.parse-moves: Parse moves (not a code)
 

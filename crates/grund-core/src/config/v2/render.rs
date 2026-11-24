@@ -44,7 +44,7 @@ pub(crate) enum Emission {
     Every,
     /// The envelope, the `[workspace]` table and the description, leaving every
     /// other table to the v2 epoch: the candidate of a block with
-    /// `include_root = false` that migrates compactly (§FS-config-migrate.8.1.3).
+    /// `include_root = false` that migrates compactly (§FS-config-migrate.8.1).
     /// Only migration asks for it.
     Envelope,
 }
@@ -67,7 +67,7 @@ impl Project {
                     self.rules_tables(&mut out);
                     self.presentation_tables(&mut out);
                 }
-                // §FS-config-migrate.8.1.3: `project_description` is the one
+                // §FS-config-migrate.8.1: `project_description` is the one
                 // kept key whose v2 home is outside the envelope.
                 Emission::Envelope => {
                     if let Some(description) = &self.presentation.description {
@@ -251,7 +251,7 @@ impl Project {
         }
     }
 
-    /// §FS-config.4.2.4: the names of tables keyed by a row name, in the order
+    /// §FS-config.4.2: the names of tables keyed by a row name, in the order
     /// the file writes its `[schema.kinds]` rows, then each name that is no row
     /// in `written` order, then any left over, in name order. `config migrate`'s
     /// candidate prints in this order too (§FS-config-migrate.2.1).

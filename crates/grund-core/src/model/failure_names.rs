@@ -1,6 +1,6 @@
 //! The names a scan failure lost when the walk kept one line for its directory entry
 //! (§AR-scanner.1.entry, §FS-check.2.4.2), for the one question a narrowed run asks of them
-//! (§FS-check.1.3.6.3). Carried from the walk the way `walked_dirs` and `unread_roots` are.
+//! (§FS-check.1.3.6). Carried from the walk the way `walked_dirs` and `unread_roots` are.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

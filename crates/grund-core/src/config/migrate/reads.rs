@@ -1,4 +1,4 @@
-//! §FS-config-migrate.3.1.4.1, §FS-config-migrate.3.1.5.1: the files a refusal's
+//! §FS-config-migrate.3.1.4, §FS-config-migrate.3.1.5: the files a refusal's
 //! detail names are the ones the version 1 scan of this tree reads, by the scan's
 //! own walk (§AR-scanner.1). Config may not read the scanner (§AR-system.4), so
 //! the surface above it hands that walk down, as it hands `scope_on_disk`
@@ -21,7 +21,7 @@ use crate::model::normalize_path_lexically;
 pub(crate) type V1Walk<'a> = dyn Fn(Config) -> Result<Vec<PathBuf>> + 'a;
 
 /// What the version 1 scan reads, walked on first ask and cached as lexical paths
-/// for both refusal details (§FS-config-migrate.3.1.4.1, §FS-config-migrate.3.1.5.1).
+/// for both refusal details (§FS-config-migrate.3.1.4, §FS-config-migrate.3.1.5).
 pub(super) struct Reads<'a> {
     v1: &'a Project,
     walk_root: &'a Path,
@@ -32,7 +32,7 @@ pub(super) struct Reads<'a> {
 }
 
 impl<'a> Reads<'a> {
-    /// §FS-config-migrate.3.1.4.1: compare and name paths in lexical coordinates,
+    /// §FS-config-migrate.3.1.4: compare and name paths in lexical coordinates,
     /// including candidate scan roots; keep the original root for the v1 walk.
     pub(super) fn new(
         v1: &'a Project,
@@ -55,11 +55,11 @@ impl<'a> Reads<'a> {
 
     /// The files read that a `[scan] exclude` entry would stop, read alone as the
     /// version 2 glob it resembles, each met as the walk meets it, down from the
-    /// file's scan root (§FS-config-migrate.3.1.4.1, §AR-config.8.1). Named as
+    /// file's scan root (§FS-config-migrate.3.1.4, §AR-config.8.1). Named as
     /// [`Self::named`] names them.
     pub(super) fn stopped_by(&self, entry: &str) -> Result<Vec<String>> {
         let globs = ExcludeGlobs::alone(entry);
-        // §FS-config-migrate.3.1.4.1: an entry that stops nothing, or can match only the path it
+        // §FS-config-migrate.3.1.4: an entry that stops nothing, or can match only the path it
         // spells, asks the scan only for a path on disk; any other entry always asks.
         if (globs.is_none() || matches_only_its_path(entry)) && !self.on_disk(spelled_path(entry)) {
             return Ok(Vec::new());
@@ -77,10 +77,10 @@ impl<'a> Reads<'a> {
     }
 
     /// The files read at the literal `path` or below it: a home is a literal path,
-    /// not a glob (§FS-config-migrate.3.1.5.1). Both sides use lexical coordinates
-    /// (§FS-config-migrate.3.1.4.1). Named as [`Self::named`] names them.
+    /// not a glob (§FS-config-migrate.3.1.5). Both sides use lexical coordinates
+    /// (§FS-config-migrate.3.1.4). Named as [`Self::named`] names them.
     pub(super) fn under(&self, path: &str) -> Result<Vec<String>> {
-        // §FS-config-migrate.3.1.5.1: an inner home not on disk names nothing, and a walk
+        // §FS-config-migrate.3.1.5: an inner home not on disk names nothing, and a walk
         // that cannot run does not fail the run for it.
         if !self.on_disk(path) {
             return Ok(Vec::new());
@@ -89,12 +89,12 @@ impl<'a> Reads<'a> {
         Ok(self.named(self.files()?.iter().filter(|file| file.starts_with(&at))))
     }
 
-    /// Nobody reads a path not on disk (§FS-check.4.10.2).
+    /// Nobody reads a path not on disk (§FS-check.4.10).
     fn on_disk(&self, path: &str) -> bool {
         normalize_path_lexically(&self.root.join(path)).exists()
     }
 
-    /// §FS-config-migrate.3.1.4.1: the deepest place holding `file`, else the config root.
+    /// §FS-config-migrate.3.1.4: the deepest place holding `file`, else the config root.
     fn scan_root(&self, file: &Path) -> &Path {
         self.scan_roots
             .iter()
@@ -103,10 +103,10 @@ impl<'a> Reads<'a> {
             .map_or(self.root.as_path(), PathBuf::as_path)
     }
 
-    /// Lexical `files` from the lexical root (§FS-config-migrate.3.1.4.1), with `/`
+    /// Lexical `files` from the lexical root (§FS-config-migrate.3.1.4), with `/`
     /// and sorted as the printed names sort. A name that is not UTF-8 is printed
     /// with its bad bytes replaced, though the scan asked the path itself
-    /// (§FS-config-migrate.3.1.9).
+    /// (§FS-config-migrate.3.1.4).
     fn named<'f>(&self, files: impl Iterator<Item = &'f PathBuf>) -> Vec<String> {
         let mut out: Vec<String> = files
             .filter_map(|file| file.strip_prefix(&self.root).ok())
@@ -128,7 +128,7 @@ impl<'a> Reads<'a> {
     /// it (§FS-config.3.5.16, §FS-config-migrate.3.1.4). A walk that fails as a
     /// whole fails the run, since nothing can then say what version 1 reads.
     /// Cache its paths in lexical coordinates for both refusal details, without
-    /// changing read membership or resolving symlinks (§FS-config-migrate.3.1.4.1).
+    /// changing read membership or resolving symlinks (§FS-config-migrate.3.1.4).
     fn files(&self) -> Result<&[PathBuf]> {
         if let Some(files) = self.files.get() {
             return Ok(files);

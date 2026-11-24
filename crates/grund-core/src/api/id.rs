@@ -69,7 +69,7 @@ pub struct IdProposal {
 #[non_exhaustive]
 pub enum IdProposalOutcome {
     Proposed(IdProposal),
-    /// The kind is not one `id` can mint from (§FS-id.1.1): a name the config does
+    /// The kind is not one `id` can mint from (§FS-id.1): a name the config does
     /// not hold, or one it holds with `citable = false` (§FS-config.3.4.1).
     /// `headline` says which — the two are different mistakes, and the caller
     /// prints the same shape for both, with `known` listing the citable kinds.
@@ -84,8 +84,8 @@ pub enum IdProposalOutcome {
 
 impl IdProposalOutcome {
     /// The `known kinds:` line a frontend prints under an `UnknownKind` headline
-    /// (§FS-id.1.1): the one renderer every refusal that names kinds shares, so
-    /// a project with no kinds reads `none` here too (§FS-list.1.1.1).
+    /// (§FS-id.1): the one renderer every refusal that names kinds shares, so
+    /// a project with no kinds reads `none` here too (§FS-list.1.1).
     pub fn known_kinds_line(known: &[String]) -> String {
         crate::config::known_kinds_line(known.iter().map(String::as_str))
     }
@@ -98,7 +98,7 @@ pub fn propose_id(kind: &str, title: &str, opts: IdOpts) -> Result<IdProposalOut
 }
 
 /// [`propose_id`] for a frontend that also renders the run's `[workspace]`
-/// warnings (§FS-check.4.10.7): `id` resolves a block's member
+/// warnings (§FS-check.4.10): `id` resolves a block's member
 /// boundary like every other walking command, and the outcome is an enum with
 /// nowhere to carry a caution.
 #[doc(hidden)]
@@ -128,7 +128,7 @@ fn propose_id_run(
     let scope = KindScope::Project("");
     let headline = match table.verdict(scope, kind) {
         KindVerdict::Citable => None,
-        // §FS-id.1.1: a non-citable kind is configured and still has nothing to
+        // §FS-id.1: a non-citable kind is configured and still has nothing to
         // mint, so it is refused in the same shape with its reason in place of
         // "unknown" — a real row in the table is not a typo (§FS-errors.2.5.1).
         KindVerdict::NonCitable(entry) => Some(entry.non_citable_reason(Quote::Backtick)),
@@ -182,7 +182,7 @@ fn propose_id_run(
         },
     };
     let rendered = format_id(&id, &config, opts.width);
-    // §FS-id.3.2: print only what `check` accepts, read by the parser a declaration is read by.
+    // §FS-id.3: print only what `check` accepts, read by the parser a declaration is read by.
     if config.grammar.parse_token(&rendered).as_ref() != Some(&id) {
         return Ok(IdProposalOutcome::Rejected {
             message: format!(

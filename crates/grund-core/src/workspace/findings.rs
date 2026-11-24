@@ -13,7 +13,7 @@
 //!
 //! The anchor beside each caution is the other half of that: the `grund.toml`
 //! line the message already names, carried as the finding's own location so an
-//! editor places it without parsing the text (§FS-lsp.1.1.3, §AR-bindings.2).
+//! editor places it without parsing the text (§FS-lsp.1.1, §AR-bindings.2).
 
 use crate::sources::path_exists;
 use std::path::{Path, PathBuf};
@@ -24,7 +24,7 @@ use crate::config::{Config, ConfigLocation, config_file_in, report_path, root_sc
 use crate::model::{Code, Diagnostic, LANDED_CLAUSE, normalize_path_lexically};
 use anyhow::Result;
 
-/// §FS-workspace.2.1.1: each of the block's own walk roots that a member root
+/// §FS-workspace.2.1: each of the block's own walk roots that a member root
 /// covers, rendered `` `<root>` in `<member>` `` — empty unless **every** root
 /// that exists is covered, because a partly covered scope is §FS-workspace.6's
 /// boundary working as designed and has to stay silent.
@@ -35,7 +35,7 @@ use anyhow::Result;
 /// home or an unwalked home changes the set (§FS-config.3.5.8). `--full` is never
 /// asked, because the flag adds the config root as a root while the boundary
 /// still prunes — the finding is a property of the configuration, not of one
-/// walk (§FS-check.1.3.1).
+/// walk (§FS-check.1.3).
 ///
 /// Why a root that is not on disk is skipped: the walk skips it too, before it
 /// prunes, so it is read by nobody and rescues nothing. Without that filter a
@@ -48,7 +48,7 @@ use anyhow::Result;
 /// the member beside it is the entry as written, which is what it was resolved
 /// from.
 pub(crate) fn absorbed_scan_roots(config: &Config, members: &[WorkspaceMember]) -> Vec<String> {
-    // §FS-workspace.2.1.2: a block with `include_root = false` is not a project, so
+    // §FS-workspace.2.1: a block with `include_root = false` is not a project, so
     // it has no scan of its own to lose — what its own files cost is the same
     // question asked from the other side, and §FS-check.4.10 is where it is asked.
     if !config.workspace_include_root || members.is_empty() {
@@ -85,7 +85,7 @@ pub(crate) fn absorbed_scan_roots(config: &Config, members: &[WorkspaceMember]) 
 /// reading of `[scan] include`: the question is about the set §FS-workspace.6's
 /// boundary prunes. `--full` is never asked, because the flag adds the config
 /// root as a root while the boundary still prunes — both findings are properties
-/// of the configuration, not of one walk (§FS-check.1.3.1).
+/// of the configuration, not of one walk (§FS-check.1.3).
 ///
 /// Why a root that is not on disk is dropped: the walk skips it before it prunes,
 /// so it is read by nobody and rescues nobody. Comparison is canonical and by
@@ -110,7 +110,7 @@ pub(crate) fn block_scope_roots<'a>(
 /// A scope root named by its path **under the block root** — the config's
 /// spelling normalized rather than the spelling itself, so `./docs/` is named
 /// `docs` and the block root itself is named `.`, never an empty path
-/// (§FS-check.4.10.5) — because a canonical root renders as nothing when it equals
+/// (§FS-check.4.10) — because a canonical root renders as nothing when it equals
 /// the render base and as an absolute path when it does not (§FS-errors.4).
 ///
 /// §FS-check.3.30: normalizing folds `.` and `..` lexically, on the spelling
@@ -163,7 +163,7 @@ pub(crate) fn reject_absorbed_scan(config: &Config, members: &[WorkspaceMember])
     ))
 }
 
-/// §FS-check.4.10.2: the roots of a block's own scope that its members leave to the
+/// §FS-check.4.10: the roots of a block's own scope that its members leave to the
 /// block itself — [`block_scope_roots`] read from the uncovered end, and from the
 /// boundary roots a populated block already carries rather than from an expanded
 /// member list.
@@ -187,7 +187,7 @@ pub(crate) fn uncovered_block_scope_roots(config: &Config) -> Vec<PathBuf> {
         .collect()
 }
 
-/// The sentence §FS-check.4.10.5 carries, built apart from the diagnostic that
+/// The sentence §FS-check.4.10 carries, built apart from the diagnostic that
 /// carries it so a test can read it: the tree no scan reaches,
 /// what that costs, and the two remedies the ticket itself named.
 ///
@@ -198,21 +198,21 @@ pub(crate) fn uncovered_block_scope_roots(config: &Config) -> Vec<PathBuf> {
 /// (§DF-unread-opted-out-block.2.4).
 /// It names no release: there is none.
 pub(crate) fn unread_block_warning(root: &str) -> String {
-    // §FS-check.4.10.5: another project may use either supported source model.
+    // §FS-check.4.10: another project may use either supported source model.
     format!(
         "no project scans `{root}`, so its citations are never checked. \
          Set include_root = true, or configure another project's source scope to read it."
     )
 }
 
-/// §FS-check.4.10.11: the unread block as one of the run's warnings, once a walker
+/// §FS-check.4.10: the unread block as one of the run's warnings, once a walker
 /// has named the first root of its own scope that holds a file it would have
 /// read.
 ///
 /// It **anchors at the block's `include_root` line**, falling back to its
 /// `[workspace]` line exactly as the breadcrumb does — the key that took the
 /// block's files out of every scan is the line the reader should open
-/// (§FS-lsp.1.1.3).
+/// (§FS-lsp.1.1).
 pub(crate) fn unread_block_diagnostic(config: &Config, root: &str) -> Diagnostic {
     config_location_diagnostic(
         Code::UNREAD_WORKSPACE_BLOCK,
@@ -245,7 +245,7 @@ pub(crate) fn undecidable_ancestor_claim_warning(
 ///
 /// It **anchors at the config it could not read — that file and no line**,
 /// because the `members` value whose line would be the anchor is exactly what
-/// could not be obtained (§FS-lsp.1.1.3). The bytes the CLI prints are the
+/// could not be obtained (§FS-lsp.1.1). The bytes the CLI prints are the
 /// sentence above, unchanged.
 pub(crate) fn undecidable_ancestor_claim_diagnostic(
     config_path: &Path,
@@ -264,7 +264,7 @@ pub(crate) fn undecidable_ancestor_claim_diagnostic(
 }
 
 /// One `[workspace]` caution anchored at the config key its own breadcrumb names
-/// (§FS-check.4.10.5).
+/// (§FS-check.4.10).
 ///
 /// The message keeps the `<config>:<line>:` breadcrumb §FS-config.4.3 gives a
 /// diagnostic about a config key, byte for byte; the anchor beside it is the

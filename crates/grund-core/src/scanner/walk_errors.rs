@@ -240,7 +240,7 @@ fn walk_skips_link(
         // §FS-scan.scope.links.owed: a loop faces what a directory faces, never `extensions`.
         Resolution::Loop => depth > 0 && loop_skipped(path, filter, schema, frame),
         Resolution::NotDirectory | Resolution::Unresolved(_) => {
-            // §FS-config-v2.schema.sources.exclude.roots: a pattern keeps a dangling file link out.
+            // §FS-config-v2.schema.sources.exclude: a pattern keeps a dangling file link out.
             name_refusal(path, schema).is_some()
                 || filter.kept_out_by_exclude(path, false)
                 || walk_ignores(path, false, schema, frame)
@@ -379,7 +379,7 @@ fn pathless_io_kind(err: &ignore::Error) -> Option<io::ErrorKind> {
 /// where the walk was never going to read through it: the hidden-name and
 /// `exclude` tests — a version 1 name or a version 2 pattern, asked of `filter`,
 /// the walk's own directory filter, which never applies them to an error entry
-/// (§FS-config-v2.schema.sources.exclude.roots) — and the ignore files, which
+/// (§FS-config-v2.schema.sources.exclude) — and the ignore files, which
 /// reach a link the walker could not resolve no other way.
 ///
 /// `ancestor` is the directory the link reaches back into, under any spelling that
@@ -426,7 +426,7 @@ pub(super) fn loop_reason(bare: &str, name: Option<String>) -> String {
 /// was found: what a directory faces, the hidden-name and `[scan] exclude` tests and the
 /// ignore files as a directory, and never `extensions` (§FS-scan.scope.links.owed).
 /// The exclude test is the walk filter's own, so a v2 pattern keeps a loop out as it keeps
-/// out a directory (§FS-config-v2.schema.sources.exclude.roots), and the ignore files judge
+/// out a directory (§FS-config-v2.schema.sources.exclude), and the ignore files judge
 /// a link asked as a directory by their rules, whether or not it opens.
 fn loop_skipped(link: &Path, filter: &WalkDirFilter, schema: &Schema, frame: Frame<'_>) -> bool {
     filter.kept_out_by_exclude(link, true) || walk_ignores(link, true, schema, frame)

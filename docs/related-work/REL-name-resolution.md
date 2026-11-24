@@ -84,7 +84,7 @@ Unison codebase is never in a broken state, even midway through a refactoring."
   are the same in every host ([§GOAL-polyglot-citation.1](../goals.md#1-what-cleanly-means)).
 - Like the scope-graph calculus, grund finds every candidate. A number-only shorthand that
   matches several declarations is reported with the sorted, complete list of them
-  ([§FS-check.3.13.3](../functional-spec/FS-check.md#3133-one-finding-per-site-in-three-forms)).
+  ([§FS-check.3.13](../functional-spec/FS-check.md#313-number-only-shorthand-citation)).
 - grund's scanner works the way an island grammar's name suggests: it recognises
   declarations and `§` citations in Markdown and in source files, and passes over the text
   around them without parsing it ([§AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection), [§AR-scanner.4.2.2](../architecture/AR-scanner.md#422-recognition-not-parsing)).

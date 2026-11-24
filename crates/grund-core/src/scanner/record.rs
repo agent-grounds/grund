@@ -19,8 +19,8 @@ use crate::model::{
 use super::context::markdown_heading_level;
 
 /// Every comment block of a source file, by form, with whether its language calls
-/// it documentation (§FS-languages.comment-block.forms, §FS-inline-citation-style.1.1.1)
-/// and whether it may declare (§FS-config-v2.schema.sources.declarations.gate): the
+/// it documentation (§FS-languages.comment-block, §FS-inline-citation-style.1.1.2)
+/// and whether it may declare (§FS-config-v2.schema.sources.declarations): the
 /// one walk the body span, the inline-note sites, the grounding structure, the
 /// formatter and the editor all read (§AR-scanner.2.8.1).
 pub(crate) fn walk_blocks(lines: &[&str], reading: &FileReading<'_>) -> Vec<RecordedBlock> {
@@ -51,7 +51,7 @@ pub(crate) fn walk_blocks(lines: &[&str], reading: &FileReading<'_>) -> Vec<Reco
                 end: end + 1,
                 closed: !matches!(kind, CommentBlockKind::Block { closed: false }),
                 doc: is_doc(doc_rule),
-                // §FS-config-v2.schema.sources.declarations.gate: decided once per block,
+                // §FS-config-v2.schema.sources.declarations: decided once per block,
                 // from the language and the block alone, citation or none.
                 declares: declaration_rule.is_none_or(|rule| reading.declares(is_doc(rule))),
                 form: match kind {
@@ -64,7 +64,7 @@ pub(crate) fn walk_blocks(lines: &[&str], reading: &FileReading<'_>) -> Vec<Reco
         .collect()
 }
 
-/// §FS-config-v2.schema.sources.declarations.gate: whether a line in declaration
+/// §FS-config-v2.schema.sources.declarations: whether a line in declaration
 /// position at `lineno` may declare. In a v2 source file only a line of an
 /// eligible comment block of the file's own language may; a Markdown heading and
 /// every v1 line are not asked (§FS-config.5.2).
@@ -197,7 +197,7 @@ pub(super) fn settle_headings(
 
 /// Add the plain headings of the doc-comments that hold a declaration, read through
 /// their envelope (§FS-languages.comment-wrapper.headings), before the parent pass
-/// reads them as relative headings and parents (§FS-declarations.section.relative.where).
+/// reads them as relative headings and parents (§FS-declarations.section.relative.form).
 /// `bodies` maps each declaration line to its body end and heading level.
 pub(super) fn record_doc_comment_plain_headings(
     record: &mut FileRecord,

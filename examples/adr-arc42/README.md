@@ -130,7 +130,7 @@ Read it as the two formats:
   `no other chapter except numbered ones (must)` refuses any other named
   chapter, such as an `Alternatives` chapter, unless the kind declares it.
 - **ADR at `docs/`** is not a typo. A kind's index must be a file inside the
-  kind's place ([§FS-config.3.4.2.3](../../docs/functional-spec/FS-config.md#3423-a-named-index-is-a-file-inside-folder-that-is-read-as-markdown)), so the row's place is `docs/` and its index is
+  kind's place ([§FS-config.3.4.2](../../docs/functional-spec/FS-config.md#342-index--the-kinds-index-file)), so the row's place is `docs/` and its index is
   `arc42/09_architecture_decisions.md`. The deeper `arc42` place and the two
   listed chapter files take everything else, which leaves `docs/adr/` to the
   records. The view does not print the index.
@@ -350,7 +350,7 @@ A status spelled `acepted` is then an error at its line in the front matter,
 `superseded by ADR-0123` is a value only if every successor is listed, because
 `one_of` is a closed list matched byte for byte. Write `status: superseded`
 and cite the successor in a key beside it; a citation in the front matter
-belongs to the record ([§FS-check.1.1.5.2.1](../../docs/functional-spec/FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)), so it must resolve:
+belongs to the record ([§FS-check.1.1.5.2](../../docs/functional-spec/FS-check.md#1152-front-matter-holds-no-heading)), so it must resolve:
 
 ```yaml
 status: superseded
@@ -480,7 +480,7 @@ What it costs:
   misplaced; only chapter 9's index finding catches it.
 - **The arc42 chapters themselves are not checked.** Nothing says which files a
   place must hold, and even a listed place that does not exist is quiet
-  ([§FS-config-v2.schema.places.boundaries.4](../../docs/functional-spec/FS-config-v2.md#schemaplacesboundaries4-a-missing-place-is-quiet)), so deleting `12_glossary.md`
+  ([§FS-config-v2.schema.places.boundaries](../../docs/functional-spec/FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name)), so deleting `12_glossary.md`
   still passes. Their headings stay exactly arc42's because no rule reads them.
 - **arc42's quality goal table becomes headings.** arc42 suggests a table of
   goals, but a declaration is a heading. Chapter 1 is also wholly the `QG`

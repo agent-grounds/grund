@@ -118,7 +118,7 @@ mod scanner;
 // set, the citation-to-target function and the two answers read off a recorded
 // span are declared in `resolver/` (§AR-resolver).
 mod resolver;
-// §AR-rules.placement / §FS-rules.11: controlled-English parsing and
+// §AR-rules.placement / §AR-rules.1: controlled-English parsing and
 // producer-neutral fact evaluation meet only inside this production component.
 mod rules;
 // §AR-system.2.6: the checker is one Rust module too, so every rule and the
@@ -190,7 +190,7 @@ pub use grammar::Grammar;
 // hidden, the concern records a `grund.toml` lowers to (§AR-config.1), which
 // still move (§FS-schema.13).
 pub use config::PointSizeUnit;
-// §FS-show.3.5 / §FS-refs.3.1.1: frontend-only prose and annotations,
+// §FS-show.3.5 / §FS-refs.3.1: frontend-only prose and annotations,
 // outside the embedding result records.
 #[doc(hidden)]
 pub use api::{
@@ -298,7 +298,7 @@ pub use model::{ClauseBy, CodeCase, CodeClause, CodeEnabled, CodeFix, CodeSeveri
 pub use scanner::ApiScanError;
 
 // §AR-system.2.10 resolver: the one refusal shape a frontend asks about
-// (§FS-workspace.8.1.1.7).
+// (§FS-workspace.8.1.1).
 #[doc(hidden)]
 pub use resolver::names_member_id_candidate;
 

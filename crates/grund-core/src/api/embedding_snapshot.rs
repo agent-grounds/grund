@@ -1,4 +1,4 @@
-//! Strict scanner data and available partial facts (§FS-distribution.3.2.2.3).
+//! Strict scanner data and available partial facts (§FS-distribution.3.2.2).
 use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::{error_data, failure};
@@ -21,7 +21,7 @@ pub(super) fn scan(r: &EmbeddingRequest) -> Result<Value, Value> {
     let snapshot = snapshot(&config, &findings);
     if !errors.is_empty() {
         let first = &errors[0];
-        // §FS-distribution.3.2.2.3, §FS-errors.2.2.5: the one form every surface publishes,
+        // §FS-distribution.3.2.2, §FS-errors.2.2.5: the one form every surface publishes,
         // the reason and its fix, the report base `.` (§FS-cli.3.4).
         let record = crate::scanner::api_scan_error(config.frame(), first);
         let mut f = failure(

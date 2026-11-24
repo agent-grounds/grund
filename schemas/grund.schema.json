@@ -319,7 +319,7 @@
             "id": "FS-config.3.4",
             "href": "docs/functional-spec/FS-config.md#34-kinds--recognized-kinds"
           },
-          "x-grund-note": "In either config version, citable names may prefix each other when their tokens\nremain distinguishable: `GR` with `{kind}-{number}` can sit beside `GRUND` with\n`{kind}-{slug}`. For a prefix-related pair, the next character in the longer name\nmust be an ASCII letter or digit, and both effective formats must begin with\n`{kind}` and produce heads that do not prefix each other. A head is the kind name\nplus the literal immediately after `{kind}`. Thus `GR` beside `GR-X` needs a\nrename even with different separators; separator-free `{kind}{number}` on `GR`\nbeside `GRUND` needs unambiguous formats. Duplicate names remain invalid,\nincluding non-citable rows; non-citable kinds are exempt from the prefix rule\n([§FS-config.3.4.5.1](../functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens),\n[§FS-config.3.2.9](../functional-spec/FS-config.md#329-kind-head)).",
+          "x-grund-note": "In either config version, citable names may prefix each other when their tokens\nremain distinguishable: `GR` with `{kind}-{number}` can sit beside `GRUND` with\n`{kind}-{slug}`. For a prefix-related pair, the next character in the longer name\nmust be an ASCII letter or digit, and both effective formats must begin with\n`{kind}` and produce heads that do not prefix each other. A head is the kind name\nplus the literal immediately after `{kind}`. Thus `GR` beside `GR-X` needs a\nrename even with different separators; separator-free `{kind}{number}` on `GR`\nbeside `GRUND` needs unambiguous formats. Duplicate names remain invalid,\nincluding non-citable rows; non-citable kinds are exempt from the prefix rule\n([§FS-config.3.4.5](../functional-spec/FS-config.md#345-name-rules),\n[§FS-config.3.2.9](../functional-spec/FS-config.md#329-kind-head)).",
           "items": {
             "type": "object",
             "properties": {
@@ -337,7 +337,7 @@
                 "description": "Removed in grund 0.13.0 and refused: rename it to `kind`.",
                 "x-grund-spec": {
                   "id": "FS-config.3.4.6",
-                  "href": "docs/functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130"
+                  "href": "docs/functional-spec/FS-config.md#346-prefix--refused-in-favor-of-kind"
                 }
               },
               "folder": {
@@ -453,8 +453,8 @@
                 "description": "This kind's ID template, overriding `[id] format`.",
                 "x-grund-default": "inherits `[id] format`",
                 "x-grund-spec": {
-                  "id": "FS-config.3.4.10.1",
-                  "href": "docs/functional-spec/FS-config.md#34101-format"
+                  "id": "FS-config.3.4.10",
+                  "href": "docs/functional-spec/FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds"
                 },
                 "examples": [
                   "{kind}-{number}"
@@ -469,16 +469,16 @@
                 "description": "How a missing external snapshot is reported: `must` as a dangling citation, `should` as a warning.",
                 "x-grund-default": "must when fetch is set, else absent",
                 "x-grund-spec": {
-                  "id": "FS-config.3.4.10.2",
-                  "href": "docs/functional-spec/FS-config.md#34102-fetch-and-resolve"
+                  "id": "FS-config.3.4.10",
+                  "href": "docs/functional-spec/FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds"
                 }
               },
               "fetch": {
                 "type": "string",
                 "description": "The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line.",
                 "x-grund-spec": {
-                  "id": "FS-config.3.4.10.2",
-                  "href": "docs/functional-spec/FS-config.md#34102-fetch-and-resolve"
+                  "id": "FS-config.3.4.10",
+                  "href": "docs/functional-spec/FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds"
                 }
               }
             },
@@ -694,8 +694,8 @@
               "description": "Files `grund fmt` never rewrites: gitignore-style globs from the config root.",
               "default": [],
               "x-grund-spec": {
-                "id": "FS-config.3.10.1",
-                "href": "docs/functional-spec/FS-config.md#3101-entries-are-gitignore-style-globs"
+                "id": "FS-config.3.10",
+                "href": "docs/functional-spec/FS-config.md#310-fmt--suppressing-the-rewrite"
               }
             },
             "cross_refs": {
@@ -2006,7 +2006,7 @@
     "v2CitationRule": {
       "type": "object",
       "description": "What a citing kind (or place) must, warn, should, may, should not, warn not and must not cite.",
-      "x-grund-note": "For a negative default that forbids a kind's own marked index entry, see\n[index-entry repair advice](citation-directions.md) for the `may` edit and how\nexplicit prohibitions and independent rule sentences differ\n([§FS-check.3.12.2](../functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).",
+      "x-grund-note": "For a negative default that forbids a kind's own marked index entry, see\n[index-entry repair advice](citation-directions.md) for the `may` edit and how\nexplicit prohibitions and independent rule sentences differ\n([§FS-check.3.12](../functional-spec/FS-check.md#312-forbidden-citation)).",
       "x-grund-spec": {
         "id": "FS-config-v2.rules.citations",
         "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"

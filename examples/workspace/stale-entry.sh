@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Demonstrate §FS-check.3.5.3.1 with a member mark an earlier render left.
+# Demonstrate §FS-check.3.5 with a member mark an earlier render left.
 set -eu
 
 fixture_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/repo"

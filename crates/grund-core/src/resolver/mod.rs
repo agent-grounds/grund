@@ -36,7 +36,7 @@
 //!   declaration's ID resolves to, which the checker's index-entry rule read the
 //!   same way (§FS-check.3.18).
 //! - `unread_block.rs` out of `workspace/members.rs`, the one half of
-//!   §FS-check.4.10.2 that has to run the walker to answer — and, with it, the
+//!   §FS-check.4.10 that has to run the walker to answer — and, with it, the
 //!   whole of the run's warning channel settled, since this is the lowest
 //!   component that can answer all four of its findings (§FS-distribution.3.1).
 //! - `shorthand.rs` out of `grammar/shorthand.rs`, the half of the number-only
@@ -48,7 +48,7 @@
 //! - `stub_home.rs` out of `queries/stub_home.rs`, the scanner's pass over a
 //!   stub's target the walk did not reach: `show` read a stub's body out of it,
 //!   and every reader of a section in `check` and `fmt` asked it as well, so the
-//!   query was answering for its siblings (§FS-check.3.2.1). It went down again,
+//!   query was answering for its siblings (§FS-check.3.2). It went down again,
 //!   into the scanner, when the scan came to reach every stub's verdict once and
 //!   record the target's declarations on the stub (§AR-scanner.4.6), so no
 //!   reader here reads a target any more (§AR-resolver.5).

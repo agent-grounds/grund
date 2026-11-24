@@ -22,7 +22,7 @@ missing-section verdicts, and any other candidate holding an operator is a patte
 recorded, and [§FS-check.checks.glob-citation](../../functional-spec/FS-check.md#checksglob-citation-glob-citation) reports it. Terminal emphasis, a sentence-final
 `?`, a footnote reference, and a trailing `*` after a complete ID stay punctuation. No
 configured ID grammar loses a character: a format or slug pattern that admits `*` is read by the
-catalog and the grammar first, so [§FS-declarations.line.configured-slug](../../functional-spec/FS-declarations.md#lineconfigured-slug-characters-admitted-by-the-slug-pattern-belong-to-the-canonical-id) is unchanged.
+catalog and the grammar first, so [§FS-declarations.line](../../functional-spec/FS-declarations.md#line-what-a-line-in-declaration-position-declares) is unchanged.
 
 Rejected: keeping the prefix edge and adding only a warning, which leaves the wrong edge in
 `refs`, `cover`, inbound counts, and grounding for a whole release; and banning operator
@@ -33,7 +33,7 @@ correcting a reading.
 
 Two verdicts move, and they take different routes. The `glob-citation` finding is new and is a
 warning first: its promotion to an error in grund 0.19.0 is the deprecation path of
-[§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), recorded in [§FS-check.checks.glob-citation.1](../../functional-spec/FS-check.md#checksglob-citation1-a-warning-before-0190-an-error-in-it), and it landed in grund 0.19.0 under
+[§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), recorded in [§FS-check.checks.glob-citation](../../functional-spec/FS-check.md#checksglob-citation-glob-citation), and it landed in grund 0.19.0 under
 [§DF-glob-citation-lands-in-0-19](DF-glob-citation-lands-in-0-19.md#df-glob-citation-lands-in-0-19-a-glob-citation-is-an-error-from-0190). Removing the prefix
 edge is not ramped. Without it a declaration cited only through a pattern earns the `unused`
 warning, and a unit grounded or satisfying a `must` direction only through one can now fail

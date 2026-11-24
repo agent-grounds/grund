@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.3.3: supported addons are unwind-capable Node-API libraries.
+// §FS-distribution.3.2.3: supported addons are unwind-capable Node-API libraries.
 fn main() {
     if std::env::var("CARGO_CFG_PANIC").as_deref() == Ok("abort") {
         panic!("grund-node requires panic=unwind");

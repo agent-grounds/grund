@@ -115,7 +115,7 @@ const PLACE: &[Code] = &[
 
 /// The spelling itself is the finding: a stub's written name, the read that failed, the names a
 /// refusal or a move already lists, and the `outside [scan] include` twins, whose message is about
-/// the name outside and which a plain run never reaches (§FS-check.1.3.2).
+/// the name outside and which a plain run never reaches (§FS-check.1.3).
 const JUDGED: &[Code] = &[
     Code::BROKEN_STUB,
     Code::EXCLUDED_STUB_TARGET,

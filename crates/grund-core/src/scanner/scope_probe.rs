@@ -59,7 +59,7 @@ pub(crate) fn effective_scope_reads_any_file_with(
         .any(|root| root_reads_any_file(root))
 }
 
-/// §FS-check.4.10.2: whether a walk of `scan_root` under this config would read a
+/// §FS-check.4.10: whether a walk of `scan_root` under this config would read a
 /// file — the same builder, the same filter and the same `is_scannable` test the
 /// reporting walk applies, stopped at the first hit.
 ///
@@ -179,7 +179,7 @@ pub(crate) fn pruning_pattern(
 /// from `path_provided`, as it answers the reporting walk, so a run given no path is never read
 /// as one handed its working directory, and every probe the caution chains asks one scope. A
 /// widened walk starts at the path and walks the project's roots beside it for the rules alone
-/// (§FS-check.1.3.6.1), so a path keeps only its first root, and a pattern or a link outside it
+/// (§FS-check.1.3.6), so a path keeps only its first root, and a pattern or a link outside it
 /// is not the path's.
 fn caution_roots(
     schema: &Schema,

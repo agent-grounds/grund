@@ -34,7 +34,7 @@ check does not recognize kinds unknown to the citing project's grammar
 
 For stale workspace sections, `expected …; found …` shows the first unequal
 entries; `<missing>` marks an absent side. Run `grund init` in the finding's
-directory (the checked project if omitted). See the [entry-detail rule](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3531-first-differing-workspace-entry).
+directory (the checked project if omitted). See the [entry-detail rule](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block).
 
 A member-local `unknown project alias` finding still fails. When its alias
 names the verified enclosing workspace's root project, follow the root location

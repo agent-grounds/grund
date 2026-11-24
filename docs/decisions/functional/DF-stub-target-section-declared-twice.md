@@ -7,7 +7,7 @@
 ## 1. Context
 
 A stub's sections are its target's, whether or not `[scan] include` reaches the target
-([§DF-stub-sections-from-unscanned-target](DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it), [§FS-check.3.2.1](../../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)). Since grund 0.17.0 a citation into
+([§DF-stub-sections-from-unscanned-target](DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it), [§FS-check.3.2](../../functional-spec/FS-check.md#32-missing-section)). Since grund 0.17.0 a citation into
 an outside target resolves through the target's section set. When that set claims one path
 twice, `show` and `refs` refuse the coordinate as ambiguous, but `check` passes the citation by
 taking the first heading. Take this tree, with `src/` outside the include:
@@ -50,7 +50,7 @@ target file's own hygiene: its other declarations, its notes and formatting, its
 whether its citations resolve ([§DF-stub-sections-from-unscanned-target.5](DF-stub-sections-from-unscanned-target.md#5-consequences)). It does not cover
 the section set every command resolves a citation through, which is a fact about the stubbed
 ID, so a verdict about that set lands where the set is written, as a duplicate declaration
-reached through stubs is named at its target ([§FS-declarations.stubs.pairing.3](../../functional-spec/FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)).
+reached through stubs is named at its target ([§FS-declarations.stubs.pairing](../../functional-spec/FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at)).
 
 ### 2.1 Reported whether or not anything cites it
 
@@ -85,7 +85,7 @@ scan's scope.
 A tree whose stub points outside the include at a target that claims a section path twice
 goes from pass to fail, cited or not: `check` exits 1 with the scanned tree's
 `duplicate-section` error, located in the target. Every other tree answers as before. A
-path-scoped run keeps the finding by its sites ([§FS-check.1.3.6.2](../../functional-spec/FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)), so `grund check docs`
+path-scoped run keeps the finding by its sites ([§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows)), so `grund check docs`
 reports it only where a site lies under `docs`, as the scanned tree's narrowed run does. The
 editor shows it at the target's heading when that file is open, where it already shows a
 duplicate declaration reached through stubs. Row U01 leaves [§REQ-one-answer.differences.stubs](../../requirements/REQ-one-answer.md#differencesstubs-stubs).

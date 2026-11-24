@@ -84,13 +84,13 @@ pub struct CoverOutput {
     pub entries: Vec<CoverEntry>,
     pub scan_errors: Vec<ApiScanError>,
     /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
-    /// cautions of §FS-check.3.29, §FS-check.4.10.11 and
+    /// cautions of §FS-check.3.29, §FS-check.4.10 and
     /// §FS-workspace.6.1.7. A frontend renders each as one CLI-level `warning:`
     /// on stderr (§FS-check.2.1.1).
     ///
     /// Three keep the anchor the engine gave them — the `grund.toml` line their
     /// own message already names — and an editor publishes those on that line
-    /// (§FS-lsp.1.1.3). §FS-check.3.29's is the exception: it carries no
+    /// (§FS-lsp.1.1). §FS-check.3.29's is the exception: it carries no
     /// location field at all, states its location inside its own text
     /// (§FS-check.3.29), and reaches an editor off `check`'s report instead,
     /// located and as an error (§FS-check.3.29).
@@ -119,13 +119,13 @@ pub struct CoverTextOutput {
     pub entries: Vec<CoverTextEntry>,
     pub scan_errors: Vec<ApiScanError>,
     /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
-    /// cautions of §FS-check.3.29, §FS-check.4.10.11 and
+    /// cautions of §FS-check.3.29, §FS-check.4.10 and
     /// §FS-workspace.6.1.7. A frontend renders each as one CLI-level `warning:`
     /// on stderr (§FS-check.2.1.1).
     ///
     /// Three keep the anchor the engine gave them — the `grund.toml` line their
     /// own message already names — and an editor publishes those on that line
-    /// (§FS-lsp.1.1.3). §FS-check.3.29's is the exception: it carries no
+    /// (§FS-lsp.1.1). §FS-check.3.29's is the exception: it carries no
     /// location field at all, states its location inside its own text
     /// (§FS-check.3.29), and reaches an editor off `check`'s report instead,
     /// located and as an error (§FS-check.3.29).
@@ -140,7 +140,7 @@ struct CoverRow<'a> {
     alias: Option<&'a str>,
     /// Rendered against the workspace root in workspace mode, so a member's
     /// file is spelled the way `[workspace] members` spells it
-    /// (§FS-workspace.8.6.5).
+    /// (§FS-workspace.8.7.3).
     path: String,
     citations: Vec<CoverCitationRow<'a>>,
 }
@@ -248,7 +248,7 @@ fn cover_rows<'a>(
             }
         }
         for citation in &project.findings.citations {
-            // §FS-coordinate-globs.matching.citations: a glob selects on the copy that
+            // §FS-coordinate-globs.matching: a glob selects on the copy that
             // holds the site, and the site is then reported under its canonical copy,
             // as `refs` reports it (§FS-imports.graph.diamond).
             let selected =
@@ -303,7 +303,7 @@ fn cover_rows<'a>(
 ///
 /// The narrowable loader, not the plain one: `cover`'s `<path>` bounds the walk
 /// (§FS-cover.1), so a scope inside the workspace root stays one narrowed scan
-/// (§AR-resolver.3.3), which `grund check <dir>` no longer is (§FS-check.1.3.6.1).
+/// (§AR-resolver.3.3), which `grund check <dir>` no longer is (§FS-check.1.3.6).
 ///
 /// §AR-scanner.2.4.2: `cover` publishes each site's enclosing declaration and
 /// section (§FS-cover.3.2), so it performs the citing-side post-pass — one of the

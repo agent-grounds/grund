@@ -2,7 +2,7 @@
 //! attached to a key that maps one-to-one moves above the v2 key or header it
 //! became, a trailing one stays on that line, the header block stays at the top,
 //! and every other comment is listed with its lines. The lines come from the v1
-//! reader's own line pass (§FS-config-migrate.4.3).
+//! reader's own line pass (§AR-config.8.1).
 
 use super::comment_guidance::Guidance;
 use super::keys::Keys;

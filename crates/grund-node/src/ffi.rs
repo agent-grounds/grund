@@ -1,4 +1,4 @@
-//! Guard conversion and scheduling as well as worker stages (§FS-distribution.3.2.3.1).
+//! Guard conversion and scheduling as well as worker stages (§FS-distribution.3.2.3).
 use super::{Job, caught, failure};
 use napi::bindgen_prelude::{AsyncTask, FromNapiValue, ToNapiValue, TypeName, ValidateNapiValue};
 use napi::{Error, Result, ValueType};

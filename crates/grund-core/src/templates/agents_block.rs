@@ -5,7 +5,7 @@
 //! What a managed block *should say*, as a function of config alone
 //! (§AR-system.2.11). That is what lets `init` write the block and the writers
 //! render the whole block into `Expected`, which `check` byte-compares for
-//! drift (§FS-check.3.5.4): rendering is deterministic, so a fresh render is
+//! drift (§FS-check.3.5): rendering is deterministic, so a fresh render is
 //! the hash.
 //! Nothing here reads the tree — workspace presence (§FS-init.2.3.4) and
 //! member text (§FS-init.2.3.4) arrive from the run that walked for them
@@ -264,7 +264,7 @@ const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a doc
 /// §FS-inline-citation-style.5.2: the sentence that follows the budgets and
 /// precedes the layout sentence, under `citation-with-note` only — restating
 /// §FS-inline-citation-style.1's block rule at the point an agent needs it to act on a cap finding
-/// (§FS-inline-citation-style.2.2). `check` compares it as it does the doc-comment sentence
+/// (§FS-languages.comment-block). `check` compares it as it does the doc-comment sentence
 /// (§FS-inline-citation-style.5.5), so a change to its wording moves the block version
 /// (§FS-init.2.3.7).
 const BLOCK_SENTENCE: &str =

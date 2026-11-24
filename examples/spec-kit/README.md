@@ -139,7 +139,7 @@ Read it as Spec Kit:
   because rules are declarations rather than configuration.
 - **tasks** is grounded at `h3`: every `##` phase and every `###` group of tests or
   implementation must cite something, and what it cites must include the spec or the plan
-  ([§FS-check.3.6](../../docs/functional-spec/FS-check.md#36-ungrounded-unit-opt-in), [§FS-check.3.11.3](../../docs/functional-spec/FS-check.md#3113-the-unit-follows-grounding_level)). Setup tasks come from the plan ("per implementation plan"),
+  ([§FS-check.3.6](../../docs/functional-spec/FS-check.md#36-ungrounded-unit-opt-in), [§FS-check.3.11](../../docs/functional-spec/FS-check.md#311-missing-required-citation)). Setup tasks come from the plan ("per implementation plan"),
   so `PLAN` is the alternative.
 - **test** and **code** must cite a requirement in every file. `code` lists `src`, so the scan
   reads the places above and `src/`, and nothing else ([§FS-config-v2.schema.places.complement](../../docs/functional-spec/FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)).

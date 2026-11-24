@@ -15,7 +15,7 @@ ea84bfaff8). Three things followed:
 - A YAML or TOML comment at the start of a line, `# METRIC-gross: …`, is an ATX heading by
   shape, so it declared `METRIC-gross`. One that repeated the file's own ID made the real
   heading a `duplicate declaration`. That contradicts
-  [§FS-declarations.requirements.mentions](../../functional-spec/FS-declarations.md#requirementsmentions-writing-about-an-id-never-declares-it--realized-one-case-deferred): a line that names an ID without introducing it
+  [§FS-declarations.requirements.mentions](../../functional-spec/FS-declarations.md#requirementsmentions-writing-about-an-id-never-declares-it): a line that names an ID without introducing it
   never declares it.
 - A `§` citation in the block sat above every declaration body, so it had no enclosing
   declaration. `refs --from` did not list it, and a rule such as
@@ -38,7 +38,7 @@ scanner, `fmt`, the editor and the link reader cannot disagree about it.
 ### 2.2 Its citations belong to the file's first declaration
 
 A front-matter citation, and every line of the block, is owned by the file's first
-declaration, under no section ([§FS-check.1.1.5.2.1](../../functional-spec/FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)). Every format the issue met keeps one
+declaration, under no section ([§FS-check.1.1.5.2](../../functional-spec/FS-check.md#1152-front-matter-holds-no-heading)). Every format the issue met keeps one
 document per file, so the first declaration is the one the front matter sits directly above.
 The declaration's body does not grow to line 1: `show`, `--toc`, the section locks and the
 body extents stay byte-identical, and only the one lookup that answers "who owns this line"
@@ -93,7 +93,7 @@ each, and for one of them there is none.
 
 1. *Prior prohibition.*
    - *A phantom declaration now dangles.* The old verdict resolved a citation to a YAML or
-     TOML comment, which [§FS-declarations.requirements.mentions](../../functional-spec/FS-declarations.md#requirementsmentions-writing-about-an-id-never-declares-it--realized-one-case-deferred) says is no declaration.
+     TOML comment, which [§FS-declarations.requirements.mentions](../../functional-spec/FS-declarations.md#requirementsmentions-writing-about-an-id-never-declares-it) says is no declaration.
      That old verdict is a wrong resolution, forbidden by [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution).
      The prohibition already applied when the Markdown reading of front matter shipped, since before front matter reached any repository grund reads.
    - *A `---` thematic break on line 1 hides the headings after it.* The old verdict declared
@@ -133,7 +133,7 @@ each, and for one of them there is none.
 
 ## release-note: Release note
 
-- [§DF-front-matter](DF-front-matter.md#df-front-matter-a-markdown-files-front-matter-is-a-region-of-its-own-owned-by-the-files-first-declaration-and-never-rewritten), [§FS-check.1.1.5.2](../../functional-spec/FS-check.md#1152-front-matter-holds-no-heading), [§FS-check.1.1.5.2.1](../../functional-spec/FS-check.md#11521-its-citations-belong-to-the-files-first-declaration), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids),
+- [§DF-front-matter](DF-front-matter.md#df-front-matter-a-markdown-files-front-matter-is-a-region-of-its-own-owned-by-the-files-first-declaration-and-never-rewritten), [§FS-check.1.1.5.2](../../functional-spec/FS-check.md#1152-front-matter-holds-no-heading), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids),
   [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms): **A Markdown file's front matter is
   read as front matter.** A `---` or `+++` block on line 1, closed by the same delimiter or by
   `...` for `---`, holds no heading, so a `# ID: …` YAML or TOML comment declares nothing.

@@ -20,7 +20,7 @@ pub(super) fn load(path: &Path, validate: bool) -> (Vec<Finding>, anyhow::Result
     if !validate {
         return (earlier, Ok(discovered));
     }
-    // §FS-distribution.3.2.3.1: refuse unsafe aliases while retaining discovery cautions.
+    // §FS-distribution.3.2.3: refuse unsafe aliases while retaining discovery cautions.
     if let Err(error) = crate::workspace::preflight_embedding_paths(path) {
         return (earlier, Err(error));
     }
@@ -32,7 +32,7 @@ pub(super) fn load(path: &Path, validate: bool) -> (Vec<Finding>, anyhow::Result
 fn cautions(config: &Config) -> Vec<Finding> {
     let mut cautions = config_run_warnings(config);
     cautions.extend(
-        // §FS-config.4.1.1: a validated workspace root's set, else this config's own.
+        // §FS-config.4.1: a validated workspace root's set, else this config's own.
         super::config_findings::held_config_diagnostics(config)
             .into_iter()
             .map(|d| Finding {
@@ -85,7 +85,7 @@ fn disjunctions(values: &[CitationDisjunction]) -> Vec<String> {
         .collect()
 }
 
-/// A v2 project's resolved source model (§FS-config-v2.schema.sources.effective.bindings):
+/// A v2 project's resolved source model (§FS-config-v2.schema.sources.effective):
 /// every admitted language with its own hosts, since v2 has no global prefix list and
 /// its `scan.comment_prefixes` is empty (§FS-languages.prefixes). `None` for v1.
 fn sources(c: &Config) -> Option<Value> {

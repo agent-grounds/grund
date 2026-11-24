@@ -86,7 +86,7 @@ with `placement` one of `First | Last | After(name)` and `content` one of
 `Prose | Values | OneOf(values)`. `form` carries no payload: v1's `value_chapter`
 is a `may` field with `Values` content, on a `Value` kind and on a `Rule` kind
 alike, because v1 accepts `rules = true` together with `value_chapter` and a
-lossless lowering keeps both ([§FS-fields.v1](../functional-spec/FS-fields.md#v1-version-1-is-unchanged)).
+lossless lowering keeps both ([§FS-fields.v1](../functional-spec/FS-fields.md#v1-version-1s-only-field-is-its-value-chapter)).
 `Schema::places()` yields `(name, &Place)` for every place of every row, and
 `Schema::kinds()` yields `(name, &Kind)` for every row with a kind. The three
 states [§DISC-core-concerns.10.1](../discussions/proposals/2026-09-30-core-concerns.md#101-the-five-decisions-the-2026-09-30-proposal-leaves-open) keeps apart are distinct by construction:
@@ -114,7 +114,7 @@ flags, the citing-side classification switch and the `cover --lines` ranges; its
 `workspace` holds the boundary roots, project roots, scope path and absent
 optional members, the configs of the `include_root = false` blocks expansion
 loaded to read their members — no project, but each named by the config
-findings ([§FS-check.4.11.3](../functional-spec/FS-check.md#4113-once-per-config-not-once-per-scope)) — and the run's kind table: one row per project the config
+findings ([§FS-check.4.11](../functional-spec/FS-check.md#411-config-read-from-the-deprecated-agents-location)) — and the run's kind table: one row per project the config
 declares, holding that project's kinds, its named-sections setting and each
 kind's scalar fields with their `one_of` values, built,
 judged against the pinned `[citations]` targets and held by one call into
@@ -322,7 +322,7 @@ kinds that file declares.
 
 Meaning validation, as opposed to spelling, runs once on the `Project` in
 `config/validate.rs`, whichever reader produced it: format-aware collision checks
-of citable names ([§FS-config.3.4.5.1](../functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens)),
+of citable names ([§FS-config.3.4.5](../functional-spec/FS-config.md#345-name-rules)),
 uniqueness of names and of the complement, home and value prerequisites,
 the grounding pair, and the marker that `strict` requires. Spelling errors, such
 as an unknown key, a wrong type or a value outside a closed set, stay with the
@@ -467,7 +467,7 @@ and two citation lists that can match one citation
 ([§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations)). A check that reads several tables runs in
 `finish.rs` once the walk ends: a row's keys together, one row's place inside
 another's, a ladder, resolution entry or title naming its row, and the omitted
-language set ([§FS-config-v2.defaults.2](../functional-spec/FS-config-v2.md#defaults2-the-language-set-is-fixed-before-it-is-executed)), and one kind's fields together —
+language set ([§FS-config-v2.defaults](../functional-spec/FS-config-v2.md#defaults-the-v2-epoch)), and one kind's fields together —
 two ends, two values fields, an `after` that names no field, the `last` one or
 an already-followed one, and a cycle ([§FS-fields.order.refusals](../functional-spec/FS-fields.md#orderrefusals-what-the-loader-refuses)). Each is kept
 with the line it is about, and the earliest is reported. A field table's own
@@ -480,7 +480,7 @@ with one text.
 ### 7.3 The lowering
 
 The v2 epoch is a literal `Project` in `defaults.rs`, written out rather than
-inherited from v1 ([§FS-config-v2.defaults.1](../functional-spec/FS-config-v2.md#defaults1-what-v2-fixes)). Each key overwrites the field
+inherited from v1 ([§FS-config-v2.defaults](../functional-spec/FS-config-v2.md#defaults-the-v2-epoch)). Each key overwrites the field
 section 3.1 names for its v1 counterpart, and `warn` and `warn-not` fill the
 fields the warning channel reads, beside `must` and `should`
 ([§FS-config-v2.rules.strengths](../functional-spec/FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)):
@@ -517,7 +517,7 @@ v2-shaped records and hands those to `v2_toml`, so `config show` and
 migration asks for it. It writes the envelope and the `[workspace]` table, and
 `[presentation] description` when one is set, and leaves every other table to
 the v2 epoch. That is the candidate of a block with
-`include_root = false` that migrates compactly ([§FS-config-migrate.8.1.3](../functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)).
+`include_root = false` that migrates compactly ([§FS-config-migrate.8.1](../functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)).
 `config show` always renders every effective value.
 
 ## 8. Migration translates records
@@ -532,12 +532,12 @@ the notices, the refusals, the listed comments and both gates' results, and
 
 - **The v1 file, once.** Migration opts into the v1 reader's owned line records,
   including raw text, key locations and attached comments, during its existing
-  single parse; migration does not parse the file a second time
-  ([§FS-config-migrate.4.3](../functional-spec/FS-config-migrate.md#43-everything-else-is-listed)). A tolerant mode of that reader, used by migration
+  single parse; migration does not parse the file a second time.
+  A tolerant mode of that reader, used by migration
   alone, accepts a path-shaped `[scan] exclude` entry so that it can be
   diagnosed; every other caller still refuses it. The ordinary reader's default
-  pass neither constructs nor retains migration-only records
-  ([§FS-config-migrate.4.3](../functional-spec/FS-config-migrate.md#43-everything-else-is-listed)). That policy is defined once at the shared reader, so all
+  pass neither constructs nor retains migration-only records.
+  That policy is defined once at the shared reader, so all
   ordinary callers skip capture. Capturing leaves lowering and the first-error
   order of section 4 unchanged; migration keeps every comment and the same
   records, report and guidance equivalence gates ([§FS-config-migrate.4.1](../functional-spec/FS-config-migrate.md#41-attached-comments-move-with-a-one-to-one-key),
@@ -548,8 +548,8 @@ the notices, the refusals, the listed comments and both gates' results, and
   disk, so the records gate compares what the v2 reader really makes of it
   ([§FS-config-migrate.5.1](../functional-spec/FS-config-migrate.md#51-the-records-gate)).
 - **The tree, as the version 1 scan reads it.** A refusal's detail names the
-  files the version 1 scan reads ([§FS-config-migrate.3.1.4.1](../functional-spec/FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads),
-  [§FS-config-migrate.3.1.5.1](../functional-spec/FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads)), and config may not read the scanner
+  files the version 1 scan reads ([§FS-config-migrate.3.1.4](../functional-spec/FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry),
+  [§FS-config-migrate.3.1.5](../functional-spec/FS-config-migrate.md#315-nested-homes)), and config may not read the scanner
   ([§AR-system.4](README.md#4-dependency-direction)). So the surface above config hands `translate` the scan's own
   walk, as it hands it the answer of section 8.4's first item, and the `migrate`
   module builds that walk its façade from the file it read tolerantly. The
@@ -557,14 +557,14 @@ the notices, the refusals, the listed comments and both gates' results, and
   entry with one directory's name and they match nothing, which is what removing
   them keeps. One walk serves every detail of a run, the member roots kept out as
   `grund list` keeps them, and a run that has no such refusal, or whose refusals
-  need only a path not on disk to answer them ([§FS-config-migrate.3.1.4.1](../functional-spec/FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads)), walks
+  need only a path not on disk to answer them ([§FS-config-migrate.3.1.4](../functional-spec/FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry)), walks
   nothing. A walk that cannot run at all fails the run, since `grund list` fails
   there too. A path-shaped entry is asked of the one matcher the version 2 walk
   asks ([§AR-scanner.1.13](AR-scanner.md#113-one-predicate-says-whether-a-file-is-read-and-why-not)), never a copy of its grammar ([§AR-system.principle](README.md#principle-one-fact-one-point-one-implementation)), and
   of the one refusal its reader makes. Since config may not read the scanner, that
   matcher lives in config, where the reader's check is and the scanner may read it.
   The nested-homes detail stays a path lookup, because a home is a literal path
-  ([§FS-config-migrate.3.1.5.1](../functional-spec/FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads)).
+  ([§FS-config-migrate.3.1.5](../functional-spec/FS-config-migrate.md#315-nested-homes)).
 
 ### 8.2 The lowering table is its checklist
 
@@ -583,14 +583,14 @@ read are passed in and read again just before the rename ([§FS-config-migrate.6
 ### 8.4 One policy for a block with `include_root = false`
 
 Whether a version-1 file is a block with `include_root = false` that migrates
-compactly is decided once in the `migrate` module ([§FS-config-migrate.8.1.2](../functional-spec/FS-config-migrate.md#812-when-the-block-migrates-compactly)).
+compactly is decided once in the `migrate` module ([§FS-config-migrate.8.1](../functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)).
 Refusal collection, candidate construction, the key map and notices, and the
 records gate all read that one answer. None of them asks the question again.
 Its first item takes the block's default scope from `root_scope_roots` and the
 canonical expanded member roots, the same scope and boundary the unread-block
-probe uses ([§FS-check.4.10.2](../functional-spec/FS-check.md#4102-what-counts)). It does not compute a second notion of what the
+probe uses ([§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)). It does not compute a second notion of what the
 block would read. On that answer the records gate narrows its comparison to the
-records the compact candidate keeps ([§FS-config-migrate.8.1.4](../functional-spec/FS-config-migrate.md#814-both-gates-still-run)). The report gate
+records the compact candidate keeps ([§FS-config-migrate.8.1](../functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)). The report gate
 and the guidance comparison run unchanged.
 
 ## 9. The answer reads the gates

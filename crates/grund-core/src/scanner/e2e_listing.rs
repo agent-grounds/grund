@@ -50,7 +50,7 @@ pub(super) fn walk_one_level(
     let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     let met = MetCases::default();
     let physical_root = canonical_config_root(frame.root());
-    // §FS-check.6.1.1: the root is covered before its listing, as every walk root is.
+    // §FS-check.6.1: the root is covered before its listing, as every walk root is.
     if !observe_input(dir, true) {
         listed.failure = Some(std::io::Error::other("watch input coverage failed"));
         return listed;

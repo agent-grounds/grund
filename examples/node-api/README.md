@@ -1,7 +1,7 @@
 # Node package consumer
 
 This example awaits the shared engine from a locally installed `grund-cli`
-package ([§FS-distribution.3.2.4](../../docs/functional-spec/FS-distribution.md#324-acceptance-evidence)).
+package ([§FS-distribution.3.2](../../docs/functional-spec/FS-distribution.md#32-node-grund-cli-npm-package)).
 Build, pack and install the API rehearsal following the
 [Node guide](../../docs/user-facing/node-api.md), then copy `example.mjs` into
 that consumer and run:

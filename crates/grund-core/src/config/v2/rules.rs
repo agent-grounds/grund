@@ -125,7 +125,7 @@ fn parse_disjunctions(
 }
 
 /// §FS-config-v2.rules.citations: two lists whose targets can match one citation
-/// are refused at the later list's line (§FS-config.3.9.5.1).
+/// are refused at the later list's line (§FS-config.3.9.5).
 pub(super) fn close_citation_kind(
     r: &mut Reader,
     kind: &str,

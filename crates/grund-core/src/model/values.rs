@@ -11,7 +11,7 @@ use super::records::Id;
 
 /// Where a declaration's bytes come from: scanned text, or a member of a value
 /// source (§FS-values.terms). `Json` names the structured reading of either
-/// format, and `format` says which (§FS-distribution.3.2.2.3).
+/// format, and `format` says which (§FS-distribution.3.2.2).
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum DeclarationSource {
@@ -43,7 +43,7 @@ impl ValueFormat {
         }
     }
 
-    /// The name the bindings' snapshot carries (§FS-distribution.3.2.2.3).
+    /// The name the bindings' snapshot carries (§FS-distribution.3.2.2).
     pub(crate) fn key(self) -> &'static str {
         match self {
             Self::Json => "json",
@@ -114,9 +114,9 @@ impl EmbeddedValueRoot {
     }
 
     /// Whether the heading's own tag made this root (§FS-values.2.4): the one
-    /// root whose semantic title drops the tag (§FS-values.2.4.2). A chapter
+    /// root whose semantic title drops the tag (§FS-values.6.1). A chapter
     /// root carries no tag, so the same bytes on its named heading grant
-    /// nothing and stay its text (§FS-values.2.4.4).
+    /// nothing and stay its text (§FS-values.2.4).
     pub fn marked(&self) -> bool {
         self.marker_column().is_some()
     }
@@ -153,7 +153,7 @@ pub struct ValueBinding {
     pub column: usize,
     /// The column of the ordinary citation this binding rides on, so a reader
     /// keyed on citation sites can tell a binding's citation from another one
-    /// (§FS-check.4.1.2.1).
+    /// (§FS-check.4.1).
     pub citation_column: usize,
 }
 
@@ -221,7 +221,7 @@ pub(crate) fn root_literal_parts(literal: &ValueComponent) -> Vec<ValueComponent
 
 /// A root's components `.1` through `.N` joined by one ASCII space, each as a
 /// declared component prints: the declared side of every root-aimed mismatch
-/// (§FS-values.3.1.2, §FS-values.5.2.2).
+/// (§FS-values.3.1.2, §FS-values.5.2).
 pub(crate) fn joined_value_components(components: &[&ValueComponent]) -> String {
     components
         .iter()
@@ -233,7 +233,7 @@ pub(crate) fn joined_value_components(components: &[&ValueComponent]) -> String 
 /// The index of the first part that is unequal to its component, comparing in
 /// declared order under §FS-values.4 and stopping there, so the finding names
 /// only that component beside the whole literal, and carries only its site
-/// (§FS-values.5.2.2). The caller has already matched the counts.
+/// (§FS-values.5.2). The caller has already matched the counts.
 pub(crate) fn first_unequal_component(
     parts: &[ValueComponent],
     components: &[&ValueComponent],

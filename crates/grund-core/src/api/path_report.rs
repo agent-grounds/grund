@@ -1,5 +1,5 @@
 //! The narrowing a `check <path>` report goes through once every rule has run over
-//! the resolution scope (§FS-check.1.3.6.1, §AR-resolver.3.3), shared by the
+//! the resolution scope (§FS-check.1.3.6, §AR-resolver.3.3), shared by the
 //! single-project arm and the workspace arm so the two cannot disagree about what a
 //! path keeps.
 
@@ -28,7 +28,7 @@ impl PathReport<'_> {
     /// the three channels are narrowed; the scope caution is asked whether the
     /// *narrowed* report is silent (§FS-check.2.2), through `scope_caution`, because
     /// each arm knows what its walk read; the files the resolution scope could not
-    /// read outside the path become cautions (§FS-check.1.3.6.3), after the silence
+    /// read outside the path become cautions (§FS-check.1.3.6), after the silence
     /// question so they cannot suppress it (§FS-check.2.2.3); `config_warnings`
     /// follow unnarrowed (§FS-check.4.3); and a `--full` the path made redundant says
     /// so last (§FS-check.1.3.7).
@@ -61,7 +61,7 @@ impl PathReport<'_> {
     }
 }
 
-/// §FS-check.1.3.6.3: one caution per file the resolution scope could not read and
+/// §FS-check.1.3.6: one caution per file the resolution scope could not read and
 /// the report scope does not own. It carries the failure's own reason and the code
 /// the §FS-check.2.4 error carries (§FS-check.2.4.3), because it is the same knowledge
 /// on a softer channel rather than a new finding. `line` is `None`, which is what puts a CLI-level message on stderr
@@ -69,7 +69,7 @@ impl PathReport<'_> {
 /// it. Silence is the thing this exists to prevent: the citation whose declaration
 /// lay in that file is reported as unresolved, and §REQ-no-wrong-citation.2 asks
 /// that a false alarm stay legible as one. The code's one cost is that
-/// `--ignore` cannot turn the line off, which §FS-check.1.3.6.3 states rather than
+/// `--ignore` cannot turn the line off, which §FS-check.1.3.6 states rather than
 /// leaves to be found.
 pub(super) fn unread_resolution_source_cautions(
     unread: impl IntoIterator<Item = ScanError>,

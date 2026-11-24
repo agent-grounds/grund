@@ -4,7 +4,7 @@ This example embeds `grund-core` as a crate and installs one rendering-layer
 integration through its one integrations entry point, `integrations`
 ([§FS-distribution.3.1.3](../../docs/functional-spec/FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)).
 It asks once and reads the answer: one event per target it touched, each an
-outcome and a path ([§FS-integrations.1.3.2](../../docs/functional-spec/FS-integrations.md#132-the-output)).
+outcome and a path ([§FS-integrations.1.3](../../docs/functional-spec/FS-integrations.md#13-which-side-owns-what)).
 From the repository root:
 
 ```sh

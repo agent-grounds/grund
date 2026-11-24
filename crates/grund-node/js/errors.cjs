@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.2.1: one ESM/CJS error identity and complete failure fields.
+// §FS-distribution.3.2.2: one ESM/CJS error identity and complete failure fields.
 'use strict';
 class GrundError extends Error {
   constructor(failure, cause) {

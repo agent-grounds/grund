@@ -15,7 +15,7 @@ use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg};
 use crate::model::{Catalog, Declaration, DeclarationSource, Id};
 use crate::model::{configured_home_path_key, normalize_path_lexically, sort_path_key};
 
-/// §FS-config.3.5.8, §FS-check.1.3.6.1: whether the project's *ordinary* walk reads
+/// §FS-config.3.5.8, §FS-check.1.3.6: whether the project's *ordinary* walk reads
 /// the E2E case root at all. A path-scoped run's resolution scope is that ordinary
 /// scope union the path, so a cases root the ordinary run skips is read only when the
 /// path itself names it.
@@ -69,7 +69,7 @@ pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
 /// (§AR-scanner.6.6).
 ///
 /// `resolution_wide` is whether a path below the root reads the project's ordinary roots beside it
-/// (§FS-check.1.3.6.1): the run's own answer for `check`, and `check`'s answer for `fmt`, which
+/// (§FS-check.1.3.6): the run's own answer for `check`, and `check`'s answer for `fmt`, which
 /// reports the case failures `check` reports on the same scope (§FS-fmt.7.2).
 #[allow(clippy::too_many_arguments)]
 pub(super) fn scan_e2e_cases(
@@ -95,7 +95,7 @@ pub(super) fn scan_e2e_cases(
     let spelled_root = frame.root().join(configured_home_path_key(folder));
     let mut scan_root = cases_root.clone();
 
-    // §FS-check.1.3.6.1: a path-scoped run reads the cases the ordinary run reads —
+    // §FS-check.1.3.6: a path-scoped run reads the cases the ordinary run reads —
     // the whole root, the report filter narrowing afterwards. Only a cases root the
     // ordinary scope misses is read through the path alone, which is the branch below.
     let narrowed_to_path = explicit_scope
@@ -109,7 +109,7 @@ pub(super) fn scan_e2e_cases(
         .filter(|(_, whole)| !whole)
         .and_then(|(roots, _)| roots.first().cloned());
 
-    // §FS-cover.1.2: the spelled path below a case, whose failures alone the pass holds.
+    // §FS-cover.1: the spelled path below a case, whose failures alone the pass holds.
     let mut held = None;
     if narrowed_to_path {
         // A path that resolved to the config root holds the whole folder.
@@ -203,7 +203,7 @@ pub(super) fn scan_e2e_cases(
                 // §AR-scanner.6.6: each failure at its own path, the case's first hiding nothing.
                 for failure in case_failures {
                     let spelled = spelled_below(&spelled_root, &cases_root, failure.path());
-                    // §FS-cover.1.2: a path holding none of its failing files holds no failure.
+                    // §FS-cover.1: a path holding none of its failing files holds no failure.
                     if held.as_ref().is_some_and(|held| !spelled.starts_with(held)) {
                         continue;
                     }
@@ -213,7 +213,7 @@ pub(super) fn scan_e2e_cases(
                 continue;
             }
         };
-        // §FS-cover.1.2: a path below the case reads it for its failures; it declares nothing.
+        // §FS-cover.1: a path below the case reads it for its failures; it declares nothing.
         if held.is_some() {
             continue;
         }
@@ -264,7 +264,7 @@ fn cases_met<'a>(
 
 /// What a narrowed pass reads, decided on the path as the tree spells it against the configured
 /// folder, and on nothing else, so neither the case nor the folder being a link changes the answer
-/// (§FS-cover.1.2): a path at or above the folder reads the whole folder; a path naming a case or
+/// (§FS-cover.1): a path at or above the folder reads the whole folder; a path naming a case or
 /// lying below one reads that case, with the spelled path beside it where it lies below the case,
 /// whose files alone it holds; a directory below the folder that is no case is read from there, as
 /// it was. `None` for any other path, which `resolved_root` then answers.
@@ -293,7 +293,7 @@ fn narrowed_root(
     (!path_is_file(run_path)).then(|| (cases_root.join(below), None))
 }
 
-/// §FS-cover.1.2: a directory path the spelling decides nothing for reads the cases where it
+/// §FS-cover.1: a directory path the spelling decides nothing for reads the cases where it
 /// resolves at, above or below the canonical folder, as it did: the target of a cases folder that
 /// is a link. The target of a case that is a link resolves outside the folder and reads nothing.
 fn resolved_root(scope: &Path, cases_root: &Path) -> Option<(PathBuf, Option<PathBuf>)> {

@@ -5,7 +5,7 @@ a cache that goes away with the run. npm's default cache is the contributor's, s
 every other project they have, and nothing in this repository reclaims it, so what a test
 writes there stays until a person removes it. [§AR-ci.3.4.1.4](AR-ci.md#3414-one-pristine-installed-consumer-per-staged-source) says the consumer installed from
 such a tarball is discarded with the run and is no new persistent cache, and
-[§FS-repository-maintenance.2.2](../functional-spec/FS-repository-maintenance.md#22-automatic-reclamation) says of the Node target that contributors need no separate
+[§FS-repository-maintenance.2](../functional-spec/FS-repository-maintenance.md#2-external-node-acceptance-target-lifetime) says of the Node target that contributors need no separate
 prune command. This is that rule for a store the repository does not own, and [§AR-ci-pip-cache](AR-ci-pip-cache.md#ar-ci-pip-cache-a-tests-pip-install-leaves-no-built-wheel-in-the-users-pip-cache)
 is its sibling for pip's wheel cache.
 
@@ -93,7 +93,7 @@ gives. One function does this for every site ([§AR-system.principle](README.md#
 
 `fresh_env` reads no such function, because it drops more than a site does: every npm setting
 the contributor exported, in any case, whether it names the setting or not
-([§FS-distribution-candidate.5.2.2](../functional-spec/FS-distribution-candidate.md#522-no-npm-setting-the-contributor-exported-reaches-an-install-whatever-the-case-of-its-name)).
+([§FS-distribution-candidate.5.2](../functional-spec/FS-distribution-candidate.md#52-every-registry-row-installs-fresh-and-without-rust)).
 Nothing slips through, so what it names is the only spelling npm sees.
 
 ## 2. The calls it leaves out

@@ -86,7 +86,7 @@ after the cursor, with one canonical citation. Suggestions match case-sensitive
 ID prefixes, list the exact match first, and then follow configured kind order
 and ID. They use your document's member config. A complete loaded alias plus
 `/` selects that project's declarations; unqualified IDs stay in your own
-project ([§FS-lsp.1.6.2](../functional-spec/FS-lsp.md#162-candidates-resolution-and-ordering)).
+project ([§FS-lsp.1.6](../functional-spec/FS-lsp.md#16-declared-id-completion)).
 
 Completion follows the formatter's protected contexts: no choices in inline
 code, link destinations, reference keys, raw HTML tags, fences, declaration
@@ -95,7 +95,7 @@ string that spans lines included),
 `grund:fmt off` regions, excluded or unscanned files, or outward file symlinks.
 Source comments and Python docstrings are eligible. A nonempty typing trigger
 works even with an empty marker; bare IDs never start completion
-([§FS-lsp.1.6.1](../functional-spec/FS-lsp.md#161-eligibility-exclusions-and-triggering)).
+([§FS-lsp.1.6](../functional-spec/FS-lsp.md#16-declared-id-completion)).
 
 Live `$$` to `§` formatting writes nothing where `grund fmt` writes nothing,
 and that includes a reference key: in `[the $$FS-lsp record][]` above
@@ -126,7 +126,7 @@ either edit makes the competing response obsolete. The client must discard it,
 notify the change, and request again; applying both old responses can damage the
 token. Completion lists request refresh on further typing. The server supplies
 plain text edits and cannot intercept Tab or enforce client response handling
-([§FS-lsp.1.6.4](../functional-spec/FS-lsp.md#164-snapshot-and-live-transform-interaction)).
+([§FS-lsp.1.6](../functional-spec/FS-lsp.md#16-declared-id-completion)).
 
 ## Unsaved files
 
@@ -140,13 +140,13 @@ resolves the project root while preserving those descendant names
 
 ## A broken `grund.toml`
 
-A `grund.toml` that stops loading — a half-typed table header, say — shows up as an error on `grund.toml` itself, at the line `grund check` names, with the message `grund check` prints. The project keeps its last good scan meanwhile, so the diagnostics on your other files are from before the config broke, and the error says so. Fix the config and the error goes away on the next load ([§FS-lsp.2.2.4.1](../functional-spec/FS-lsp.md#2241-a-config-that-will-not-load-is-a-diagnostic-on-that-config)).
+A `grund.toml` that stops loading — a half-typed table header, say — shows up as an error on `grund.toml` itself, at the line `grund check` names, with the message `grund check` prints. The project keeps its last good scan meanwhile, so the diagnostics on your other files are from before the config broke, and the error says so. Fix the config and the error goes away on the next load ([§FS-lsp.2.2.4](../functional-spec/FS-lsp.md#224-an-unusable-folder-is-skipped)).
 
 ## Imports
 
 A config that declares [`[workspace.imports]`](configuration.md#workspaceimportsalias) is answered through its imports as `grund check` reads them, and the imported project needs no folder of its own. Open the consumer alone and hover, go-to-definition, references, highlights and document links on a citation qualified with an import's alias, such as `native-image/`, resolve into the sibling tree, completion offers that alias and the aliases beneath it, such as an imported member's, and then the imported project's declarations, and a missing section or a wrong value through an import is reported as `grund check` reports it ([§FS-imports.editor](../functional-spec/FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)).
 
-A file of the imported tree that you open from there is read-only to the consumer: it gets no diagnostics, because its findings are the dependency's own, and no completion or `$$` edit. Two consumers that import the same tree in one session share it rather than claim it twice. To edit the dependency, add it as a folder: it then owns its files and is edited as any project is ([§FS-lsp.2.2.3](../functional-spec/FS-lsp.md#223-a-document-no-project-answers)).
+A file of the imported tree that you open from there is read-only to the consumer: it gets no diagnostics, because its findings are the dependency's own, and no completion or `$$` edit. Two consumers that import the same tree in one session share it rather than claim it twice. To edit the dependency, add it as a folder: it then owns its files and is edited as any project is ([§FS-lsp.2.2.2](../functional-spec/FS-lsp.md#222-one-project-answers-each-document)).
 
 The editor reports changes only inside its folders, so the server watches each imported tree outside them itself: through file watchers it registers with the client where the client supports relative patterns, and through its own watcher where it does not. Saved edits, new and deleted files and edits to the dependency's `grund.toml` are followed, and so is an unsaved edit to an imported file you have open. A dependency that disappears drops out of the consumer with `import-missing` on its import line. A dependency `grund.toml` that stops loading shows up on that same import line with the message `grund check` prints, and the consumer keeps its last good scan until the dependency's config loads again.
 
@@ -233,7 +233,7 @@ When IntelliJ has a formatter for a language, LSP4IJ otherwise withholds on-type
 formatting requests from grund-lsp. This includes Java, and Markdown when a
 formatter is installed. The setting lets those requests reach the live transform,
 so the default `$$` becomes `§` while typing a citation
-([§FS-lsp.2.4.1.1](../functional-spec/FS-lsp.md#2411-live-transform-client-configuration)).
+([§FS-lsp.2.4](../functional-spec/FS-lsp.md#24-installed-editor-integrations)).
 
 For example, in a mapped Markdown file in this repository, type:
 

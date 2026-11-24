@@ -74,7 +74,7 @@ integration runs. Five answers lose.
 `check` must not send a reader to a command that refuses, so at such a home its tail
 becomes `— declare it in that source file`, or `— move the kind to a Markdown file or folder` for
 a value kind, which no comment can declare
-([§FS-check.3.1.3.1](../../functional-spec/FS-check.md#3131-a-home-fetch-refuses)). The message's
+([§FS-check.3.1](../../functional-spec/FS-check.md#31-dangling-citation)). The message's
 base, its code, its severity and the exit stay what they are.
 
 ## 3. Compatibility

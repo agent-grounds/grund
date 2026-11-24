@@ -1,4 +1,4 @@
-// Synchronous terminal coordinator (§FS-check.6.1.2, §AR-bindings.3).
+// Synchronous terminal coordinator (§FS-check.6.1, §AR-bindings.3).
 
 fn command_check_watch(
     opts: CheckOpts,
@@ -30,7 +30,7 @@ fn run_check_watch(
     }
     let _stopped = Stopped;
     let mut screen = WatchScreen::new();
-    // §FS-check.6.1.3: retain the lexical location across deletion/recreation
+    // §FS-check.6.1: retain the lexical location across deletion/recreation
     // of the process's working directory; a relative `.` would name its old inode.
     if !opts.path.is_absolute() {
         opts.path = match std::env::current_dir() {
@@ -64,7 +64,7 @@ fn run_check_watch(
     let mut last = None;
     let mut failure = None;
     // During work the bounded backend queue is drained into a single pending burst,
-    // under the one debounce the editor server's watcher runs too (§FS-check.6.1.2).
+    // under the one debounce the editor server's watcher runs too (§FS-check.6.1).
     let mut debounce = Debounce::default();
     let mut run = true;
     let mut recovery = false;

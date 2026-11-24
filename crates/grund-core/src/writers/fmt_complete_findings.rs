@@ -43,7 +43,7 @@ use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
 /// satisfied with an empty one, which is the bypass again with more ceremony.
 ///
 /// A proof covers the project it was made of, and a qualified citation resolves
-/// against another (§FS-fmt.7.4.4). That half of the proof is carried where the
+/// against another (§FS-fmt.7.4). That half of the proof is carried where the
 /// rewrite reads the other project's set: `ShorthandTargets` holds an aliased
 /// project's declarations only where `WorkspaceProject::read_in_full` says so, so a
 /// canonical ID cannot be rendered from an unproven set, and the link pass asks the
@@ -73,7 +73,7 @@ mod complete_findings {
         /// The scan is unscoped and non-strict about the scope on purpose: the
         /// declaration a shorthand names routinely lives outside the files being
         /// rewritten, so a scope-narrow set is not the set this question is
-        /// asked of (§FS-fmt.2.4.5).
+        /// asked of (§FS-fmt.2.4).
         ///
         /// Why a refusal and not a partial result: this is the one command that
         /// edits files, and the errors it aborts on are the same ones every
@@ -84,7 +84,7 @@ mod complete_findings {
         /// partial-scan one means every readable file was rewritten and this one
         /// means nothing was, and `--write` reaches this path in the ordinary
         /// case rather than the exceptional one — it turns `--cross-refs` on by
-        /// itself wherever the scope holds Markdown (§FS-fmt.6.6). Paths are
+        /// itself wherever the scope holds Markdown (§FS-fmt.6.7.2). Paths are
         /// rendered against the run's config, like every other path `fmt` prints.
         pub(crate) fn of_tree_or_abort(config: &Config, render: &Config) -> Result<Self> {
             let (findings, errors) = scan_tree(config.schema(), config.frame(), None, false)?;
@@ -155,7 +155,7 @@ mod complete_findings {
 
 pub(super) use complete_findings::{CompleteFindings, CompleteScan};
 
-/// The refusal a rewrite into a project whose scan met an error earns (§FS-fmt.7.4.4):
+/// The refusal a rewrite into a project whose scan met an error earns (§FS-fmt.7.4):
 /// §FS-fmt.3.2's lines, the paths this walk met and then each such project's, each path
 /// once, since a walk and the project behind a link it met can name the same one.
 pub(super) fn unproven_alias_abort(
@@ -180,7 +180,7 @@ pub(super) fn unproven_alias_abort(
 /// The refusal a conflict block earns (§FS-fmt.7.4): each block's
 /// `conflict-marker` finding, from the one function `check` reports it with
 /// (§AR-scanner.2.9), its owners spelled by the project that holds them and its
-/// paths by the run's config, files then lines (§FS-fmt.3.3).
+/// paths by the run's config, files then lines (§FS-fmt.3.2).
 fn conflict_abort(
     findings: &Catalog,
     config: &Config,

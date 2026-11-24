@@ -30,7 +30,7 @@ pub(super) fn channel(strength: Strength) -> Option<Channel> {
     }
 }
 
-/// §FS-fields.strengths.may: a present field is held to its shape on its
+/// §FS-fields.strengths: a present field is held to its shape on its
 /// presence's channel, and `may` waives absence only, so a present `may`
 /// field's violation is an error.
 fn shape_channel(field: &Field) -> Channel {
@@ -81,7 +81,7 @@ fn arm_fields(schema: &Schema, armed: &mut Armed) {
             if field.title.is_some() {
                 armed.arm(Switch::FieldTitle);
             }
-            // §FS-fields.front-matter.findings: its keys turn on the codes a field does.
+            // §FS-fields.strengths: its keys turn on the codes a field does.
             if let Some(shape) = field.front_matter() {
                 armed.arm(Switch::FrontMatterField);
                 if shape.keys.iter().any(|key| key.presence != Strength::May) {
@@ -136,7 +136,7 @@ fn for_each_finding<'a>(
 /// §FS-fields.terms: a declaration's direct sections, `(name, line, display name)`
 /// in the order they are written. The lead is not a section; a section written
 /// twice counts once, at its first heading (§FS-fields.identity.name); the front
-/// matter is no chapter (§FS-fields.front-matter.findings).
+/// matter is no chapter (§FS-fields.front-matter).
 fn direct_sections(declaration: &Declaration) -> Vec<(&str, usize, Cow<'_, str>)> {
     // §FS-fields.content.one-of: the one value reader, which a whose clause reads too.
     let mut direct: Vec<(&str, usize, Cow<'_, str>)> = declaration
@@ -263,7 +263,7 @@ impl<'a> Shape<'a> {
     /// §FS-fields.checks.misplaced-field over each chain (§FS-fields.order): a
     /// present member is judged against its nearest present predecessor where it
     /// actually stands, or against its chain head's end when every predecessor is
-    /// absent, so one field out of place is one finding (§FS-fields.order.nearest).
+    /// absent, so one field out of place is one finding (§FS-fields.checks.misplaced-field).
     fn order(&self, kind: &'a Kind, out: &mut Vec<FieldFinding<'a>>) {
         let count = self.direct.len();
         let successor = |name: &str| {
@@ -280,7 +280,7 @@ impl<'a> Shape<'a> {
             let mut member = Some(head);
             while let Some(field) = member {
                 member = successor(&field.name);
-                // §FS-fields.order.absent: an absent member is skipped.
+                // §FS-fields.order.after: an absent member is skipped.
                 let Some(at) = self.position(&field.name) else {
                     continue;
                 };
@@ -403,7 +403,7 @@ pub(crate) fn pair_fields_with_rules(
 }
 
 /// The chapter name a `chapter-cardinality` finding counted zero of, read off
-/// the message §FS-rules.7.2.1 fixes: `<ID> has 0 <NAME> chapters; …`.
+/// the message §FS-rules.7.2 fixes: `<ID> has 0 <NAME> chapters; …`.
 fn absent_chapter(diagnostic: &Diagnostic) -> Option<&str> {
     if diagnostic.code != Code::CHAPTER_CARDINALITY {
         return None;

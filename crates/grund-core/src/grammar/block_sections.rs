@@ -1,9 +1,9 @@
 //! A managed `AGENTS.md` block cut into the parts a stale finding names
-//! (§FS-check.3.5.3): the citation scheme, which is everything above the first
+//! (§FS-check.3.5): the citation scheme, which is everything above the first
 //! `###` heading, then one part per `###` heading up to the next or to the
 //! `<!-- END GRUND MANAGED BLOCK -->` line. The cut is lexical and reads both
 //! sides alike, the render `Expected` carries and the block on disk, so the
-//! comparison of §FS-check.3.5.4 covers every byte between the delimiters.
+//! comparison of §FS-check.3.5 covers every byte between the delimiters.
 
 use super::managed_block::AGENTS_BLOCK_END;
 
@@ -28,7 +28,7 @@ pub(crate) struct BlockSection<'a> {
 }
 
 impl BlockSection<'_> {
-    /// The lower-case noun a stale finding names this part by (§FS-check.3.5.3).
+    /// The lower-case noun a stale finding names this part by (§FS-check.3.5).
     pub(crate) fn noun(&self) -> String {
         match self.heading.strip_prefix("### ") {
             Some(title) => title.trim().to_lowercase(),
@@ -38,7 +38,7 @@ impl BlockSection<'_> {
 }
 
 /// `block`, from its begin delimiter to its end delimiter, cut into its parts
-/// in order (§FS-check.3.5.3). The parts partition every byte before the end
+/// in order (§FS-check.3.5). The parts partition every byte before the end
 /// delimiter, so two blocks whose parts agree in order and in bytes are equal.
 pub(crate) fn block_sections(block: &str) -> Vec<BlockSection<'_>> {
     let end = AGENTS_BLOCK_END

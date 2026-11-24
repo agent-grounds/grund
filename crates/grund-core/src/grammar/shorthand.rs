@@ -86,7 +86,7 @@ pub(crate) fn parse_id_arg_with_shorthand(raw: &str, grammar: &Grammar) -> Resul
 /// number-only shorthand (§FS-check.1.2.6). A query persists nothing, so the
 /// shorthand is simply expanded here rather than reported the way a shorthand in
 /// a file is (§DF-number-only-citation-shorthand.2.2) — this is what lets a
-/// clicked `<§>FS-042` open in a terminal (§FS-integrations.3.1.7).
+/// clicked `<§>FS-042` open in a terminal (§FS-integrations.3.1).
 ///
 /// A shorthand matching several declarations is the same class of query failure
 /// as an ambiguous full ID (§FS-show.2.2.1); one matching none keeps its
@@ -144,7 +144,7 @@ impl std::fmt::Display for IdArgError {
 }
 
 /// Every declaration whose kind and number match a shorthand `Id`, in the
-/// deterministic `BTreeMap` key order the report needs (§FS-check.3.13.3). One
+/// deterministic `BTreeMap` key order the report needs (§FS-check.3.13). One
 /// match is the resolution; zero or several is what the checker reports.
 ///
 /// One-shot lookup, for the sites that answer a single question — a CLI
@@ -239,7 +239,7 @@ fn shorthand_index_number(grammar: &Grammar, declared: &Id) -> Option<Option<u32
 /// `Id` and never learn the shorthand existed.
 ///
 /// Zero or several matches leave `slug: None`, which is exactly the state
-/// §FS-check.3.13.3 reports as unknown or ambiguous.
+/// §FS-check.3.13 reports as unknown or ambiguous.
 ///
 /// The escaped citations are resolved too. Without that, `<§>FS-042` escaping a
 /// real declaration is silently exempt from a check that catches

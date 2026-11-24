@@ -14,7 +14,7 @@ Two landings were already shapes this CLI has, so neither is an invention. The t
 
 Bare `grund` is a CLI-level error: `error:` and two `hint:` lines on stderr, empty stdout, exit `2`, in the exact bytes [§FS-cli.4](../../functional-spec/FS-cli.md#4-errors-with-no-source-location) gives. The help page is not the landing.
 
-The reason is [§FS-cli.1.1](../../functional-spec/FS-cli.md#11-why-these-defaults)'s own, the only sentence in the specification that states a *purpose* for the fallback: bare `grund` kept checking "so that old CI scripts do not turn into a successful no-op". A CI step still spelled `grund` that prints help and exits `0` is precisely that no-op — and silently, because exit `0` is what it got before. Under the error it goes red on the upgrade and the message names `grund check`. That is the outcome [§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) calls a release blocker, so the cheaper landing is cheaper in specification surface, not in risk.
+The reason is <§>FS-cli.1.1's own, the only sentence in the specification that states a *purpose* for the fallback: bare `grund` kept checking "so that old CI scripts do not turn into a successful no-op". A CI step still spelled `grund` that prints help and exits `0` is precisely that no-op — and silently, because exit `0` is what it got before. Under the error it goes red on the upgrade and the message names `grund check`. That is the outcome [§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) calls a release blocker, so the cheaper landing is cheaper in specification surface, not in risk.
 
 ## 3. Consequences
 
@@ -29,7 +29,7 @@ The reason is [§FS-cli.1.1](../../functional-spec/FS-cli.md#11-why-these-defaul
 
 | Approach | Why rejected |
 |---|---|
-| The top-level help page, exit `0` — what `docs/changelog/0.3.0.md` published | A CI step spelled `grund` goes green having validated nothing, which is the one outcome [§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) treats as a release blocker, and is the no-op [§FS-cli.1.1](../../functional-spec/FS-cli.md#11-why-these-defaults) says the window was bought to prevent. Cheaper in specification surface — it extends a point seven sites lean on and needs no new case — and it would make an eleven-release-old changelog true; neither buys back a silent green pipeline. |
+| The top-level help page, exit `0` — what `docs/changelog/0.3.0.md` published | A CI step spelled `grund` goes green having validated nothing, which is the one outcome [§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) treats as a release blocker, and is the no-op <§>FS-cli.1.1 says the window was bought to prevent. Cheaper in specification surface — it extends a point seven sites lean on and needs no new case — and it would make an eleven-release-old changelog true; neither buys back a silent green pipeline. |
 | Keep the fallback and drop only the warning | Leaves the bare form as an undocumented alias for `grund check .` forever, so the deprecation path named a release and then did not use it. |
 | Exit `1` rather than `2` | `1` is a finding or a failed query ([§FS-cli.5](../../functional-spec/FS-cli.md#5-exit-code-mapping-is-fixed)); nothing was scanned and no query was made. A CLI launch failure is `2`. |
 

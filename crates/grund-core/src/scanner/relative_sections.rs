@@ -20,13 +20,13 @@ use crate::model::{
 };
 
 /// A relative candidate, with the finding its value marker earns if no
-/// accepted heading takes the marker (§FS-values.2.4.4).
+/// accepted heading takes the marker (§FS-values.2.4).
 pub(super) type RelativeCandidate = (UnmarkedHeadingCandidate, Option<InvalidValueSite>);
 
 /// The headings the per-file pass holds until the file's headings are known: the
 /// unmarked Markdown candidates, and the relative ones the parent pass settles, in
 /// Markdown and in a doc-comment alike (§FS-declarations.section.relative.form,
-/// §FS-declarations.section.relative.where, §FS-declarations.checks.unmarked-heading).
+/// §FS-declarations.checks.unmarked-heading).
 #[derive(Default)]
 pub(super) struct HeldHeadings {
     pub(super) unmarked: Vec<UnmarkedHeadingCandidate>,
@@ -62,7 +62,7 @@ impl HeldHeadings {
     /// Hold the relative headings of a source file's doc-comment declaration bodies:
     /// the plain headings the comments' section reading sees, recorded here so the
     /// parent pass reads them as it reads a Markdown body's
-    /// (§FS-declarations.section.relative.where, §FS-languages.comment-wrapper.headings).
+    /// (§FS-declarations.section.relative.form, §FS-languages.comment-wrapper.headings).
     pub(super) fn hold_doc_comment(
         &mut self,
         findings: &mut Catalog,
@@ -111,7 +111,7 @@ impl HeldHeadings {
             return;
         }
         let relative = std::mem::take(&mut self.relative);
-        // §FS-declarations.section.relative.where: a refused doc-comment line stays prose,
+        // §FS-declarations.section.relative.form: a refused doc-comment line stays prose,
         // since only a Markdown heading is an unmarked-heading candidate.
         let mut prose = Vec::new();
         let unmarked = if record.markdown {
@@ -146,7 +146,7 @@ fn take_marker(
 /// (§FS-declarations.checks.relative-section-parent); and one that is outside
 /// every body, or whose title syntax its parent's path refuses, is handed back
 /// as the unmarked candidate it is without this form
-/// (§FS-declarations.section.relative.where, §FS-declarations.checks.unmarked-heading).
+/// (§FS-declarations.section.relative.form, §FS-declarations.checks.unmarked-heading).
 ///
 /// Candidates are taken shallowest first, so every parent is settled — accepted,
 /// failed or a claimant of a duplicated path — before a child asks for it. An
@@ -308,7 +308,7 @@ pub(crate) enum RelativeAnswer {
 /// §FS-declarations.section.relative.parent, then the title syntax its canonical
 /// path takes (§FS-declarations.section.relative.form). The parent pass asks it
 /// of a Markdown body and a doc-comment body alike
-/// (§FS-declarations.section.relative.where), so the two readings cannot drift.
+/// (§FS-declarations.section.relative.form), so the two readings cannot drift.
 pub(crate) fn relative_answer(
     record: &FileRecord,
     decl: &Declaration,

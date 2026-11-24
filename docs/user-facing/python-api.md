@@ -7,7 +7,7 @@ python -m pip install crates/grund-py
 ```
 
 The Python API is supplied locally; PyPI publication and release wheels remain
-pending ([§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-local-source-and-typing-handoff)).
+pending ([§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-interpreters-source-installs-and-typing)).
 This runnable example uses the repository's existing erroneous-citation fixture:
 
 ```python
@@ -41,7 +41,7 @@ operation below also accepts `root=None`, except `scan(root)` (required) and
 user-global and setup instructions have no root. The callable definitions and
 inline annotations are in `crates/grund-py/python/grund`; `py.typed` marks them for type checkers.
 The full inventory implements
-[§FS-distribution.3.3.5](../functional-spec/FS-distribution.md#335-complete-initial-inventory).
+[§FS-distribution.3.3.5](../functional-spec/FS-distribution.md#335-complete-inventory).
 
 | Function (besides common root) | Returned record |
 | --- | --- |
@@ -142,7 +142,7 @@ unsupported ([§FS-distribution.3.3.4](../functional-spec/FS-distribution.md#334
 cross-reference formatting still applies when cross_refs=False. Each change's
 `label` is the CLI row, so compare its `counts` and `lock_file` rather than the
 text, which grows as fmt names more of what it does
-([§FS-distribution.3.2.2.2](../functional-spec/FS-distribution.md#3222-result-fields)). For
+([§FS-distribution.3.2.2](../functional-spec/FS-distribution.md#322-typed-readonly-host-records)). For
 `init`, `docs` is the CLI's `--scaffold` option, `write=True` corresponds to
 the inverse of `--dry-run`, and Python previews by default whereas `grund init`
 writes by default; the bindings do not accept the CLI's `--template` option.

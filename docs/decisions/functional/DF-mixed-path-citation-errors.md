@@ -15,8 +15,8 @@ announced route under [§REQ-backwards-compatibility.2](../../requirements/REQ-b
 ## decision: Decision
 
 From 0.19.0, unresolved mixed citations use ordinary reference errors
-([§FS-citations.checks.mixed-path](../../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190)), and required rule and configured citation
-findings lose only mixed-path relief ([§FS-rules.7.12](../../functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)). Their codes, sites and
+([§FS-citations.checks.mixed-path](../../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked)), and required rule and configured citation
+findings lose only mixed-path relief ([§FS-rules.5.1](../../functional-spec/FS-rules.md#51-facts-and-identity)). Their codes, sites and
 ordinary messages remain; the temporary warning clause disappears. Independently
 qualifying warning windows and explicit warning strengths keep their meanings.
 Recommended findings remain opt-in suggestions.
@@ -37,7 +37,7 @@ retirement were separate work, landed by #639.
 
 ## release-note: Release note
 
-- [§FS-citations.checks.mixed-path](../../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190), [§FS-rules.7.12](../../functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190),
+- [§FS-citations.checks.mixed-path](../../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked), [§FS-rules.5.1](../../functional-spec/FS-rules.md#51-facts-and-identity),
   [§FS-section-lock.checks.unrecorded-section-citation](../../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold): **Mixed citation warnings
   become ordinary errors in 0.19.0 after the 0.18.0 warning release.** Repositories
   relying on unresolved citations of a name under a number, or required rule and

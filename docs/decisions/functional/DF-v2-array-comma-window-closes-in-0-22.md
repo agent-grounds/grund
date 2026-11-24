@@ -35,9 +35,9 @@ In 0.22.0 (agent-grounds/grund#1098):
 - the warning goes, and with it the `commas` remedy case of `config-not-toml` in
   [§FS-errors.5.5](../../functional-spec/FS-errors.md#55-the-check-code-catalog); the code stays, and once the open-line window closes in the same release
   nothing fires it, so it is spent
-  ([§FS-config-v2.checks.config-not-toml.1](../../functional-spec/FS-config-v2.md#checksconfig-not-toml1-a-warning-in-021x-the-unclosed-array-or-expected-string-refusal-from-0220), [§DF-v2-open-line-closes-in-0-22](DF-v2-open-line-closes-in-0-22.md#df-v2-open-line-closes-in-0-22-the-version-2-open-line-window-closes-in-0220));
+  ([§FS-config-v2.checks.config-not-toml](../../functional-spec/FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses), [§DF-v2-open-line-closes-in-0-22](DF-v2-open-line-closes-in-0-22.md#df-v2-open-line-closes-in-0-22-the-version-2-open-line-window-closes-in-0220));
 - the ancestor climb reads such a `[workspace] members` value as not a list, as it reads any
-  value the full load refuses ([§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable));
+  value the full load refuses ([§FS-workspace.6.1.7](../../functional-spec/FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run));
 - version 1, whose list reader already refuses every comma before a `]`, does not move;
 - the window's point, <§>FS-config-v2.reader.5.commas.window, stays as a past-tense account of
   what 0.21.x did, because a section name that has shipped is kept

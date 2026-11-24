@@ -1,7 +1,7 @@
 //! A stub's verdict, reached once after the walk (§AR-scanner.4.6): whether the
 //! file a stub points at is there, whether the scan reads it, and which of its
 //! records declare the stub's ID, read through the walk's own pass on the text a
-//! save would write (§FS-declarations.stubs.target.1). Every command reads
+//! save would write (§FS-declarations.stubs.target). Every command reads
 //! the verdict recorded on the stub, so the stub's health and the count of the ID's
 //! declarations agree whether or not the walk reached the target, and whether or not
 //! an edit to it is saved (§FS-declarations.stubs.verdict).
@@ -25,13 +25,13 @@ use crate::workspace::WorkspaceCitationTarget;
 /// (§AR-scanner.4.6): every command reads it from there and none reaches its own
 /// (§FS-declarations.stubs.verdict). A target the walk did not record the ID
 /// in is read through the walk's own pass over one file, on the text a save would
-/// write (§FS-declarations.stubs.target.1), once per target however many
+/// write (§FS-declarations.stubs.target), once per target however many
 /// stubs and IDs name it. An ID no stub declares is passed over. A stub pointing
 /// at a target the walk from `roots` would not read, for an `exclude` entry or an
 /// ignore file, is refused before reading or pairing (§FS-declarations.stubs.target.3).
 /// Once every verdict is in, an eligible target lends the declaration its citations
 /// (§FS-declarations.stubs.target.5), and a target a stub pairs with gives its conflict
-/// blocks, as a scanned file does (§FS-declarations.body.conflict.where).
+/// blocks, as a scanned file does (§FS-declarations.body.conflict.block).
 pub(super) fn resolve_stubs(
     schema: &Schema,
     frame: Frame<'_>,
@@ -243,7 +243,7 @@ fn resolve_stub(
 /// record (§AR-scanner.2.8), which is how `show` reads a stub's target, and the
 /// citations its pass assigns to a declaration, which it lends once per target and
 /// ID (§FS-declarations.stubs.target.5), and the conflict blocks its pass records,
-/// given once per target a stub pairs with (§FS-declarations.body.conflict.where).
+/// given once per target a stub pairs with (§FS-declarations.body.conflict.block).
 struct UnwalkedTargets<'a> {
     schema: &'a Schema,
     frame: Frame<'a>,
@@ -332,7 +332,7 @@ impl<'a> UnwalkedTargets<'a> {
 
     /// Give the conflict blocks `path`'s pass recorded to the catalog, the first time a
     /// stub pairs with it and never again, so a target two stubs name reports each block
-    /// once, at its own lines (§FS-declarations.body.conflict.where).
+    /// once, at its own lines (§FS-declarations.body.conflict.block).
     fn give_blocks(&mut self, path: &Path) {
         if let Some(Some(read)) = self.read.get_mut(&physical_path_key(path)) {
             self.blocks.append(&mut read.conflict_blocks);

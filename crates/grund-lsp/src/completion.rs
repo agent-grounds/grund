@@ -1,8 +1,8 @@
-// Completion transport and UTF-16 marshaling (§FS-lsp.1.6.2, §FS-lsp.1.6.3).
+// Completion transport and UTF-16 marshaling (§FS-lsp.1.6).
 
 impl Server {
     /// Initial project/member characters, deduplicated across folders
-    /// (§FS-lsp.1.6.1). New configuration characters require client restart.
+    /// (§FS-lsp.1.6). New configuration characters require client restart.
     fn completion_trigger_characters(&self) -> Vec<String> {
         self.projects.iter().filter_map(|project| project.completion.as_ref())
             .flat_map(grund_core::LspCompletionContext::trigger_characters)
@@ -10,7 +10,7 @@ impl Server {
     }
 
     /// Marshal core byte edits without introducing protocol-side recognition
-    /// or rescanning (§AR-lsp.1, §FS-lsp.1.6.3, §FS-lsp.1.6.4), against `text`,
+    /// or rescanning (§AR-lsp.1, §FS-lsp.1.6), against `text`,
     /// the document as the request found it (§FS-lsp.responsiveness.4).
     fn completion(&self, params: Value, text: Option<String>) -> Result<lsp_types::CompletionList> {
         let params: lsp_types::CompletionParams = serde_json::from_value(params)?;

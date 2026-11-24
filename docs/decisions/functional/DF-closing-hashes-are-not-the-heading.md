@@ -37,7 +37,7 @@ TOC `title` a separate output that takes the warning release.
 
 A heading's closing sequence of `#`, and the whitespace before it, is not part of its
 rendered text ([§FS-declarations.heading.rendered-text](../../functional-spec/FS-declarations.md#headingrendered-text-a-headings-rendered-text)). Every anchor is slugged from the
-rendered text by [§FS-fmt.6.2.3](../../functional-spec/FS-fmt.md#623-the-github-profile-reproduces-github-slugger), so `fmt --cross-refs` writes `fs.md#1-steps`, `show`'s
+rendered text by [§FS-fmt.6.2.2](../../functional-spec/FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text), so `fmt --cross-refs` writes `fs.md#1-steps`, `show`'s
 JSON `anchor` is `1-steps` ([§FS-show.3.1.3](../../functional-spec/FS-show.md#313-json)), and the two stay one answer
 ([§REQ-one-answer.writes.anchors](../../requirements/REQ-one-answer.md#writesanchors-shows-anchor-is-the-anchor-fmt-writes)). A heading with no closing run slugs exactly as before:
 `## A — B` is still `a--b`, because `github-slugger` trims no trailing `-` of its own.

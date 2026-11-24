@@ -22,7 +22,7 @@ of a kind name, so `… must cite at least 3 distinct SRC.` is refused with
 targets one at a time but requires every `SRC` in the project. Counting sites
 was a default and never a ruling against counting targets: distinct counting is
 not among the deliberate phase-1 absences ([§FS-rules.12](../../functional-spec/FS-rules.md#12-deliberate-phase-1-absences)), and no record weighs
-it. The language grows by addition ([§FS-rules.requirements.addition](../../functional-spec/FS-rules.md#requirementsaddition-the-language-grows-by-addition--directional)), and
+it. The language grows by addition ([§FS-rules.requirements.addition](../../functional-spec/FS-rules.md#requirementsaddition-the-language-grows-by-addition)), and
 [§DF-field-value-subjects](DF-field-value-subjects.md#df-field-value-subjects-a-rule-subject-may-select-on-a-scalar-fields-value-with-one-whose-clause) is the precedent for a refusal of this shape becoming an
 accepted clause through one record.
 
@@ -40,7 +40,7 @@ plain count reads, so `§SRC-x`, `§SRC-x.2` and `§SRC-x.outcome` count once, a
 a subject in its own target set counts itself once ([§FS-rules.3.2.1](../../functional-spec/FS-rules.md#321-counting-distinct-cited-declarations),
 [§FS-rules.5.2](../../functional-spec/FS-rules.md#52-family-clauses)). A failure is `citation-cardinality` with a row of its own
 ([§FS-rules.7.3](../../functional-spec/FS-rules.md#73-outbound-citation-cardinality)), and from its first release that row names every site it read
-([§FS-rules.7.3.1](../../functional-spec/FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)). No code is added, so the rule-produced codes stay nine
+([§FS-rules.7.3](../../functional-spec/FS-rules.md#73-outbound-citation-cardinality)). No code is added, so the rule-produced codes stay nine
 ([§FS-rules.7.6](../../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits)). The managed block renders each authored sentence verbatim, so
 its version does not move.
 

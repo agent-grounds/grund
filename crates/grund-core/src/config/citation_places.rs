@@ -17,7 +17,7 @@ pub(crate) struct CitationPlace {
 }
 
 /// Project each normalized row's scanned file/folder places (§AR-config.1.3,
-/// §FS-config-v2.schema.places.boundaries.6), reading the active-version table
+/// §FS-config-v2.schema.places.boundaries), reading the active-version table
 /// spelling from the config validator (§FS-config-v2.rules.citations, §FS-config.3.9).
 pub(crate) fn citation_places(schema: &Schema, version: u32) -> Vec<CitationPlace> {
     let table = citations_table(version);

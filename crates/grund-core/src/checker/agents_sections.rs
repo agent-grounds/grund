@@ -1,10 +1,10 @@
-//! Compare managed block sections without discarding drift (§FS-check.3.5.4),
-//! retaining their texts for workspace entry detail (§FS-check.3.5.3.1).
+//! Compare managed block sections without discarding drift (§FS-check.3.5),
+//! retaining their texts for workspace entry detail (§FS-check.3.5).
 
 use crate::grammar::{WORKSPACE_SECTIONS, block_sections};
 use crate::model::ExpectedSection;
 
-/// A stale section retains both texts for §FS-check.3.5.3.1's entry detail.
+/// A stale section retains both texts for §FS-check.3.5's entry detail.
 /// An absent side has no text and therefore no body entries.
 pub(super) struct StaleSection<'a> {
     pub(super) noun: String,
@@ -13,12 +13,12 @@ pub(super) struct StaleSection<'a> {
 }
 
 /// The sections of the root block `current` that differ from
-/// `expected`, in the render's order (§FS-check.3.5.3, §FS-check.3.5.4): one
+/// `expected`, in the render's order (§FS-check.3.5): one
 /// expected and absent, one present and unexpected, one whose bytes differ, and,
 /// where the sections agree but their order does not, the first one out of
 /// place. Where the run does not compare the workspace sections both sides lose
 /// them first (§FS-check.3.5.5).
-/// The retained texts explain each workspace difference (§FS-check.3.5.3.1).
+/// The retained texts explain each workspace difference (§FS-check.3.5).
 pub(super) fn stale_sections<'a>(
     expected: &'a [ExpectedSection],
     current: &'a str,
@@ -74,7 +74,7 @@ pub(super) fn stale_sections<'a>(
     stale
 }
 
-/// §FS-check.3.5.3.1: compare nonblank body lines verbatim and positionally,
+/// §FS-check.3.5: compare nonblank body lines verbatim and positionally,
 /// leaving byte drift with equal entries to the section-level fallback.
 pub(super) fn workspace_entry_detail(expected: &str, current: &str) -> String {
     let mut expected = workspace_entries(expected);
@@ -95,7 +95,7 @@ pub(super) fn workspace_entry_detail(expected: &str, current: &str) -> String {
     }
 }
 
-/// §FS-check.3.5.3.1: omit the heading and blank lines without changing entries.
+/// §FS-check.3.5: omit the heading and blank lines without changing entries.
 fn workspace_entries(section: &str) -> impl Iterator<Item = &str> {
     section
         .lines()

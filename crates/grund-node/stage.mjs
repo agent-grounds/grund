@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.3.3: disposable API rehearsal; #471 owns assembly.
+// §FS-distribution.3.2.3: disposable API rehearsal; #471 owns assembly.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

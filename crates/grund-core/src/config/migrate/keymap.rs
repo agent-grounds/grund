@@ -183,7 +183,7 @@ fn spelling(
 }
 
 /// The key map and the notices, both in file order, and last the one notice
-/// for the defaults a compact block leaves unwritten (§FS-config-migrate.8.1.3).
+/// for the defaults a compact block leaves unwritten (§FS-config-migrate.8.1).
 pub(super) fn map(
     keys: &Keys,
     v2: &Project,
@@ -213,7 +213,7 @@ pub(super) fn comment_map(
 }
 
 /// §FS-config-migrate.2.2: one authored-key mapping supplies both presentations.
-/// §FS-config-migrate.8.1.1, §FS-config-migrate.8.1.3: a key with no reader on
+/// §FS-config-migrate.8.1: a key with no reader on
 /// a block with `include_root = false` is dropped with a notice.
 fn map_with_addresses(
     keys: &Keys,

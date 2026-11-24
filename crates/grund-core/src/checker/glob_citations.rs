@@ -7,7 +7,7 @@ use crate::config::Schema;
 use crate::model::remedies;
 use crate::model::{Catalog, CheckReport, Code, Diagnostic};
 
-/// §FS-check.checks.glob-citation.1: an error since grund 0.19.0, and the
+/// §FS-check.checks.glob-citation: an error since grund 0.19.0, and the
 /// clause says so in the landed half of the release guard's vocabulary
 /// (§FS-distribution.4.2.3, §DF-glob-citation-lands-in-0-19).
 const LANDED_CLAUSE: &str = "; this became an error in grund 0.19.0";

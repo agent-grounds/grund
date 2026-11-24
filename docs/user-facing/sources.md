@@ -236,7 +236,7 @@ The default is `[]`; add generated directories such as `target/` or
 `node_modules/` when the project needs them excluded. A pattern the parser refuses, such as an unclosed `[`, is
 refused at the `exclude` line.
 
-How it composes with the other filters ([§FS-config-v2.schema.sources.exclude.roots](../functional-spec/FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters)):
+How it composes with the other filters ([§FS-config-v2.schema.sources.exclude](../functional-spec/FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)):
 
 1. A scan root, whether a row's place or a path you pass on the command line, is
    read even when a pattern names it. Only what lies below it is filtered.
@@ -251,8 +251,8 @@ How it composes with the other filters ([§FS-config-v2.schema.sources.exclude.r
    disables only ignore files. Being outside a configured place alone is allowed, and formatter exclusions
    affect rewrites only. An explicit scan
    root is read, but exclusions still filter what lies below it ([stub target
-   rules](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#schemasourcesexcludestubs-a-pattern-is-the-exclude-reason-a-stubs-target-is-not-read),
-   [scan roots](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters)).
+   rules](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list),
+   [scan roots](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)).
 
 `[presentation.fmt] exclude` uses the same grammar with a different effect: it
 keeps `grund fmt` from rewriting a file that the scan still reads.

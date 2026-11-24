@@ -49,7 +49,7 @@ In 0.22.0 (agent-grounds/grund#1118):
   accept it, and `--only` says the check is spent ([§FS-config-v2.checks.config-not-toml](../../functional-spec/FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses),
   [§FS-config-v2.checks.config-multiline-string](../../functional-spec/FS-config-v2.md#checksconfig-multiline-string-a-version-2-config-value-holds-a-multi-line-string), [§FS-errors.5.5](../../functional-spec/FS-errors.md#55-the-check-code-catalog));
 - the ancestor climb reads such a `[workspace] members` value as not a list, as it reads any
-  value the full load refuses ([§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable));
+  value the full load refuses ([§FS-workspace.6.1.7](../../functional-spec/FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run));
 - version 1, which reads no array across lines, does not move;
 - the window's point, <§>FS-config-v2.reader.5.strings.window, stays as a past-tense account of
   what 0.21.x did, because a section name that has shipped is kept

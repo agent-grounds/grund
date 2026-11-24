@@ -125,7 +125,7 @@ The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard
 lines of at most 100 columns, so each description is a single terse line. Some rows say more
 than what the command is: `show`'s marks it as the default command, `fmt`'s names link and
 section-lock maintenance ([§DF-fmt-maintenance-guidance](../decisions/functional/DF-fmt-maintenance-guidance.md#df-fmt-maintenance-guidance-teach-the-existing-post-rename-formatter-maintenance)), `integrations`' names `grund-lsp`
-([§FS-integrations.2.3](FS-integrations.md#23-the-way-to-grund-lsp)), `guide`'s says it teaches setting up and using grund and lists its
+([§FS-integrations.2](FS-integrations.md#2-detection)), `guide`'s says it teaches setting up and using grund and lists its
 sections, with the bare command as its sample call ([§DF-guide-command](../decisions/functional/DF-guide-command.md#df-guide-command-grund-agent-setup-instructions-becomes-grund-guide-whose-bare-run-prints-a-front-page-and-whose-sections-are-named-positionally), [§FS-init.5.6](FS-init.md#56-the-front-page)), and
 `list`'s names the declarations nothing cites, with `--unused` as its sample call
 ([§FS-list.1.3](FS-list.md#13---unused)):
@@ -146,7 +146,7 @@ A page is static: it discovers no configuration to render, so it describes scope
 for every supported config version, in version-neutral terms or by labelling v1's
 `[scan] include` and v2's places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). `check`'s page keeps the
 no-config default directories and describes `--full` as
-[§FS-config-v2.schema.places.boundaries.7](FS-config-v2.md#schemaplacesboundaries7---full-widens-past-the-places) does, never as a way past source exclusions
+[§FS-config-v2.schema.places.boundaries](FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name) does, never as a way past source exclusions
 ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)).
 
 Every flag the page names, a run flag of [§FS-cli.3](FS-cli.md#3-cross-subcommand-flags) included, has an example: a command line
@@ -181,7 +181,7 @@ statuses it exits with ([§FS-check.6.3](FS-check.md#63-lifecycle)), and links t
 ([§DF-fmt-maintenance-guidance](../decisions/functional/DF-fmt-maintenance-guidance.md#df-fmt-maintenance-guidance-teach-the-existing-post-rename-formatter-maintenance)): an example `grund fmt --write` from the config or workspace root, which
 re-derives generated Markdown link destinations and anchors where the link pass applies ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive))
 and makes the eligible section-lock updates ([§FS-section-lock.write.rules](FS-section-lock.md#writerules-add-refresh-drop)); how its report reads
-([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label), [§FS-fmt.3.7](FS-fmt.md#37-the---write-report), [§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)); and what `fmt` does not do: rename an
+([§FS-fmt.3.5](FS-fmt.md#35-the-dry-run-report), [§FS-fmt.3.7](FS-fmt.md#37-the---write-report), [§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)); and what `fmt` does not do: rename an
 authored citation ID, repair an arbitrary URL, rename a lock for a file move alone
 ([§FS-section-lock.file.shard](FS-section-lock.md#fileshard-one-file-per-cited-declaration)) or silently approve a protected section move
 ([§FS-section-lock.write.never-a-move](FS-section-lock.md#writenever-a-move-fmt-never-approves-a-move)).

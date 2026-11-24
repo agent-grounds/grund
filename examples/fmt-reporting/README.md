@@ -2,7 +2,7 @@
 
 This runnable mini-repository shows how `grund fmt` reports a change: a preview
 row names every kind of rewrite its line gets
-([§FS-fmt.3.5.1](../../docs/functional-spec/FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)), the `--write` summary totals them
+([§FS-fmt.3.5](../../docs/functional-spec/FS-fmt.md#35-the-dry-run-report)), the `--write` summary totals them
 ([§FS-fmt.3.7](../../docs/functional-spec/FS-fmt.md#37-the---write-report)), and a lock file a rename deletes or creates is said to be
 deleted or created ([§FS-section-lock.write.report](../../docs/functional-spec/FS-section-lock.md#writereport-what-fmt-reports)). It is for anyone who
 reads the preview to decide whether to write, or who describes a write from its
@@ -35,7 +35,7 @@ link pass then wraps what it marked
 just marked. The notes row shows the whole link, before and after, because the
 rename moved its file part, `FS-login.md` to `FS-sign-in.md`, while the anchor
 stayed: an item names the link, not only its anchor
-([§FS-fmt.3.6.2](../../docs/functional-spec/FS-fmt.md#362-a-written-link-names-the-link-before-and-after)). Each row can be applied by hand, one line at a time,
+([§FS-fmt.3.6](../../docs/functional-spec/FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes)). Each row can be applied by hand, one line at a time,
 by replacing the text left of `→` with the text right of it. The lock rows say that the run moves the
 entry from one lock file to another: the old file is left with no entry, so the
 write deletes it, and the new one does not exist yet, so the write creates it.

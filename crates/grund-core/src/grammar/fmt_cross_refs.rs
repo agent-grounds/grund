@@ -88,7 +88,7 @@ pub(crate) enum CitationLink {
     /// A wrap `fmt` keeps re-deriving (§FS-citations.wrap.recognized).
     Wrap(CrossRefWrap),
     /// In the text of a link its author wrote, in any form
-    /// §FS-citations.wrap.enclosing.scope lists, or in bytes no pass rewrites
+    /// §FS-citations.wrap.enclosing.shape lists, or in bytes no pass rewrites
     /// (§FS-citations.zones.authored-markup); `entry` where that link goes
     /// somewhere and `check` takes it as a kind-index entry
     /// (§FS-citations.wrap.enclosing).
@@ -108,7 +108,7 @@ pub(crate) enum CitationLink {
 /// flatten and the editor's hover all ask, so none of them can take a link the
 /// others leave to its author. The wrap test runs first: a citation whose own
 /// brackets make a wrap is one, whatever brackets stand around it
-/// (§FS-citations.wrap.enclosing.wrap-wins).
+/// (§FS-citations.wrap.recognized).
 pub(crate) fn citation_link(
     links: LineLinks<'_>,
     line: &str,

@@ -1,12 +1,12 @@
 //! The body of a coordinate glob read into tokens in one pass, over the operator table
-//! the citation guard reads (§FS-coordinate-globs.grammar.operators), refusing at the
-//! first bracket or escape the grammar cannot close (§FS-coordinate-globs.errors.reasons).
+//! the citation guard reads (§FS-coordinate-globs.grammar), refusing at the
+//! first bracket or escape the grammar cannot close (§FS-coordinate-globs.errors.shape).
 
 use super::coordinate_glob::{GlobRefusal, GlobStage, Spanned, Token, offered, refusal};
 use super::glob_candidate::GlobOperator;
 
 /// The body's reader: one pass, refusing at the first bracket or escape the
-/// grammar cannot close (§FS-coordinate-globs.grammar.operators, §FS-coordinate-globs.grammar.braces).
+/// grammar cannot close (§FS-coordinate-globs.grammar).
 pub(super) struct Tokenizer<'t> {
     text: &'t str,
     chars: Vec<(usize, char)>,
@@ -116,7 +116,7 @@ impl<'t> Tokenizer<'t> {
     }
 
     /// Close the group, pointing its `{` and commas at this `}`, and refuse a
-    /// `{N..M}` range (§FS-coordinate-globs.grammar.braces).
+    /// `{N..M}` range (§FS-coordinate-globs.grammar).
     fn close(&mut self) -> Result<Token, GlobRefusal> {
         let open = self.group.take().expect("guarded by the caller");
         let close = self.tokens.len();
@@ -154,7 +154,7 @@ impl<'t> Tokenizer<'t> {
     }
 
     /// `[…]`, `[!…]` or `[^…]`: a leading `]` and a leading or trailing `-` are
-    /// members, and a range must run forwards (§FS-coordinate-globs.grammar.operators).
+    /// members, and a range must run forwards (§FS-coordinate-globs.grammar).
     fn class(&mut self, open: usize) -> Result<Token, GlobRefusal> {
         let negated = matches!(self.peek(0), Some('!' | '^'));
         if negated {

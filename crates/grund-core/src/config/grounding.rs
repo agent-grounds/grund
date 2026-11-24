@@ -23,7 +23,7 @@ use super::run::Run;
 /// A lookup over the schema's rows and the rules' grounding pair, and the one
 /// reading of it a caller does by kind name rather than by row: `compile` asks
 /// it per row for the scan demand (§AR-config.6.1) and the checker per citing
-/// kind (§FS-check.3.11.3), which is why it sits with the keys rather than with
+/// kind (§FS-check.3.11), which is why it sits with the keys rather than with
 /// either of them.
 pub(crate) fn grounding_level_for_kind(schema: &Schema, rules: &Rules, kind: &str) -> usize {
     let grounding = &rules.grounding;
@@ -37,7 +37,7 @@ pub(crate) fn grounding_level_for_kind(schema: &Schema, rules: &Rules, kind: &st
     if schema.rows.iter().any(|row| row.name == kind) {
         return level(kind);
     }
-    // §FS-config.3.9.2.3: the homeless kind's declared row, else the default — or
+    // §FS-config.3.4.8: the homeless kind's declared row, else the default — or
     // the ladder v2 writes for the undeclared complement by name.
     schema
         .rows
@@ -57,14 +57,14 @@ pub(crate) fn grounding_unit(level: usize) -> String {
     }
 }
 
-/// The effective `require_grounding` default (§FS-config.3.4.8.3): the
+/// The effective `require_grounding` default (§FS-config.3.4.8): the
 /// `[reference]` key, or `grund check --require-grounding`, which sets the same
 /// default for one run (§FS-check.3.5) — so an explicit row `false` still wins.
 pub(crate) fn requires_grounding_by_default(rules: &Rules, run: &Run) -> bool {
     rules.grounding.require || run.scope.require_grounding
 }
 
-/// The effective grounding pair for the row named `kind` (§FS-config.3.4.8.3):
+/// The effective grounding pair for the row named `kind` (§FS-config.3.4.8):
 /// the row's word where it has one, else the default. The records' reading of
 /// `Config::kind_grounding`, for a stage handed no façade (§AR-config.5).
 pub(crate) fn row_grounding(rules: &Rules, run: &Run, kind: &str) -> (bool, usize) {
@@ -88,7 +88,7 @@ fn row_pair(rules: &Rules, require_default: bool, kind: &str) -> (bool, usize) {
     )
 }
 
-/// The effective pair for the homeless kind (§FS-config.3.9.2.3) — its declared
+/// The effective pair for the homeless kind (§FS-config.3.4.8) — its declared
 /// row when the schema has one, else the defaults. A v2 ladder written for the
 /// undeclared complement by name is its row's word (§FS-config-v2.rules.grounding).
 pub(crate) fn homeless_row_grounding(schema: &Schema, rules: &Rules, run: &Run) -> (bool, usize) {
@@ -129,7 +129,7 @@ pub(crate) fn grounding_setting(kind: &str, version: u32, code: fn(&str) -> Stri
 /// Whether any place is grounded at all (§FS-check.3.6), the checker's early out
 /// and the gate that arms `ungrounded` (§FS-check.1.4.1): a row, or the homeless
 /// kind, whose effective pair requires grounding, so a default that every row sets
-/// `false` grounds nothing (§FS-config.3.4.8.3). A v2 ladder rung below `must`
+/// `false` grounds nothing (§FS-config.3.4.8). A v2 ladder rung below `must`
 /// grounds too (§FS-config-v2.rules.grounding). `Config::grounding_enabled` asks
 /// the looser question of whether anything sets the key at all.
 pub(crate) fn any_place_grounded(schema: &Schema, rules: &Rules, run: &Run) -> bool {
@@ -193,7 +193,7 @@ fn ladders(grounding: &Grounding) -> impl Iterator<Item = &Rung> {
 }
 
 impl Config {
-    /// The effective grounding pair for one `[[kinds]]` row (§FS-config.3.4.8.3):
+    /// The effective grounding pair for one `[[kinds]]` row (§FS-config.3.4.8):
     /// the row's word where it has one, else the `[reference]` default — which is
     /// also what `grund check --require-grounding` sets, so an explicit row
     /// `false` wins over the flag.
@@ -226,12 +226,12 @@ impl Config {
     }
 
     /// The `[[kinds]]` grounding lines `grund config show` prints for one row
-    /// (§FS-config.4.2.1): each key only where the row's effective value differs
+    /// (§FS-config.4.2): each key only where the row's effective value differs
     /// from the effective global, which is printed under `[reference]`. A row
     /// that inherits both prints neither, and the shown config loads back to the
     /// same effective values — printing a key on every row would be noise, and
     /// printing a level under a row that turned grounding off would not load at
-    /// all (§FS-config.3.4.8.6).
+    /// all (§FS-config.4.2).
     pub fn kind_grounding_toml_lines(&self, kind: &KindConfig) -> Vec<String> {
         let (require, level) = self.kind_grounding(kind);
         let mut lines = Vec::new();

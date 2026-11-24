@@ -22,17 +22,17 @@ pub(super) enum Block {
     /// §FS-config-migrate applies unchanged.
     Project,
     /// A block with `include_root = false` that keeps the conservative path,
-    /// where only named sections are never refused (§FS-config-migrate.8.1.1).
+    /// where only named sections are never refused (§FS-config-migrate.8.1).
     OptedOut,
     /// A block with `include_root = false` that migrates compactly
-    /// (§FS-config-migrate.8.1.2).
+    /// (§FS-config-migrate.8.1).
     Compact,
 }
 
 impl Block {
-    /// §FS-config-migrate.8.1.2: `v1` read from the file whose keys are `keys`.
+    /// §FS-config-migrate.8.1: `v1` read from the file whose keys are `keys`.
     /// `scope_on_disk` answers item 1 with the unread-block probe's own scope
-    /// and member boundary (§FS-check.4.10.2), and is asked last, only of a
+    /// and member boundary (§FS-check.4.10), and is asked last, only of a
     /// block whose authored keys already pass item 2.
     pub(super) fn of(
         v1: &Project,
@@ -51,7 +51,7 @@ impl Block {
         }
     }
 
-    /// §FS-config-migrate.8.1.1: no project reads the block's named sections.
+    /// §FS-config-migrate.8.1: no project reads the block's named sections.
     pub(super) fn opted_out(self) -> bool {
         self != Self::Project
     }
@@ -61,8 +61,8 @@ impl Block {
     }
 }
 
-/// §FS-config-migrate.8.1.2 item 2's first bullet: a key with force on any
-/// block, which the compact candidate keeps (§FS-config-migrate.8.1.3).
+/// §FS-config-migrate.8.1 item 2's first bullet: a key with force on any
+/// block, which the compact candidate keeps (§FS-config-migrate.8.1).
 pub(super) fn kept(section: &str, key: &str) -> bool {
     match section {
         "" => matches!(
@@ -73,7 +73,7 @@ pub(super) fn kept(section: &str, key: &str) -> bool {
     }
 }
 
-/// §FS-config-migrate.8.1.2 item 2: `[scan] include` counts as omitted when the
+/// §FS-config-migrate.8.1 item 2: `[scan] include` counts as omitted when the
 /// file leaves it out, writes `[]`, or writes exactly version 1's default list.
 fn include_omitted(v1: &Project, keys: &Keys) -> bool {
     if keys.line("scan", "include").is_none() {
@@ -83,7 +83,7 @@ fn include_omitted(v1: &Project, keys: &Keys) -> bool {
     include.is_empty() || Some(include) == v1::default_project().schema.sources.include.as_deref()
 }
 
-/// §FS-config-migrate.8.1.2 item 2: every authored key is kept, named sections,
+/// §FS-config-migrate.8.1 item 2: every authored key is kept, named sections,
 /// an omitted include, `[output]`, or at version 1's default. The last is read
 /// as the records gate reads a project (§FS-config-migrate.5.1): the file means
 /// what version 1's defaults mean once the other keys are put back. That reading

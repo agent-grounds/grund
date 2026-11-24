@@ -15,7 +15,7 @@ from `grund-lsp` instead. It also serves the editors with no client here:
 IntelliJ IDEA and its family through LSP4IJ (`grund-lsp integrations lsp4ij`),
 Helix, Neovim, Zed, Emacs and Sublime Text. [Editor Support via LSP](lsp.md)
 sets it up
-([§FS-integrations.2.3](../functional-spec/FS-integrations.md#23-the-way-to-grund-lsp)).
+([§FS-integrations.2](../functional-spec/FS-integrations.md#2-detection)).
 
 ---
 

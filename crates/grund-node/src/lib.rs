@@ -1,4 +1,4 @@
-//! Thin, owned AsyncTask frontend (§AR-bindings.5, §FS-distribution.3.2.3.1).
+//! Thin, owned AsyncTask frontend (§AR-bindings.5, §FS-distribution.3.2.3).
 mod ffi;
 mod runtime;
 #[cfg(feature = "test-node-runtime")]
@@ -55,7 +55,7 @@ pub(crate) fn caught<T>(f: impl FnOnce() -> T) -> std::result::Result<T, ()> {
     })
 }
 
-/// Native private request transport (§FS-distribution.3.2.3.2).
+/// Native private request transport (§FS-distribution.3.2.3).
 #[napi]
 pub fn invoke(env: Env, request: ffi::Input) -> Result<ffi::Dispatch> {
     runtime::install_hook();

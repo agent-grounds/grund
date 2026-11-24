@@ -27,7 +27,7 @@ unicode-normalization = "0.1"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
 # grund's one SHA-256 (§FS-section-lock.holds.fingerprint), the digest
-# §FS-remote-projects.bytes.digest names.
+# §FS-remote-projects.bytes names.
 sha2 = "0.10"
 # The YAML event parser behind a value source's YAML reader and the span tree
 # front matter will share (§DA-yaml-value-reader.2.1). MIT OR Apache-2.0, pure

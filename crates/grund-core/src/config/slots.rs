@@ -15,7 +15,7 @@ pub struct Slot<'a> {
     pub title: Option<&'a str>,
     /// Where the slot stands; data on the slot, never a reordering (§FS-fields.order).
     pub placement: Option<&'a Placement>,
-    /// The configured strength (§FS-fields.strengths.table). A form says
+    /// The configured strength (§FS-fields.strengths). A form says
     /// nothing about it, so a slot derived from one is `May`, the weakest.
     pub presence: Strength,
     pub content: Content<'a>,

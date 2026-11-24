@@ -117,7 +117,7 @@ const RUBY_EPOCH_STARTERS: &[&str] = &["class", "module", "def"];
 /// admits (§FS-config-v2.schema.sources.epoch, §FS-inline-citation-style.1.1.4).
 /// Each profile is one of the recognizers above, fixed as it stood at the v2
 /// epoch; `None` is a language with no notion of documentation, every comment of
-/// which may declare (§FS-config-v2.schema.sources.declarations.eligible).
+/// which may declare (§FS-config-v2.schema.sources.declarations).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum DocProfile {
     None,

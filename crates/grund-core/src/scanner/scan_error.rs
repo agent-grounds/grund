@@ -225,7 +225,7 @@ impl FailureRoots {
     }
 
     /// What `scan_roots` answered, whose first entry is the path a narrowed run was handed
-    /// (§FS-check.1.3.6.1). `whole` says the scope is the config root, which is no narrowing.
+    /// (§FS-check.1.3.6). `whole` says the scope is the config root, which is no narrowing.
     pub(super) fn new(
         roots: Vec<PathBuf>,
         whole: bool,
@@ -531,7 +531,7 @@ pub(super) fn publish_file_failure(
 /// same directory entry for the same bare reason (§FS-check.2.4.2, §AR-scanner.1.relisted): a link
 /// in a value home whose target lookup is refused is reported by the walk too, whatever its name,
 /// and the value pass's line, with its value-home remedy, is
-/// the one that stands (§FS-values.5.3.1), since `exclude` does not reach a value source.
+/// the one that stands (§FS-values.5.3), since `exclude` does not reach a value source.
 pub(super) fn publish_value_source_failure(
     report: ScanError,
     error: &Error,

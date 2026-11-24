@@ -1,7 +1,7 @@
 # Node binding acceptance
 
 Run `python tests/bindings/node/run.py` from the checkout. This tests the local
-API rehearsal of [§FS-distribution.3.2.4](../../../docs/functional-spec/FS-distribution.md#324-acceptance-evidence).
+API rehearsal of [§FS-distribution.3.2](../../../docs/functional-spec/FS-distribution.md#32-node-grund-cli-npm-package).
 Node 22/24, npm, Rust/Cargo, linker/SDK and dependency access or populated caches
 are prerequisites. Scratch packages and Cargo targets are under `~/ag/tmp`.
 No registry publication or installed-prebuilt platform certification occurs.

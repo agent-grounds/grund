@@ -34,7 +34,7 @@ An `include` entry and a default root such as `src` move the same way, since the
 
 ### 2.2 What moves in bytes only
 
-Where a wider walk root meets the denied parent, version 2 exited `2` before and exits `2` now, with one more `error:` line at the home, since the parent and the home are two failures ([§FS-check.2.4.2](../../functional-spec/FS-check.md#242-one-failure-one-line)). A run narrowed to a path outside the home, as `grund check docs/offer.md`, keeps its exit and gains the [§FS-check.1.3.6.3](../../functional-spec/FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud) caution naming the home.
+Where a wider walk root meets the denied parent, version 2 exited `2` before and exits `2` now, with one more `error:` line at the home, since the parent and the home are two failures ([§FS-check.2.4.2](../../functional-spec/FS-check.md#242-one-failure-one-line)). A run narrowed to a path outside the home, as `grund check docs/offer.md`, keeps its exit and gains the [§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows) caution naming the home.
 
 ### 2.3 What does not move
 

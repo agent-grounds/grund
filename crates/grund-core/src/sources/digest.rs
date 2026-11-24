@@ -1,5 +1,5 @@
 //! grund's one SHA-256 (§FS-section-lock.holds.fingerprint): the digest
-//! §FS-remote-projects.bytes.digest names for a projection's exact bytes, and the
+//! §FS-remote-projects.bytes names for a projection's exact bytes, and the
 //! one a section lock's fingerprint is cut from. It sits with the bytes rather than
 //! with either reader, so the two cannot come to disagree on the algorithm.
 

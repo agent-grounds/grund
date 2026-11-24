@@ -1,4 +1,4 @@
-//! Request guards, pool ownership and environment cleanup (§FS-distribution.3.2.3.1).
+//! Request guards, pool ownership and environment cleanup (§FS-distribution.3.2.3).
 use napi::Env;
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;

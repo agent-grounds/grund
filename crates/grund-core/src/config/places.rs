@@ -152,7 +152,7 @@ impl Row {
             .collect()
     }
 
-    /// §FS-config.3.4.2.3: the `index_paths` the configuration reads as Markdown
+    /// §FS-config.3.4.2: the `index_paths` the configuration reads as Markdown
     /// (§FS-fmt.2.3.1). A named index that is not is refused at load
     /// (§FS-config-v2.checks.config-index-not-markdown), so only the default `README.md` can be
     /// dropped here, and its folder is judged as under `index = false`
@@ -225,7 +225,7 @@ impl Schema {
 
     /// Whether a run without `--full` reads `relative` by its owner: in v2 a file
     /// is unwalked only when the place that owns it is `scan = false`, so a scanned
-    /// place under an unscanned one is read (§FS-config-v2.schema.places.boundaries.6).
+    /// place under an unscanned one is read (§FS-config-v2.schema.places.boundaries).
     pub fn owner_walked(&self, relative: &Path) -> bool {
         self.owner(relative).is_none_or(|owner| owner.place.scanned)
     }

@@ -1,4 +1,4 @@
-// Native subscriptions derived from shared checking inputs (§FS-check.6.1.3).
+// Native subscriptions derived from shared checking inputs (§FS-check.6.1).
 
 type WatchNotice = notify::Result<notify::Event>;
 
@@ -9,13 +9,13 @@ struct WatchSubscriptions {
     runtime_failure: std::sync::Arc<std::sync::Mutex<Option<String>>>,
     inputs: BTreeSet<grund_core::CheckInput>,
     desired: BTreeSet<grund_core::CheckInput>,
-    // §FS-check.6.1.3: native ownership is physical; inputs remain lexical too.
+    // §FS-check.6.1: native ownership is physical; inputs remain lexical too.
     handles: BTreeMap<PathBuf, bool>,
     failure: Option<String>,
 }
 
 /// A bounded native queue. Saturation records uncertainty instead of blocking
-/// the backend or accumulating work (§FS-check.6.1.2, §FS-check.6.1.4).
+/// the backend or accumulating work (§FS-check.6.1).
 fn native_watch_backend(
     tx: std::sync::mpsc::SyncSender<WatchNotice>,
     lost: std::sync::Arc<std::sync::atomic::AtomicBool>,
@@ -40,7 +40,7 @@ fn native_watch_backend(
     #[cfg(feature = "test-watch")]
     watch_retain_callback(closed.clone());
     use notify::Watcher;
-    // §FS-check.6.1.3: followed targets receive explicit physical coverage;
+    // §FS-check.6.1: followed targets receive explicit physical coverage;
     // recursive traversal must not register their lexical aliases again.
     let watcher = notify::RecommendedWatcher::new(
         move |event: WatchNotice| {
@@ -58,7 +58,7 @@ fn native_watch_backend(
 }
 
 /// Shared with failure-injection builds so saturation exercises the real
-/// callback policy (§FS-check.6.1.4, §FS-check.6.3.2).
+/// callback policy (§FS-check.6.1, §FS-check.6.3.2).
 fn watch_queue_notice(
     tx: &std::sync::mpsc::SyncSender<WatchNotice>,
     lost: &std::sync::atomic::AtomicBool,
@@ -97,7 +97,7 @@ struct NativeWatchBackend {
 impl NativeWatchBackend {
     /// ReadDirectoryChangesW keys registrations by path, so a second one orphans
     /// the first request, and that request keeps the callback past release.
-    /// Refuse it on every platform (§FS-check.6.1.3, §FS-check.6.3.3).
+    /// Refuse it on every platform (§FS-check.6.1, §FS-check.6.3.3).
     fn watch(&mut self, path: &Path, mode: notify::RecursiveMode) -> notify::Result<()> {
         use notify::Watcher;
         if self.registered.contains(path) {
@@ -148,7 +148,7 @@ impl WatchSubscriptions {
     }
 
     /// Parent anchors are shallow; only resolved trees recurse. Absent paths
-    /// use their nearest existing directory (§FS-check.6.1.3).
+    /// use their nearest existing directory (§FS-check.6.1).
     fn coverage(input: &grund_core::CheckInput) -> BTreeMap<PathBuf, bool> {
         let mut coverage = BTreeMap::new();
         if input.recursive && input.path.is_dir() {
@@ -158,7 +158,7 @@ impl WatchSubscriptions {
         while let Some(path) = parent {
             if path.is_dir() {
                 coverage.entry(path.to_path_buf()).or_insert(false);
-                // §FS-check.6.1.3: also anchor replacement of this directory,
+                // §FS-check.6.1: also anchor replacement of this directory,
                 // including a root with invalid config and no ancestor climb.
                 if let Some(anchor) = path.parent().filter(|anchor| anchor.is_dir()) {
                     coverage.entry(anchor.to_path_buf()).or_insert(false);
@@ -167,7 +167,7 @@ impl WatchSubscriptions {
             }
             parent = path.parent();
         }
-        // §FS-check.6.1.3: intermediate directory links can retarget while
+        // §FS-check.6.1: intermediate directory links can retarget while
         // their old physical directory remains. Keep each link's own parent.
         for path in input.path.ancestors() {
             if std::fs::symlink_metadata(path).is_ok_and(|m| m.file_type().is_symlink()) {
@@ -181,7 +181,7 @@ impl WatchSubscriptions {
 
     /// Called synchronously by the engine before reads, including Rayon reads.
     /// Additions happen immediately; retirement waits for rediscovery to finish
-    /// (§FS-check.6.1.1).
+    /// (§FS-check.6.1).
     fn observe(&mut self, input: grund_core::CheckInput) -> bool {
         self.desired.insert(input.clone());
         self.inputs.insert(input.clone());
@@ -213,7 +213,7 @@ impl WatchSubscriptions {
             return Ok(());
         }
         watch_inject_failure!("subscribe")?;
-        // §FS-check.6.1.3: a shallow anchor that becomes recursive coverage moves
+        // §FS-check.6.1: a shallow anchor that becomes recursive coverage moves
         // to a complete replacement backend instead of registering its directory twice.
         if self.handles.contains_key(&path) {
             let mut handles = self.handles.clone();
@@ -238,8 +238,8 @@ impl WatchSubscriptions {
     }
 
     /// A coverage path deleted after the event or check that named it is a missing
-    /// input, not a failed subscription (§FS-check.6.1.4). Its nearest existing
-    /// parent anchor is part of the same input's coverage (§FS-check.6.1.3), so the
+    /// input, not a failed subscription (§FS-check.6.1). Its nearest existing
+    /// parent anchor is part of the same input's coverage (§FS-check.6.1), so the
     /// path is skipped (`None`) and a full rescan is forced to see its recreation.
     /// The backend's own not-found answer is the evidence: re-checking existence
     /// would race a recreation. Every other failure stays fatal (§FS-check.6.3.2).
@@ -264,7 +264,7 @@ impl WatchSubscriptions {
 
     /// Build a replacement backend under retained coverage before dropping the
     /// old one. This repairs stale inode watches as well as loss/overflow
-    /// (§FS-check.6.1.4). Failure is fatal, never a stale resident loop.
+    /// (§FS-check.6.1). Failure is fatal, never a stale resident loop.
     fn recover(&mut self) -> Result<(), String> {
         watch_inject_failure!("recover")?;
         let handles = self.physical_coverage()?;
@@ -274,7 +274,7 @@ impl WatchSubscriptions {
     }
 
     /// Deduplicate aliases and subsume shallow/recursive children under a
-    /// recursive physical root (§FS-check.6.1.3). Recompute after retargeting.
+    /// recursive physical root (§FS-check.6.1). Recompute after retargeting.
     fn physical_coverage(&self) -> Result<BTreeMap<PathBuf, bool>, String> {
         let mut handles = BTreeMap::new();
         for input in &self.inputs {
@@ -300,7 +300,7 @@ impl WatchSubscriptions {
 
     /// A backend can share handles even between recursive parents and children.
     /// Install the complete retained set before releasing its old owner instead
-    /// of unwatching an alias or subtree still needed (§FS-check.6.1.1, §FS-check.6.1.4).
+    /// of unwatching an alias or subtree still needed (§FS-check.6.1).
     fn replace_coverage(&mut self, mut handles: BTreeMap<PathBuf, bool>) -> Result<(), String> {
         let mut replacement = native_watch_backend(
             self.tx.clone(),
@@ -321,7 +321,7 @@ impl WatchSubscriptions {
                 })?
                 .is_none()
             {
-                // §FS-check.6.1.4: not owned, so the next reconciliation retries it.
+                // §FS-check.6.1: not owned, so the next reconciliation retries it.
                 vanished.push(path.clone());
                 continue;
             }
@@ -354,7 +354,7 @@ impl WatchSubscriptions {
 }
 
 /// The backend or resolver found no path: it vanished before it could be covered
-/// (§FS-check.6.1.4). Watch limits, permissions and backend errors are not this.
+/// (§FS-check.6.1). Watch limits, permissions and backend errors are not this.
 /// The Windows backend reports a missing path only as this generic message.
 fn watch_path_vanished(err: &notify::Error) -> bool {
     match &err.kind {
@@ -368,7 +368,7 @@ fn watch_path_vanished(err: &notify::Error) -> bool {
 }
 
 /// Shallow ancestors only react to exact inputs or their replacement/creation;
-/// unrelated siblings do not cause runs (§FS-check.6.1.3).
+/// unrelated siblings do not cause runs (§FS-check.6.1).
 fn watch_event_relevant(inputs: &BTreeSet<grund_core::CheckInput>, event: &notify::Event) -> bool {
     if matches!(event.kind, notify::EventKind::Access(_)) {
         return false;

@@ -17,7 +17,7 @@ The example pins three runs ([§FS-examples.5.5](../../docs/functional-spec/FS-e
 [`1-cover/repo`](1-cover/repo/) is `ee`. Its [`docs/tck.md`](1-cover/repo/docs/tck.md) cites
 `substratevm/FS-sec.1` and `substratevm/FS-rel.access.1`, and its `grund.toml` lists no
 workspace, so the alias resolves nowhere. `cover` keeps it anyway
-([§FS-cover.2.1](../../docs/functional-spec/FS-cover.md#21-a-cross-project-citation-counts)):
+([§FS-cover.2](../../docs/functional-spec/FS-cover.md#2-behaviour)):
 
 ```bash
 cd examples/downstream-citers/1-cover/repo
@@ -66,7 +66,7 @@ docs/functional-spec/old.md:1: warning: declared but never cited: FS-old; cite i
 ```
 
 The page is an ordinary citing file: a citation counts wherever the run reads it
-([§FS-check.4.1.4](../../docs/functional-spec/FS-check.md#414-a-citation-anywhere-in-the-resolution-scope-counts)). The one warning left is the point nobody cites.
+([§FS-check.4.1](../../docs/functional-spec/FS-check.md#41-unused-declaration)). The one warning left is the point nobody cites.
 
 ## Step 3: a listed point is deleted
 

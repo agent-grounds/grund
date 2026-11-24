@@ -69,18 +69,18 @@ fn schema_header(view: &SchemaView) -> String {
 }
 
 /// §FS-schema.8: the legend's three lines; the graph formats print the first two
-/// and their own third (§FS-schema.9). The table adds the lines of §FS-schema.8.3
-/// and §FS-schema.8.4 after them where each applies.
+/// and their own third (§FS-schema.9). The table adds the lines of §FS-schema.8
+/// after them where each applies.
 const SCHEMA_LEGEND: [&str; 3] = [
     "must = check error · warn = check warning · should = suggestion (check --suggestions)",
     "may = allowed · must not / warn not / should not = forbidden at that strength",
     "A|B = one obligation, met by citing either · — = no direction rule names it",
 ];
 
-/// §FS-schema.8.3: the table legend's fourth line, where some scanned place or
+/// §FS-schema.8: the table legend's fourth line, where some scanned place or
 /// the complement has an obligation and no `grounded` badge — an obligation
 /// never judges a file there that cites nothing, and grounding is what does
-/// (§FS-config-v2.rules.citations.uncited, §FS-config.3.9.1.4). The graph
+/// (§FS-config-v2.rules.citations.uncited, §FS-config.3.9.1). The graph
 /// formats never print it.
 fn schema_uncited_line(view: &SchemaView) -> Option<String> {
     let obligation = |level: CitationLevel| {
@@ -102,8 +102,8 @@ fn schema_uncited_line(view: &SchemaView) -> Option<String> {
     })
 }
 
-/// §FS-schema.8.4: the table legend's last line, where some kind prints a field
-/// line, which places every heading a shape line shows (§FS-schema.4.1.1). The
+/// §FS-schema.8: the table legend's last line, where some kind prints a field
+/// line, which places every heading a shape line shows (§FS-schema.4.1). The
 /// graph formats never print it.
 fn schema_depth_line(view: &SchemaView) -> Option<String> {
     let fields = view.nodes.iter().any(|node| !node.slots.is_empty());
@@ -113,7 +113,7 @@ fn schema_depth_line(view: &SchemaView) -> Option<String> {
 /// §FS-schema.9: the third comment line of the graph formats.
 const SCHEMA_GRAPH_ANY_OF: &str = "any of = one obligation, met by citing any one of its arrows";
 
-/// §FS-schema.2.1: the line naming a workspace root's members, `None` elsewhere.
+/// §FS-schema.2: the line naming a workspace root's members, `None` elsewhere.
 fn schema_members_line(view: &SchemaView) -> Option<String> {
     (!view.members.is_empty()).then(|| {
         format!(

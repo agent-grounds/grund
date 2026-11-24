@@ -70,7 +70,7 @@ pub(super) fn settings(
             &bare_citations_repair(here),
         ));
     }
-    // §FS-config-migrate.3.1.1, never on a block nobody reads (§FS-config-migrate.8.1.1)
+    // §FS-config-migrate.3.1.1, never on a block nobody reads (§FS-config-migrate.8.1)
     if !schema.ids.named_sections && !block.opted_out() {
         out.push(match keys.line("id", "named_sections") {
             Some(line) => refusal(
@@ -151,14 +151,14 @@ pub(super) fn settings(
             .as_ref()
             .is_some_and(|kind| kind.value_chapter().is_some())
         {
-            // §FS-config-migrate.3.1.7.1: a fetched kind takes no field, so neither line holds.
+            // §FS-config-migrate.3.1.7: a fetched kind takes no field, so neither line holds.
             let (reason, repair) = if row.fetches() {
                 (
                     "has no version 2 spelling on a fetched kind, because a fetched kind takes no fields",
                     "none yet; keep version 1, or under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths",
                 )
             } else {
-                // §FS-config-migrate.3.1.7.2: the repair says what removal costs and the rewrite.
+                // §FS-config-migrate.3.1.7: the repair says what removal costs and the rewrite.
                 (
                     "would become a field, which adds a \"Declaration shapes\" section grund check compares",
                     "removing value_chapter alone ends the comparison of every binding that quoted the chapter; to keep them compared, under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths",
@@ -241,7 +241,7 @@ fn grounding(v1: &Project, keys: &Keys) -> Vec<MigrateRefusal> {
     }
     for row in &v1.schema.rows {
         let (require, level) = configured_row_grounding(rules, &row.name);
-        // An explicit row `false` wins over the flag (§FS-config.3.4.8.3).
+        // An explicit row `false` wins over the flag (§FS-config.3.4.8).
         let explicit = rules
             .grounding
             .kinds
@@ -264,7 +264,7 @@ fn grounding(v1: &Project, keys: &Keys) -> Vec<MigrateRefusal> {
 /// §FS-config-migrate.3.1.4: each path-shaped exclude entry, with the files the
 /// glob it resembles would stop reading on this tree, among the ones version 1
 /// reads, counted as `0 files` where there are none, when the refusal still stands
-/// (§FS-config-migrate.3.1.4.1).
+/// (§FS-config-migrate.3.1.4).
 fn path_shaped_excludes(
     v1: &Project,
     keys: &Keys,

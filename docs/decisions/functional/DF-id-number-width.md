@@ -8,7 +8,7 @@
 
 A repo whose `[id] format` carries a `{number}` placeholder — the `grund init` default `{kind}-{number}-{slug}` — needs `grund id` to decide how many digits to pad the next number to. `FS-7` and `FS-007` are the same number; which one does the tool emit? The choice is small but, once a handful of IDs exist, sticky: an ID is an immutable handle ([§FS-non-goals.4](../../functional-spec/FS-non-goals.md#4-cross-workspace-id-renaming), [§FS-id.4](../../functional-spec/FS-id.md#4-next-number-derivation)), so a width chosen on day one is the width every ID of that kind below the rollover threshold wears forever.
 
-(Repos with no `{number}` placeholder — `{kind}-{slug}`, the form `grund` itself uses — are unaffected: there is no number to pad, `--width` is inert, and the `--format json` `number` field is `null` — [§FS-id.4.1](../../functional-spec/FS-id.md#41-number-less-id-formats).)
+(Repos with no `{number}` placeholder — `{kind}-{slug}`, the form `grund` itself uses — are unaffected: there is no number to pad, `--width` is inert, and the `--format json` `number` field is `null` — [§FS-id.4](../../functional-spec/FS-id.md#4-next-number-derivation).)
 
 ## 2. Decision
 

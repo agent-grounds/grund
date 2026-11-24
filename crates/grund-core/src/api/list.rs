@@ -5,7 +5,7 @@
 //! Its own file since before the component was a module, so the list contract
 //! could grow without the contract file growing with it
 //! (§AR-core-module-layout.3). The citation counts each row's `refs` is read off
-//! are the catalog query's, read downward (§FS-list.3.2.1).
+//! are the catalog query's, read downward (§FS-list.3.2).
 
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
@@ -44,7 +44,7 @@ pub struct ListOpts {
     /// Optional declaration/chapter selector (§FS-rules.8).
     pub selector: Option<String>,
     /// Coordinate globs, unioned; empty lists declarations as before
-    /// (§FS-coordinate-globs.matching.union).
+    /// (§FS-coordinate-globs.matching).
     pub globs: Vec<String>,
 }
 
@@ -86,7 +86,7 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
 }
 
 /// [`list`] for a frontend that renders the run's `[workspace]` warnings even
-/// when the query is refused (§FS-check.4.10.7, §FS-workspace.6.1.7).
+/// when the query is refused (§FS-check.4.10, §FS-workspace.6.1.7).
 ///
 /// A refusal `list` settles *after* the workspace pass — an unknown project alias,
 /// an unknown kind — leaves an `Err` with nowhere to carry a caution the reader is
@@ -155,13 +155,13 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             if opts.unused_only && used_counts.get(id).copied().unwrap_or(0) > 0 {
                 continue;
             }
-            // §FS-list.1.3.1: a configured `E2E` kind is left out unless `--kind` selects it.
+            // §FS-list.1.3: a configured `E2E` kind is left out unless `--kind` selects it.
             if opts.unused_only && unused_leaves_out(&id.kind, &opts.kind_filter) {
                 continue;
             }
             // §AR-scanner.4.6: the declarations every command counts, each at its record,
             // so a paired declaration is its target's, one row per declaration the target
-            // holds, wherever it sits (§FS-declarations.stubs.pairing.4, §FS-list.2.5).
+            // holds, wherever it sits (§FS-declarations.stubs.pairing, §FS-list.2).
             let paired = paired_declarations(decls);
             let duplicate = paired.len() > 1;
             // §AR-resolver.3.3: the path's entries, each with the project's answers.
@@ -325,7 +325,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                         .collect(),
                 };
             };
-            // §FS-coordinate-globs.scope.filters: the glob intersects the selector, and a
+            // §FS-coordinate-globs.scope: the glob intersects the selector, and a
             // declaration's rows are the declaration, then its sections in path order.
             let glob_selects =
                 |section: Option<&str>| globs.selects(entry.project_index, &label, section);

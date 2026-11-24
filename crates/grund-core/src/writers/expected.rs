@@ -3,7 +3,7 @@
 //! rendered whole through the two calls `grund init` writes with, per
 //! conversation surface, so the command that clears a drift finding and the
 //! check that raises it ask one component for one answer from opposite
-//! directions (§AR-checker.2.7, §FS-check.3.5.4). The chapter-rule section is
+//! directions (§AR-checker.2.7, §FS-check.3.5). The chapter-rule section is
 //! rendered from the check run's own catalog, so building it adds no walk
 //! (§FS-init.2.3.4), and the workspace sections from the projects the run
 //! already loaded, or not at all (§FS-check.3.5.5).
@@ -60,19 +60,19 @@ impl WorkspaceBlocks<'_> {
 
 /// Render `Expected` for one project's check (§AR-checker.1.3).
 ///
-/// `findings` is the run's resolution scope (§FS-check.1.3.6.1), never its
+/// `findings` is the run's resolution scope (§FS-check.1.3.6), never its
 /// report scope, so a path holding no rule declaration still renders every
 /// chapter-rule bullet and a narrowed run compares against the render
-/// `grund check .` compares against (§FS-rules.9.1.1). `workspace` is the project
+/// `grund check .` compares against (§FS-rules.9.1). `workspace` is the project
 /// map the run loaded, which is what lets a run at the workspace root resolve a
 /// member's cross-boundary rule and so catch a member block missing its bullet
 /// (§FS-rules.9.1).
 ///
-/// A rule this scope cannot verify still earns its bullet (§FS-rules.4.1.2,
-/// §FS-check.3.5.4). A genuinely invalid rule leaves no block of the project
+/// A rule this scope cannot verify still earns its bullet (§FS-rules.4.1,
+/// §FS-check.3.5). A genuinely invalid rule leaves no block of the project
 /// to compare, because `grund init` refuses to write one while it stands: the
 /// entrypoints are dropped and `blocks_withheld` is set, so the rule's own
-/// located error is the finding to act on (§FS-check.3.5.4). `blocks` says
+/// located error is the finding to act on (§FS-check.3.5). `blocks` says
 /// whether the workspace sections are rendered and compared, and from which
 /// projects (§FS-check.3.5.5).
 pub(crate) fn expected(

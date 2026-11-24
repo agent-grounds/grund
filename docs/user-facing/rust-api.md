@@ -134,7 +134,7 @@ match integrations(opts) {
 Without `write`, the same call only describes: `detected`, one status per
 client, and the named client's `artifact`. A refusal is an `IntegrationsError`.
 Its `failure` says why, and its `output` keeps what the run wrote before it
-stopped ([§FS-integrations.1.3.3](../functional-spec/FS-integrations.md#133-the-refusal)).
+stopped ([§FS-integrations.1.3](../functional-spec/FS-integrations.md#13-which-side-owns-what)).
 
 A `format_references` run that needs the whole declaration set and finds a merge
 conflict left in a declaration writes nothing, and its error downcasts to

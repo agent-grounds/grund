@@ -1,12 +1,12 @@
-//! Effective checking inputs, reported before reads (§FS-check.6.1.1,
-//! §FS-check.6.1.3). No watcher, process, or stream lives in the engine.
+//! Effective checking inputs, reported before reads
+//! (§FS-check.6.1). No watcher, process, or stream lives in the engine.
 
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 /// Data-only subscription intent. Exact paths also need replacement anchors;
-/// trees include ignored descendants (§AR-bindings.3, §FS-check.6.1.3).
+/// trees include ignored descendants (§AR-bindings.3, §FS-check.6.1).
 #[doc(hidden)]
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct CheckInput {
@@ -43,7 +43,7 @@ pub(crate) fn check_input_observer() -> Option<CheckInputObserver> {
 }
 
 /// Observe lexical paths and followed targets before content reads. Broken
-/// links retain their intended target for repair (§FS-check.6.1.3).
+/// links retain their intended target for repair (§FS-check.6.1).
 pub(crate) fn observe_input(path: &Path, recursive: bool) -> bool {
     let Some(observer) = check_input_observer() else {
         return true;
@@ -56,7 +56,7 @@ pub(crate) fn observe_input(path: &Path, recursive: bool) -> bool {
     let absolute = crate::model::normalize_path_lexically(&absolute);
     let mut cursor = absolute;
     let mut seen = std::collections::BTreeSet::new();
-    // §FS-check.6.1.3: intermediate links can be replaced independently too.
+    // §FS-check.6.1: intermediate links can be replaced independently too.
     while seen.insert(cursor.clone()) {
         if !observer(CheckInput {
             path: cursor.clone(),

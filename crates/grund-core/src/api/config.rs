@@ -19,13 +19,13 @@ use crate::workspace::{expand_workspace_tree, open, resolve_workspace_config};
 use crate::writers::scaffold_project;
 
 /// The run's `[workspace]` warnings off a `Config` a caller already holds
-/// (§FS-check.4.10, §FS-workspace.6.1.7.6): what the workspace pass
-/// settled on it, plus the walk §FS-check.4.10.2 needs, published as the
+/// (§FS-check.4.10, §FS-workspace.6.1.7): what the workspace pass
+/// settled on it, plus the walk §FS-check.4.10 needs, published as the
 /// `Finding`s a frontend renders (§FS-distribution.3.1).
 ///
 /// The channel rides on the config every walking command resolves, so a command
 /// that hands one back — [`validate_config`], which loads every member's
-/// (§FS-config.4.1.1) — needs no channel of its own.
+/// (§FS-config.4.1) — needs no channel of its own.
 #[doc(hidden)]
 pub fn config_run_warnings(config: &Config) -> Vec<Finding> {
     public_run_warnings(config, settled_run_warnings(config.run()))
@@ -63,7 +63,7 @@ pub fn effective_project(path: &Path) -> Result<Project> {
 /// header's config path is spelled from the config root, whatever the run's
 /// `--path-base` (§FS-schema.1), and a nameless project is named by its root.
 /// Where no config file was found, the view carries what `grund init --scaffold`
-/// would write there beside it (§FS-schema.8.2).
+/// would write there beside it (§FS-schema.8).
 pub fn schema_view(path: &Path) -> Result<SchemaView> {
     let config = effective_config(path)?;
     let mut view = SchemaView::of_config(&config);
@@ -78,13 +78,13 @@ pub fn schema_view(path: &Path) -> Result<SchemaView> {
 /// (§FS-config.4.1). Discovery *is* the validation for one project — a config
 /// that loads is a config that is valid. At a workspace root the config the
 /// run loads includes every member's, so validation loads them too
-/// (§FS-config.4.1.1): every member config the run would load, and the
+/// (§FS-config.4.1): every member config the run would load, and the
 /// `members` list itself, is validated here exactly as `expand_workspace_tree`
 /// validates it for `grund check` — no tree scan. Returns the resolved config
 /// so a caller can also report the non-fatal findings [`config_warnings`]
 /// carries: at a workspace root, the root's config's, each expanded project's
 /// and each `include_root = false` block's, the set `grund check` names
-/// (§FS-config.4.1.1, §FS-check.4.11.3), recorded on the returned config's run
+/// (§FS-config.4.1, §FS-check.4.11), recorded on the returned config's run
 /// from the configs expansion already loaded, so no member is walked twice. A path inside a member resolves to that
 /// member and names its findings alone.
 pub fn validate_config(path: &Path) -> Result<Config> {
@@ -101,9 +101,9 @@ pub fn validate_config(path: &Path) -> Result<Config> {
 /// The CLI-level `warning:` texts a loaded config carries: every finding the
 /// module doc of `api/config_findings.rs` lists, which is the one list of them.
 /// Message text only, so `grund config validate` and `grund config show` print
-/// the same sentences `grund check` does (§FS-check.4.11.2) without depending on
+/// the same sentences `grund check` does (§FS-check.4.11) without depending on
 /// the checker's report type. For a config [`validate_config`] returned at a
-/// workspace root that is every config the workspace reads (§FS-config.4.1.1); for any
+/// workspace root that is every config the workspace reads (§FS-config.4.1); for any
 /// other, its own alone (§FS-config.4.2).
 pub fn config_warnings(config: &Config) -> Vec<String> {
     held_config_diagnostics(config)
@@ -112,7 +112,7 @@ pub fn config_warnings(config: &Config) -> Vec<String> {
         .collect()
 }
 
-/// Reference marker and typing trigger resolved for one path. §FS-lsp.1.4.6
+/// Reference marker and typing trigger resolved for one path. §FS-lsp.1.4
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ReferenceStyle {
     pub marker: String,
@@ -121,7 +121,7 @@ pub struct ReferenceStyle {
 
 /// Resolve the marker/trigger pair for a specific document. Workspace member
 /// files use the member config, matching `grund fmt` and `grund check`
-/// (§FS-lsp.1.4.6, §FS-workspace.5.1).
+/// (§FS-lsp.1.4, §FS-workspace.5.1).
 pub fn reference_style(path: &Path) -> Result<ReferenceStyle> {
     let config = resolve_workspace_config(path)?;
     Ok(ReferenceStyle {

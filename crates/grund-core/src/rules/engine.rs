@@ -38,7 +38,7 @@ mod tests_counted;
 mod tests_mixed_ramp;
 
 /// One finding the engine returns, and beside it the citations its count read, each the fact's own
-/// `SiteMeta`: empty for every finding but a count above zero (§AR-rules.5, §FS-rules.7.3.1). The
+/// `SiteMeta`: empty for every finding but a count above zero (§AR-rules.5, §FS-rules.7.3). The
 /// checker renders them; the pair is the existing boundary types, not a new one.
 pub(crate) type RuleFinding = (Diagnostic, Vec<SiteMeta>);
 
@@ -54,7 +54,7 @@ struct SemanticRule {
 
 /// Deduplicate normalized constraints and evaluate them over one snapshot. The
 /// engine never reparses prose or asks a producer for more facts (§AR-rules.4).
-/// `headings` are what a too-low chapter count may name (§FS-rules.7.2.1); the
+/// `headings` are what a too-low chapter count may name (§FS-rules.7.2); the
 /// unmarked ones it names come back beside the findings.
 pub(crate) fn evaluate_with(
     rules: &[ParsedRule],
@@ -240,7 +240,7 @@ fn evaluate_one(
                 return;
             };
             for subject in subjects {
-                // §FS-rules.7.11: a chapter a stub's target lends counts as a scanned one.
+                // §FS-rules.5.1: a chapter a stub's target lends counts as a scanned one.
                 // §FS-fields.front-matter.surfaces: a front-matter unit, with no display
                 // name, is neither counted nor listed.
                 let chapters: Vec<(&NodeKey, &str, &str)> = index
@@ -256,7 +256,7 @@ fn evaluate_one(
                     .filter(|(_, _, display_name)| display_name.eq_ignore_ascii_case(name))
                     .count();
                 if !rule.cardinality.contains(count) {
-                    // §FS-rules.7.2.1: show accepted direct chapters in source order,
+                    // §FS-rules.7.2: show accepted direct chapters in source order,
                     // retaining the complete released prefix (§FS-errors.3).
                     let mut observed = chapters.clone();
                     observed.sort_by_key(|(node, _, _)| {
@@ -273,7 +273,7 @@ fn evaluate_one(
                             .collect::<Vec<_>>()
                             .join(", ")
                     };
-                    // §FS-rules.7.2.1: a too-low count names a heading that would count.
+                    // §FS-rules.7.2: a too-low count names a heading that would count.
                     let named = rule
                         .cardinality
                         .minimum
@@ -322,7 +322,7 @@ fn evaluate_one(
                     if citation_matches_targets(target, &targets, index) {
                         // §FS-rules.7.5: hard prohibitions reuse §FS-check.3.12's ordinary
                         // repair with `(<RULE-ID>)` authority; recommendations omit it.
-                        // §FS-check.3.12.2 finalizes required index-entry repairs.
+                        // §FS-check.3.12 finalizes required index-entry repairs.
                         let (code, repair) = if rule.level == RuleLevel::Required {
                             (Code::FORBIDDEN_CITATION, citation_direction_repair())
                         } else {
@@ -355,7 +355,7 @@ fn evaluate_one(
         RuleRelation::BeCitedBy => {
             for subject in subjects {
                 // §FS-rules.3.4: a numbered section of the subject's own body
-                // reaches it here, an ordinary site since §FS-rules.7.8 landed, and a
+                // reaches it here, an ordinary site since §FS-rules.5.1 landed, and a
                 // citing kind counts wherever a pinned target matches it (§FS-config.3.9.3).
                 let read: Vec<_> = index
                     .citations_to(&subject)
@@ -393,7 +393,7 @@ fn evaluate_one(
     }
 }
 
-/// §FS-rules.7.2.1: the `named` case for the first direct non-chapter heading that reads
+/// §FS-rules.7.2: the `named` case for the first direct non-chapter heading that reads
 /// `name`, unless its lower-case form is no section name or already a direct chapter's handle.
 fn named_form<'h>(
     headings: Option<&'h Vec<NonChapter>>,
@@ -426,7 +426,7 @@ fn named_form<'h>(
 }
 
 /// A heading's text after any leading number such as `1.` or `2.3`, which a
-/// numbered heading carries and a chapter's name does not (§FS-rules.7.2.1).
+/// numbered heading carries and a chapter's name does not (§FS-rules.7.2).
 fn unnumbered(text: &str) -> &str {
     let rest = text.trim_start_matches(|c: char| c.is_ascii_digit() || c == '.');
     if rest.len() < text.len() && rest.starts_with(' ') {

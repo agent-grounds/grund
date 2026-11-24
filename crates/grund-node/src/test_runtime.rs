@@ -1,4 +1,4 @@
-//! Native-only deterministic runtime seam (§FS-distribution.3.2.3.1).
+//! Native-only deterministic runtime seam (§FS-distribution.3.2.3).
 use napi::bindgen_prelude::AsyncTask;
 use napi::{Env, Result, Task};
 use napi_derive::napi;

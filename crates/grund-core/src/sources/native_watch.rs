@@ -1,6 +1,6 @@
 //! The native watcher (§AR-lsp.2.1): the `notify` backend `check --watch` runs, and
 //! the one an editor server falls back on for the import roots its client cannot
-//! watch, with the one debounce both coalesce its events by (§FS-check.6.1.2). The
+//! watch, with the one debounce both coalesce its events by (§FS-check.6.1). The
 //! backend is behind the `native-watch` feature, which only grund-cli and grund-lsp
 //! enable, so the bindings never link it; the debounce is time arithmetic and needs
 //! no feature.
@@ -14,13 +14,13 @@ use notify::Watcher;
 use std::path::PathBuf;
 use std::time::Duration;
 
-/// The quiet after the last pending event that ends a burst (§FS-check.6.1.2).
+/// The quiet after the last pending event that ends a burst (§FS-check.6.1).
 const QUIET: Duration = Duration::from_millis(100);
 /// The longest a burst waits from its first pending event, so continued writes
-/// cannot postpone the work after them indefinitely (§FS-check.6.1.2).
+/// cannot postpone the work after them indefinitely (§FS-check.6.1).
 const CEILING: Duration = Duration::from_millis(500);
 
-/// The bounded debounce over native events (§FS-check.6.1.2): a burst is due after
+/// The bounded debounce over native events (§FS-check.6.1): a burst is due after
 /// 100 ms without an event or 500 ms from its first event, whichever comes
 /// first. Times are durations since one instant of the caller's clock, so the policy
 /// is independent of how many events the backend delivers, and a test can feed it

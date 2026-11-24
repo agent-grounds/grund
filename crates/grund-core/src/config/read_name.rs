@@ -202,7 +202,7 @@ impl<'f> Frame<'f> {
     /// none. This is the entry answer, not the file's reading: the rule then picks the format, or
     /// says the file reads as no value source at all, which earns the name a located finding
     /// rather than silence, and a failed status keeps this format (§FS-scan.identity.reading,
-    /// §FS-scan.checks.reading-moved, §FS-values.5.3.1).
+    /// §FS-scan.checks.reading-moved, §FS-values.5.3).
     pub(crate) fn enters_as_value(&self, schema: &Schema, path: &Path) -> Option<ValueFormat> {
         let as_spelled = ReadName::as_spelled(schema, path);
         let entered = FileReading::of(self.compiled, schema, as_spelled).value_format();

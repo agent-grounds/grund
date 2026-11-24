@@ -95,7 +95,7 @@ pub(super) fn schema_key(r: &mut Reader, key: &str, value: &str, line: usize) ->
         "marker" => {
             let marker = r.string(line, value)?;
             if marker.is_empty() {
-                // §FS-config-v2.defaults.1: citations are marked, with no opt-out.
+                // §FS-config-v2.defaults: citations are marked, with no opt-out.
                 return r.fail(line, "[schema] marker must not be empty".to_string());
             }
             r.project.schema.citation.marker = marker;
@@ -167,7 +167,7 @@ pub(super) fn row_key(
                 if written.is_empty() {
                     return r.fail(line, format!("`{clause}` names an empty path"));
                 }
-                // §FS-config-v2.schema.places.boundaries.1: normalized, and inside the root.
+                // §FS-config-v2.schema.places.boundaries: normalized, and inside the root.
                 let Some(path) = normalize_place(&written) else {
                     let message =
                         format!("place `{written}` in `{clause}` is outside the config root");
@@ -273,7 +273,7 @@ pub(super) fn close_row(r: &Reader, index: usize) -> Result<()> {
     Ok(())
 }
 
-/// §FS-config-v2.schema.places.boundaries.1: a place as one lexical path from
+/// §FS-config-v2.schema.places.boundaries: a place as one lexical path from
 /// the config root, `./` and a trailing `/` folded away; `None` for a place that
 /// is absolute or climbs out of the root with `..`.
 pub(super) fn normalize_place(written: &str) -> Option<String> {

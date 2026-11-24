@@ -32,7 +32,7 @@ defaults included, in the file's own version ([§FS-config.4.2](../functional-sp
 line from it into `grund.toml` to change that setting. An opt-in table that is
 off, such as `[schema.leads.words]` while no lead is capped, is not printed:
 `grund config explain` lists every table and answers for its keys
-([§FS-config.4.2.3.1](../functional-spec/FS-config.md#4231-what-sends-a-reader-to-show-names-explain)). A config file an
+([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)). A config file an
 earlier `init` wrote keeps loading unchanged, and `grund config migrate` converts
 it when you choose to.
 
@@ -98,7 +98,7 @@ shape renders ([§FS-init.2.3.7](../functional-spec/FS-init.md#237-the-block-ver
 it. A current block whose text no longer matches what `init` would write — after a
 config edit, a migration, or a member joining the workspace — is reported stale,
 naming the part that differs, and `grund init` refreshes it
-([§FS-check.3.5.4](../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)).
+([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)).
 `[schema.sources] fenced` is one such edit: the Rules bullet on how to mention an
 ID without citing it then ends “or use a fenced code block not tagged `mermaid`”,
 naming the fences left unread, and with `fenced = []` it reads as before
@@ -124,7 +124,7 @@ run's success ([§FS-init.4.1](../functional-spec/FS-init.md#41-what-earns-the-1
 
 An invalid rule withholds writes. A rule whose alias cannot be judged in member
 scope is instead reported and rendered as authored
-([§FS-rules.4.1.2](../functional-spec/FS-rules.md#412-what-init-writes-anyway)).
+([§FS-rules.4.1](../functional-spec/FS-rules.md#41-a-rule-this-scope-cannot-verify)).
 That member still exits `1` after writing, updating or finding every path
 current, including under `--check` and `--dry-run`. The exit alone therefore
 cannot serve as that member's staleness gate. Run `grund check` from the
@@ -180,7 +180,7 @@ and the managed block's Project map tells the agent how to add the first kind
 instead of listing an empty one.
 
 When sources exist but no kind is declared, the warning names the offline help
-for a kind's keys ([§FS-check.4.5.2](../functional-spec/FS-check.md#452-the-message)):
+for a kind's keys ([§FS-check.4.5](../functional-spec/FS-check.md#45-nothing-recognized)):
 
 ```bash
 grund config explain '[schema.kinds.<NAME>]'

@@ -63,7 +63,7 @@ All four frontend crates take their engine logic from `grund-core` alone and dep
 
 Python joins the resolved graph proof in `tests/bindings/python/test_isolation.py`:
 grund-py depends directly on core and transitively on no frontend. The ordinary
-Cargo CLI graph excludes PyO3/Python build dependencies ([§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-local-source-and-typing-handoff)).
+Cargo CLI graph excludes PyO3/Python build dependencies ([§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-interpreters-source-installs-and-typing)).
 This extends, rather than replaces, the existing CLI/LSP isolation proof.
 
 ## 2. grund-core: the only place logic lives
@@ -118,19 +118,19 @@ Every name on the crate's public surface returns data and writes to no stream; c
 
 ### 2.2 `integrations` is the one integrations orchestration
 
-`writers/integrations_api.rs` holds `integrations`, the only sequence that refuses, detects, describes and installs for `grund integrations` ([§FS-integrations.1.3.1](../functional-spec/FS-integrations.md#131-the-engines-answer)). It answers with the records of `writers/integrations_output.rs`, and both frontends read that one answer: the CLI renders its text from it, and `writers/integrations_data.rs` projects it into the JSON the Python and Node packages return. The projection keeps the hosts' own name parsing and their `invalid-client`, `invalid-agent` and `invalid-preference` codes, and decides nothing the typed operation does not.
+`writers/integrations_api.rs` holds `integrations`, the only sequence that refuses, detects, describes and installs for `grund integrations` ([§FS-integrations.1.3](../functional-spec/FS-integrations.md#13-which-side-owns-what)). It answers with the records of `writers/integrations_output.rs`, and both frontends read that one answer: the CLI renders its text from it, and `writers/integrations_data.rs` projects it into the JSON the Python and Node packages return. The projection keeps the hosts' own name parsing and their `invalid-client`, `invalid-agent` and `invalid-preference` codes, and decides nothing the typed operation does not.
 
 ## 3. crates/grund-cli: the CLI binary
 
 `crates/grund-cli`, the Cargo package published as `grund`: what `cargo install grund` produces and what the npm/PyPI packages wrap. It owns the installed binary, prints help and version, restores SIGPIPE, and routes top-level commands to CLI-local wrappers over the data APIs. Every command renders through one of those wrappers, `integrations` included: its argument parsing, detection and artifact printing, and its `--write` reports are `cli_integrations.rs` and `cli_integrations_write.rs`, which render the answer of the engine's `integrations` and carry no write sequence of their own ([§FS-integrations.1.3](../functional-spec/FS-integrations.md#13-which-side-owns-what), [§FS-distribution.3.1.3](../functional-spec/FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)). Synchronous; no async runtime, no LSP types, no JSON-RPC.
 
-For [§FS-check.6](../functional-spec/FS-check.md#6-watch-mode---watch), a synchronous CLI coordinator owns native notifications, bounded debounce, serialized scans/publication, screen ownership and shutdown. It reuses `check_with_run_warnings` and the one-shot selection/sorting/rendering/status path. Core config/workspace/scanner helpers expose a data-only effective-input inventory, including failed discovery; they do not own notifications or a public binding watch API. Coverage is installed before reads and refreshed before obsolete subscriptions retire ([§FS-check.6.1.1](../functional-spec/FS-check.md#611-subscribe-before-reading)). A directory is registered at most once per native backend, because ReadDirectoryChangesW keys registrations by path and a second one orphans the first request: a shallow anchor that becomes recursive coverage is moved to a replacement backend, which is complete before the old one is released ([§FS-check.6.1.3](../functional-spec/FS-check.md#613-effective-input-inventory), [§FS-check.6.3.3](../functional-spec/FS-check.md#633-interrupt-and-completion)).
+For [§FS-check.6](../functional-spec/FS-check.md#6-watch-mode---watch), a synchronous CLI coordinator owns native notifications, bounded debounce, serialized scans/publication, screen ownership and shutdown. It reuses `check_with_run_warnings` and the one-shot selection/sorting/rendering/status path. Core config/workspace/scanner helpers expose a data-only effective-input inventory, including failed discovery; they do not own notifications or a public binding watch API. Coverage is installed before reads and refreshed before obsolete subscriptions retire ([§FS-check.6.1](../functional-spec/FS-check.md#61-change-detection)). A directory is registered at most once per native backend, because ReadDirectoryChangesW keys registrations by path and a second one orphans the first request: a shallow anchor that becomes recursive coverage is moved to a replacement backend, which is complete before the old one is released ([§FS-check.6.1](../functional-spec/FS-check.md#61-change-detection), [§FS-check.6.3.3](../functional-spec/FS-check.md#633-interrupt-and-completion)).
 
-Private test builds provide an observer outside stdout/stderr for subscription readiness and completed publication (including both stream flushes, sequence, captured bytes and status). They also provide controllable discovery/scan/publication barriers, fake clock/events and injected setup/runtime/loss/saturation/recovery failures. Tests use these to prove startup ordering, unpublished-result discard, empty JSON completion and cleanup ([§FS-check.6.1.2](../functional-spec/FS-check.md#612-bounded-debounce-and-serialized-work), [§FS-check.6.1.4](../functional-spec/FS-check.md#614-uncertain-notifications-and-recovery), [§FS-check.6.2.1](../functional-spec/FS-check.md#621-exact-stream-contract), [§FS-check.6.3.3](../functional-spec/FS-check.md#633-interrupt-and-completion)). Production builds contain no observer, barrier, injection control or completion record; enabling test machinery cannot change report bytes.
+Private test builds provide an observer outside stdout/stderr for subscription readiness and completed publication (including both stream flushes, sequence, captured bytes and status). They also provide controllable discovery/scan/publication barriers, fake clock/events and injected setup/runtime/loss/saturation/recovery failures. Tests use these to prove startup ordering, unpublished-result discard, empty JSON completion and cleanup ([§FS-check.6.1](../functional-spec/FS-check.md#61-change-detection), [§FS-check.6.2.1](../functional-spec/FS-check.md#621-exact-stream-contract), [§FS-check.6.3.3](../functional-spec/FS-check.md#633-interrupt-and-completion)). Production builds contain no observer, barrier, injection control or completion record; enabling test machinery cannot change report bytes.
 
 ### 3.1 A watch test never relies on separate writes landing in one run
 
-Each write a test makes is its own notification, and whether two of them reach one run depends only on whether the test thread stalls past the quiet window between them ([§FS-check.6.1.2](../functional-spec/FS-check.md#612-bounded-debounce-and-serialized-work)), which the test does not control: a loaded runner splits them. A barrier fires once, for the first run that reaches it. So a test that observes one particular run makes every change that run must see before it reads the tree, holding it at the `scanning` barrier for instance, and arms any later barrier for that run only then; whichever run the first write triggers then reads them all. A test that only waits, through intermediate completions, for the result of the final state arms nothing a partial run could take and needs no hold. Time between writes is never part of whether a watch test passes.
+Each write a test makes is its own notification, and whether two of them reach one run depends only on whether the test thread stalls past the quiet window between them ([§FS-check.6.1](../functional-spec/FS-check.md#61-change-detection)), which the test does not control: a loaded runner splits them. A barrier fires once, for the first run that reaches it. So a test that observes one particular run makes every change that run must see before it reads the tree, holding it at the `scanning` barrier for instance, and arms any later barrier for that run only then; whichever run the first write triggers then reads them all. A test that only waits, through intermediate completions, for the result of the final state arms nothing a partial run could take and needs no hold. Time between writes is never part of whether a watch test passes.
 
 ### 3.2 A barrier waits for its release, never for a clock
 
@@ -142,7 +142,7 @@ Speaks LSP over stdio ([§AR-lsp.4](AR-lsp.md#4-transport)). Imports `grund-core
 
 ## 5. grund-node: the napi-rs binding
 
-Implements [§FS-distribution.3.2.1](../functional-spec/FS-distribution.md#321-operations-options-and-refusals) through [§FS-distribution.3.2.4](../functional-spec/FS-distribution.md#324-acceptance-evidence). The crate
+Implements [§FS-distribution.3.2.1](../functional-spec/FS-distribution.md#321-operations-options-and-refusals) through [§FS-distribution.3.2](../functional-spec/FS-distribution.md#32-node-grund-cli-npm-package). The crate
 owns napi-rs conversion and AsyncTask dispatch; owned inputs and records cross
 the worker boundary. Compute does all engine/filesystem work on libuv workers;
 resolve marshals data on the live JS thread. No Tokio runtime or CLI subprocess.
@@ -168,14 +168,14 @@ target/N-API metadata. A shared lazy CJS loader and explicit ESM facade preserve
 GrundError identity on Node 22/24, N-API 8. A matching local payload wins over an
 exact-version platform payload; corrupt/incompatible local payloads fail without
 fallback. Imports without native payload work; calls reject structured load
-failures without downloading or compiling ([§FS-distribution.3.2.3.2](../functional-spec/FS-distribution.md#3232-moduleruntimeload-interface)).
+failures without downloading or compiling ([§FS-distribution.3.2.3](../functional-spec/FS-distribution.md#323-workers-loading-and-source-builds)).
 
 #469 owns JS/TS assets, `package-api.json`, native/source builders and a
 disposable API-only staging helper. #471 owns the single assembly manifest,
 grund executable launcher, optional platform packages and installed-platform
 evidence. The fragment is consumed by that recipe, never a second committed
 umbrella manifest. The explicit bundled locked source workflow in
-[§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership) uses an external Cargo target directory. #470 owns
+[§FS-distribution.3.2.3](../functional-spec/FS-distribution.md#323-workers-loading-and-source-builds) uses an external Cargo target directory. #470 owns
 the common corpus/oracle; Node supplies its adapter and fixtures. Complete-data
 and frozen CLI-byte parity are distinct proofs ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)).
 
@@ -225,7 +225,7 @@ prerequisite for this local frontend.
 ### 6.1 Native extension build setup
 
 `crates/grund-py/build.rs` owns the platform linker setup for raw Cargo extension
-builds ([§FS-distribution.3.3.7.1](../functional-spec/FS-distribution.md#3371-raw-cargo-extension-builds)), beside its existing interpreter/ABI checks. Use
+builds ([§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-interpreters-source-installs-and-typing)), beside its existing interpreter/ABI checks. Use
 PyO3's supported extension-module link-argument mechanism, scoped to the cdylib,
 so maturin and the same-source command-agreement host need no separate copies
 of Darwin flags. Ordinary workspace builds retain their executable/test linking.

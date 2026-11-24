@@ -185,10 +185,10 @@ pub(super) fn positive(raw: &str) -> Result<usize, Refusal> {
     if !numeral(raw) || digits.is_empty() {
         return Err(refuse(REASON, Form::None { kind: false }));
     }
-    // §FS-rule-refusals.sentences.count-range.leading-zeros: the value is read
+    // §FS-rule-refusals.sentences.count-range: the value is read
     // after the zeros, so an overflow is refused for its range either way.
     let Ok(n) = digits.parse::<usize>() else {
-        // §FS-rule-refusals.sentences.count-range.no-form: nothing in range to offer.
+        // §FS-rule-refusals.sentences.count-range: nothing in range to offer.
         return Err(refuse(
             format!(
                 "{REASON}; the count is above the largest supported count, {}",

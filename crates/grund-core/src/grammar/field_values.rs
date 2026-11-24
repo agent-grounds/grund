@@ -16,7 +16,7 @@ use crate::model::{Declaration, SectionInfo};
 /// The display name of the section at `path`, where it is a direct section of
 /// its declaration, which only a field can be (§FS-fields.identity.name): the
 /// lead is not one, and a nested path is not. A front-matter unit is no chapter
-/// (§FS-fields.front-matter.findings), and so no field a whose clause reads
+/// (§FS-fields.front-matter), and so no field a whose clause reads
 /// (§FS-rules.5.2).
 pub(crate) fn direct_section_value<'a>(path: &str, info: &'a SectionInfo) -> Option<Cow<'a, str>> {
     (!path.contains('.') && !info.in_front_matter())

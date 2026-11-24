@@ -29,7 +29,7 @@ The run writes two files and touches nothing under `docs/`
   declaring a first kind. With no `[schema.kinds]` row it declares no kinds.
   `grund config show` prints what applies, each default the file leaves included
   ([§FS-config.4.2](../../docs/functional-spec/FS-config.md#42-grund-config-show-path)), and `grund config explain` every setting
-  ([§FS-config.4.2.3.1](../../docs/functional-spec/FS-config.md#4231-what-sends-a-reader-to-show-names-explain)).
+  ([§FS-config.4.2](../../docs/functional-spec/FS-config.md#42-grund-config-show-path)).
 - `AGENTS.md`, whose Project map teaches the first `[schema.kinds]` table rather
   than listing an empty one ([§FS-init.2.3.4](../../docs/functional-spec/FS-init.md#234-managed-block-content-sections)).
 
@@ -45,7 +45,7 @@ grund config explain schema.kinds /tmp/adopt
 ```
 
 The check exits `0` with a `nothing recognized` warning naming the quoted
-per-kind help command ([§FS-check.4.5.2](../../docs/functional-spec/FS-check.md#452-the-message)).
+per-kind help command ([§FS-check.4.5](../../docs/functional-spec/FS-check.md#45-nothing-recognized)).
 Both explain calls teach the kind's nine keys, including `files` and `folders`.
 The parent answer labels the rows `Keys of [schema.kinds.<NAME>]:`, so you can
 learn them without another lookup ([§FS-config-explain.1.2](../../docs/functional-spec/FS-config-explain.md#12-rungs)).

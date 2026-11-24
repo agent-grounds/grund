@@ -28,11 +28,11 @@ Leans on [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, verdict).
 | `win32-x64-msvc` | Windows x64 / Windows 10, MSVC 14 runtime | `x86_64-pc-windows-msvc` | `win32-x64-msvc` | `win_amd64` | `windows-latest` |
 | `win32-arm64-msvc` | Windows arm64 / Windows 11, MSVC 14 runtime | `aarch64-pc-windows-msvc` | deferred | deferred | `windows-11-arm`: downloadable binaries only |
 
-The row ids are the npm suffixes of [§FS-distribution.3.2.3.2](FS-distribution.md#3232-moduleruntimeload-interface), and the table is the one place a script, a workflow and a test read the matrix from: `scripts/distribution/candidate.py matrix` prints it as JSON, one object per row, and nothing else spells a row by hand. Every row is built with Rust 1.95.0, and both Linux rows in the digest-pinned `manylinux2014` images of [§FS-distribution.4.8](FS-distribution.md#48-one-old-glibc-baseline-one-pinned-toolchain).
+The row ids are the npm suffixes of [§FS-distribution.3.2.3](FS-distribution.md#323-workers-loading-and-source-builds), and the table is the one place a script, a workflow and a test read the matrix from: `scripts/distribution/candidate.py matrix` prints it as JSON, one object per row, and nothing else spells a row by hand. Every row is built with Rust 1.95.0, and both Linux rows in the digest-pinned `manylinux2014` images of [§FS-distribution.4.8](FS-distribution.md#48-one-old-glibc-baseline-one-pinned-toolchain).
 
 ### 1.2 Every registry row proves every runtime it promises
 
-Each registry row is installed and exercised on Node 22.x and 24.x and on CPython 3.10, 3.11, 3.12, 3.13 and 3.14. Node loads one N-API 8 addon per row; Python loads one `cp310-abi3` extension per row ([§FS-distribution.3.3.7](FS-distribution.md#337-local-source-and-typing-handoff)), carried by the row's one wheel, which the rehearsal installs into each of the five interpreters rather than trusting its tag.
+Each registry row is installed and exercised on Node 22.x and 24.x and on CPython 3.10, 3.11, 3.12, 3.13 and 3.14. Node loads one N-API 8 addon per row; Python loads one `cp310-abi3` extension per row ([§FS-distribution.3.3.7](FS-distribution.md#337-interpreters-source-installs-and-typing)), carried by the row's one wheel, which the rehearsal installs into each of the five interpreters rather than trusting its tag.
 
 ### 1.3 Runtime floors are inspected, not assumed
 
@@ -58,7 +58,7 @@ A full-release candidate holds exactly:
 
 ### 2.2 npm selects one platform package by OS, CPU and libc
 
-`grund-cli` and `grund-lsp` each list their five platform packages as `optionalDependencies` at exactly the candidate's version. Each platform package declares the `os`, `cpu` and, on Linux, `libc: ["glibc"]` of its row. The umbrella's `grund.platformPackages` maps each Rust target to its platform package, which is what the binding's loader reads ([§FS-distribution.3.2.3.2](FS-distribution.md#3232-moduleruntimeload-interface)). The CLI and addon of one row share a platform package, so the `grund` command and `import "grund-cli"` can never come from two versions.
+`grund-cli` and `grund-lsp` each list their five platform packages as `optionalDependencies` at exactly the candidate's version. Each platform package declares the `os`, `cpu` and, on Linux, `libc: ["glibc"]` of its row. The umbrella's `grund.platformPackages` maps each Rust target to its platform package, which is what the binding's loader reads ([§FS-distribution.3.2.3](FS-distribution.md#323-workers-loading-and-source-builds)). The CLI and addon of one row share a platform package, so the `grund` command and `import "grund-cli"` can never come from two versions.
 
 ### 2.3 One assembly recipe consumes the binding's fragment
 
@@ -78,7 +78,7 @@ Each npm and PyPI package carries a README that names what that package installs
 - the `grund` wheel holds the executable as `grund-<version>.data/scripts/grund` and the extension as `grund/_native.abi3.so` (`.pyd` on Windows); the `grund-lsp` wheel holds `grund_lsp-<version>.data/scripts/grund-lsp`;
 - an archive holds one top-level directory, `grund-<version>-<target>/` or `grund-lsp-<version>-<target>/`, with the executable, `LICENSE` and `README.md`.
 
-A wheel installs the executable itself onto `PATH`, so `pip install`, `pipx install` and `uv tool install` run the payload with no Python launcher in front of it ([§FS-distribution.3.3.7](FS-distribution.md#337-local-source-and-typing-handoff)).
+A wheel installs the executable itself onto `PATH`, so `pip install`, `pipx install` and `uv tool install` run the payload with no Python launcher in front of it ([§FS-distribution.3.3.7](FS-distribution.md#337-interpreters-source-installs-and-typing)).
 
 ### 3.2 The npm launcher is invisible
 
@@ -86,7 +86,7 @@ The npm `grund` and `grund-lsp` launchers start their payload with the same argu
 
 ### 3.3 A missing payload is an error, never a substitute
 
-When the launcher finds no platform package for the host, finds one whose version is not the umbrella's, or runs on a row the matrix does not list, it exits `2` and writes one line to standard error, beginning `error:`, that names the host platform and what it looked for and ends with the fix: install the matching platform package, or run `npm run build:source` in the installed package ([§FS-distribution-candidate.4.1](FS-distribution-candidate.md#41-npm-builds-from-source-only-when-asked)). It never runs another row's payload, never downloads one and never compiles one. A matching `native/grund` from a source build is preferred over the platform package, the same precedence the addon loader keeps ([§FS-distribution.3.2.3.2](FS-distribution.md#3232-moduleruntimeload-interface)).
+When the launcher finds no platform package for the host, finds one whose version is not the umbrella's, or runs on a row the matrix does not list, it exits `2` and writes one line to standard error, beginning `error:`, that names the host platform and what it looked for and ends with the fix: install the matching platform package, or run `npm run build:source` in the installed package ([§FS-distribution-candidate.4.1](FS-distribution-candidate.md#41-npm-builds-from-source-only-when-asked)). It never runs another row's payload, never downloads one and never compiles one. A matching `native/grund` from a source build is preferred over the platform package, the same precedence the addon loader keeps ([§FS-distribution.3.2.3](FS-distribution.md#323-workers-loading-and-source-builds)).
 
 ### 3.4 The LSP's stdout stays the protocol's
 
@@ -96,11 +96,11 @@ When the launcher finds no platform package for the host, finds one whose versio
 
 ### 4.1 npm builds from source only when asked
 
-`npm run build:source` in an installed `grund-cli` builds the addon with the binding's own source builder ([§FS-distribution.3.2.3.3](FS-distribution.md#3233-source-buildlocal-package-ownership)) and the `grund` executable from the same bundled, locked sources, both into `native/`. In `grund-lsp` it builds only the server. Neither package has an `install` or `postinstall` script, so an install never compiles.
+`npm run build:source` in an installed `grund-cli` builds the addon with the binding's own source builder ([§FS-distribution.3.2.3](FS-distribution.md#323-workers-loading-and-source-builds)) and the `grund` executable from the same bundled, locked sources, both into `native/`. In `grund-lsp` it builds only the server. Neither package has an `install` or `postinstall` script, so an install never compiles.
 
 ### 4.2 Python builds from the sdist only when asked
 
-`pip install --no-binary=:all: grund` builds the extension and the `grund` executable from the sdist and installs both; `grund-lsp` builds only the server. Each sdist carries everything its build reads ([§FS-distribution.3.3.7](FS-distribution.md#337-local-source-and-typing-handoff)).
+`pip install --no-binary=:all: grund` builds the extension and the `grund` executable from the sdist and installs both; `grund-lsp` builds only the server. Each sdist carries everything its build reads ([§FS-distribution.3.3.7](FS-distribution.md#337-interpreters-source-installs-and-typing)).
 
 ### 4.3 A source build needs Rust and says so
 

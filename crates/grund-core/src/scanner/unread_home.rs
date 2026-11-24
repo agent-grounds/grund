@@ -1,6 +1,6 @@
 //! The home `fetch` refuses because the scan would not read what it writes (§FS-fetch.4.2.1):
 //! the one function behind `fetch`'s refusal and `check`'s tail at that home
-//! (§FS-check.3.1.3.1). The name rules and the kind are the frame's; a folder home's `<ID>.md`
+//! (§FS-check.3.1). The name rules and the kind are the frame's; a folder home's `<ID>.md`
 //! that passes them is then asked of the walk's own read predicate (§AR-scanner.1.13), which
 //! reads the ignore files and the `exclude` rules exactly as the walk does.
 

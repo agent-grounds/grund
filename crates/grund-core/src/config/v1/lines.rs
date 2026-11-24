@@ -1,8 +1,8 @@
 //! The v1 line pass's own record of the file (§AR-config.8.1): each line as the
 //! section walk in `parse.rs` met it — blank, a comment, a table header, or a key
 //! with its section, its value and any trailing comment. Migration reads the key
-//! lines and the comments from here rather than parsing the file a second time
-//! (§FS-config-migrate.4.3); ordinary readers skip capture entirely.
+//! lines and the comments from here rather than parsing the file a second time;
+//! ordinary readers skip capture entirely.
 //!
 //! The pass also carries the one tolerance only migration asks for: a
 //! path-shaped `[scan] exclude` entry is read rather than refused, so it can be

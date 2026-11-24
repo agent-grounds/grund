@@ -79,7 +79,7 @@ pub(crate) fn plural(value: usize) -> &'static str {
 /// rule sentence reuses these bytes with `(<RULE-ID>)` in place of the
 /// `(citation direction)` authority tail (§FS-rules.7.5). The checker's shared
 /// finalization replaces this suffix for required marked index entries
-/// (§FS-check.3.12.2). Lives here rather than beside either message: the
+/// (§FS-check.3.12). Lives here rather than beside either message: the
 /// citation-direction pass is the checker's and the rule sentence is the rules',
 /// and the rules sit below the checker, so the spelling goes all the way down
 /// (§AR-system.4).

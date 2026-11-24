@@ -33,7 +33,7 @@ pub(crate) const LANDED_CLAUSE: &str = "; this became an error in grund 0.16.0";
 /// `path:line` it occurred at, the message text, and any cross-reference `sites`.
 /// `column` is the 1-based start column of the offending token when the finding
 /// concerns a specific citation, so a consumer can anchor on that token rather
-/// than the first one on the line (§FS-lsp.1.1.1); it is `None` for line-anchored
+/// than the first one on the line (§FS-lsp.1.1); it is `None` for line-anchored
 /// findings. `authority` is the bytewise-sorted set of rule origins that authored
 /// the finding and is empty where no chapter rule did (§FS-rules.7.6) — the set
 /// the message tail is joined from, so text and JSON cannot disagree about who
@@ -55,7 +55,7 @@ pub(crate) struct Diagnostic {
 /// vocabulary, and these are what an editor tags a published diagnostic with and
 /// what a test selects one by.
 impl Code {
-    /// §FS-check.4.10.9: a `[workspace]` block whose own files no scan read.
+    /// §FS-check.4.10: a `[workspace]` block whose own files no scan read.
     pub(crate) const UNREAD_WORKSPACE_BLOCK: Code = Code("unread-workspace-block");
     /// §FS-workspace.6.1.7: an ancestor's claim on a block that could not be read.
     pub(crate) const UNDECIDABLE_WORKSPACE_CLAIM: Code = Code("undecidable-workspace-claim");
@@ -90,7 +90,7 @@ impl Code {
 /// `armed` is not a channel: it is what the run's gates turned on, which only
 /// the CLI's selection reads (§FS-check.1.4.1). Nor is `verified_blocks`: it
 /// says the run found a managed block to compare, which the absent-member
-/// warning reads (§FS-check.4.9.1).
+/// warning reads (§FS-check.4.9).
 #[derive(Default)]
 pub(crate) struct CheckReport {
     pub(crate) errors: Vec<Diagnostic>,
@@ -123,7 +123,7 @@ pub struct Finding {
     pub line: Option<usize>,
     /// 1-based start column of the offending citation when the finding concerns
     /// a specific token, so an LSP can anchor on that token rather than the first
-    /// citation on the line (§FS-lsp.1.1.1). `None` for line-anchored findings.
+    /// citation on the line (§FS-lsp.1.1). `None` for line-anchored findings.
     pub column: Option<usize>,
     pub message: String,
     pub sites: Vec<FindingSite>,

@@ -93,10 +93,10 @@ pub(crate) struct RecordedBlock {
     pub(crate) start: usize,
     pub(crate) end: usize,
     pub(crate) form: BlockForm,
-    /// Whether the file's language calls it documentation (§FS-inline-citation-style.1.1.1).
+    /// Whether the file's language calls it documentation (§FS-inline-citation-style.1.1.2).
     pub(crate) doc: bool,
     /// Whether a line in declaration position in it may declare: always in v1, and
-    /// in v2 as the declaration gate decides (§FS-config-v2.schema.sources.declarations.gate).
+    /// in v2 as the declaration gate decides (§FS-config-v2.schema.sources.declarations).
     pub(crate) declares: bool,
     /// Whether a `/* … */` block's `*/` was found; only a closed block has bare
     /// lines in declaration position (§FS-declarations.line.block-comment). Always
@@ -154,7 +154,7 @@ impl FileRecord {
 
     /// Whether line `line` (1-indexed) sits in the file's front matter, the
     /// region whose citations its first declaration owns and `fmt` never
-    /// rewrites (§FS-check.1.1.5.2, §FS-check.1.1.5.2.1).
+    /// rewrites (§FS-check.1.1.5.2).
     pub(crate) fn in_front_matter(&self, line: usize) -> bool {
         self.front_matter
             .is_some_and(|last| line >= 1 && line <= last)
