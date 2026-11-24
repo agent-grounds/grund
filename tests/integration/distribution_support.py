@@ -47,6 +47,7 @@ WHEEL_TAGS = {
     "darwin-arm64": "macosx_11_0_arm64",
     "win32-x64-msvc": "win_amd64",
 }
+# The bindings and the LSP server, and no third kind of surface (§FS-non-goals.12).
 PRODUCTS = ("grund", "grund-lsp", "node-addon", "python-extension")
 # What a receipt names, one per rehearsal module (§FS-distribution-candidate.6.5).
 RECEIPT_CHECKS = ("inventory", "install", "cli-parity", "api-parity", "lsp-lifecycle",
