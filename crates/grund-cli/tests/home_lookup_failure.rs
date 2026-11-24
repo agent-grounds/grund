@@ -255,7 +255,7 @@ const V1_DEFAULT_ROOTS: &str = "grund_config_version = 1\nproject_name = \"outwa
 const V2_OUTWARD_HOME: &str = "grund_config_version = 2\nproject_name = \"outward-root\"\n\n\
     [schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n\n\
     [schema.kinds.CONST]\nfolders = [\"vals\"]\nindex = false\n";
-/// §FS-config-v2.schema.places.boundaries.3: the refusal at `vals`'s line in V2_OUTWARD_HOME.
+/// §FS-config-v2.schema.places.boundaries: the refusal at `vals`'s line in V2_OUTWARD_HOME.
 const OUTWARD_REFUSAL: &str = "error: grund.toml:9: place `vals` in `[schema.kinds.CONST] folders` links out of the project root";
 
 /// Runs `check` with `link` naming `target` (under `par/`) outside the project and `par` denied.
@@ -287,7 +287,7 @@ fn outward_root_link_with_a_denied_parent_is_pruned_on_version_1() {
     assert_exit(&output, 0);
 }
 
-/// §FS-config-v2.schema.places.boundaries.3.1: on version 2 such a link as a kind's home is
+/// §FS-config-v2.schema.places.boundaries: on version 2 such a link as a kind's home is
 /// refused at load as it is with the target open, so a mode outside the project decides nothing.
 #[test]
 fn outward_home_link_with_a_denied_parent_is_refused_on_version_2() {
@@ -300,7 +300,7 @@ fn outward_home_link_with_a_denied_parent_is_refused_on_version_2() {
     assert_exit(&output, 2);
 }
 
-/// §FS-config-v2.schema.places.boundaries.3.1: a dangling link whose lookup a directory refuses
+/// §FS-config-v2.schema.places.boundaries: a dangling link whose lookup a directory refuses
 /// cannot be told from a present one, so it is judged on the partial resolution and refused.
 #[test]
 fn dangling_outward_home_link_with_a_denied_parent_is_refused_on_version_2() {
@@ -317,8 +317,8 @@ fn dangling_outward_home_link_with_a_denied_parent_is_refused_on_version_2() {
     assert_exit(&output, 2);
 }
 
-/// §FS-config-v2.schema.places.boundaries.3.1: a place that does not exist stays quiet,
-/// a dangling link out of the project included (§FS-config-v2.schema.places.boundaries.4).
+/// §FS-config-v2.schema.places.boundaries: a place that does not exist stays quiet,
+/// a dangling link out of the project included (§FS-config-v2.schema.places.boundaries).
 #[test]
 fn dangling_outward_home_link_stays_quiet_on_version_2() {
     let fixture = Fixture::bare("out-v2-dangling", V2_OUTWARD_HOME, "# FS-a: A\n\nPlain.\n");
@@ -334,7 +334,7 @@ fn dangling_outward_home_link_stays_quiet_on_version_2() {
     assert_exit(&output, 0);
 }
 
-/// §FS-config-v2.schema.places.boundaries.3.1: a place still inside the root where the lookup
+/// §FS-config-v2.schema.places.boundaries: a place still inside the root where the lookup
 /// stops is not refused at load; its failure is the scan failure at the home.
 /// It is the link of §FS-scan.scope.links.owed, so its line is the unopenable link's.
 #[test]

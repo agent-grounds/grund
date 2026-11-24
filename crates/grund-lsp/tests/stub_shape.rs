@@ -3,7 +3,7 @@
 //! home with no directory named `docs` on its path, is a stub, and the editor shows
 //! nothing at its heading (§FS-declarations.stubs.shape, §FS-declarations.checks.stub-shape,
 //! §FS-lsp.1.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

@@ -2,7 +2,7 @@
 //! (§FS-lsp.1.3.4): on a `/* … */` line, before the block's first `*/`
 //! (§FS-declarations.line.block-comment), while a line comment or a Markdown
 //! heading keeps a `*/` its author wrote.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::*;
 use crate::queries::LspSnapshotOpts;

@@ -38,7 +38,7 @@ fn vocabulary() -> RuleVocabulary {
 /// could not be supplied is a kind.
 type Row = (&'static str, &'static str, bool);
 
-/// §FS-config.3.4.5.1 / §FS-rule-refusals.sentences.rewrite.recovered:
+/// §FS-config.3.4.5 / §FS-rule-refusals.sentences.rewrite.recovered:
 /// recovery uses a name boundary and retains the longer kind's identity.
 #[test]
 fn kind_heads_recovery_keeps_the_named_kind() {
@@ -121,7 +121,7 @@ fn assert_rows(rows: &[Row]) {
     );
 }
 
-/// §FS-rule-refusals.sentences.rewrite.replaced: a refused token is replaced by its canonical spelling,
+/// §FS-rule-refusals.sentences.rewrite: a refused token is replaced by its canonical spelling,
 /// and the subject, modality and object kinds stay as typed.
 #[test]
 fn a_refused_token_is_replaced_under_the_typed_subject_and_kinds() {

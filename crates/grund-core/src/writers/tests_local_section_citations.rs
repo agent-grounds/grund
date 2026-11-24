@@ -1,6 +1,6 @@
 //! Local-to-full formatter rewrites and protected locations
 //! (§FS-fmt.2.3, §FS-fmt.2.4, §DF-declaration-local-section-shorthand).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::api::{FmtOpts, format_references};
 use crate::testing::{test_root, write};
@@ -35,7 +35,7 @@ fn fixture(name: &str) -> crate::testing::TemporaryRoot {
     root
 }
 
-/// One row per line names every safe owned local expansion, in source order (§FS-fmt.3.6.1).
+/// One row per line names every safe owned local expansion, in source order (§FS-fmt.3.6).
 #[test]
 fn formatter_dry_run_names_only_safe_owned_local_replacements() {
     let root = fixture("formatter_dry_run_names_only_safe_owned_local_replacements");
@@ -47,7 +47,7 @@ fn formatter_dry_run_names_only_safe_owned_local_replacements() {
         cross_refs: false,
     })
     .expect("format dry run");
-    // §FS-fmt.3.5.2: a line's local expansions share one `local section → canonical` row.
+    // §FS-fmt.3.5: a line's local expansions share one `local section → canonical` row.
     assert_eq!(
         output
             .changes
@@ -133,7 +133,7 @@ fn the_dry_run_omits_a_local_path_its_owner_has_no_heading_for() {
         cross_refs: false,
     })
     .expect("format dry run");
-    // §FS-fmt.3.5.2: a line's local expansions share one `local section → canonical` row.
+    // §FS-fmt.3.5: a line's local expansions share one `local section → canonical` row.
     assert_eq!(
         output
             .changes

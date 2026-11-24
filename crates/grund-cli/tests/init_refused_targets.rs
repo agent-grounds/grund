@@ -86,8 +86,8 @@ fn fixture_base() -> PathBuf {
 /// A fresh directory outside every version-controlled tree — deliberately *not*
 /// under `target/`, which is inside this repository's git tree and would satisfy
 /// the version-control rule through the walk-up.
-/// Ownership covers setup and use (§FS-repository-maintenance.4.1); each claim
-/// is a direct leaf of the shared base (§FS-repository-maintenance.4.2).
+/// Ownership covers setup and use (§FS-repository-maintenance.4); each claim
+/// is a direct leaf of the shared base (§FS-repository-maintenance.4).
 fn outside_repo_dir(suffix: &str) -> TemporaryRoot {
     let dir = TemporaryRoot::new(
         &fixture_base(),

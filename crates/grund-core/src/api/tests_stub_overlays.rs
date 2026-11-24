@@ -1,9 +1,9 @@
 //! A stub's target is read as a save would write it
-//! (§FS-declarations.stubs.target.1): with the target open in an editor,
+//! (§FS-declarations.stubs.target): with the target open in an editor,
 //! `show` and the editor snapshot answer what they answer once that text is
 //! saved (§FS-show.2.3.4, §FS-show.2.3, §FS-lsp.1.1), whether or not the
 //! target is in the scan.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::{lsp_snapshot, lsp_snapshot_with_completion, show_from_snapshot};
 use crate::model::format_path;

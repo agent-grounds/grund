@@ -1,8 +1,8 @@
 //! The cases of agent-grounds/grund#837, run alone in the three groups its
 //! change lands in: `fmt` writes nothing before its last refusal
-//! (§FS-fmt.7.4.3), a conflict block is a `check` error
+//! (§FS-fmt.7.4), a conflict block is a `check` error
 //! (§FS-declarations.checks.conflict-marker), and `fmt` refuses on one
-//! (§FS-fmt.3.3). Every case is also in the full e2e pass.
+//! (§FS-fmt.3.2). Every case is also in the full e2e pass.
 
 use std::path::PathBuf;
 
@@ -22,9 +22,9 @@ fn run(label: &str, names: &[&str]) {
     assert_every_case_passed(label, &outcomes);
 }
 
-/// §FS-fmt.7.4.3: a refusal the lock pass or a shorthand's deferred scan meets
+/// §FS-fmt.7.4: a refusal the lock pass or a shorthand's deferred scan meets
 /// finds the tree as the run found it. The workspace control passes before the
-/// change too: its preflight already refuses before any write (§FS-fmt.3.3).
+/// change too: its preflight already refuses before any write (§FS-fmt.3.2).
 #[test]
 fn a_refused_fmt_writes_nothing() {
     run(
@@ -39,8 +39,8 @@ fn a_refused_fmt_writes_nothing() {
 
 /// §FS-declarations.body.conflict: what a block is, where it is looked for and
 /// whom it names, as `check` reports it, in a stub's target outside the include
-/// too, with `--full` as without it (§FS-declarations.body.conflict.where,
-/// §FS-check.1.3.4).
+/// too, with `--full` as without it (§FS-declarations.body.conflict.block,
+/// §FS-check.1.3).
 #[test]
 fn a_conflict_block_is_a_check_error() {
     run(
@@ -62,10 +62,10 @@ fn a_conflict_block_is_a_check_error() {
     );
 }
 
-/// §FS-fmt.7.4, §FS-fmt.3.4: a run that needs the whole declaration set refuses
+/// §FS-fmt.7.4, §FS-fmt.3.2: a run that needs the whole declaration set refuses
 /// on a block, in both modes and both cross-reference settings, root first in a
 /// workspace, with a lock in conflict beside it (§FS-section-lock.write.rebuild), and
-/// in a stub's target outside the include (§FS-declarations.body.conflict.where).
+/// in a stub's target outside the include (§FS-declarations.body.conflict.block).
 #[test]
 fn a_conflict_block_refuses_fmt() {
     run(

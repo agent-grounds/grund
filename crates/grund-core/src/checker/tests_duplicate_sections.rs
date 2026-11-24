@@ -2,7 +2,7 @@
 //! §FS-show.2.2.2, §DF-duplicate-section-path). The scanner half is
 //! first-wins recording, the checker half is the error, the `show` half is the
 //! refusal that replaced a body assembled out of both headings.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::BTreeMap;
 

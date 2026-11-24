@@ -22,7 +22,7 @@ pub struct GoldenChange {
 /// refresh branch returned before the final-tree surface was reached at all, so
 /// a stale `expected.repo` golden survived a green refresh and failed the very
 /// next compare pass (§AR-workspace.9.1.5).
-/// §FS-examples.5.6.1: refresh borrows the same owner as comparison.
+/// §FS-examples.5.6: refresh borrows the same owner as comparison.
 fn refresh_case(
     execution: &CaseExecution,
     case: &Path,
@@ -61,7 +61,7 @@ fn refresh_case(
 ///
 /// Returns whether the case carries a tree at all, which is what the accounting
 /// counts. A case with no `expected.repo` pins nothing here and gains no golden.
-/// §FS-examples.5.6.1: never reconstruct another invocation's final tree.
+/// §FS-examples.5.6: never reconstruct another invocation's final tree.
 fn refresh_expected_repo(
     execution: &CaseExecution,
     case: &Path,

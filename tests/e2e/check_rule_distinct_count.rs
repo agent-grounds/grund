@@ -1,7 +1,7 @@
 //! `<subject> must cite at least N distinct <KIND>.` counts the different declarations a subject
 //! cites (§FS-rules.3.2.1), so one source cited three times is one, and its
-//! `citation-cardinality` row names every site it read, in text and JSON (§FS-rules.7.3,
-//! §FS-rules.7.3.1). The plain sentence `… must cite at least 3 SRC.` keeps counting sites, with
+//! `citation-cardinality` row names every site it read, in text and JSON
+//! (§FS-rules.7.3). The plain sentence `… must cite at least 3 SRC.` keeps counting sites, with
 //! #1366's bytes, and a sentence that holds `distinct` where the predicate does not admit it is
 //! refused for that on both rule surfaces (§FS-rule-refusals.sentences,
 //! §DF-distinct-target-counts). Issue #1367 is the report, and its reproducer is this fixture:
@@ -61,7 +61,7 @@ const RULE_PLAIN: (&str, &str) = ("RULE-002-country-truck-mass-sites", PLAIN);
 
 const REMEDY: &str = "add or remove those citations until the count fits";
 
-/// `; counted at …` over `(line, citation as written)` entries of one file (§FS-rules.7.3.1).
+/// `; counted at …` over `(line, citation as written)` entries of one file (§FS-rules.7.3).
 fn clause(path: &str, counted: &[(usize, &str)]) -> String {
     let entries: Vec<String> = counted
         .iter()
@@ -208,7 +208,7 @@ impl Drop for Tree {
 
 /// The control: the issue's own sentence counts sites, so Serbia's three
 /// citations of one source pass it and Croatia's two fail it, with #1366's row and list
-/// (§FS-rules.3.2, §FS-rules.7.3.1). It proves the fixture sound, so a red test below is about
+/// (§FS-rules.3.2, §FS-rules.7.3). It proves the fixture sound, so a red test below is about
 /// `distinct` alone.
 #[test]
 fn the_plain_count_keeps_its_verdict_and_bytes() {

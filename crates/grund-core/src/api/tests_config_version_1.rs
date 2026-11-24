@@ -4,7 +4,7 @@
 //! and in the same bytes `config migrate` prints for a member still on version 1
 //! when it runs at the workspace root, its directory spelled from where it ran
 //! anywhere else (§FS-config-migrate.6.5.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 
@@ -76,7 +76,7 @@ fn no_config_file_is_not_cautioned() {
     assert!(cautions(&root).is_empty());
 }
 
-/// §FS-check.checks.config-version-1.1: `.agents/grund.toml` names the project
+/// §FS-check.checks.config-version-1: `.agents/grund.toml` names the project
 /// root, not `.agents/`, after the location warning.
 #[test]
 fn an_agents_config_names_the_project_root_after_the_location_warning() {

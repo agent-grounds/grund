@@ -1,5 +1,5 @@
 //! Test module: scanner comment handling, stubs, and anchors (§AR-scanner)
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::checker::check_findings;
 use crate::config::{Config, load_config};

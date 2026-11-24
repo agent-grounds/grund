@@ -1,6 +1,6 @@
 //! Contract tests for module-level assigned Python triple-quoted data
-//! (§FS-check.1.1.3.1, §FS-refs.2, §FS-fmt.2.3.1.1, §AR-scanner.4.4).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! (§FS-check.1.1.3.1, §FS-refs.2, §FS-fmt.2.3.1, §AR-scanner.4.4).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -277,7 +277,7 @@ fn type_after(root: &Path, before: &str, typed: &str) -> String {
 }
 
 /// Bulk and live formatting preserve assigned bytes but recover before the next
-/// real docstring, where both expand the shorthand (§FS-fmt.2.3.1.1).
+/// real docstring, where both expand the shorthand (§FS-fmt.2.3.1).
 #[test]
 fn fmt_and_on_type_preserve_data_and_recover_for_a_later_docstring() {
     let source = concat!(

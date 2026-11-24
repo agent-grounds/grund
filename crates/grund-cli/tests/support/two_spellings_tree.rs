@@ -50,7 +50,7 @@ pub struct Run {
 
 impl Run {
     /// The scan failures a run reports, from either stream: an `error:` line naming no line
-    /// number, or the caution of §FS-check.1.3.6.3. Every other warning says nothing about one.
+    /// number, or the caution of §FS-check.1.3.6. Every other warning says nothing about one.
     pub fn failure_lines(&self) -> Vec<&str> {
         self.stdout
             .lines()

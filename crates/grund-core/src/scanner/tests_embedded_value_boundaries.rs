@@ -1,7 +1,7 @@
 //! Negative embedded-value boundaries: wrapper normalization, host-language
 //! enrollment, and overlapping root authority (§FS-values.2.4, §FS-values.5.1,
 //! §FS-values.9).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::testing::{embedded_value_config, scan_embedded_value, scan_tree, test_root, write};
 
@@ -173,7 +173,7 @@ fn non_comment_source_markers_are_inert() {
 
 /// Overlapping marks invalidate both roots whichever physical order they were
 /// written in, and a marker on a duplicated section path invalidates the
-/// primary claim as well (§FS-values.2.4.4).
+/// primary claim as well (§FS-values.2.4).
 #[test]
 fn reversed_and_duplicate_root_claims_invalidate_catalog_authority() {
     let (config, findings) = scan_embedded_value(

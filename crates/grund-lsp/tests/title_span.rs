@@ -1,7 +1,7 @@
 //! Real-server coverage for a section title's span on a C-family heading line:
 //! it ends where the `grund <ID> --toc` title ends, so the closing `*/` is left
 //! out as comment envelope (§FS-lsp.1.3.4, §FS-languages.comment-wrapper.headings).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

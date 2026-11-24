@@ -11,7 +11,7 @@ use crate::grammar::find_managed_block;
 #[cfg(unix)]
 use crate::testing::{OutputRetryingBusy, test_root, write};
 
-// §FS-integrations.4.1.4: managed dotfile block splice is idempotent.
+// §FS-integrations.4.1: managed dotfile block splice is idempotent.
 #[test]
 fn integrations_block_appends_then_is_idempotent() {
     let (appended, outcome) =
@@ -31,7 +31,7 @@ fn integrations_block_appends_then_is_idempotent() {
     assert_eq!(again, appended);
 }
 
-// §FS-integrations.4.1.4: a changed snippet updates only the marked region.
+// §FS-integrations.4.1: a changed snippet updates only the marked region.
 #[test]
 fn integrations_block_updates_in_place() {
     let (first, _) = install_managed_block("#", false, "keep-before\n", "OLD").unwrap();
@@ -75,14 +75,14 @@ fn install_outcomes_merge_towards_the_stronger_one() {
     }
 }
 
-// §FS-integrations.4.1.4: a block newer than this binary is a hard error.
+// §FS-integrations.4.1: a block newer than this binary is a hard error.
 #[test]
 fn integrations_block_rejects_newer_version() {
     let newer = "# >>> grund integrations (v99) >>>\nx\n# <<< grund integrations (v99) <<<\n";
     assert!(install_managed_block("#", false, newer, "SNIPPET").is_err());
 }
 
-// §FS-integrations.4.1.4: a begin marker with no matching end marker is a hard
+// §FS-integrations.4.1: a begin marker with no matching end marker is a hard
 // error, not an append — appending would let the next --write splice from the
 // orphan begin to the appended end and delete the user config in between.
 #[test]
@@ -95,7 +95,7 @@ fn integrations_block_rejects_orphan_begin_marker() {
     assert!(result.unwrap_err().contains("incomplete"));
 }
 
-// §FS-integrations.4.1.4: an older supported block is upgraded in place rather
+// §FS-integrations.4.1: an older supported block is upgraded in place rather
 // than left active beside a newly appended current block.
 #[test]
 fn integrations_block_upgrades_older_version_in_place() {
@@ -110,7 +110,7 @@ fn integrations_block_upgrades_older_version_in_place() {
     assert!(updated.ends_with("after\n"));
 }
 
-// §FS-integrations.4.1.4: indentation accepted by marker recognition is part
+// §FS-integrations.4.1: indentation accepted by marker recognition is part
 // of the marker line and must be consumed during replacement.
 #[test]
 fn integrations_block_consumes_complete_indented_marker_lines() {
@@ -131,7 +131,7 @@ fn integrations_block_rejects_multiple_blocks() {
     assert!(install_managed_block("#", false, &format!("{block}{block}"), "NEW").is_err());
 }
 
-/// §FS-integrations.3.3.4: `--peek` renders the declaration instead of opening
+/// §FS-integrations.3.3: `--peek` renders the declaration instead of opening
 /// an editor, through the *same* resolution path — a peek and a click must
 /// never disagree about where a citation points. The output leads with the
 /// resolved `path:line` so the peek is actionable, and never launches an
@@ -201,7 +201,7 @@ fn resolver_peek_prints_the_declaration_without_opening_an_editor() {
     );
 }
 
-/// §FS-integrations.3.2.4: VSCodium is a separate application with a separate
+/// §FS-integrations.3.2: VSCodium is a separate application with a separate
 /// extensions root. Installing the extension into `~/.vscode` for a VSCodium
 /// user fails *silently* — the write reports success and no link ever appears
 /// — so the two clients must never share a target.
@@ -221,7 +221,7 @@ fn codium_installs_into_its_own_extensions_root() {
     assert!(IntegrationClient::Codium.artifact_snippet().is_none());
 }
 
-/// §FS-integrations.4.1.1: the markers are comments *in the host file's
+/// §FS-integrations.4.1: the markers are comments *in the host file's
 /// language*. `#` is a comment in kitty.conf and .tmux.conf but the length
 /// operator in Lua, so a `#` marker in wezterm.lua is a syntax error that
 /// costs the user their entire WezTerm config — the block loads, and nothing
@@ -251,7 +251,7 @@ fn integrations_block_lookup_is_dialect_scoped() {
     assert!(find_managed_block("#", &lua).unwrap().is_none());
 }
 
-/// §FS-integrations.4.1.2: WezTerm applies hyperlink rules only from the config
+/// §FS-integrations.4.1: WezTerm applies hyperlink rules only from the config
 /// object the file returns, so a from-scratch install that stopped at the
 /// block would parse and register nothing. The scaffold is what makes a fresh
 /// install work without hand-editing.
@@ -269,7 +269,7 @@ fn wezterm_fresh_install_is_a_working_config() {
     assert!(IntegrationClient::Tmux.scaffold().is_none());
 }
 
-// §FS-integrations.4.1.3: the wiring step is reported, and the test is the
+// §FS-integrations.4.1: the wiring step is reported, and the test is the
 // unmanaged remainder alone. A whole-file search would match the block's own
 // definition and comments on every config and so report nothing, ever.
 #[test]
@@ -416,7 +416,7 @@ fn link_instruction_names_the_effective_target() {
             "{target:?} must teach the link form: {rendered}"
         );
         assert!(rendered.contains(phrase), "{target:?}: {rendered}");
-        // Self-scoping, like every other block text (§FS-integrations.4.3.10).
+        // Self-scoping, like every other block text (§FS-integrations.requirements.any-repository).
         assert!(
             rendered.starts_with(
                 "In repositories with a `grund.toml` (at the root or under `.agents/`):"

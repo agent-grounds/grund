@@ -212,7 +212,7 @@ fn ignoring_unparsable_file_is_accepted_and_hides_nothing() {
     assert!(line.ends_with(&format!("; {EXIT}")), "{line}");
 }
 
-/// §FS-check.1.3.6.3: the caution of a narrowed run wears the failure's own code.
+/// §FS-check.1.3.6: the caution of a narrowed run wears the failure's own code.
 #[test]
 fn a_parse_failure_outside_a_narrowed_run_cautions_as_unparsable() {
     let tree = Tree::new(

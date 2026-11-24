@@ -141,7 +141,7 @@ fn folder_list(folders: &[(&Path, &str)]) -> Value {
 #[test]
 #[cfg(unix)]
 fn an_external_directory_link_has_no_diagnostics_or_hover() {
-    // §FS-lsp.2.2.3: the LSP consumes the shared scan. A document reachable only
+    // §FS-lsp.2.2.2: the LSP consumes the shared scan. A document reachable only
     // below an outward directory link is therefore neither diagnosed nor
     // answerable by this project.
     let base = fixture_base().join(format!("grund-lsp-symlink-{}", std::process::id()));
@@ -166,7 +166,7 @@ fn an_external_directory_link_has_no_diagnostics_or_hover() {
     let pushes = diagnostic_pushes(&receiver, "FS-002-user");
     assert!(
         pushes.is_empty(),
-        "§FS-lsp.2.2.3: content below an external directory link has no diagnostics: {pushes:?}"
+        "§FS-lsp.2.2.2: content below an external directory link has no diagnostics: {pushes:?}"
     );
     let hover = hover_citation(
         &mut child,
@@ -177,7 +177,7 @@ fn an_external_directory_link_has_no_diagnostics_or_hover() {
     );
     assert!(
         hover.is_null(),
-        "§FS-lsp.2.2.3: content below an external directory link has no hover: {hover}"
+        "§FS-lsp.2.2.2: content below an external directory link has no hover: {hover}"
     );
 
     stop_server(&mut child, &mut stdin, &receiver, 3);
@@ -467,7 +467,7 @@ fn on_type_edits(
         .unwrap_or_default()
 }
 
-/// §FS-lsp.1.4.6: which configuration drives the live transform. The trigger
+/// §FS-lsp.1.4: which configuration drives the live transform. The trigger
 /// and marker that answer a keystroke are the ones resolved for the *edited
 /// document*, so a workspace member's `[reference]` overrides win over the
 /// root's — the same document-to-config mapping `grund fmt` uses.

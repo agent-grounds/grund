@@ -6,7 +6,7 @@
 //! alias-path boundary (§FS-workspace.1) is the first such character, and it is
 //! asked of a *pattern* as a question about what the pattern matches — both
 //! directions are pinned below, because a substring test got both wrong.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::*;
 use crate::testing::{test_root, write};

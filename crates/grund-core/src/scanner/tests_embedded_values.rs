@@ -1,7 +1,7 @@
 //! Focused embedded-section value proofs: exact markers, every supported
 //! source wrapper, strict physical shape, binding ownership, and formatter
 //! stability (§FS-values.2.4, §FS-values.5.1, §FS-values.8).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -62,7 +62,7 @@ fn exact_marker_probe_is_total_for_utf8_and_rejects_lookalikes() {
 
 /// The exact marker on a plain heading grants no authority and is reported as
 /// `invalid-value-declaration` at that marker, while a cased lookalike on a
-/// numeric heading stays inert prose (§FS-values.2.4.4).
+/// numeric heading stays inert prose (§FS-values.2.4).
 #[test]
 fn exact_marker_requires_a_citable_numeric_heading() {
     let (_, findings) = scan_embedded(
@@ -254,7 +254,7 @@ fn strict_shape_branches_report_the_offending_lines() {
 /// A marked root nested inside another marked root invalidates both. The
 /// bindings at the inner root's component and at the inner root itself are
 /// suppressed by that invalid authority, and only the form below the component
-/// is refused (§FS-values.2.4.4, §FS-values.3.1.2, §FS-values.5.1).
+/// is refused (§FS-values.2.4, §FS-values.3.1.2, §FS-values.5.1).
 #[test]
 fn an_invalid_nested_root_refuses_only_the_form_below_its_component() {
     let (config, findings) = scan_embedded(
@@ -337,7 +337,7 @@ fn formatter_preserves_qualified_embedded_binding_across_two_writes() {
     assert_formatter_and_comparison_stable(&root, &path);
 }
 
-/// §FS-values.8, §FS-workspace.4.4: a qualified binding into a member's value
+/// §FS-values.8, §FS-workspace.4: a qualified binding into a member's value
 /// chapter keeps its bytes though the citing member's grammar, without named
 /// sections, reads only the ID from the same marker.
 #[test]

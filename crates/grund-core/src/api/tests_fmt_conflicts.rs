@@ -1,5 +1,5 @@
 //! Test module: `fmt` refused for a conflict block across the public API
-//! (§FS-fmt.7.4, §FS-fmt.3.3, §FS-distribution.3.3.2), and `check`'s finding
+//! (§FS-fmt.7.4, §FS-fmt.3.2, §FS-distribution.3.3.2), and `check`'s finding
 //! beside it (§FS-declarations.checks.conflict-marker). Every marker line here is
 //! inside an indented string literal, so no line of this file is itself one.
 
@@ -37,7 +37,7 @@ fn fmt_write(root: &Path, cross_refs: bool) -> anyhow::Error {
     .expect_err("the run is refused")
 }
 
-/// §FS-fmt.3.3: a workspace-root run names every block, the root's first and then
+/// §FS-fmt.3.2: a workspace-root run names every block, the root's first and then
 /// each member's, files then lines within a project; nothing is written; and the
 /// bindings' failure is located at the first block with one site per block
 /// (§FS-distribution.3.3.2).
@@ -106,7 +106,7 @@ fn a_workspace_refusal_names_every_block_root_first_files_then_lines() {
     );
 }
 
-/// §FS-fmt.3.3: an unreadable path anywhere in a workspace-root run wins, so a
+/// §FS-fmt.3.2: an unreadable path anywhere in a workspace-root run wins, so a
 /// member that cannot be read refuses the run for that path alone and the
 /// root's block goes unnamed.
 #[test]
@@ -177,7 +177,7 @@ const LOCKED: &str = concat!(
     "[fmt.cross_refs]\nenabled = false\n",
 );
 
-/// §FS-fmt.7.4.3: with cross-references off the section-lock pass is where the
+/// §FS-fmt.7.4: with cross-references off the section-lock pass is where the
 /// run first needs the declaration set; it refuses on the block after the walk
 /// planned the `$$` rewrite, and neither that file nor the lock is written.
 #[test]
@@ -200,7 +200,7 @@ fn the_lock_pass_refuses_a_block_with_nothing_written() {
     assert_eq!(read(&root, ".grund/sections/FS-login.lock"), lock);
 }
 
-/// §FS-fmt.7.4.3: a shorthand defers the declaration-set scan to the file that
+/// §FS-fmt.7.4: a shorthand defers the declaration-set scan to the file that
 /// holds it, after an earlier file's `$$` was planned; the block refuses there
 /// and the earlier file is not written.
 #[test]

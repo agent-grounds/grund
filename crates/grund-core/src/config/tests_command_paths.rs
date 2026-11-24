@@ -3,7 +3,7 @@
 //! `..` where it climbs, empty or absent at the directory itself, discovery's
 //! path without a working directory, and one POSIX shell word with `./` before
 //! a leading `-` (and `:`, for `git`).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

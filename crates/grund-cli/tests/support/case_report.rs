@@ -109,7 +109,7 @@ pub fn assert_every_case_passed(label: &str, outcomes: &[CaseOutcome]) {
 /// manifest's own `{repo_copy}` requirement in [`run_case`]); the file list and
 /// the per-file bytes are golden comparisons, so a difference is pushed onto
 /// `mismatches` — as one `final repo mismatch` entry — instead of panicking.
-/// §FS-examples.5.6.1: compare the tree belonging to the live invocation owner.
+/// §FS-examples.5.6: compare the tree belonging to the live invocation owner.
 fn assert_expected_repo(
     case: &Path,
     execution: &CaseExecution,
@@ -208,7 +208,7 @@ fn relative_files(root: &Path) -> BTreeSet<PathBuf> {
 
 /// A dangling link is no file: it has no bytes to compare or write, and a tree
 /// golden could not carry it anyway, so the `symlinks` manifest that made it is
-/// its only record (§FS-fmt.7.4.3 pins a refused write next to one).
+/// its only record (§FS-fmt.7.4 pins a refused write next to one).
 fn collect_relative_files(root: &Path, dir: &Path, files: &mut BTreeSet<PathBuf>) {
     for entry in fs::read_dir(dir).unwrap_or_else(|err| panic!("read {}: {err}", dir.display())) {
         let entry = entry.unwrap();

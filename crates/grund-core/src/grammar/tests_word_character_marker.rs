@@ -1,5 +1,5 @@
 //! Shared note classification regressions for §FS-check.1.1.10.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::comment_line::{comment_strip_prefixes, line_citation_ranges};
 use super::inline_note_layout::{

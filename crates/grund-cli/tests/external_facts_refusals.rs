@@ -218,7 +218,7 @@ fn external_facts_folder_home_replaces_nested_snapshot_and_refuses_nested_duplic
     assert_eq!(tree_with_directories(&duplicate), before);
 }
 
-/// §FS-config.3.4.10.2, §FS-config.3.4.10.4: the schema half of the external
+/// §FS-config.3.4.10: the schema half of the external
 /// facts rows, from the surface that reads them back. `config show` on a row
 /// that wrote only `file` and `fetch` prints an explicit `format`, the `fetch`
 /// it was given, and the *effective* `resolve` — the defaulted `must`, which

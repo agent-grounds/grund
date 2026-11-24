@@ -8,7 +8,7 @@
 //! also why their fixtures put a config inside a scanned tree rather than above
 //! the run's root (§DF-unlisted-workspace-block.2.3) — except the one case that is
 //! about what an ancestor above that root can and cannot answer.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 
@@ -273,7 +273,7 @@ fn only_the_outermost_unlisted_block_of_a_chain_is_reported() {
 
 /// §FS-check.3.29: a nested directory carrying a plain `grund.toml` with no
 /// `[workspace]` table declares no projects to absorb. It is ordinary tree to
-/// the enclosing walk (§FS-check.1.3.1) and this rule says nothing about it.
+/// the enclosing walk (§FS-check.1.3) and this rule says nothing about it.
 #[test]
 fn a_nested_config_with_no_workspace_table_is_not_reported() {
     let root = test_root("a_nested_config_with_no_workspace_table_is_not_reported");
@@ -384,7 +384,7 @@ fn the_runs_own_workspace_root_is_never_reported_under_full() {
 /// run that never reaches the block says nothing — the same stance §FS-check.3.18
 /// takes for an index the run did not scan. This is the residue the spec keeps
 /// recording rather than papering over.
-/// §FS-workspace.6.1.8.1: this is the first of the two unreported shapes — a
+/// §FS-workspace.6.1.8: this is the first of the two unreported shapes — a
 /// block the walk never reaches, here behind a narrowed scope, because a run
 /// that cannot see something does not judge it.
 #[test]
@@ -505,9 +505,9 @@ fn assert_block_unreported(root: &Path, why: &str) {
 /// `repo/b` listed beside a member that does not exist, so the list will not
 /// expand — leaves the block undecidable in both directions (§FS-workspace.6.1.8)
 /// and unreported. No answer is not the answer that nothing claims it.
-/// §FS-workspace.6.1.7.2: the quiet climb asked this ancestor and read its entry
+/// §FS-workspace.6.1.7: the quiet climb asked this ancestor and read its entry
 /// text; an ancestor it cannot read out leaves the claim unanswered, and that
-/// question fails no run. §FS-workspace.6.1.8.1: the second of the two
+/// question fails no run. §FS-workspace.6.1.8: the second of the two
 /// unreported shapes — the unanswered claim, as against the unreached block.
 #[test]
 fn a_claim_the_ancestor_cannot_answer_leaves_the_block_unreported() {
@@ -523,10 +523,10 @@ fn a_claim_the_ancestor_cannot_answer_leaves_the_block_unreported() {
     );
 }
 
-/// §FS-workspace.6.1.7.5: an ancestor whose `members` text cannot be obtained —
+/// §FS-workspace.6.1.7: an ancestor whose `members` text cannot be obtained —
 /// grund#1010's typo, a list naming `repo/b` that never closes its bracket —
 /// leaves the claim undecidable in both directions, and the quiet climb leaves
-/// the block unreported (§FS-workspace.6.1.7.2). §FS-check.3.29: the floor below
+/// the block unreported (§FS-workspace.6.1.7). §FS-check.3.29: the floor below
 /// stands on entry text that was read, and this ancestor has none, so whether it
 /// names `b` cannot be said; reporting it as listed by nobody claims an answer.
 #[test]
@@ -538,8 +538,8 @@ fn an_ancestor_members_list_that_will_not_parse_leaves_the_block_unreported() {
     assert_block_unreported(&root, "the ancestor's `members` cannot be read");
 }
 
-/// §FS-workspace.6.1.7.5 names both values: a readable `members` that names
-/// nothing here does not decide the claim while `optional_members` (§FS-workspace.2.2.9),
+/// §FS-workspace.6.1.7 names both values: a readable `members` that names
+/// nothing here does not decide the claim while `optional_members` (§FS-workspace.2.2),
 /// which claims by the same entry-text rule, cannot be read (§FS-check.3.29).
 #[test]
 fn an_ancestor_optional_members_that_will_not_parse_leaves_the_block_unreported() {
@@ -550,7 +550,7 @@ fn an_ancestor_optional_members_that_will_not_parse_leaves_the_block_unreported(
     assert_block_unreported(&root, "the ancestor's `optional_members` cannot be read");
 }
 
-/// §FS-workspace.6.1.7.5's other unobtainable shape: a `members` value that
+/// §FS-workspace.6.1.7's other unobtainable shape: a `members` value that
 /// parses and is not a list has no entries to read a claim off, so the claim is
 /// as undecidable as an unparsable one, and as unreported (§FS-check.3.29).
 #[test]

@@ -196,7 +196,7 @@ fn key_case(name: &str) -> (String, String, &'static [&'static str]) {
         "grund_config_version" => plain("", "grund_config_version = 1"),
         "project_name" => plain("", "project_name = \"demo\""),
         "project_description" => plain("", "project_description = \"A demo.\""),
-        // §FS-config.3.4.4.5: against one untitled row, so the rows are all it moves.
+        // §FS-config.3.4.4: against one untitled row, so the rows are all it moves.
         "kinds" => (FS_ROW.to_string(), "kinds = []\n".to_string(), &[]),
         "[reference] conversation" => plain("[reference]\n", "conversation = \"link\""),
         "[reference] grounding_level" => plain(

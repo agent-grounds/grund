@@ -1,8 +1,8 @@
 //! Black-box: a finding about what a file holds is one line naming each spelling once, a line
 //! names only what the plain run reaches, and a finding judged from the file's directory names
 //! the spelling it was judged at (§FS-scan.identity.findings.content,
-//! §FS-scan.identity.findings.judged, §FS-scan.identity.link-path, §FS-check.1.3.2,
-//! §FS-check.1.3.6.2, §FS-errors.5.1).
+//! §FS-scan.identity.findings.judged, §FS-scan.identity.link-path, §FS-check.1.3,
+//! §FS-check.1.3.6, §FS-errors.5.1).
 #![cfg(unix)]
 
 #[path = "support/two_names.rs"]
@@ -46,7 +46,7 @@ fn its_json_carries_both_in_sites() {
 }
 
 /// A finding naming several sites is in scope at any and keeps its bytes, so a run naming the
-/// link prints the whole run's line (§FS-scan.identity.link-path, §FS-check.1.3.6.2).
+/// link prints the whole run's line (§FS-scan.identity.link-path, §FS-check.1.3.6).
 #[test]
 fn a_run_naming_either_spelling_prints_the_whole_runs_line() {
     let tree = tree("scoped");
@@ -91,7 +91,7 @@ fn plain_and_full_agree_on_a_line_naming_both_reached_spellings() {
 }
 
 /// Guard: a line names only the spellings the plain run reaches. With one root the plain run
-/// never meets the other name, so `--full` must print the plain bytes (§FS-check.1.3.2).
+/// never meets the other name, so `--full` must print the plain bytes (§FS-check.1.3).
 #[test]
 fn a_line_names_only_the_spellings_the_plain_run_reaches() {
     for (include, want) in [
@@ -124,7 +124,7 @@ fn a_line_names_only_the_spellings_the_plain_run_reaches() {
 
 /// Guard: a stub's link resolves from the file's directory, so it can hold at one spelling and
 /// fail at the other. It is judged at the name listed first and names only that one, whichever
-/// way that goes (§FS-scan.identity.findings.judged, §FS-fmt.2.3.2.2).
+/// way that goes (§FS-scan.identity.findings.judged, §FS-fmt.2.3.2).
 #[test]
 fn a_stub_finding_names_only_the_spelling_it_was_judged_at() {
     let tree = Tree::new("stub-holds", V2);

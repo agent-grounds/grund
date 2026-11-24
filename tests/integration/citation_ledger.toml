@@ -65,7 +65,7 @@ points = [
   "FS-scan.identity.link-path",
   "FS-scan.identity.root-path",
   "FS-scan.identity.read-once",
-  "FS-declarations.stubs.target.1",
+  "FS-declarations.stubs.target",
 ]
 owners = [
   "crates/grund-core/src/scanner/stub_homes.rs",

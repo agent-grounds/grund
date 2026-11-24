@@ -6,7 +6,7 @@
 //! lists, are `crates/grund-cli/tests/mount_operations.rs`, where the commands are, and
 //! the editor's, one per capability the server advertises, are
 //! `tests/integration/lsp_mount_operations.rs`.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::{Path, PathBuf};
 
@@ -258,7 +258,7 @@ fn a_mounted_tree_answers_every_inventoried_operation_as_its_standalone_run() {
     assert_eq!(targets, [Some("dep".into()), Some("dep/core".into())]);
 }
 
-/// §FS-remote-projects.ignore, §FS-remote-projects.differences.ignore: a mounted root
+/// §FS-remote-projects.ignore: a mounted root
 /// reads its own ignore files and none above it, `.git/info/exclude` included, where
 /// its in-place run reads all three.
 #[test]

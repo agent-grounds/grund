@@ -117,7 +117,7 @@ fn full_scope_keeps_the_plain_runs_spelling_of_a_linked_file() {
                 .filter(|diagnostic| !diagnostic.code.as_str().starts_with("out-of-scope-")),
         ),
         located_diagnostics(&scoped.config, scoped.report.errors.iter()),
-        "§FS-check.1.3.2: --full stays purely additive — same in-scope lines, same spelling of the file two roots reach"
+        "§FS-check.1.3: --full stays purely additive — same in-scope lines, same spelling of the file two roots reach"
     );
     assert_eq!(
         located_diagnostics(&scoped.config, scoped.report.errors.iter()),
@@ -230,7 +230,7 @@ fn a_plain_run_collapses_an_aliased_root() {
         vec![
             "docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha; cite it (also at docs-link/functional-spec/FS-001-alpha.md:1)"
         ],
-        "§FS-check.1.3.2: one physical file read once, under the earlier root's spelling — no duplicate of itself"
+        "§FS-check.1.3: one physical file read once, under the earlier root's spelling — no duplicate of itself"
     );
 }
 

@@ -1,6 +1,6 @@
 //! Test module: one answer to what a relative heading is (§FS-declarations.section.relative.parent),
 //! given by the parent pass to a Markdown body and a doc-comment body alike
-//! (§FS-declarations.section.relative.where).
+//! (§FS-declarations.section.relative.form).
 
 use super::relative_sections::RelativeAnswer;
 use crate::config::load_config;

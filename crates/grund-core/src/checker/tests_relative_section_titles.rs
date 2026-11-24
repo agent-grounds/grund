@@ -1,7 +1,7 @@
 //! Test module: a relative heading's display name
 //! (§FS-declarations.section.relative.shown), one case per surface that reads
 //! it — a chapter rule, a version-2 field and a `list --selector` row.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::api::{ListOpts, list};
 use crate::config::load_config;

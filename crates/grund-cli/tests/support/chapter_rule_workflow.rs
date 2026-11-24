@@ -191,7 +191,7 @@ fn chapter_rule_cross_refs_disabled_keeps_the_bare_citation_stable() {
     stable_cycle(&fixture, false);
 }
 
-/// §FS-check.3.5.4: agreement cannot be obtained by hiding real rule drift.
+/// §FS-check.3.5: agreement cannot be obtained by hiding real rule drift.
 #[test]
 fn chapter_rule_content_drift_is_detected_after_a_stable_linked_cycle() {
     let fixture = Fixture::new("drift", true);

@@ -1,8 +1,8 @@
 //! Test module: the editor's report asks a scan failure's names as `grund check <path>` does, so
 //! a failure under the anchor stays an error under any of them, in the tree where the name the
-//! whole run keeps is under the anchor neither as written nor resolved (§FS-check.1.3.6.3,
+//! whole run keeps is under the anchor neither as written nor resolved (§FS-check.1.3.6,
 //! §FS-lsp.1.1, §AR-scanner.1.entry). Unix-only: the tree is links and a mode.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -70,7 +70,7 @@ fn a_failure_under_the_anchor_stays_an_error_under_any_of_its_names() {
     let outside = io_errors(&root, "docs");
     fs::set_permissions(root.join("zz/x"), fs::Permissions::from_mode(0o755)).expect("free it");
 
-    // Membership considers every alias (§FS-check.1.3.6.3); naming is asserted separately below.
+    // Membership considers every alias (§FS-check.1.3.6); naming is asserted separately below.
     assert_eq!(under_the_anchor.len(), 1, "{under_the_anchor:?}");
     assert_eq!(under_another_name.len(), 1, "{under_another_name:?}");
     assert!(outside.is_empty(), "{outside:?}");
@@ -274,7 +274,7 @@ fn issue_1337_e2e_decode_failures_keep_the_whole_runs_name_and_case_alias() {
 
 /// §FS-check.2.4 in the editor: one report, the same limit as `grund check`. Over the root the
 /// unread value source is the snapshot's own error, so the citation earns nothing; anchored at
-/// `docs` it is outside the report and the finding stands (§FS-check.1.3.6.3).
+/// `docs` it is outside the report and the finding stands (§FS-check.1.3.6).
 #[test]
 fn an_unread_home_withholds_the_finding_only_where_the_failure_is_the_reports_own() {
     let root = physical_test_root("an_unread_home_withholds_in_the_editor");

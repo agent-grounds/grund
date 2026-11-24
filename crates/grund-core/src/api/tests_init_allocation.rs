@@ -1,6 +1,6 @@
 //! Test module: the kind and place init's guidance names, and the refresh test
 //! that reads the same selection (§FS-init.2.2.2).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::path::Path;

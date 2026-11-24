@@ -1,9 +1,9 @@
-//! Test module: `check` holds the whole managed block (§FS-check.3.5.4) — the
+//! Test module: `check` holds the whole managed block (§FS-check.3.5) — the
 //! render it compares is `init`'s on either conversation surface, the parts a
 //! stale finding names, the directory a finding about another project's block
 //! names (§FS-errors.3.6), and the runs that leave the two workspace sections
-//! out (§FS-check.3.5.5, §FS-check.4.9.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! out (§FS-check.3.5.5, §FS-check.4.9).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -106,7 +106,7 @@ fn block_on_disk(path: &Path) -> String {
     text[start..end].to_string()
 }
 
-/// §FS-check.3.5.4, §FS-init.2.3.7: the parts `Expected` holds a root
+/// §FS-check.3.5, §FS-init.2.3.7: the parts `Expected` holds a root
 /// entrypoint to are, in order, the block `init` wrote there, on the plain
 /// surface of `AGENTS.md` and the linked one of a standalone `CLAUDE.md`.
 #[test]
@@ -149,7 +149,7 @@ fn expected_root_block_is_inits_on_the_plain_and_linked_surfaces() {
     assert_eq!(agents_init(&check(&root)), Vec::<String>::new());
 }
 
-/// §FS-check.3.5.3: the parts a stale finding names, in block order, and the
+/// §FS-check.3.5: the parts a stale finding names, in block order, and the
 /// parts cover every byte before the end delimiter.
 #[test]
 fn block_sections_name_every_part_of_the_block() {
@@ -171,7 +171,7 @@ fn block_sections_name_every_part_of_the_block() {
     assert_eq!(whole, block[..block.find(END).expect("end")]);
 }
 
-/// §FS-check.3.5.3, §FS-init.2.3.5: a config that declares a rule renders
+/// §FS-check.3.5, §FS-init.2.3.5: a config that declares a rule renders
 /// the citation directions section, and the parts name it in block order.
 #[test]
 fn block_sections_name_the_directions_a_declared_rule_renders() {
@@ -206,7 +206,7 @@ fn block_sections_name_the_directions_a_declared_rule_renders() {
 /// turns every block red, and each finding about another project's block —
 /// a companion under `.claude/` included — names that project's root
 /// (§FS-errors.3.6). Inside the member the workspace sections are left out.
-/// §FS-check.3.5.3.1: each detail compares the first unequal body lines positionally.
+/// §FS-check.3.5: each detail compares the first unequal body lines positionally.
 #[test]
 fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
     let root = workspace("whole_block_new_member", &["billing"], &[]);
@@ -264,7 +264,7 @@ fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
     assert_eq!(agents_init(&check(&billing)), Vec::<String>::new());
 }
 
-/// §FS-check.3.5.5, §FS-check.4.9.1: a checkout without an optional member
+/// §FS-check.3.5.5, §FS-check.4.9: a checkout without an optional member
 /// leaves the workspace sections out, and says so in the member's warning
 /// only where the run verified a block.
 #[test]

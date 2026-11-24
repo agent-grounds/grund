@@ -1,4 +1,4 @@
-//! §FS-config.4.2.3.1: every place that sends a reader to `grund config show`
+//! §FS-config.4.2: every place that sends a reader to `grund config show`
 //! names `grund config explain` for what `show` leaves out, and none says that
 //! `show` prints every setting (#1068). `show`'s own bytes are not this file's:
 //! the `config-show-fresh-scaffold` e2e case holds them.
@@ -7,7 +7,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// The sentence §FS-config.4.2.3.1 asks for wherever a place's subject allows.
+/// The sentence §FS-config.4.2 asks for wherever a place's subject allows.
 const SENTENCE: &str =
     "`grund config show` prints what applies, `grund config explain` every setting";
 
@@ -21,7 +21,7 @@ const OVERCLAIMS: [&str; 6] = [
     "prints the table each one lives in",
 ];
 
-/// The places that send a reader to `grund config show`, as §FS-config.4.2.3.1
+/// The places that send a reader to `grund config show`, as §FS-config.4.2
 /// names them: the `init` templates, both copies of `grund guide config`, and the
 /// guides (`grund guide schema` among them), examples and README that say what
 /// `show` prints or present it as where a reader finds a setting. Each paragraph
@@ -96,7 +96,7 @@ fn grund(args: &[&str], cwd: &Path) -> (Option<i32>, String) {
     )
 }
 
-/// §FS-config.4.2.3.1: no place that sends a reader to `show`, and no point of
+/// §FS-config.4.2: no place that sends a reader to `show`, and no point of
 /// the specification that describes it, says `show` prints every setting.
 #[test]
 fn no_place_says_show_prints_every_setting() {
@@ -114,7 +114,7 @@ fn no_place_says_show_prints_every_setting() {
     );
 }
 
-/// §FS-config.4.2.3.1: every paragraph that sends a reader to `show` names
+/// §FS-config.4.2: every paragraph that sends a reader to `show` names
 /// `grund config explain` for what `show` leaves out.
 #[test]
 fn every_pointer_to_show_names_explain() {
@@ -132,7 +132,7 @@ fn every_pointer_to_show_names_explain() {
     );
 }
 
-/// §FS-config.4.2.3.1, §FS-init.2.4.3: the comment a fresh `init` writes is the
+/// §FS-config.4.2, §FS-init.2.4.3: the comment a fresh `init` writes is the
 /// sentence, after what the file holds, on one line of at most 100 columns.
 #[test]
 fn the_shipped_header_is_the_sentence() {
@@ -149,7 +149,7 @@ fn the_shipped_header_is_the_sentence() {
     }
 }
 
-/// §FS-config.4.2.3.1, §FS-init.5.5: the configuration questions `grund guide
+/// §FS-config.4.2, §FS-init.5.5: the configuration questions `grund guide
 /// config` prints, from the copy the binary ships, say the sentence where they
 /// send a version-2 reader to `show`.
 #[test]
@@ -168,7 +168,7 @@ fn guide_config_sends_a_version_2_reader_to_show_and_explain() {
     );
 }
 
-/// §FS-config.4.2.3.1, §FS-cli.2.3: the help of `grund init` and of `grund config`
+/// §FS-config.4.2, §FS-cli.2.3: the help of `grund init` and of `grund config`
 /// name `grund config explain` beside `show`, and neither says `show` prints every
 /// setting; `grund init -h` says the sentence.
 #[test]

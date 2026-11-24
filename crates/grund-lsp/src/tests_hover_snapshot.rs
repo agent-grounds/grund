@@ -201,7 +201,7 @@ fn a_citation_hover_is_what_show_toc_prints() {
     }
 }
 
-/// §FS-lsp.4.1 with §FS-lsp.responsiveness.3: an unsaved edit to the cited body
+/// §FS-lsp.4 with §FS-lsp.responsiveness.3: an unsaved edit to the cited body
 /// is in the hover, the same bytes `grund <ID> --toc` prints once it is saved.
 /// A snapshot-answered hover must take the body from the snapshot's buffers,
 /// never from disk. This passes today.
@@ -339,7 +339,7 @@ fn did_open(target: &Path, lead: &str) -> Value {
     }})
 }
 
-/// §AR-lsp.2.1 with §FS-lsp.4.1: a snapshot goes stale when any file its run
+/// §AR-lsp.2.1 with §FS-lsp.4: a snapshot goes stale when any file its run
 /// read changes, not only a file it scanned, and whether the run read it from
 /// disk or from an open buffer. An unsaved edit in `a` of the declaration `b`
 /// stubs is in the hover on `b`'s citation through the file's whole life in the

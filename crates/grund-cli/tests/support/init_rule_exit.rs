@@ -100,7 +100,7 @@ fn help_explains_both_exit_one_causes_and_reports() {
     );
 }
 
-/// §FS-init.4.1, §FS-init.4, §FS-rules.4.1.2: writing/current and rule failure
+/// §FS-init.4.1, §FS-init.4, §FS-rules.4.1: writing/current and rule failure
 /// coexist, including current and pending previews; no exit normalization.
 #[test]
 fn member_rule_findings_survive_written_current_and_pending_paths() {
@@ -167,7 +167,7 @@ fn member_rule_findings_survive_written_current_and_pending_paths() {
     }
 }
 
-/// §FS-rules.4, §FS-rules.4.1.2: retain the existing invalid/unverifiable mixed
+/// §FS-rules.4, §FS-rules.4.1: retain the existing invalid/unverifiable mixed
 /// refusal and workspace-root controls through the ordinary golden harness.
 #[test]
 fn existing_rule_write_and_scope_controls() {

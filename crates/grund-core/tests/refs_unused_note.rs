@@ -1,7 +1,7 @@
 //! §FS-refs.2.1.1 at the library boundary, from issue #936: the engine decides
 //! the `list --unused` note once, as the `note` of the `refs` result, so the
 //! Rust API, the Python call and the Node call carry one value, in the
-//! declaration's catalog spelling (§FS-distribution.3.2.2.2).
+//! declaration's catalog spelling (§FS-distribution.3.2.2).
 
 #[path = "support/numeric_spelling.rs"]
 mod support;
@@ -86,7 +86,7 @@ fn api_note_withheld() {
     }
 }
 
-/// §FS-refs.2.1.1, §FS-distribution.3.2.2.2: both host transports carry the
+/// §FS-refs.2.1.1, §FS-distribution.3.2.2: both host transports carry the
 /// engine's one note unchanged, with no new field.
 #[test]
 fn host_note_matches_the_api() {

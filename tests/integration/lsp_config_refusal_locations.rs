@@ -1,7 +1,7 @@
 //! Real config-load refusals retain their named lines through publication
-//! (§FS-lsp.2.2.4.1), with CLI message agreement (§FS-lsp.1.1). Exercise the
+//! (§FS-lsp.2.2.4), with CLI message agreement (§FS-lsp.1.1). Exercise the
 //! shared core/transport boundary (§AR-lsp.2), not prelocated mock diagnostics.
-//! Fixture owners remove their roots after all consumers (§FS-repository-maintenance.4.1).
+//! Fixture owners remove their roots after all consumers (§FS-repository-maintenance.4).
 
 #[path = "binaries.rs"]
 mod binaries;

@@ -1,4 +1,4 @@
-"""Real CLI coverage for §FS-non-goals.1.1, §AR-ci.3.1.1 and §AR-ci.3.1.3.
+"""Real CLI coverage for §FS-non-goals.1, §AR-ci.3.1.1 and §AR-ci.3.1.3.
 
 Port the issue-403 triage reproducer's loopback assertions. The production
 configuration is copied unchanged for delayed-response and permanent-timeout
@@ -222,7 +222,7 @@ class LinkGateNetworkTests(unittest.TestCase):
 class TransientRecheckNetworkTests(unittest.TestCase):
     """§AR-ci.3.1.3 — lychee sends a rejected 5xx, a 403 and a malformed response
     once; the wrapper checks such a URL once more, and a later 200 passes
-    (§FS-non-goals.1.1). Ported from the issue-738 triage reproducer."""
+    (§FS-non-goals.1). Ported from the issue-738 triage reproducer."""
 
     @classmethod
     def setUpClass(cls):

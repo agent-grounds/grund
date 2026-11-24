@@ -1,5 +1,5 @@
 //! Black-box placement context and unchanged ownership controls for #1000.
-//! §FS-declarations.checks.misplaced-declaration; §FS-check.1.3.1;
+//! §FS-declarations.checks.misplaced-declaration; §FS-check.1.3;
 //! §FS-check.3.29: plain nested configs gain no standalone finding.
 
 use serde_json::{Value, json};

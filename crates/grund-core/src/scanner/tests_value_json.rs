@@ -1,6 +1,6 @@
 //! JSON value-home shape, order, and duplicate ownership (§FS-values.2.2,
 //! §FS-values.2.3).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 
@@ -50,7 +50,7 @@ fn declarations<'a>(findings: &'a Catalog, kind: &str, slug: &str) -> &'a [crate
 /// The reader keeps member order, the raw number and string spellings, the
 /// decoded strings, and the exact key/member/element spans, all before any
 /// lookup map could reorder them (§FS-values.2.2.2).
-/// §FS-config.3.4.9.2: the `folder` home `values` is the JSON source boundary —
+/// §FS-config.3.4.9: the `folder` home `values` is the JSON source boundary —
 /// its direct `.json` child `catalog.json` is what contributes, read whole and
 /// normalized, without the generic `[scan] include` reaching for it.
 #[test]

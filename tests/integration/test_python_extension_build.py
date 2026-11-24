@@ -1,4 +1,4 @@
-"""Raw Cargo extension setup (§FS-distribution.3.3.7.1, §AR-bindings.6.1).
+"""Raw Cargo extension setup (§FS-distribution.3.3.7, §AR-bindings.6.1).
 
 The portable probe compiles the actual build.rs with the locked PyO3 build-config
 library, then executes it for Darwin targets. It checks emitted Cargo directives,

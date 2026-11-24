@@ -2,7 +2,7 @@
 //! counts a declaration-side title carries, the citation preview they must
 //! leave alone, and the citation that resolves to nothing and defers to its
 //! diagnostic (§FS-lsp.1.2).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 
@@ -198,7 +198,7 @@ fn citation_hover_still_previews_the_declaration_body() {
 /// A citation that cannot resolve has no hover body. Its diagnostic already
 /// carries the nearest-ID hint, so returning it from hover too would double
 /// the text in editors that render diagnostics in the hover popup; hover
-/// returns nothing and the diagnostic stands alone (§FS-lsp.1.2.2).
+/// returns nothing and the diagnostic stands alone (§FS-lsp.1.2.1).
 #[test]
 fn hover_on_dangling_citation_defers_to_diagnostic() {
     let root = test_root("hover-dangling-defers");
@@ -237,7 +237,7 @@ fn hover_on_dangling_citation_defers_to_diagnostic() {
     assert!(
         hover["result"].is_null(),
         "hover on a dangling citation returns nothing so the diagnostic is not \
-         echoed a second time in the hover popup (§FS-lsp.1.2.2): {hover:?}"
+         echoed a second time in the hover popup (§FS-lsp.1.2.1): {hover:?}"
     );
 
     send_message(
@@ -253,7 +253,7 @@ fn hover_on_dangling_citation_defers_to_diagnostic() {
 
 /// §FS-lsp.1.2.1: the hover's linkification asks the one reading of
 /// §FS-citations.wrap, so a citation in a link its author wrote, in any form
-/// §FS-citations.wrap.enclosing.scope lists, and a citation-only image are left as
+/// §FS-citations.wrap.enclosing.shape lists, and a citation-only image are left as
 /// written, and only the bare citation becomes a link. Today the hover's own
 /// preceding-bracket test nests a link into every one of them.
 #[test]

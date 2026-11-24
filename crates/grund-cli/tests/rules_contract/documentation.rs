@@ -45,7 +45,7 @@ fn guide_example_readmes_and_goldens_ship_together() {
     assert!(examples.contains("rules/"));
 }
 
-/// §FS-rules.10.1: the maintained example must teach the path-subject refusal
+/// §FS-rules.10: the maintained example must teach the path-subject refusal
 /// actually printed, including no form where none is offered.
 #[test]
 fn example_path_subject_entry_teaches_the_cli_refusal_without_a_rewrite() {

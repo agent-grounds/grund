@@ -1,4 +1,4 @@
-//! Owner-effective and qualified acceptance for §FS-lsp.1.6.1 and §FS-lsp.1.6.2.
+//! Owner-effective and qualified acceptance for §FS-lsp.1.6.
 use super::completion_support::*;
 use serde_json::json;
 

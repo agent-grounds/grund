@@ -3,7 +3,7 @@
 //! whether a line is a declaration heading is read off the record of that same
 //! text (§AR-scanner.2.8.5), so the buffer gives the missing-entry message a save
 //! would (§FS-check.3.18).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

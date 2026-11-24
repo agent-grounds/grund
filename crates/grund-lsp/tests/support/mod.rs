@@ -65,7 +65,7 @@ pub fn server_binary() -> PathBuf {
 
 /// A fresh configured fixture root under [`fixture_base`] (§AR-ci.10.3).
 pub fn test_root(name: &str) -> TemporaryRoot {
-    // §FS-repository-maintenance.4.1: cleanup already owns any failed setup below.
+    // §FS-repository-maintenance.4: cleanup already owns any failed setup below.
     let dir = TemporaryRoot::new(&fixture_base(), &format!("grund-lsp-{name}"));
     fs::create_dir_all(dir.join("docs")).expect("create docs dir");
     fs::write(

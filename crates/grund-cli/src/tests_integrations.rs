@@ -33,7 +33,7 @@ mod tests_integrations {
         assert!(snippet.contains("grund-open \\0"));
     }
 
-    // §FS-integrations.2.1: detection closes on the preview line and the setup
+    // §FS-integrations.2: detection closes on the preview line and the setup
     // guide, in both the detected and the nothing-detected form — the guide
     // carries the prerequisites and manual steps `--write` cannot perform.
     #[test]
@@ -98,7 +98,7 @@ mod tests_integrations {
         }
     }
 
-    // §FS-integrations.4.4.4: the report names the form each agent received, and
+    // §FS-integrations.4.4: the report names the form each agent received, and
     // why when it is not the one asked for — unreported, an override, a gate
     // downgrade, and an unread key look identical from the outside.
     #[test]
@@ -178,7 +178,7 @@ mod tests_integrations {
     /// §FS-integrations.5: the machine detection plan distinguishes ambient
     /// detection from actual installation state, and carries each client's
     /// `install_kind` so a manual client's permanent `installed: false` reads as
-    /// "not knowable" rather than "not installed" (§FS-integrations.3.4.2).
+    /// "not knowable" rather than "not installed" (§FS-integrations.3.4).
     #[test]
     fn integrations_detection_json_reports_installed_state() {
         let mut out = integrations(IntegrationsOpts::default()).expect("detect");

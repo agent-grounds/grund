@@ -132,7 +132,7 @@ const UNCHANGED: &[&str] = &[
 ];
 
 /// What an import leaves as it was: a config with no import reads no sibling, however
-/// its `project_name` or its config reads (§FS-imports.declaration.none); the
+/// its `project_name` or its config reads (§FS-imports.graph.reverse); the
 /// dependency run on its own never learns its consumer (§FS-imports.graph.reverse); a
 /// version-1 consumer keeps today's refusal of the table; and a managed block rendered
 /// before an import was adopted stays current (§FS-imports.declaration.table).
@@ -576,7 +576,7 @@ fn a_missing_import_never_falls_back_to_a_decoy_with_its_name() {
 
 /// With no import declared, nothing changes: a sibling whose `project_name` matches
 /// the alias a citation spells is never searched, and the citation keeps today's
-/// finding (§FS-imports.declaration.none).
+/// finding (§FS-imports.graph.reverse).
 #[test]
 fn no_import_declared_never_reads_a_matching_sibling() {
     let tree = Tree::sibling("none");

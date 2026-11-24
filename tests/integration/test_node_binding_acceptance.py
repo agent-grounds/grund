@@ -2,16 +2,16 @@
 
 Exact-leaf proof routes, exercised by the suite below:
 §FS-distribution.3.0.3: complete-data and separate CLI-byte parity.
-§FS-distribution.3.0.3.1: Node field mapping and the frozen CLI wire projection.
-§FS-distribution.3.2.1.1: full export inventory and excluded process/editor APIs.
-§FS-distribution.3.2.2.1: structured Promise failures and nullable records.
-§FS-distribution.3.2.2.2: all operation-specific results.
-§FS-distribution.3.2.2.3: scan snapshots and native-only corpus fields.
-§FS-distribution.3.2.2.4: closed options and writer validation.
-§FS-distribution.3.2.3.1: owned workers, runtime barriers and lease cleanup.
-§FS-distribution.3.2.3.2: modules, metadata and lazy structured loading.
-§FS-distribution.3.2.3.3: local source/pack/install and bundled fallback.
-§FS-distribution.3.2.4: executable acceptance and honest readiness.
+§FS-distribution.3.0.3: Node field mapping and the frozen CLI wire projection.
+§FS-distribution.3.2.1: full export inventory and excluded process/editor APIs.
+§FS-distribution.3.2.2: structured Promise failures and nullable records.
+§FS-distribution.3.2.2: all operation-specific results.
+§FS-distribution.3.2.2: scan snapshots and native-only corpus fields.
+§FS-distribution.3.2.1: closed options and writer validation.
+§FS-distribution.3.2.3: owned workers, runtime barriers and lease cleanup.
+§FS-distribution.3.2.3: modules, metadata and lazy structured loading.
+§FS-distribution.3.2.3: local source/pack/install and bundled fallback.
+§FS-distribution.3.2: executable acceptance and honest readiness.
 """
 
 import subprocess

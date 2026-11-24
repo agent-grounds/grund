@@ -287,7 +287,7 @@ fn refs_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
             .unwrap_or_default()
             .to_string())
     };
-    // §FS-refs.4.1.1: a broken stub is no home for `refs`, so it refuses only where
+    // §FS-refs.4.1: a broken stub is no home for `refs`, so it refuses only where
     // two remain, and then names every declaration as `show` does.
     let want = match row.declarations() {
         ds if ds.iter().filter(|s| !row.is_broken_stub(s)).count() > 1 => Err(ambiguity(&ds)),

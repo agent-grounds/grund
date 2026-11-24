@@ -1,6 +1,6 @@
 //! Unsaved rule rationales use the shared overlay scan (§FS-lsp.1.1,
 //! §FS-lsp.4, §FS-rules.9).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::lsp_snapshot;
 use crate::queries::LspSnapshotOpts;

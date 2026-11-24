@@ -1,7 +1,7 @@
 //! §FS-integrations.1.3, §AR-bindings.3 — the bytes `grund integrations …
 //! --write` prints and writes, pinned before the CLI renders the engine's
 //! `integrations` answer
-//! (§FS-integrations.1.3.1) and held after it: each client on a first run and a
+//! (§FS-integrations.1.3) and held after it: each client on a first run and a
 //! re-run, every guidance target with and without an agent override, a missing
 //! agent home, the user configuration's cautions, and a filesystem failure
 //! partway through a run. A case's golden is every invocation's exit code,
@@ -168,7 +168,7 @@ fn assert_goldens(failures: Vec<Option<String>>) {
 
 /// §FS-integrations.4 and §FS-integrations.6.1: every client's first `--write`
 /// and its re-run, on a machine with every agent home, and a WezTerm config that
-/// already exists without its apply call (§FS-integrations.4.1.3).
+/// already exists without its apply call (§FS-integrations.4.1).
 #[test]
 fn each_client_writes_the_same_bytes_on_a_first_run_and_a_re_run() {
     let mut failures = Vec::new();
@@ -237,7 +237,7 @@ fn every_guidance_target_writes_the_same_bytes_with_and_without_an_agent_overrid
     assert_goldens(failures);
 }
 
-/// §FS-integrations.4.3.9: no agent home at all, so every instruction target is
+/// §FS-integrations.4.3.8: no agent home at all, so every instruction target is
 /// reported skipped and nothing is created for it.
 #[test]
 fn a_machine_with_no_agent_home_skips_every_instruction_target() {

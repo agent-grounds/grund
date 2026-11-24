@@ -67,7 +67,7 @@ fn per_target_once_accepted_word_judges_physical_sites_on_both_surfaces() {
                                     "severity": if modality == "must" { "error" } else { "warning" },
                                     "path": "docs/sys.md", "line": 3,
                                     "code": "citation-cardinality", "message": message,
-                                    // §FS-rules.7.3.1: each counted line once.
+                                    // §FS-rules.7.3: each counted line once.
                                     "sites": [
                                         {"path": "docs/sys.md", "line": 5},
                                         {"path": "docs/sys.md", "line": 6}

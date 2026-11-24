@@ -1,4 +1,4 @@
-"""§FS-distribution.1.1, §FS-distribution.1.1.1, §FS-distribution.1.1.2,
+"""§FS-distribution.1.1,
 §FS-distribution.1.2, §FS-distribution.1.3 — the package layer of the
 distribution spec, read off the manifests and the pre-release name guard that
 actually carry it.
@@ -47,7 +47,7 @@ UNDER_FAKE_CURL = 'PATH="$(cygpath -u "$1" 2>/dev/null || printf %s "$1"):$PATH"
 # claim from a notice.
 
 # The table keeps pinning every claimed name when a registry's ownership
-# rule moves to a helper of its own (§FS-distribution.1.1.1).
+# rule moves to a helper of its own (§FS-distribution.1.1).
 CALL = re.compile(
     r"""^([a-z_]+)\s+"([^"]+)"\s+"([^"]+)"\s+"([^"]+)"\s*$""",
     re.M,
@@ -116,7 +116,7 @@ class PackageNameTests(unittest.TestCase):
         *from*. A repository move reaches those registries only with the next
         release — the one this guard stands in front of — so the former owner
         passes beside the current one, and nobody else does. crates.io no longer
-        decides ownership this way (§FS-distribution.1.1.1); this pattern is what
+        decides ownership this way (§FS-distribution.1.1); this pattern is what
         npm and PyPI keep."""
         pattern = re.search(r"repo_pattern='([^']+)'", NAME_GUARD.read_text()).group(1)
         for owner in ("agent-grounds", "vjovanov"):
@@ -249,7 +249,7 @@ TRUSTED = {
     "url": "https://github.com/vjovanov",
 }
 
-# Owner records that look like ownership and are not it (§FS-distribution.1.1.1).
+# Owner records that look like ownership and are not it (§FS-distribution.1.1).
 # Each differs from TRUSTED in exactly one field, so a rule that reads the wrong
 # one is named by the subtest that fails.
 NOT_THE_IDENTITY = {
@@ -263,7 +263,7 @@ NOT_THE_IDENTITY = {
     "a login with a suffix": {"id": 8, "login": "vjovanov-2", "kind": "user"},
 }
 
-# Owner responses that are not owner evidence at all (§FS-distribution.1.1.2).
+# Owner responses that are not owner evidence at all (§FS-distribution.1.1).
 UNREADABLE_OWNERS = {
     "no users key": '{"teams": []}',
     "users is an object": '{"users": {"login": "vjovanov", "kind": "user"}}',
@@ -365,7 +365,7 @@ def package_metadata(repository, **extra):
 
 
 class CratesIoOwnershipTests(unittest.TestCase):
-    """§FS-distribution.1.1.1 — ownership of the three crates.io names is the
+    """§FS-distribution.1.1 — ownership of the three crates.io names is the
     registry's own owner record and nothing the package says about itself. The
     guard is run whole, through `bash`, because that is the entry point
     `release.yml` and `pre-release-checks.yml` invoke (§FS-distribution.4.3)."""
@@ -434,7 +434,7 @@ class CratesIoOwnershipTests(unittest.TestCase):
 
 
 class CratesIoEvidenceTests(unittest.TestCase):
-    """§FS-distribution.1.1.2 — an existing crate whose ownership cannot be
+    """§FS-distribution.1.1 — an existing crate whose ownership cannot be
     established stops the release, and says which of the four things went wrong.
     There is deliberately no fallback to declared metadata: that fallback is
     what both the move deadlock and the copied-URL acceptance are made of."""

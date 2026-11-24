@@ -1,7 +1,7 @@
 //! Issue #1138's cases, run alone: at a workspace root `check` and `config validate` name the
 //! config findings of each `include_root = false` block the workspace expansion reaches, as
-//! they name a member's, and a narrowed or imported run names none (§FS-check.4.11.3,
-//! §FS-check.checks.config-version-1, §FS-config.4.1.1). Every one is also in the full pass.
+//! they name a member's, and a narrowed or imported run names none (§FS-check.4.11,
+//! §FS-check.checks.config-version-1, §FS-config.4.1). Every one is also in the full pass.
 
 use super::case_runner::CaseKind::E2e;
 use super::case_runner::{assert_every_case_passed, run_case};

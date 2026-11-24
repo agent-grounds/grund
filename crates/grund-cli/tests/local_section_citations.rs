@@ -12,7 +12,7 @@ use std::path::Path;
 use std::process::{Command, Output};
 
 fn fixture(name: &str) -> TemporaryRoot {
-    // §FS-repository-maintenance.4.1: own the leaf before fallible setup.
+    // §FS-repository-maintenance.4: own the leaf before fallible setup.
     let root = TemporaryRoot::new(&std::env::temp_dir(), &format!("grund-cli-{name}"));
     fs::create_dir_all(root.join("docs")).expect("create fixture");
     fs::write(

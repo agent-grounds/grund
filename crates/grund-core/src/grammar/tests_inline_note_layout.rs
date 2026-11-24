@@ -1,6 +1,6 @@
 //! Test module: the inline note layout classifier and its opt-in check
 //! (§FS-inline-citation-style.3.3, §FS-inline-citation-style.4.4)
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::comment_line::{comment_content_range, line_citation_ranges};
 use super::inline_note_layout::{
@@ -17,7 +17,7 @@ fn conforms(config: &Config, line: &str) -> bool {
     let ranges = line_citation_ranges(line, 0, config.lexical(), &[]);
     let prefixes = comment_strip_prefixes(config.lexical());
     match line_layout_view(line, &ranges, &prefixes) {
-        // §FS-inline-citation-style.3.3.1, rule 1: no citation in the content,
+        // §FS-inline-citation-style.3.3, rule 1: no citation in the content,
         // so nothing to lay out.
         None => true,
         Some((content, tokens)) => content_conforms(
@@ -47,7 +47,7 @@ fn violations(config: &Config, block: &[&str], has_note: bool) -> Vec<usize> {
     )
 }
 
-// §FS-inline-citation-style.2.1: the default imposes nothing, so every
+// §FS-inline-citation-style.3.3: the default imposes nothing, so every
 // arrangement a `citation-with-note` tree already wrote still passes.
 #[test]
 fn any_layout_accepts_every_arrangement() {
@@ -67,9 +67,9 @@ fn any_layout_accepts_every_arrangement() {
 /// spelling, a citation later in the note, a colon that ends the line, and a
 /// line with no citation at all.
 ///
-/// §FS-inline-citation-style.3.3.3: the rule constrains what *opens* the line
+/// §FS-inline-citation-style.3.3: the rule constrains what *opens* the line
 /// only, so `(see also §…)` later in the note conforms.
-/// §FS-inline-citation-style.3.3.9: these are the conforming example lines.
+/// §FS-inline-citation-style.3.3: these are the conforming example lines.
 #[test]
 fn citation_first_colon_accepts_the_canonical_forms() {
     let root = test_root("citation_first_colon_accepts_the_canonical_forms");
@@ -93,9 +93,9 @@ fn citation_first_colon_accepts_the_canonical_forms() {
     }
 }
 
-/// §FS-inline-citation-style.3.3.4, rule 4: the form is exact, so each near miss
+/// §FS-inline-citation-style.3.3, rule 4: the form is exact, so each near miss
 /// is a deviation rather than a tolerated spelling.
-/// §FS-inline-citation-style.3.3.9: these are the nonconforming example lines.
+/// §FS-inline-citation-style.3.3: these are the nonconforming example lines.
 #[test]
 fn citation_first_colon_rejects_near_misses() {
     let root = test_root("citation_first_colon_rejects_near_misses");
@@ -118,7 +118,7 @@ fn citation_first_colon_rejects_near_misses() {
     }
 }
 
-/// §FS-inline-citation-style.3.3.8: the line is read after the comment prefix and
+/// §FS-inline-citation-style.3.3: the line is read after the comment prefix and
 /// any block closer are stripped, so every recognized comment shape is judged on
 /// the same content the author sees. The prefix set is the project's, not one
 /// language's: `//!` and `/**` open a doc comment in the C family and so are
@@ -148,7 +148,7 @@ fn citation_first_colon_reads_every_comment_prefix() {
     }
 }
 
-// §FS-inline-citation-style.3.3.8: the block closer and the space in front of it
+// §FS-inline-citation-style.3.3: the block closer and the space in front of it
 // are stripped together, so a colon that ends a `/* … */` line closes the
 // grammar's empty tail rather than opening a note made of one space.
 #[test]
@@ -173,7 +173,7 @@ fn a_block_closer_leaves_no_trailing_space() {
     assert!(!has_note(&config, &block));
 }
 
-// §FS-inline-citation-style.3.3.8: a leading list marker is skipped with the
+// §FS-inline-citation-style.3.3: a leading list marker is skipped with the
 // indentation, so an enumerated block of grounded points can open each item
 // with its citation run. One marker, and only where a space follows it.
 #[test]
@@ -206,7 +206,7 @@ fn a_list_marker_is_skipped_like_indentation() {
     assert!(has_note(&config, &["// - \u{a7}FS-001-login"]));
 }
 
-/// §FS-inline-citation-style.3.3.1, rule 1: the line that opens the note is
+/// §FS-inline-citation-style.3.3, rule 1: the line that opens the note is
 /// judged, and so is any later line that opens with a citation — but a
 /// continuation line that opens with prose is note text, so a note may wrap
 /// and still name a second point on the way (rule 3, and the line budget).
@@ -239,7 +239,7 @@ fn a_wrapped_note_may_name_a_point_on_its_continuation() {
     assert_eq!(violations(&config, &prose_first, true), vec![2]);
 }
 
-// §FS-inline-citation-style.3.3.5, rule 5: a workspace-qualified token is one
+// §FS-inline-citation-style.3.3, rule 5: a workspace-qualified token is one
 // citation token, so the run reads it as the line's opening citation.
 #[test]
 fn citation_first_colon_reads_a_qualified_token() {
@@ -249,7 +249,7 @@ fn citation_first_colon_reads_a_qualified_token() {
     assert!(!conforms(&config, "// §api/FS-001-login the member's rule"));
 }
 
-// §FS-inline-citation-style.3.3.2, rule 2: a site with no note has no layout, so
+// §FS-inline-citation-style.3.3, rule 2: a site with no note has no layout, so
 // nothing in it is classified — not even a line that would otherwise deviate.
 #[test]
 fn a_site_without_a_note_is_exempt() {
@@ -265,7 +265,7 @@ fn a_site_without_a_note_is_exempt() {
 /// nothing, so a chain stays a pure citation comment however it is spelled —
 /// including with the `, ` the layout itself mandates in front of a colon.
 ///
-/// §FS-inline-citation-style.2.3.3: note presence is what is being decided here
+/// §FS-inline-citation-style.1.4: note presence is what is being decided here
 /// — after the prefixes, the citation tokens, and the whitespace-and-one-comma
 /// separators are stripped, anything non-whitespace left is a note, which is
 /// why ` + `, an `and`, a second comma, and a colon-led sentence all carry one.
@@ -372,7 +372,7 @@ fn no_layout_records_no_violations() {
 /// §FS-inline-citation-style.4.4: the scanner classifies a line only where the
 /// checker has somewhere to report it, and both read one predicate — so a
 /// `Config` built in memory with a level the load-time enum would have rejected
-/// (§FS-inline-citation-style.2.2) classifies nothing rather than paying for
+/// (§FS-config.3.1.9) classifies nothing rather than paying for
 /// verdicts the checker then drops.
 #[test]
 fn an_unknown_check_level_classifies_nothing() {

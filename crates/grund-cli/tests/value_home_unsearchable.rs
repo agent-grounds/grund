@@ -1,5 +1,5 @@
 //! Black-box regression for a listed value candidate whose metadata lookup fails
-//! (§FS-values.5.3.1). Git cannot retain the directory modes, so these end-to-end
+//! (§FS-values.5.3). Git cannot retain the directory modes, so these end-to-end
 //! trees are built here, as in value_home_unlistable.rs. Skip where permissions
 //! do not bar this process; a skip supplies no evidence for the regression.
 #![cfg(unix)]

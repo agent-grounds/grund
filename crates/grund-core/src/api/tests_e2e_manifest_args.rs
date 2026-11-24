@@ -1,7 +1,7 @@
 //! An E2E case's `args` is its parsed `command.args` on every structured surface,
 //! `[]` when it has none, and only the text form's first line says `grund check`
-//! (§FS-show.2.4, §FS-show.2.4.2, §FS-output-shapes.4.2, §FS-distribution.3.2.2.3).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! (§FS-show.2.4, §FS-show.2.4.2, §FS-output-shapes.4, §FS-distribution.3.2.2).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::*;
 use crate::queries::{ShowFormat, ShowMode, ShowOpts};

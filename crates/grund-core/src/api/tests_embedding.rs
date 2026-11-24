@@ -1,5 +1,5 @@
 //! Test module: the public embedding API and init guidance (§AR-bindings.2)
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -26,7 +26,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     );
     // The default config indexes `FS`, so the fixture owes the entry
     // (§FS-check.3.18) — and the entry is a citation to `list` and `refs`
-    // alike, which is why the counts below are two (§FS-check.4.1.2).
+    // alike, which is why the counts below are two (§FS-check.4.1).
     write(
         &root.join("docs/functional-spec/README.md"),
         "# Functional spec\n\n- [\u{a7}FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha)\n",
@@ -408,7 +408,7 @@ fn public_check_api_returns_relative_slash_normalized_paths() {
     }
 }
 
-/// §FS-config.4.1.1: at a workspace root, `validate_config` loads every
+/// §FS-config.4.1: at a workspace root, `validate_config` loads every
 /// member config the run would load — the same public API a binding or
 /// `grund-lsp` would call, so its `Err` must name the broken member.
 #[test]

@@ -1,6 +1,6 @@
 //! §AR-lsp.5.1.1, §AR-scanner.6.6: a snapshot anchored at a path partitions a failure reading an
 //! E2E case as `grund check` of that path does. The partition is the one `check` asks, of the
-//! failure's location (§FS-check.1.3.6.3), so a failure located at the cases root made every anchor
+//! failure's location (§FS-check.1.3.6), so a failure located at the cases root made every anchor
 //! below that root call it outside, and the location at the file that failed is the whole repair.
 
 #[path = "binaries.rs"]

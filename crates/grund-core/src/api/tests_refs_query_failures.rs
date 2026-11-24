@@ -1,6 +1,6 @@
 //! Core contract for the typed `refs` query-failure carrier
 //! (§FS-refs.4, §FS-errors.2.3).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

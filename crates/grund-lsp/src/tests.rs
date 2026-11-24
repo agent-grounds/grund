@@ -7,7 +7,7 @@ mod fixture_root_contract;
 #[path = "../../grund-cli/tests/support/temporary_root.rs"]
 mod temporary_root;
 
-/// Own the leaf through canonicalization and use (§FS-repository-maintenance.4.1).
+/// Own the leaf through canonicalization and use (§FS-repository-maintenance.4).
 fn test_root(name: &str) -> temporary_root::TemporaryRoot {
     // The server answers from canonical paths, so a fixture URI built from this
     // root must be canonical too — `env::temp_dir()` is `/var/…` behind a

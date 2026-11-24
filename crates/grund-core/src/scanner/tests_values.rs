@@ -1,7 +1,7 @@
 //! Focused first-class-value scanner cases: Markdown title boundaries and the
 //! exact attempted-binding delimiter and source-context contracts
 //! (§FS-values.2.1, §FS-values.3.1, §FS-values.3.2).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::PathBuf;
 
@@ -171,7 +171,7 @@ fn malformed_delimiters_are_errors_but_unbackticked_adjacency_is_prose() {
 
 /// A literal that closes its line onto a next-line value citation is an invalid
 /// attempted binding located at the literal's opening backtick, carrying the
-/// join-the-lines message; a blank line between leaves prose (§FS-values.3.1.1.1).
+/// join-the-lines message; a blank line between leaves prose (§FS-values.3.1.1).
 #[test]
 fn a_binding_split_by_a_line_break_is_refused_at_its_literal() {
     let joined = "invalid value binding: value binding must be on one physical line; \
@@ -272,7 +272,7 @@ fn mismatch_messages(root: &PathBuf) -> Vec<String> {
 }
 
 /// Two components of different kinds can print the same bytes, so the finding
-/// names each side's kind after the canonical text (§FS-values.5.2.1).
+/// names each side's kind after the canonical text (§FS-values.5.2).
 #[test]
 fn a_mixed_kind_mismatch_names_each_sides_kind() {
     assert_eq!(
@@ -289,7 +289,7 @@ fn a_mixed_kind_mismatch_names_each_sides_kind() {
 }
 
 /// A same-kind mismatch keeps the canonical text to the byte, so widening the
-/// mixed-kind clause fails here rather than in every golden (§FS-values.5.2.1).
+/// mixed-kind clause fails here rather than in every golden (§FS-values.5.2).
 #[test]
 fn a_same_kind_mismatch_keeps_the_canonical_text() {
     assert_eq!(
@@ -332,7 +332,7 @@ const REMEDY: &str =
 /// only: an agreeing literal is silent, a one-part disagreement names the root
 /// and its component apart, with none of the `.1` spelling's bytes in front, and
 /// a two-part literal names the root because its part count differs
-/// (§FS-values.3.1.2, §FS-values.5.2.2).
+/// (§FS-values.3.1.2, §FS-values.5.2).
 #[test]
 fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling_in_verdict() {
     let agrees = check_run(

@@ -1,7 +1,7 @@
 //! Test module: which homes hold a path, the one list both "the one kind whose
 //! home holds it" and "is it in any home" are read from (§AR-scanner.4.7,
 //! §FS-declarations.stubs.shape).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::context::{file_home_kind, in_some_home};
 use crate::config::{Config, load_config};

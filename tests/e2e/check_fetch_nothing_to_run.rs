@@ -1,5 +1,5 @@
 //! `check` names no `grund fetch` command for a key that command has nothing to run for, and
-//! gives the repair instead (§FS-check.3.1.3.2). The first cases are the project #1322 reports.
+//! gives the repair instead (§FS-check.3.1). The first cases are the project #1322 reports.
 //! Each message is asserted whole, so a load refusal or a vanished finding cannot pass as the
 //! change. Each tree is built in the temp directory, because a file named `" "` cannot be a
 //! committed fixture on every platform. An absent value home takes the same question of its
@@ -121,7 +121,7 @@ fn finding_json(run: &Run) -> serde_json::Value {
         .unwrap_or_else(|| panic!("no finding of AR-002-other: {}", run.shown()))
 }
 
-/// §FS-check.3.1.3.2: the report's two files, whose `should` finding gives the repair.
+/// §FS-check.3.1: the report's two files, whose `should` finding gives the repair.
 #[test]
 fn a_blank_v1_key_under_should_gives_the_repair() {
     for value in ["", " "] {
@@ -143,7 +143,7 @@ fn a_blank_v1_key_under_should_gives_the_repair() {
     }
 }
 
-/// §FS-check.3.1.3.2: under `must` the same tail follows the `dangling` base, and exits 1.
+/// §FS-check.3.1: under `must` the same tail follows the `dangling` base, and exits 1.
 #[test]
 fn a_blank_v1_key_under_must_gives_the_repair() {
     for value in ["", " "] {
@@ -169,7 +169,7 @@ fn a_blank_v1_key_under_must_gives_the_repair() {
     }
 }
 
-/// §FS-check.3.1.3.2: a file named `" "` at the root is still run, so the command stays.
+/// §FS-check.3.1: a file named `" "` at the root is still run, so the command stays.
 #[test]
 #[cfg(unix)]
 fn a_whitespace_value_naming_a_file_keeps_the_command() {
@@ -179,7 +179,7 @@ fn a_whitespace_value_naming_a_file_keeps_the_command() {
     should(&tree, FETCH_TAIL);
 }
 
-/// §FS-check.3.1.3.2: a named program and a nonblank path nothing stands at keep the command.
+/// §FS-check.3.1: a named program and a nonblank path nothing stands at keep the command.
 #[test]
 fn a_named_value_keeps_the_command() {
     for value in ["scripts/fetch", "scripts/absent"] {
@@ -190,7 +190,7 @@ fn a_named_value_keeps_the_command() {
     }
 }
 
-/// §FS-check.3.1.3.2: a near-ID hint still takes the tail's place on a blank key.
+/// §FS-check.3.1: a near-ID hint still takes the tail's place on a blank key.
 #[test]
 fn a_near_id_hint_keeps_its_place() {
     let tree = Tree::new();
@@ -203,7 +203,7 @@ fn a_near_id_hint_keeps_its_place() {
     );
 }
 
-/// §FS-check.3.1.3.2: a home `fetch` refuses keeps its own tail on a blank key. Version 1,
+/// §FS-check.3.1: a home `fetch` refuses keeps its own tail on a blank key. Version 1,
 /// because version 2 refuses the blank key at load (§FS-config-v2.checks.config-fetch-names-nothing).
 #[test]
 fn a_refused_home_keeps_its_tail() {
@@ -269,7 +269,7 @@ fn a_blank_key_in_the_target_gives_the_repair_through_an_import() {
     );
 }
 
-/// §FS-check.3.1.3.2: the target's working key keeps the command, whatever the citer holds; a
+/// §FS-check.3.1: the target's working key keeps the command, whatever the citer holds; a
 /// version 2 citer cannot hold a blank key (§FS-config-v2.checks.config-fetch-names-nothing).
 #[test]
 #[cfg(unix)]

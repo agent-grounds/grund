@@ -1,7 +1,7 @@
 //! grund#1010's tree, through the shipped `grund` frontend: a repository `shop`
 //! with one nested `[workspace]` in `packages/hub`, under a directory whose own
 //! `grund.toml` names it in a `members` list that never closes its bracket.
-//! §FS-workspace.6.1.7.5: that value cannot be obtained, so whether the ancestor
+//! §FS-workspace.6.1.7: that value cannot be obtained, so whether the ancestor
 //! lists `packages/hub` is undecidable in both directions, and the quiet climb of
 //! §FS-check.3.29 says nothing and leaves the block unreported — a typo above a
 //! repository is not that repository's problem, and must not fail its `check`.
@@ -102,7 +102,7 @@ fn outcome(output: &Output) -> (Option<i32>, String, String) {
     )
 }
 
-/// §FS-workspace.6.1.7.5, §FS-check.3.29: the issue's reproducer. The run goes
+/// §FS-workspace.6.1.7, §FS-check.3.29: the issue's reproducer. The run goes
 /// ahead exactly as it does once the bracket is closed — exit 0, the one warning,
 /// and no `unlisted-workspace-block` naming `packages/hub` as listed by nobody.
 #[test]
@@ -150,7 +150,7 @@ fn loadable(entry: &str) -> impl Iterator<Item = String> + '_ {
         .map(move |shape| shape.replace("{}", entry))
 }
 
-/// §FS-workspace.6.1.7.5: a value the config reader loads is a list the climb reads
+/// §FS-workspace.6.1.7: a value the config reader loads is a list the climb reads
 /// too, so the run's own workspace root written that way confirms that it lists
 /// `project` and not `project/packages/hub`, and §FS-check.3.29 reports the block
 /// as it does under the one-line spelling. Read one line at a time, the root
@@ -195,7 +195,7 @@ fn an_ancestor_members_list_the_config_loads_answers_the_claim_both_ways() {
     }
 }
 
-/// §FS-workspace.6.1.7.5: another key's array that never closes holds no claim, so
+/// §FS-workspace.6.1.7: another key's array that never closes holds no claim, so
 /// it makes neither value unobtainable, and §FS-check.3.29's floor holds. An
 /// ancestor that names elsewhere before it, and one that writes no `[workspace]`
 /// at all, in either version, still confirm the absence: the block is reported,
@@ -224,7 +224,7 @@ fn an_unclosed_array_of_another_key_leaves_the_claim_answered() {
     }
 }
 
-/// §FS-config-v2.reader.5.strings, §FS-workspace.6.1.7.5: from grund 0.22.0 a `members`
+/// §FS-config-v2.reader.5.strings, §FS-workspace.6.1.7: from grund 0.22.0 a `members`
 /// list whose string runs over a line break is not a list to the climb, exactly where the reader
 /// refuses it as `unclosed array` with 0.22.0's suffix, so the claim is undecidable whatever the
 /// list names: the quiet climb records nothing and leaves the block unreported.
@@ -255,7 +255,7 @@ fn an_ancestor_members_string_over_a_break_is_not_a_list() {
 }
 
 /// Guard, green today and kept (§FS-config-v2.reader.5.strings,
-/// §FS-workspace.6.1.7.5): a `members` list whose string never closes is not a list to the
+/// §FS-workspace.6.1.7): a `members` list whose string never closes is not a list to the
 /// climb exactly where the reader refuses it as `unclosed array`, so the claim is
 /// undecidable and the block is left unreported.
 #[test]
@@ -271,7 +271,7 @@ fn an_ancestor_members_string_that_never_closes_is_not_a_list() {
     assert!(stderr.contains("unclosed array"), "{stderr}");
 }
 
-/// §FS-config-v2.reader.5.commas, §FS-workspace.6.1.7.5: from grund 0.22.0 a `members`
+/// §FS-config-v2.reader.5.commas, §FS-workspace.6.1.7: from grund 0.22.0 a `members`
 /// list ending in a doubled comma is not a list to the climb, exactly where the reader refuses
 /// it as `expected string` with 0.22.0's suffix, so the claim is undecidable whatever the list
 /// names: the quiet climb records nothing and leaves the block unreported.

@@ -7,7 +7,7 @@
 //! obligation and a folder home, and `ungrounded` a default and a place it
 //! reaches. Each source is pinned off and on, as `tests_armed_switches` pins the
 //! rest.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 
@@ -53,7 +53,7 @@ fn a_value_chapter_arms_the_value_codes_in_either_version() {
 
 /// §FS-check.1.4.1, §FS-values.2.4: a value tag needs no switch, so the scan
 /// finding one arms the value codes, and so does a misplaced one, which the
-/// family reports (§FS-values.2.4.4).
+/// family reports (§FS-values.2.4).
 #[test]
 fn a_value_tag_arms_the_value_codes_with_no_switch() {
     let off = armed(v2("armed_tag_off", "", ""));
@@ -87,7 +87,7 @@ fn ticket_v1(resolve: &str) -> String {
     )
 }
 
-/// §FS-check.1.4.1, §FS-config.3.4.10.3: `missing-snapshot` is armed by a fetched
+/// §FS-check.1.4.1, §FS-config.3.4.10: `missing-snapshot` is armed by a fetched
 /// kind whose resolution is `should` (v2's `warn`), and by neither part alone:
 /// `fetch` without it resolves `must`, which selects the `dangling` error. The
 /// advice names the resolution, in the version the project reads.
@@ -192,7 +192,7 @@ fn grounding(name: &str, default: bool, code: bool) -> crate::testing::Temporary
     root
 }
 
-/// §FS-check.1.4.1, §FS-config.3.4.8.3: `ungrounded` is armed by a place grounding
+/// §FS-check.1.4.1, §FS-config.3.4.8: `ungrounded` is armed by a place grounding
 /// reaches, and a row's own `false` wins over the default, so a default that every
 /// row refuses, the key's or the flag's, leaves it off. The advice says so in either
 /// version.

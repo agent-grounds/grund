@@ -1,4 +1,4 @@
-"""Fresh installed consumers pin §FS-distribution.3.2.4 before implementation."""
+"""Fresh installed consumers pin §FS-distribution.3.2 before implementation."""
 
 import os
 import sys
@@ -43,11 +43,11 @@ class NodeConsumerTests(unittest.TestCase):
     def test_input_query_and_config_failures(self):
         self.assertEqual("", self.rehearsal.run("failures.mjs"))
 
-    # §FS-config.4.1.1: member config findings at a workspace root land in runCautions.
+    # §FS-config.4.1: member config findings at a workspace root land in runCautions.
     def test_workspace_root_config_findings(self):
         self.assertEqual("", self.rehearsal.run("workspace-config-findings.mjs"))
 
-    # §FS-check.4.11.3: a grouping block's config findings at a workspace root land in
+    # §FS-check.4.11: a grouping block's config findings at a workspace root land in
     # check's report.warnings and validateConfig's runCautions.
     def test_grouping_block_config_findings(self):
         self.assertEqual("", self.rehearsal.run("grouping-block-config-findings.mjs"))

@@ -90,7 +90,7 @@ MOVES = (
      ("A scope inside a member with no config of its own is member-local all the same",)),
     ("FS-workspace.md", "8.8", "path.discovery",
      ("behaves as if the command were invoked from that path",)),
-    ("FS-check.md", "1.3.6.1", "path.check",
+    ("FS-check.md", "1.3.6", "path.check",
      ("is the set of files the run reads so that citations resolve and citation edges count",
       "because a path may lie outside `include` and must still be read")),
     ("FS-list.md", "1", "path.list",
@@ -112,8 +112,8 @@ KEPT = (
     ("FS-config.md", "3.5", "`docstring_python` enables Python triple-quoted-string scanning"),
     ("FS-config.md", "3.5.16", "is one directory **component name**"),
     ("FS-workspace.md", "5.1", "`unknown project alias <path>` error at the citation site"),
-    ("FS-check.md", "1.3.6.1", "Three verdicts move"),
-    ("FS-check.md", "1.3.6.1", "Two classes of diagnostic are not about a scanned file"),
+    ("FS-check.md", "1.3.6", "Three verdicts move"),
+    ("FS-check.md", "1.3.6", "Two classes of diagnostic are not about a scanned file"),
     ("FS-list.md", "1", "`--kind` selects configured citable kinds"),
     ("FS-show.md", "1.4", "is an accepted alias for scripts"),
     ("FS-refs.md", "1", "widen the section filter"),
@@ -138,19 +138,19 @@ CITED = ("REQ-one-answer.differences.scope", "FS-workspace.6.2")
 # FS-check's adds #634's 10-line chapter, §FS-check.3.17's wrap-test line (grund#655)
 # and #756's 9 lines of checks.config-version-1: a restatement still has one line to regrow.
 
-# FS-workspace's adds #823's 20 lines of §FS-workspace.5.1.1 and #921's 3 of §FS-workspace.2.2.2;
+# FS-workspace's adds #823's 20 lines of §FS-workspace.5.1.1 and #921's 3 of §FS-workspace.2.2;
 # FS-check's adds #836's 9 of §FS-check.2.3.1, #829's 17 of §FS-check.1.4.1 and §FS-check.2.2.1,
-# and #906's 14 of §FS-check.3.5.3, §FS-check.3.5.5 and §FS-check.4.9.1; the margin is unchanged.
+# and #906's 14 of §FS-check.3.5, §FS-check.3.5.5 and §FS-check.4.9; the margin is unchanged.
 
-# #932 adds 4 lines of §FS-check.3.5.3.1; retain the one-line margin.
-# #1010 adds 8 lines of §FS-workspace.6.1.7.5; the margin is unchanged.
+# #932 adds 4 lines of §FS-check.3.5; retain the one-line margin.
+# #1010 adds 8 lines of §FS-workspace.6.1.7; the margin is unchanged.
 # #1046 adds 15 lines of §FS-check.1.1.5.2, §FS-check.3.24 and §FS-check.3.17; the same.
 
 # #1079 adds 14 lines of §FS-check.2.2.2; the same.
-# #1069 adds 12 lines of §FS-check.3.1.4; the same.
+# #1069 adds 12 lines of §FS-check.3.1; the same.
 # #1073 adds 16 lines of §FS-check.1.1.12 and §FS-check.checks.off-format-citation; the same.
 
-# #1322 adds 7 lines of §FS-check.3.1.3.2; the same.
+# #1322 adds 7 lines of §FS-check.3.1; the same.
 
 # #1376 adds 7 lines of §FS-check.2.2.2; the same.
 

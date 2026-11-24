@@ -1,7 +1,7 @@
 //! Test module: the one answer to whether a scan failure is inside a narrowed run's path, and
-//! which name it is printed under (§FS-check.1.3.6.3, §FS-check.2.4.2, §AR-scanner.1.entry).
+//! which name it is printed under (§FS-check.1.3.6, §FS-check.2.4.2, §AR-scanner.1.entry).
 //! Unix-only: every tree here is reached through a link.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::path::Path;

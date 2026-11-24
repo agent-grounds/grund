@@ -1,6 +1,6 @@
 //! Test module: the rule that keeps the walk from a stub's target
 //! (§FS-declarations.stubs.target.3, §AR-scanner.1.13).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::PathBuf;
 

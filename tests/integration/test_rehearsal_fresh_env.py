@@ -1,5 +1,5 @@
-"""§FS-distribution-candidate.5.2.1: the rehearsal's fresh `PATH` hides Rust and keeps the rest;
-§FS-distribution-candidate.5.2.2: it carries no npm setting the contributor exported, in any case,
+"""§FS-distribution-candidate.5.2: the rehearsal's fresh `PATH` hides Rust and keeps the rest;
+§FS-distribution-candidate.5.2: it carries no npm setting the contributor exported, in any case,
 nor a variable that chooses which global npmrc npm reads.
 
 Each test makes up a `PATH`, and the npm settings exported, and asks the real `fresh_env` about
@@ -24,12 +24,12 @@ from rehearsal import rehearsal_support
 
 WINDOWS = os.name == "nt"
 RUST = ("cargo", "rustc", "rustup")
-# §FS-distribution-candidate.5.2.1: what a directory holding one of `RUST` also hides.
+# §FS-distribution-candidate.5.2: what a directory holding one of `RUST` also hides.
 TOOLCHAIN = ("rustdoc", "rustfmt", "cargo-clippy", "clippy-driver", "rls", "rust-gdb",
              "cargo-1.75", "rustc-1.75", "rust-lld", "rust-analyzer", "cargo-nextest")
 OWN_COMMANDS = ("grund", "grund-lsp")
 NAMED_REGISTRY = "http://named.invalid/"
-# §FS-distribution-candidate.5.2.2: spellings npm reads, of a setting `fresh_env` does not name
+# §FS-distribution-candidate.5.2: spellings npm reads, of a setting `fresh_env` does not name
 # and of two it does. On Windows `os.environ` folds names to upper case, so there they arrive as
 # `NPM_CONFIG_*` and the test holds that one spelling.
 MIXED_CASE = {"Npm_Config_Offline": "true", "NPM_Config_Offline": "true",
@@ -37,7 +37,7 @@ MIXED_CASE = {"Npm_Config_Offline": "true", "NPM_Config_Offline": "true",
               "Npm_Config_Cache": "inherited-cache", "Npm_Config_Registry": "http://mixed.invalid/"}
 EXACT_CASE = {"npm_config_offline": "true", "NPM_CONFIG_OFFLINE": "true",
               "npm_config_cache": "inherited-cache", "NPM_CONFIG_REGISTRY": "http://exact.invalid/"}
-# §FS-distribution-candidate.5.2.2: each chooses the global npmrc, where `offline=true` would
+# §FS-distribution-candidate.5.2: each chooses the global npmrc, where `offline=true` would
 # turn npm offline.
 GLOBAL_NPMRC_CHOOSERS = {"PREFIX": "chosen-prefix", "DESTDIR": "chosen-destdir"}
 # Asks in a process of its own, whose exit removes what `keep` made, from a cwd of its choosing.
@@ -89,7 +89,7 @@ def tree(directory):
 
 
 class FreshPathTests(unittest.TestCase):
-    """§FS-distribution-candidate.5.2.1, on a `PATH` made up for each test."""
+    """§FS-distribution-candidate.5.2, on a `PATH` made up for each test."""
 
     def setUp(self):
         temp = scratch("grund-fresh-env-")
@@ -275,7 +275,7 @@ def npm_settings(env):
 
 
 class InheritedNpmSettingTests(unittest.TestCase):
-    """§FS-distribution-candidate.5.2.2, with npm settings exported in the spellings npm reads."""
+    """§FS-distribution-candidate.5.2, with npm settings exported in the spellings npm reads."""
 
     def setUp(self):
         temp = scratch("grund-fresh-env-npm-")

@@ -9,7 +9,7 @@ RefusalTests pins policy validation (§FS-cochange-recipe.inputs) and exact
 snapshot/query refusals (§FS-cochange-recipe.snapshots).
 SnapshotEdgeTests pins deterministic JSON refusals (§FS-cochange-recipe.output).
 ScanScopeTests pins the scan-scope remedy (§FS-cochange-recipe.snapshots.scope),
-also for a source move's destination (§FS-cochange-recipe.snapshots.scope.move).
+also for a source move's destination (§FS-cochange-recipe.snapshots.scope).
 """
 from pathlib import Path
 import sys

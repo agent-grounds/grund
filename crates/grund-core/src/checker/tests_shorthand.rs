@@ -27,10 +27,10 @@ fn check_tree(config: &Config, root: &Path) -> (Catalog, CheckReport) {
     (findings, report)
 }
 
-/// §FS-check.3.13.3: a shorthand that names exactly one declaration is reported
+/// §FS-check.3.13: a shorthand that names exactly one declaration is reported
 /// once, with the canonical form to write — and, per §FS-check.1.2.4 (§FS-citations.shorthand.edge), it still
 /// counts as a citation everywhere else. The uncited warning firing here was
-/// the original defect (§FS-check.4.1.1): `check` said "declared but never
+/// the original defect (§FS-check.4.1): `check` said "declared but never
 /// cited" about a declaration this file cites twice, so the resolving
 /// shorthand has to count for §FS-check.4.1 like any other citation.
 #[test]
@@ -77,7 +77,7 @@ fn resolvable_shorthand_reports_once_and_counts_as_a_citation() {
     assert_eq!(findings.citations[1].section.as_deref(), Some("1"));
 }
 
-// §FS-check.3.13.3: the unknown and ambiguous outcomes. Neither resolves, and
+// §FS-check.3.13: the unknown and ambiguous outcomes. Neither resolves, and
 // neither is guessed at (§DF-number-only-citation-shorthand.2.7).
 #[test]
 fn unknown_and_ambiguous_shorthands_are_named_not_guessed() {
@@ -173,7 +173,7 @@ fn full_id_wins_over_the_shorthand_prefix_inside_it() {
     assert!(messages(&report).is_empty(), "{:?}", messages(&report));
 }
 
-/// §FS-check.1.2.1 / §FS-id.4.1: a format missing `{number}` or `{slug}` has
+/// §FS-check.1.2.1 / §FS-id.4: a format missing `{number}` or `{slug}` has
 /// no shorthand, so neither the grammar nor any pass downstream does anything.
 /// `grund` itself is on `{kind}-{slug}`, which is why its own tree gains no
 /// findings.
@@ -225,7 +225,7 @@ fn number_less_and_slug_less_formats_have_no_shorthand() {
 #[test]
 fn component_patterns_must_be_valid_regexes_on_their_own() {
     let root = test_root("component_patterns_must_be_valid_regexes_on_their_own");
-    // §FS-repository-maintenance.4.1: retain root while configuring its path copy.
+    // §FS-repository-maintenance.4: retain root while configuring its path copy.
     let mut config = numbered_config(root.to_path_buf());
     config.number_pattern = "(".into();
     config.slug_pattern = "a)".into();
@@ -283,7 +283,7 @@ fn a_shorthand_fmt_cannot_rewrite_is_counted_but_not_reported() {
     );
 }
 
-/// §FS-check.3.13.2 / §FS-fmt.2.3.1.1: the "may `fmt` rewrite this?" question has
+/// §FS-check.3.13 / §FS-fmt.2.3.1: the "may `fmt` rewrite this?" question has
 /// to be asked of the text `fmt` will see, and inside a Python docstring that
 /// text is the interior with the delimiters stripped — on both sides. The
 /// opening line is where the raw line and the scanned line differ, so it is
@@ -379,7 +379,7 @@ fn an_escaped_shorthand_that_resolves_is_suggested() {
 #[test]
 fn shorthand_shape_is_derived_from_either_separator_side() {
     let root = test_root("shorthand_shape_is_derived_from_either_separator_side");
-    // §FS-repository-maintenance.4.1: retain root while configuring its path copy.
+    // §FS-repository-maintenance.4: retain root while configuring its path copy.
     let mut config = legacy_fs_folder_config(root.to_path_buf());
     config.id_format = "{kind}-{slug}-{number}".into();
     config.rebuild_grammar().expect("rebuild grammar");

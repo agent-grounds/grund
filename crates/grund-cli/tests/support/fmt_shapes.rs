@@ -11,9 +11,9 @@
 //!
 //! The six shapes are the forms §FS-fmt.7.2 names. `clean-markdown` rewrites
 //! every class, including the citations inside section headings that other
-//! files link to (§FS-fmt.6.3.3) and the links a `markdown link` row's items are
-//! hardest to apply (§FS-fmt.3.6.2.1), and meets no scan error, though `check`
-//! reports its absent-target line (§FS-fmt.7.5.2). `strict-abort` is the whole-declaration-set path refusing up
+//! files link to (§FS-fmt.6.3) and the links a `markdown link` row's items are
+//! hardest to apply (§FS-fmt.3.6), and meets no scan error, though `check`
+//! reports its absent-target line (§FS-fmt.7). `strict-abort` is the whole-declaration-set path refusing up
 //! front (§FS-fmt.3.2). `partial-source` is a source-only scope, where no rewrite
 //! needs the whole set, so the run reports its rewrites *and* names the path it
 //! could not read. `two-scopes` narrows the rewrite to one directory while the
@@ -193,7 +193,7 @@ const BOTH_SCOPES: &str = "grund_config_version = 1\n\n[scan]\ninclude = [\"docs
 const SOURCE_SCOPE: &str = "grund_config_version = 1\n\n[scan]\ninclude = [\"src\"]\n\
      extensions = [\"md\", \"rs\"]\n\n[fmt.cross_refs]\nenabled = true\n";
 
-/// The declaration-local class, twice and each on its own line (§FS-fmt.7.5.2):
+/// The declaration-local class, twice and each on its own line (§FS-fmt.7):
 /// `\u{a7}2.1` names a section the declaration records, so both modes rewrite it,
 /// and `\u{a7}12` names none, so both leave it byte-identical (§FS-fmt.2.4.6). The
 /// marker is spelled `\u{a7}`, since a typed trigger before `2.1` is not a
@@ -203,12 +203,12 @@ const DECLARATION: &str = "# FS-001-alpha: Alpha\n\nAlpha is the first thing.\n\
      ### 2.1 Detail\n\nThe detail.\n";
 /// A typed trigger, a bare token `--marker` would mark, and a shorthand whose
 /// expansion needs the whole declaration set — the other three rewrite classes
-/// on three lines, so a preview has something to be a preview of (§FS-fmt.7.5.2).
+/// on three lines, so a preview has something to be a preview of (§FS-fmt.7).
 const CITING_NOTES: &str = "# Notes\n\nSee $$FS-001-alpha for the rest.\n\n\
      Bare here: FS-001-alpha.\n\nShorthand here: $$FS-001.\n";
 /// Two section headings whose own citation the run expands — a number-only
 /// shorthand and a declaration-local one — so the heading's anchor moves in the
-/// same run that links to it (§FS-fmt.6.3.3, §FS-fmt.7.5.2). The second
+/// same run that links to it (§FS-fmt.6.3, §FS-fmt.7). The second
 /// heading's local citation names the first, so one rewritten heading also links
 /// to the other.
 const EXPANDING_HEADINGS: &str = "# FS-002-beta: Beta\n\nBeta builds on alpha.\n\n\
@@ -222,7 +222,7 @@ const HEADING_NOTES: &str = "# Heading notes\n\nThe shorthand heading: \u{a7}FS-
 const REPEATED_HEADINGS: &str = "# FS-003-gamma: Gamma\n\n## 1. Overview\n\nFirst.\n\n# \
      FS-004-delta: Delta\n\n## 1. Overview\n\nSecond.\n";
 /// The two lines a `markdown link` row's items are hardest to apply on
-/// (§FS-fmt.3.6.2.1): a link already right beside one the write re-points to a
+/// (§FS-fmt.3.6): a link already right beside one the write re-points to a
 /// repeat's numbered anchor, under the repeated-anchor note, with the same old
 /// destination; and a link already right beside a fresh one of the same
 /// citation, which the first match of the fresh item's text would wrongly name.
@@ -251,7 +251,7 @@ fn build_strict_abort(root: &Path) {
 
 fn build_partial_source(root: &Path) {
     // No Markdown in scope, so the cross-reference pass does not turn itself on
-    // (§FS-fmt.6.6) and nothing here needs the whole declaration set: the run
+    // (§FS-fmt.6.7.2) and nothing here needs the whole declaration set: the run
     // rewrites what it can and still owes an account of what it could not read.
     write(root, "grund.toml", SOURCE_SCOPE);
     write(root, "src/lib.rs", CITING_SOURCE);
@@ -316,7 +316,7 @@ pub fn stderr(output: &Output) -> String {
 
 /// The `<path>: <reason>` pairs a run reported, in the order it printed them,
 /// with §FS-fmt.7.2's one licensed difference removed: a strict abort spells its
-/// lines `error: nothing was rewritten: …` on purpose (§FS-fmt.3.4), because the
+/// lines `error: nothing was rewritten: …` on purpose (§FS-fmt.3.2), because the
 /// two exit `2`s mean opposite things. Everything after that prefix is the part
 /// two readers of one tree must agree on.
 pub fn scan_error_pairs(output: &Output) -> Vec<String> {
@@ -333,7 +333,7 @@ pub fn scan_error_pairs(output: &Output) -> Vec<String> {
 
 /// Whether a run took the strict whole-declaration-set path, read off the one
 /// thing that says so. A strict `fmt` scans the project rather than the scope
-/// (§FS-fmt.3.2, §FS-fmt.2.4.5), so the run it is comparable to is `check` over the
+/// (§FS-fmt.3.2, §FS-fmt.2.4), so the run it is comparable to is `check` over the
 /// project — the distinction §FS-fmt.7.2 draws per walk rather than per argv.
 pub fn aborted_strictly(output: &Output) -> bool {
     stderr(output).contains("error: nothing was rewritten: ")

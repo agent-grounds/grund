@@ -1,9 +1,9 @@
 //! Test module: a slot's shape line (§FS-schema.4.1) — the heading to write as a code
 //! span, its presence and placement in check's words, and what the chapter holds — for
 //! every kind of slot: prose titled and untitled, each placement, a scalar, a value
-//! chapter, a front-matter field with its keys and its `closed` (§FS-schema.4.1.3), a
-//! value kind in each form its home holds and fetched (§FS-schema.4.1.4), a kind's
-//! `closed`, the code-span fences and the placeholders (§FS-schema.4.1.2).
+//! chapter, a front-matter field with its keys and its `closed` (§FS-schema.4.1), a
+//! value kind in each form its home holds and fetched (§FS-schema.4.1), a kind's
+//! `closed`, the code-span fences and the placeholders (§FS-schema.4.1).
 
 use super::schema_slot::kind_closed_line;
 use super::*;
@@ -40,7 +40,7 @@ fn a_prose_field_shows_its_heading_presence_and_placement() {
             text: "`## terms: Terms` (must, first)".to_string(),
         }]
     );
-    // §FS-schema.4.1.2: an untitled field's title is a placeholder.
+    // §FS-schema.4.1: an untitled field's title is a placeholder.
     let untitled = SchemaSlot {
         presence: Strength::May,
         placement: None,
@@ -92,7 +92,7 @@ fn a_value_chapter_shows_its_roots_and_parts() {
     );
 }
 
-/// §FS-schema.4.1.3: front matter is no heading; its keys and its own `closed`
+/// §FS-schema.4.1: front matter is no heading; its keys and its own `closed`
 /// nest one level under it, each as the line to write.
 #[test]
 fn front_matter_shows_the_block_its_keys_and_its_closed() {
@@ -180,7 +180,7 @@ fn home(place: &str, folder: bool, forms: &[ValueForm]) -> ValueHome {
     }
 }
 
-/// §FS-schema.4.1.4: a file home shows its one form and where, then the citation
+/// §FS-schema.4.1: a file home shows its one form and where, then the citation
 /// part 1 answers to.
 #[test]
 fn a_value_file_home_shows_its_form_and_the_first_part() {
@@ -207,7 +207,7 @@ fn a_value_file_home_shows_its_form_and_the_first_part() {
     );
 }
 
-/// §FS-schema.4.1.4: a folder home names each form, joined by `, ` and by `, or `
+/// §FS-schema.4.1: a folder home names each form, joined by `, ` and by `, or `
 /// before the last.
 #[test]
 fn a_value_folder_home_names_every_form_it_holds() {
@@ -229,7 +229,7 @@ fn a_value_folder_home_names_every_form_it_holds() {
     );
 }
 
-/// §FS-schema.4.1.4: a fetched kind's line teaches no form to write by hand.
+/// §FS-schema.4.1: a fetched kind's line teaches no form to write by hand.
 #[test]
 fn a_fetched_value_kind_names_the_file_grund_fetch_writes() {
     let fetched = numbered(ValueFiles {
@@ -242,7 +242,7 @@ fn a_fetched_value_kind_names_the_file_grund_fetch_writes() {
     );
 }
 
-/// §FS-schema.4.1.2: the fence is one backtick longer than the longest run inside
+/// §FS-schema.4.1: the fence is one backtick longer than the longest run inside
 /// the span, with a space inside each fence where it begins or ends with one.
 #[test]
 fn a_title_with_backticks_gets_a_longer_fence() {
@@ -254,7 +254,7 @@ fn a_title_with_backticks_gets_a_longer_fence() {
     assert_eq!(line("form `x`"), "`` ## terms: form `x` `` (must, first)");
 }
 
-/// §FS-schema.4.1.2: a control character in a title or a value is its TOML
+/// §FS-schema.4.1: a control character in a title or a value is its TOML
 /// basic-string escape, so the line stays one line.
 #[test]
 fn a_title_with_a_line_break_stays_on_one_line() {
@@ -278,7 +278,7 @@ const VALUE_KINDS: &str = "grund_config_version = 2\nproject_name = \"view\"\n\
                            [schema.kinds.F]\nfiles = [\"f.md\"]\nform = \"value\"\n\
                            fetch = \"scripts/fetch\"\n";
 
-/// §FS-schema.4.1.4: the view asks each home's forms of the rule the scan reads a
+/// §FS-schema.4.1: the view asks each home's forms of the rule the scan reads a
 /// value home by, and a fetched kind its one home.
 #[test]
 fn the_view_reads_each_value_homes_forms_by_the_scans_rule() {

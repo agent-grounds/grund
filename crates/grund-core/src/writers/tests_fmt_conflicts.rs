@@ -2,7 +2,7 @@
 //! on a conflict block (§FS-fmt.7.4), on the scan `fmt` takes, which classifies
 //! nothing (§AR-scanner.2.9). Every marker line here is inside an indented string
 //! literal, so no line of this file is itself one.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::fmt_complete_findings::CompleteScan;
 use super::fmt_error::FmtConflictAbort;

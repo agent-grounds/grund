@@ -107,7 +107,7 @@ pub(super) const CASES: &[Case] = &[
         fs_with!("value_chapter = \"values\"\n"),
         &[Refused("value_chapter would become a field")],
     ),
-    // §FS-config-migrate.3.1.7.1
+    // §FS-config-migrate.3.1.7
     case(
         "[[kinds]] value_chapter",
         fs_with!("value_chapter = \"values\"\nfetch = \"scripts/fetch\"\n"),

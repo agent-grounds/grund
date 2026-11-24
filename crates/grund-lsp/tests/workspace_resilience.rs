@@ -288,14 +288,14 @@ fn recv_publish_for(
 
 const BROKEN_CONFIG: &str = "grund_config_version = 1\n[scan\n";
 
-/// §FS-lsp.2.2.4.1: the load error `grund check` prints for `[scan` on line 2,
+/// §FS-lsp.2.2.4: the load error `grund check` prints for `[scan` on line 2,
 /// as one `error` from `grund` on `grund.toml` at line index 1.
 fn assert_config_diagnostic(diagnostics: &[Value]) {
     assert_config_error_at(diagnostics, 1, "grund.toml:2: expected `key = value`");
 }
 
 /// One `error` from `grund` at line index `line`, opening with `grund check`'s
-/// text for it (§FS-lsp.2.2.4.1).
+/// text for it (§FS-lsp.2.2.4).
 fn assert_config_error_at(diagnostics: &[Value], line: u64, cli_text: &str) {
     assert_eq!(
         diagnostics.len(),
@@ -480,7 +480,7 @@ fn a_member_config_two_folders_fail_on_is_published_once_from_the_member() {
     );
 
     // The member folder spells its config `grund.toml`, the root's scan
-    // `m/grund.toml`: one diagnostic, spelled from the member (§FS-lsp.2.2.4.1).
+    // `m/grund.toml`: one diagnostic, spelled from the member (§FS-lsp.2.2.4).
     write(&config, BROKEN_CONFIG);
     changed_watched_files(&mut stdin);
     let diagnostics = recv_publish_for(
@@ -530,7 +530,7 @@ fn a_claiming_ancestor_config_that_stops_loading_is_published_on_its_grund_toml(
     );
 
     // The block that claims `m` is the file that will not load, so `grund check`
-    // in `m` fails on it, and the editor marks it there (§FS-lsp.2.2.4.1).
+    // in `m` fails on it, and the editor marks it there (§FS-lsp.2.2.4).
     write(&ancestor_config, &format!("{claiming}[scan\n"));
     changed_watched_files(&mut stdin);
     let diagnostics = recv_publish_for(

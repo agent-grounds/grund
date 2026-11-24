@@ -1,5 +1,5 @@
 //! Test module: strict formatter scan errors across the public API (§FS-fmt.3).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::*;
 use crate::scanner::ApiScanError;
@@ -59,7 +59,7 @@ fn public_fmt_api_preserves_every_strict_scan_error() {
     );
 }
 
-/// §FS-fmt.7.4.3: with cross-references off no preflight reads the tree, so a file
+/// §FS-fmt.7.4: with cross-references off no preflight reads the tree, so a file
 /// the walk cannot read is met after it has planned the first file's `$$`; the run
 /// still writes nothing and its partial output lists no change.
 #[test]

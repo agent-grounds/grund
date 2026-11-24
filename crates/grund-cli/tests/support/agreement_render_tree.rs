@@ -109,7 +109,7 @@ impl View<'_> {
         owner.map_or(Value::Null, |a| a["project"].clone())
     }
 
-    /// §FS-workspace.8.3.1, §FS-workspace.8.1.5: a workspace run names each
+    /// §FS-workspace.8.3.1, §FS-show.2.6: a workspace run names each
     /// declaration by its project's alias.
     pub fn qualified(&self, d: usize) -> String {
         let decl = &self.m.decls[d];
@@ -181,7 +181,7 @@ impl View<'_> {
             .map_or(Value::Null, |k| k["title"].clone())
     }
 
-    /// Declarations and sections by coordinate, then physical site (§FS-list.2.7).
+    /// Declarations and sections by coordinate, then physical site (§FS-list.3.4).
     /// A member run loads its member alone (§FS-scan.projects.member), so no
     /// question of it finds a declaration another project holds.
     pub fn order(&self) -> Vec<(usize, Option<usize>)> {
@@ -198,7 +198,7 @@ impl View<'_> {
                     .map(|s| (d, Some(s))),
             );
         }
-        // §FS-list.2.7: duplicate homes interleave by coordinate, then site;
+        // §FS-list.3.4: duplicate homes interleave by coordinate, then site;
         // every claimant's measurement stays local to its own physical body.
         // §FS-workspace.8.3.4: a workspace run sorts by the whole alias path.
         rows.sort_by(|&(a, sa), &(b, sb)| {
@@ -259,10 +259,10 @@ impl View<'_> {
         )
     }
 
-    /// §FS-check.1.3.6.2: a finding is reported when its anchor or a site it
-    /// names lies at or under the path; §FS-check.1.3.6.1: the agent-entrypoint
+    /// §FS-check.1.3.6: a finding is reported when its anchor or a site it
+    /// names lies at or under the path; §FS-check.1.3.6: the agent-entrypoint
     /// finding is a probe over the root, which the path never drops;
-    /// §FS-check.1.3.6.3: a file outside it that the walk could not read is a
+    /// §FS-check.1.3.6: a file outside it that the walk could not read is a
     /// caution, never an error.
     pub fn findings(&self) -> Vec<Value> {
         let mut out = Vec::new();
@@ -403,7 +403,7 @@ impl View<'_> {
         row
     }
 
-    /// §FS-list.3.2.2: a declaration's value roots of either origin, marked
+    /// §FS-list.3.2: a declaration's value roots of either origin, marked
     /// (§FS-values.2.4) or chapter-declared (§FS-values.2.5), in canonical
     /// section-path order.
     fn value_roots(&self, d: usize) -> Vec<Value> {

@@ -13,7 +13,7 @@ const E2E_CONFIG: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n[sch
                           folders = [\"e2e/cases\"]\nindex = false\n";
 
 /// A project whose one E2E case, `a`, holds an `expected.exit` that is not an integer, owned by
-/// the root each test holds for its whole length (§FS-repository-maintenance.4.1).
+/// the root each test holds for its whole length (§FS-repository-maintenance.4).
 fn unparsable_exit(name: &str) -> TemporaryRoot {
     let root = test_root(name);
     write(&root.join("grund.toml"), E2E_CONFIG);

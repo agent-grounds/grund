@@ -1,5 +1,5 @@
 //! Black-box: a dangling citation of a kind none of whose v2 places exists names those
-//! places and their `grund.toml` lines (§FS-check.3.1.4), so a place written as a glob,
+//! places and their `grund.toml` lines (§FS-check.3.1), so a place written as a glob,
 //! which loads as a literal path that names nothing (grund#1069), is pointed at from the
 //! citer instead of leaving only `unknown reference` behind.
 

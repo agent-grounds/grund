@@ -1,6 +1,6 @@
 //! A missing `<path>` given to `check` in a workspace whose root block leaves a
 //! tree unread: the run still says the block's warning, then refuses the path
-//! (§FS-scan.scope.homes.lookup, §FS-check.4.10.7). The library's refusal
+//! (§FS-scan.scope.homes.lookup, §FS-check.4.10). The library's refusal
 //! of an unmarked path (§FS-scan.scope.homes.lookup) does not move
 //! the CLI's marked path ahead of the warning.
 
@@ -13,7 +13,7 @@ use std::process::Command;
 
 #[test]
 fn missing_path_is_refused_after_the_unread_block_warning() {
-    // §FS-repository-maintenance.4.2: claim a direct leaf without an unowned pid parent.
+    // §FS-repository-maintenance.4: claim a direct leaf without an unowned pid parent.
     let root = TemporaryRoot::new(&std::env::temp_dir(), "grund-missing-path-run-warning");
     fs::create_dir_all(root.join("a/docs")).expect("create fixture");
     fs::create_dir_all(root.join("docs")).expect("create fixture");

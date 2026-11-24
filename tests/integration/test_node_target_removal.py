@@ -1,7 +1,7 @@
-"""Real-helper removal acceptance for §FS-repository-maintenance.2.4.
+"""Real-helper removal acceptance for §FS-repository-maintenance.2.
 
-Protected output/ownership follow §FS-repository-maintenance.2.1 and eligibility
-follows §FS-repository-maintenance.2.3; helper placement: §AR-ci.3.4.1.2.
+Protected output/ownership follow §FS-repository-maintenance.2 and eligibility
+follows §FS-repository-maintenance.2; helper placement: §AR-ci.3.4.1.2.
 """
 
 import errno

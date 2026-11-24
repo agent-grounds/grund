@@ -1,5 +1,5 @@
 //! Black-box: a value source the scan cannot open is an incomplete scan at exit `2` from every
-//! reader of the catalog, whichever its format (§FS-values.2.2.4, §FS-values.5.3). Git carries no
+//! reader of the catalog, whichever its format (§FS-values.2.2.3, §FS-values.5.3). Git carries no
 //! mode a fixture could keep unreadable, so this is the one row of that table's first line the
 //! e2e corpus cannot hold; its malformed UTF-8 and its parse failure are cases there.
 //! The contextual I/O reason is shared with ordinary reads (§FS-check.2.4.1).

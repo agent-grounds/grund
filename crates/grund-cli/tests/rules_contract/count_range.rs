@@ -33,8 +33,7 @@ fn every_count_shape(count: &str) -> Vec<String> {
         .collect()
 }
 
-/// §FS-rule-refusals.sentences.count-range.shapes, §FS-rule-refusals.sentences.count-range.leading-zeros,
-/// §FS-rule-refusals.sentences.count-range.no-form: `check --rule` refuses the first count above
+/// §FS-rule-refusals.sentences.count-range: `check --rule` refuses the first count above
 /// the largest supported count for its range in every count shape, with or without leading
 /// zeros, and prints the reason alone.
 #[test]
@@ -55,7 +54,7 @@ fn check_rule_refuses_a_count_above_the_largest_supported_count_for_its_range() 
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
-/// §FS-rule-refusals.sentences.count-range.shapes: a configured rule declaration whose count is above
+/// §FS-rule-refusals.sentences.count-range: a configured rule declaration whose count is above
 /// the largest supported count carries the same reason in its `invalid-rule` finding.
 #[test]
 fn a_configured_rule_with_a_count_above_the_largest_supported_count_names_the_range() {

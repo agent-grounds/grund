@@ -222,7 +222,7 @@ fn full_scope_does_not_resolve_an_in_scope_shorthand_against_the_wider_walk() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         located_diagnostics(&scoped.config, &scoped.report.errors),
-        "§FS-check.3.13.3: the wider walk must not leave the site holding a canonical ID whose declaration was narrowed away — one cause, one finding"
+        "§FS-check.3.13: the wider walk must not leave the site holding a canonical ID whose declaration was narrowed away — one cause, one finding"
     );
     assert!(
         located_diagnostics(&scoped.config, &scoped.report.errors)
@@ -248,7 +248,7 @@ fn full_scope_reports_an_unknown_alias_outside_include() {
     assert_eq!(full.report.errors[0].code, "out-of-scope-unknown-project");
 }
 
-/// §FS-check.3.13.3: the qualified cross-member shorthand. The workspace pass
+/// §FS-check.3.13: the qualified cross-member shorthand. The workspace pass
 /// resolves `§api/AR-900` against `api`'s *whole* walk, which under `--full`
 /// includes a declaration `api`'s own `include` excludes; narrowing then drops
 /// it. One cause must still be one finding.
@@ -286,7 +286,7 @@ fn full_scope_reports_a_qualified_shorthand_once() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         located_diagnostics(&scoped.config, &scoped.report.errors),
-        "§FS-check.3.13.3: at most one shorthand finding per site, and never a dangling one beside it"
+        "§FS-check.3.13: at most one shorthand finding per site, and never a dangling one beside it"
     );
     assert!(
         located_diagnostics(&scoped.config, &scoped.report.errors)

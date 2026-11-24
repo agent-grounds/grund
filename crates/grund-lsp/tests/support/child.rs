@@ -1,5 +1,5 @@
 //! A server process finishes before its fixture root is removed, also when a
-//! client assertion unwinds (§FS-repository-maintenance.4.1, §AR-ci.10.4).
+//! client assertion unwinds (§FS-repository-maintenance.4, §AR-ci.10.4).
 
 use std::io;
 use std::ops::{Deref, DerefMut};
@@ -33,7 +33,7 @@ impl DerefMut for Child {
 
 impl Drop for Child {
     /// Reap even an early-exiting test's server before the root owner drops
-    /// (§FS-repository-maintenance.4.1).
+    /// (§FS-repository-maintenance.4).
     fn drop(&mut self) {
         if let Some(child) = self.0.as_mut() {
             let _ = child.kill();

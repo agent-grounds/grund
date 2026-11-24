@@ -135,7 +135,7 @@ fn a_version_1_folder_through_a_parent_step_is_one_line_every_run_holds() {
     }
 }
 
-/// §FS-config-v2.schema.places.boundaries.1: a version 2 place folds its `..` as it parses, so this
+/// §FS-config-v2.schema.places.boundaries: a version 2 place folds its `..` as it parses, so this
 /// tree has the one spelling of any other.
 #[test]
 fn a_folder_configured_through_a_parent_step_is_one_line() {
@@ -322,7 +322,7 @@ fn a_linked_folder_keeps_its_manifest_line_beside_the_walks_report_of_the_target
     }
 }
 
-/// §FS-check.1.3.6.3: a healthy sibling holds no spelling of the one failing file, so it cautions
+/// §FS-check.1.3.6: a healthy sibling holds no spelling of the one failing file, so it cautions
 /// about it once, at the spelling listed first, and the failure leaves its exit alone.
 #[test]
 fn a_healthy_sibling_on_a_link_tree_keeps_its_cautions() {
@@ -431,7 +431,7 @@ const AT_LINK: &str = "error: zz/cases/b/fix: permission denied";
 
 /// §FS-check.2.4.2: the walk kept the pass's spelling as a name of its report, so the two are one
 /// failure: one line whether the run names it under the survivor or under that spelling, and no
-/// exit moves (§FS-check.1.3.6.3).
+/// exit moves (§FS-check.1.3.6).
 #[test]
 fn a_case_failure_the_walk_kept_the_spelling_of_is_one_line() {
     let Some(tree) = Tree::barred_fixture("kept-spelling", ".", ENTERED_CASE) else {

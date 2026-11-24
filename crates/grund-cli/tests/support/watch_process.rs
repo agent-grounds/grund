@@ -179,7 +179,7 @@ impl Watch {
         }
     }
 
-    /// §FS-check.6.1.2: do not assume an exact count of native events/runs. Consume
+    /// §FS-check.6.1: do not assume an exact count of native events/runs. Consume
     /// repeated previous snapshots, and transient input errors from a run that read
     /// the tree mid-deletion (§FS-check.6.3.1), before matching the new report.
     fn drain_stale(&mut self, stream: usize, target: &[u8]) {
@@ -199,7 +199,7 @@ impl Watch {
         }
     }
 
-    /// Fails with the captured streams if the watcher has exited (§FS-check.6.1.4).
+    /// Fails with the captured streams if the watcher has exited (§FS-check.6.1).
     pub fn assert_resident(&mut self, context: &str) {
         self.receive();
         if let Some(status) = self.child.try_wait().unwrap() {

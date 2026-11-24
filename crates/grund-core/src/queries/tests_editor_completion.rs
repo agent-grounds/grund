@@ -1,5 +1,5 @@
-//! Core authoring contracts (§FS-lsp.1.6.1, §FS-lsp.1.6.2,
-//! §FS-lsp.1.6.3, §FS-lsp.1.6.4) independent of UTF-16 transport.
+//! Core authoring contracts (§FS-lsp.1.6)
+//! independent of UTF-16 transport.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

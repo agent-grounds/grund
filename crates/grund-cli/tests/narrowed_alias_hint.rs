@@ -1,4 +1,4 @@
-//! §FS-check.3.8.1 — a narrowed run may hint only for a written alias that is a
+//! §FS-check.3.8 — a narrowed run may hint only for a written alias that is a
 //! strict segment-wise extension of its scope. One repository is checked from
 //! both the workspace root and the nested `group` scope so paths, ordering,
 //! streams, exit status, the admitted hint, and the suppressed controls stay one
@@ -38,7 +38,7 @@ fn assert_failed_with(output: &Output, expected_stdout: &str, command: &str) {
     );
 }
 
-/// §FS-check.3.8.4: the final scope-only wording.
+/// §FS-check.3.8: the final scope-only wording.
 fn scope_only(alias: &str, scope: &str) -> String {
     format!(
         "unknown project alias {alias}; the {scope} project and its descendants are in scope here — check from the workspace root for a path outside that subtree"
@@ -71,7 +71,7 @@ fn narrowed_json() -> String {
     )
 }
 
-/// §FS-check.3.8.1: `group/alph` is safely inside `group`; shorter,
+/// §FS-check.3.8: `group/alph` is safely inside `group`; shorter,
 /// outside-prefix, and lexical-prefix aliases remain ineligible, while the equal
 /// alias resolves normally. Both root and narrowed text bytes stay exact.
 #[test]
@@ -94,7 +94,7 @@ fn narrowed_alias_hints_only_rewrite_paths_inside_the_scope() {
     assert_failed_with(&narrowed, &narrowed_text(), "(cd group && grund check)");
 }
 
-/// §FS-check.3.8.4: text and JSON carry the same final message bytes in one
+/// §FS-check.3.8: text and JSON carry the same final message bytes in one
 /// error diagnostic per citation; stable codes still drive `--only`/`--ignore`.
 #[test]
 fn narrowed_scope_clarification_preserves_json_fields_and_code_selection() {

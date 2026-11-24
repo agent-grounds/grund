@@ -3,7 +3,7 @@
 //! reason and exits 2, whole-tree and narrowed to the case; a dangling `expected.exit` still names
 //! a case that fails there (§FS-declarations.e2e-case.id), and a link that loops carries the
 //! walk's unreadable-link reason (§FS-declarations.e2e-case.failure,
-//! §FS-scan.scope.links.unresolvable, §FS-check.2.4, §FS-check.1.3.6.3). These are not goldens
+//! §FS-scan.scope.links.unresolvable, §FS-check.2.4, §FS-check.1.3.6). These are not goldens
 //! because a golden has no skip and a dangling link is not portable in git; the tree is built in
 //! the temp directory instead. Unix-only: every tree here is about a link.
 #![cfg(unix)]

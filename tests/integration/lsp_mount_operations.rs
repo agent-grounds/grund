@@ -2,7 +2,7 @@
 //! document under an import, in a session over the consumer alone, is answered as a session
 //! over the dependency's own folder answers it, for every capability the server advertises.
 //! The edits and diagnostics a read-only import withholds are the one difference, and each
-//! row says which (§FS-lsp.2.2.3). One row per advertised capability, so a capability added
+//! row says which (§FS-lsp.2.2.2). One row per advertised capability, so a capability added
 //! without a row fails; the command-line rows are `crates/grund-cli/tests/mount_operations.rs`.
 
 #[path = "binaries.rs"]

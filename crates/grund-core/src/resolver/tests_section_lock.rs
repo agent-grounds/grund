@@ -2,7 +2,7 @@
 //! `fmt --write` writes from (§FS-section-lock.write.rules,
 //! §FS-section-lock.checks.section-address-changed,
 //! §FS-section-lock.checks.vanished), over a scanned tree.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::BTreeMap;
 

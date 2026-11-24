@@ -24,7 +24,7 @@ pub fn normalize(value: &str, context: &Value) -> String {
         .is_some_and(|s| s.contains("{repo_copy}"))
         || context["manifests"]["command.cwd"] == "{repo_copy}\n"
     {
-        // §FS-examples.5.6.2: use the shared runner's stable logical spelling.
+        // §FS-examples.5.6: use the shared runner's stable logical spelling.
         case_paths::logical_copy(&name)
             .to_string_lossy()
             .replace('\\', "/")

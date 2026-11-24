@@ -1,6 +1,6 @@
 //! Scanner ownership and grammar boundaries for declaration-local numeric citations
 //! (§FS-check.1.1.8, §AR-scanner.2.3, §AR-scanner.2.4).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::model::{Catalog, Citation, Id};
 use crate::testing::{numbered_config, scan_tree, test_root, write};

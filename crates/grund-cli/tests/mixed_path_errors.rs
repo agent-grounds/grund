@@ -1,7 +1,7 @@
-//! §FS-citations.checks.mixed-path and §FS-rules.7.12: mixed paths use ordinary
+//! §FS-citations.checks.mixed-path and §FS-rules.5.1: mixed paths use ordinary
 //! findings; independent warning windows, suggestions and strengths survive.
 //! The configured-prohibition and count fixtures port issue-710's triage probe.
-//! A count's list names each citation as written (§FS-rules.7.3.1), so the
+//! A count's list names each citation as written (§FS-rules.7.3), so the
 //! mixed and ordinary runs agree up to that list, and the mixed run's names
 //! `GOAL-g.1.goals`.
 
@@ -16,7 +16,7 @@ static NEXT: AtomicUsize = AtomicUsize::new(0);
 /// has no version 2 spelling (§FS-check.checks.config-version-1).
 const CONFIG_VERSION_1: &str = "config-version-1";
 const MIXED: &str = "a citation of a name under a number is now checked";
-/// Where a count row's list of the citations it counted begins (§FS-rules.7.3.1).
+/// Where a count row's list of the citations it counted begins (§FS-rules.7.3).
 const COUNTED: &str = "; counted at ";
 const CONFIG: &str = "grund_config_version = 1\n\
     [reference]\nstrict = true\nrequire_grounding = false\n\
@@ -90,7 +90,7 @@ fn json(output: &Output) -> Vec<Value> {
 
 /// Each finding with its message cut before the counted list, which names every
 /// citation as written and so differs between a mixed and an ordinary spelling
-/// (§FS-rules.7.3.1, §FS-rules.7.12); every other field is kept whole.
+/// (§FS-rules.7.3, §FS-rules.5.1); every other field is kept whole.
 fn before_the_list(mut ds: Vec<Value>) -> Vec<Value> {
     for d in &mut ds {
         let message = d["message"].as_str().unwrap();
@@ -126,7 +126,7 @@ fn ordinary_error(repo: &Repo, args: &[&str], code: &str) {
 
 /// The one count finding `--rule <sentence>` raises names, in its list, every
 /// citation it counted as written, `lines` of `docs/fs/x.md` in order, and its
-/// `sites` are those lines (§FS-rules.7.3.1).
+/// `sites` are those lines (§FS-rules.7.3).
 fn names_as_written(repo: &Repo, sentence: &str, code: &str, list: &str, lines: &[usize]) {
     let output = repo.run(&["check", "--format", "json", "--rule", sentence]);
     let ds = json(&output);
@@ -142,7 +142,7 @@ fn names_as_written(repo: &Repo, sentence: &str, code: &str, list: &str, lines: 
     assert_eq!(ds[0]["sites"], Value::Array(sites), "{ds:#?}");
 }
 
-/// §FS-rules.7.12 and §FS-rules.7.3.1: a count's ordinary message carries the
+/// §FS-rules.5.1 and §FS-rules.7.3: a count's ordinary message carries the
 /// counted list, which names the mixed citation as written, `GOAL-g.1.goals`,
 /// where the ordinary run's names `GOAL-g`; it is what shows the author which
 /// citation counted. It covers every count case `ordinary_error` runs below.
@@ -427,7 +427,7 @@ fn copy_tree(from: &Path, to: &Path) {
 
 #[test]
 fn configured_lent_mixed_overlap_is_an_ordinary_error() {
-    // §FS-rules.7.11 and §FS-rules.7.12 have both closed, so no window relieves it.
+    // §FS-rules.5.1: both windows have closed, so no window relieves it.
     let repo = Repo::new();
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join(
         "../../tests/e2e/cases/check-stub-unscanned-target-citations-prohibition-errors/repo",

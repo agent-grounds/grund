@@ -1,6 +1,6 @@
 //! Workspace-wide strict formatter preflight through the public API
-//! (§FS-fmt.3.3).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! (§FS-fmt.3.2).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 

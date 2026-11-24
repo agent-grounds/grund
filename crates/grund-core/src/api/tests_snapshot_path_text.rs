@@ -1,7 +1,7 @@
 //! Test module: a path that does not resolve keeps its components and nothing else
 //! (§FS-scan.identity.unresolved), read at the public seam as text, because `Path` compares by
 //! component and `a/b/` equals `a/b`: an assertion between `PathBuf`s passes on the defect.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;

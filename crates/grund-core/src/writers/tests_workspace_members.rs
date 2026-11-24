@@ -11,7 +11,7 @@ mod project_namespaces;
 
 /// §FS-init.2.3.4: `render_workspace_members_section` returns the empty
 /// string for a target that is not inside a workspace. The Project Map
-/// section is unchanged from the no-workspace fixture (§FS-init-fixtures.6.3).
+/// section is unchanged from the no-workspace fixture (§FS-init-fixtures.6).
 #[test]
 fn workspace_members_empty_when_no_workspace_declared() {
     let root = test_root("workspace_members_empty_when_no_workspace_declared");
@@ -31,7 +31,7 @@ fn workspace_members_empty_when_no_workspace_declared() {
 /// §FS-init.2.3.4: invoked at the workspace root, the section omits the
 /// root itself and lists every foreign member in alias order, each linking its
 /// directory whether or not it is initialized (§FS-init.2.3.4). Mirrors
-/// §FS-init-fixtures.6.1.
+/// §FS-init-fixtures.6.
 #[test]
 fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_root_init_omits_self_and_preserves_foreign_rows");
@@ -55,7 +55,7 @@ fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
 /// §FS-init.2.3.4: invoked inside a member, the section omits that member
 /// and keeps the foreign root and siblings in alias order, with link paths
 /// recomputed relative to the member's AGENTS.md: the root is `../../`.
-/// Mirrors §FS-init-fixtures.6.2.
+/// Mirrors §FS-init-fixtures.6.
 #[test]
 fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_member_init_omits_self_and_preserves_foreign_rows");
@@ -281,7 +281,7 @@ fn workspace_members_suppresses_duplicate_aliases() {
 /// §FS-init.2.3.4 + §DF-workspace-member-descriptions: a project's
 /// `project_description` renders after its link, and a project without one
 /// keeps the link-only bullet. Mirrors
-/// §FS-init-fixtures.6.4. §FS-workspace.3.1 is the residency rule the rows
+/// §FS-init-fixtures.6. §FS-workspace.3.1 is the residency rule the rows
 /// read: each member's description comes from that member's own config and a
 /// member without one has none, which `packages/ui` is here for.
 #[test]

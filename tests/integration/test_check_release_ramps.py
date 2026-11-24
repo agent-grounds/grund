@@ -40,7 +40,7 @@ OFF_FORMAT_GOLDENS = "tests/e2e/cases/check-off-format-citation"
 
 
 def apart_from_the_off_format_flip(found):
-    """§FS-check.checks.off-format-citation.1: the tree's claims less the pair the
+    """§FS-check.checks.off-format-citation: the tree's claims less the pair the
     off-format-citation message closes with, `unchecked in grund 0.20.0, an error
     in 0.21.0`, at the off-format goldens that quote it, judged on its own, so a
     window pinned for another ramp does not move with it, and another ramp with
@@ -341,7 +341,7 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertIn("tests", homes)
 
     def test_the_fulfilled_main_entry_removal_is_no_longer_pending(self):
-        """§FS-distribution.3.1.1: 0.14.0 shipped the removal notice and 0.15.0
+        """§FS-distribution.3.1.2: 0.14.0 shipped the removal notice and 0.15.0
         removes the symbol, so this tree no longer carries that pending claim.
         Other 0.15.0 ramps remain ordinary input to the generic release gate."""
         pending = [
@@ -356,7 +356,7 @@ class ThisRepositoryTests(unittest.TestCase):
 
     def test_no_golden_still_promises_a_wording_change_in_0_16_0(self):
         """§FS-distribution.4.2.2 — the wording ramps this tree carried all named
-        0.16.0, and their goldens hold the final wording (§FS-check.3.8.4,
+        0.16.0, and their goldens hold the final wording (§FS-check.3.8,
         §FS-errors.3.6, §FS-errors.3.7). A golden that still promised a
         wording change would ship a promise the release has already reached.
         The one-grammar window names 0.19.0 instead (§FS-errors.2.5.1)."""
@@ -394,7 +394,7 @@ class ThisRepositoryTests(unittest.TestCase):
         refuse 0.15.x, the unlisted-`[workspace]` flip (§FS-check.3.29)
         refuses 0.14.x, and the `prefix` removal refuses 0.12.x. The integrations
         retirement's lines raise the tree's floor further, and are judged apart.
-        So is the off-format flip (§FS-check.checks.off-format-citation.1), whose
+        So is the off-format flip (§FS-check.checks.off-format-citation), whose
         pair refuses a 0.20.x release (§FS-distribution.4.2), and the `fetch` key
         refusal (§FS-config-v2.checks.config-fetch-names-nothing), whose landed
         `0.23.0` raises the tree's floor past this one, and the six markdown-home

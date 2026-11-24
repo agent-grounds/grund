@@ -40,7 +40,7 @@ fn refused(name: &str, toml: &str, line: usize, message: &str) {
     );
 }
 
-/// §FS-config-v2.defaults.1: an omitted key takes the v2 epoch, in the records.
+/// §FS-config-v2.defaults: an omitted key takes the v2 epoch, in the records.
 #[test]
 fn v2_defaults_lower_into_the_records() {
     let project = project("v2_defaults", &format!("{HEAD}{FS_GOAL}"));
@@ -54,7 +54,7 @@ fn v2_defaults_lower_into_the_records() {
     assert!(project.schema.sources.respect_gitignore);
 }
 
-/// §FS-config-v2.defaults.1: a v2 file has the kinds it declares and no
+/// §FS-config-v2.defaults: a v2 file has the kinds it declares and no
 /// built-in ones, in the order its headers are written (§FS-config-v2.reader.4).
 #[test]
 fn v2_rows_are_the_declared_ones_in_authored_order() {
@@ -213,7 +213,7 @@ fn v2_a_positive_citation_default_is_refused() {
 }
 
 /// §FS-config-v2.rules.citations: overlap between two lists is refused at the
-/// second, as in v1 (§FS-config.3.9.5.1).
+/// second, as in v1 (§FS-config.3.9.5).
 #[test]
 fn v2_citation_overlap_is_refused() {
     let toml =

@@ -2,7 +2,7 @@
 //! without a stub (§FS-check.3.18, §DF-index-entry-form.2.7). These cases pin the
 //! discriminator and the exact-site unused accounting; the CLI test pins the
 //! `show` / `list` surface.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::path::Path;
@@ -63,7 +63,7 @@ pub(super) fn scanned_index(root: &Path) -> (Config, Catalog, KindIndexEntries) 
 }
 
 /// §FS-check.3.18: the canonical bare-ID source link is membership and entry
-/// at once. With no other citation, §FS-check.4.1.2 still reports the source
+/// at once. With no other citation, §FS-check.4.1 still reports the source
 /// declaration unused — proof that the link is navigation rather than use.
 #[test]
 fn a_canonical_source_link_enrolls_without_a_stub() {
@@ -227,7 +227,7 @@ fn fmt_can_write_the_canonical_enrollment_form() {
     );
 }
 
-/// §FS-fmt.6.1.2: the entries-only carve-out cannot infer intent from a bare
+/// §FS-fmt.6.1: the entries-only carve-out cannot infer intent from a bare
 /// external citation. With global link generation disabled it stays ordinary
 /// prose until the author explicitly writes or requests the canonical link.
 #[test]
@@ -354,7 +354,7 @@ fn a_link_nested_in_a_markdown_destination_does_not_enroll() {
     assert!(!entries.is_index_entry(&findings.citations[0]));
 }
 
-/// §FS-check.3.18 / §FS-check.4.1.2.1: the link that enrolls is the entry that
+/// §FS-check.3.18 / §FS-check.4.1: the link that enrolls is the entry that
 /// satisfies, and a canonical link riding on the index's own declaration heading is
 /// a citation from that declaration, never the entry. So it enrolls nothing: the
 /// index owes no entry it could not take, and the link is use.

@@ -1,7 +1,7 @@
 //! Test module: the row init's guidance names (§FS-init.2.2.2), which the
 //! `next:` block allocates in and the managed block's discovery rung leads its
 //! `--kind` example with (§FS-init.2.3.4).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::config::{Config, guided_kind, load_config};
 use crate::testing::{test_root, write};

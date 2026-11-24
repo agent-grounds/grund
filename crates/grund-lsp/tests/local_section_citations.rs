@@ -1,6 +1,6 @@
 //! Real-server coverage for local-section diagnostic parity and graph navigation
 //! (§FS-lsp.1.1, §FS-lsp.1.3, §AR-lsp.5).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

@@ -1,4 +1,4 @@
-//! §FS-citations.wrap.enclosing.scope — a citation in every form a Markdown link is
+//! §FS-citations.wrap.enclosing.shape — a citation in every form a Markdown link is
 //! written in, and in a citation-only image, is left with the author's markup by
 //! `fmt`, and `check` credits only the forms that go somewhere
 //! (§FS-citations.wrap.enclosing): from grund 0.20.0 a citation-only image keeps no
@@ -80,7 +80,7 @@ fn full_index() -> String {
     format!("{PG_ROW}- [§ADR-use-redis]({REDIS_LINK})\n")
 }
 
-/// Every form §FS-citations.wrap.enclosing.scope lists, the citation-only image of
+/// Every form §FS-citations.wrap.enclosing.shape lists, the citation-only image of
 /// §FS-citations.wrap.enclosing.images, and the two shapes of §FS-citations.wrap.enclosing.shape
 /// the review of grund#838 raised, each as the whole of `docs/notes.md`.
 const AUTHORED: &[(&str, &str)] = &[
@@ -164,7 +164,7 @@ const AUTHORED: &[(&str, &str)] = &[
     ),
 ];
 
-/// §FS-citations.wrap.enclosing.scope, §FS-citations.wrap.enclosing.images,
+/// §FS-citations.wrap.enclosing.shape, §FS-citations.wrap.enclosing.images,
 /// §FS-citations.zones.authored-markup, §FS-fmt.6.4: every authored form keeps
 /// every byte under the fullest run, `fmt --write --marker --cross-refs`, and
 /// `fmt --check` then lists nothing. Today each but the link inside the text

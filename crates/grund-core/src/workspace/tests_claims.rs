@@ -16,7 +16,7 @@ use crate::config::load_config;
 use crate::testing::physical_test_root;
 use crate::testing::{test_root, write};
 
-/// §FS-workspace.6.1.5, §FS-workspace.6.1.5.2: an alias path is read from the
+/// §FS-workspace.6.1.5: an alias path is read from the
 /// outermost workspace at every scope, three levels deep — so a run narrowed to
 /// the middle block resolves a *subset* of the outer run's paths and does not
 /// name its projects from itself. Without that, a citation could pass a subtree
@@ -63,7 +63,7 @@ fn nested_workspace_alias_paths_are_stable_across_scopes() {
     );
 }
 
-/// §FS-workspace.6.1.6: two blocks may claim one directory — a multi-segment
+/// §FS-workspace.6.1.5: two blocks may claim one directory — a multi-segment
 /// `members` entry (`grp/inner`) hops `grp`, which declares `[workspace]` and
 /// lists the same child — and the alias path is read from the **outermost**
 /// claim, the one the top-down walk follows. Taking the nearest instead
@@ -115,7 +115,7 @@ fn alias_paths_follow_the_outermost_claim_of_a_member() {
     );
 }
 
-/// §FS-workspace.6.1.5 / §FS-workspace.6.1.5.1, the recorded limitation of the
+/// §FS-workspace.6.1.5, the recorded limitation of the
 /// scope guarantee, pinned so the spec stays honest about it: the guarantee is
 /// quantified over the scope, so alias paths are stable for every scope *in*
 /// the claimed chain, and `grp` — hopped by `mid`'s multi-segment entry
@@ -168,7 +168,7 @@ fn a_block_the_chain_never_lists_respells_its_own_subtree() {
     );
 }
 
-/// §FS-workspace.6.1.4: a `members` entry may reach this directory through a
+/// §FS-workspace.2.3: a `members` entry may reach this directory through a
 /// symlink, and then the entry text names it only once resolved. The claim
 /// therefore compares canonical paths too — otherwise the prefix is dropped
 /// and the subtree names itself, which is the re-spelling §FS-check.3.8 would

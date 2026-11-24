@@ -1,5 +1,5 @@
 //! A home file that cannot be decoded refuses the fetch with the line `grund check` prints for
-//! it, in a folder home (§FS-fetch.5.4) and a file home (§FS-fetch.4.4). What the fetch prints
+//! it, in a folder home (§FS-fetch.5.4) and a file home (§FS-fetch.5.4). What the fetch prints
 //! is compared to what `check` prints on the same tree, which a case's goldens cannot say.
 #![cfg(unix)]
 
@@ -187,7 +187,7 @@ fn the_file_is_spelled_from_the_report_base() {
     assert_refused_with_checks_line(&project, &project.join("fs"), "FS-001-a", "a.md");
 }
 
-/// §FS-fetch.4.4: the same refusal through the file home's own read of the bytes.
+/// §FS-fetch.5.4: the same refusal through the file home's own read of the bytes.
 #[test]
 fn an_undecodable_file_home_is_named() {
     let project = file_project("file-home");

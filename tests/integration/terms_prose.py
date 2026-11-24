@@ -1,4 +1,4 @@
-"""§FS-terms.senses.4 — the one reader of a spec's prose, so the exclusion that
+"""§FS-terms.senses — the one reader of a spec's prose, so the exclusion that
 makes a token a name rather than a use has a single implementation and a single
 place to drift from. A fenced block is dropped, a link target and a backticked
 span are blanked, and what is left is what a shared word has to stand in to count.

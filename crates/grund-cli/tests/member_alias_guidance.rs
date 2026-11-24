@@ -214,7 +214,7 @@ fn genuinely_unknown_alias_does_not_claim_to_be_the_enclosing_project() {
 
 /// §FS-workspace.5.1.1 needs the root project's actual alias, and an ancestor
 /// above `repo` whose `members` text cannot be obtained may list it
-/// (§FS-workspace.6.1.7.5) — then `shop` names a member, not the root, so the
+/// (§FS-workspace.6.1.7) — then `shop` names a member, not the root, so the
 /// remedy is withheld. A readable ancestor that names nothing here verifies it.
 #[test]
 fn an_undecidable_ancestor_above_the_root_withholds_the_root_remedy() {
@@ -238,7 +238,7 @@ fn an_undecidable_ancestor_above_the_root_withholds_the_root_remedy() {
     );
 }
 
-/// §FS-workspace.6.1.7.5: an ancestor whose `members` spans lines and ends in the
+/// §FS-workspace.6.1.7: an ancestor whose `members` spans lines and ends in the
 /// trailing comma TOML allows is the list its config loads, not an unreadable
 /// value, so naming elsewhere it still verifies `shop` as the root and the remedy
 /// is given, exactly as under the one-line spelling (§FS-workspace.5.1.1).
@@ -254,7 +254,7 @@ fn an_ancestor_members_list_written_across_lines_still_verifies_the_root() {
     member_text(&fixture, &fixture.member(), &["check"], "../..");
 }
 
-/// §FS-workspace.6.1.7.5: an ancestor that writes no `[workspace]` claims nothing,
+/// §FS-workspace.6.1.7: an ancestor that writes no `[workspace]` claims nothing,
 /// even with another key's array left open to the end of the file, which holds no
 /// claim. So `shop` is still verified as the root and the remedy is given
 /// (§FS-workspace.5.1.1), exactly as with that array closed.
@@ -270,7 +270,7 @@ fn an_unclosed_array_of_another_key_above_the_root_keeps_the_root_remedy() {
     member_text(&fixture, &fixture.member(), &["check"], "../..");
 }
 
-/// §FS-workspace.6.1.7.5: a version-1 value is read on its key's line, as the v1
+/// §FS-workspace.6.1.7: a version-1 value is read on its key's line, as the v1
 /// reader reads every value (§FS-config.3), so a v1 ancestor's `members` naming
 /// `repo` across lines or with a trailing comma is not a list. The root's run warns
 /// that it cannot read it and goes on, as grund 0.20.0 did, rather than taking it

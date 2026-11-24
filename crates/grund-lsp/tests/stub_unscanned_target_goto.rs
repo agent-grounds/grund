@@ -1,7 +1,7 @@
 //! Real-server regression for goto on a citation of a stubbed ID whose target the
 //! scan does not reach: the user lands on the declaration in the target, never on
-//! the stub (§FS-lsp.1.3, §FS-declarations.stubs.pairing.4).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! the stub (§FS-lsp.1.3, §FS-declarations.stubs.pairing).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

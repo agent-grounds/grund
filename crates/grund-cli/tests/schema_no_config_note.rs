@@ -1,6 +1,6 @@
 //! Binary regressions for agent-grounds/grund#1041: with no grund.toml, the
 //! `grund schema` table says that `grund init --scaffold` writes a different
-//! layout, and which kinds it adds (§FS-schema.8.2).
+//! layout, and which kinds it adds (§FS-schema.8).
 //!
 //! These cases live outside the `tests/e2e/cases` corpus because every case there
 //! sits inside this repository, whose own grund.toml would be discovered: the
@@ -83,7 +83,7 @@ fn kind_rows(table: &str) -> Vec<(String, String)> {
         .collect()
 }
 
-/// The note §FS-schema.8.2 asks for, derived from what `init --scaffold` really
+/// The note §FS-schema.8 asks for, derived from what `init --scaffold` really
 /// writes: its version from the scaffold's header, its kinds from the rows the
 /// scaffold has and the defaults lack.
 fn expected_note(defaults: &str) -> String {
@@ -96,7 +96,7 @@ fn expected_note(defaults: &str) -> String {
         "the scaffold's own view: {table}"
     );
     let version = header.rsplit(" · v").next().unwrap();
-    // §FS-schema.8.2: a tree whose config file was read prints no note.
+    // §FS-schema.8: a tree whose config file was read prints no note.
     assert_eq!(table.lines().nth(1), Some(""), "a configured tree: {table}");
     let known: Vec<String> = kind_rows(defaults).into_iter().map(|(k, _)| k).collect();
     let added: Vec<String> = kind_rows(&table)
@@ -128,7 +128,7 @@ fn assert_no_config(fresh: &Fresh, header: &str) {
     );
 }
 
-/// §FS-schema.8.2: the line after the no-config header names `grund init
+/// §FS-schema.8: the line after the no-config header names `grund init
 /// --scaffold`, its version, and each kind it adds with its places.
 #[test]
 fn no_config_table_names_what_the_scaffold_adds() {
@@ -154,7 +154,7 @@ fn no_config_table_names_what_the_scaffold_adds() {
     assert_eq!(lines.next(), Some("kinds and places"));
 }
 
-/// §FS-schema.8.2: Mermaid and DOT carry the header comment and no note.
+/// §FS-schema.8: Mermaid and DOT carry the header comment and no note.
 #[test]
 fn no_config_sources_carry_no_note() {
     let fresh = Fresh::new("sources");

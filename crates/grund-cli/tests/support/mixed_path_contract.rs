@@ -1,4 +1,4 @@
-//! §FS-citations.checks.mixed-path, §FS-rules.7.12 and
+//! §FS-citations.checks.mixed-path, §FS-rules.5.1 and
 //! §FS-section-lock.checks.unrecorded-section-citation: the release transition
 //! and its resolution, lock-enrollment and move/fingerprint controls.
 

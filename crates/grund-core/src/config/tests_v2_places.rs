@@ -15,7 +15,7 @@ const HEAD: &str = "grund_config_version = 2\nproject_name = \"example\"\n[schem
 fn load(name: &str, toml: &str) -> anyhow::Result<crate::testing::Rooted<Config>> {
     let root = test_root(name);
     write(&root.join("grund.toml"), toml);
-    // §FS-repository-maintenance.4.1: keep the tree with its loaded path consumer.
+    // §FS-repository-maintenance.4: keep the tree with its loaded path consumer.
     let config = load_config(&root)?;
     Ok(root.hold(config))
 }
@@ -97,7 +97,7 @@ fn v1_keeps_a_nested_file_on_the_complement() {
     assert_eq!(owner(&config, "docs/spec/login.md"), Some("FS"));
 }
 
-/// §FS-config-v2.schema.places.boundaries.3: two spellings of one place, and
+/// §FS-config-v2.schema.places.boundaries: two spellings of one place, and
 /// two places linking to one target, are one place; a case-only difference is
 /// one place exactly where the filesystem folds case.
 #[test]
@@ -149,7 +149,7 @@ fn a_place_repeated_by_spelling_case_or_link_is_refused() {
     }
 }
 
-/// §FS-config-v2.schema.places.boundaries.1: a place that normalizes to the
+/// §FS-config-v2.schema.places.boundaries: a place that normalizes to the
 /// config root is refused at its key, since the complement already covers it.
 #[test]
 fn a_place_at_the_config_root_is_refused() {
@@ -174,7 +174,7 @@ fn declared(config: &Config) -> Vec<String> {
         .collect()
 }
 
-/// §FS-config-v2.schema.places.boundaries.6: a scanned place under an unscanned
+/// §FS-config-v2.schema.places.boundaries: a scanned place under an unscanned
 /// one is walked, and an unscanned place under a scanned one is pruned.
 #[test]
 fn scan_false_answers_nesting_both_ways() {

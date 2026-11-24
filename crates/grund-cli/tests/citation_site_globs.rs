@@ -64,7 +64,7 @@ fn cover_citations() -> Vec<serde_json::Value> {
         .collect()
 }
 
-/// §FS-refs.globs and §FS-coordinate-globs.matching.citations: a pattern selects the sites whose
+/// §FS-refs.globs and §FS-coordinate-globs.matching: a pattern selects the sites whose
 /// cited coordinate it matches, declared or not, each once, in ID mode's order and shapes.
 #[test]
 fn refs_glob_lists_who_cites_a_set() {
@@ -145,7 +145,7 @@ fn an_id_typed_as_the_path_gets_a_hint() {
     );
 }
 
-/// §FS-refs.from.owned and §FS-refs.from.stubs: a source owns its lead, its proper ancestors and
+/// §FS-refs.from.owned: a source owns its lead, its proper ancestors and
 /// itself, a rejected heading's sites lie in the lead, and a doc-comment lead stops at the code.
 #[test]
 fn refs_from_lists_what_one_point_cites() {
@@ -197,7 +197,7 @@ fn a_from_source_fails_as_show_fails() {
     );
 }
 
-/// §FS-coordinate-globs.scope.targets and §FS-workspace.8.2: a citation matches by the project it
+/// §FS-coordinate-globs.scope and §FS-workspace.8.2: a citation matches by the project it
 /// targets, and its record still names the project it sits in.
 #[test]
 fn workspace_citations_match_the_project_they_target() {
@@ -304,11 +304,11 @@ fn own_tree_bare_glob_selects_only_the_bare_citations() {
     );
 }
 
-/// §FS-refs.from.owned: `--from FS-refs.3.2.1` lists exactly the sites `cover` gives `FS-refs`
-/// under no section, `3`, `3.2` or `3.2.1`, in `cover`'s records (§FS-refs.from.records).
+/// §FS-refs.from.owned: `--from FS-refs.3.2` lists exactly the sites `cover` gives `FS-refs`
+/// under no section, `3` or `3.2`, in `cover`'s records (§FS-refs.from.records).
 #[test]
 fn own_tree_from_lists_the_sites_of_its_lead_ancestors_and_self() {
-    let owned = [None, Some("3"), Some("3.2"), Some("3.2.1")];
+    let owned = [None, Some("3"), Some("3.2")];
     let expected: Vec<_> = cover_citations()
         .into_iter()
         .filter(|site| {
@@ -323,7 +323,7 @@ fn own_tree_from_lists_the_sites_of_its_lead_ancestors_and_self() {
             .any(|site| site["enclosing_section"].is_null()),
         "FS-refs's lead cites something"
     );
-    let source = "FS-refs.3.2.1";
+    let source = "FS-refs.3.2";
     let listed = rows(&grund(&["refs", "--from", source, "--format", "json"]));
     assert_eq!(listed, expected);
     let sites = expected.len();

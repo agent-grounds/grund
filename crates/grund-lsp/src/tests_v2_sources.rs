@@ -1,8 +1,8 @@
 //! The editor reads a v2 file as the scan does (§FS-config-v2.schema.sources): the
 //! on-type shorthand expansion (§FS-lsp.1.4) asks the declaration gate the scan
-//! asks (§FS-config-v2.schema.sources.declarations.gate), and reads a remapped
+//! asks (§FS-config-v2.schema.sources.declarations), and reads a remapped
 //! suffix as the language it maps to, whole (§FS-config-v2.schema.sources.extensions).
-//! Source-derived fixture labels name one leaf (§FS-repository-maintenance.4.2).
+//! Source-derived fixture labels name one leaf (§FS-repository-maintenance.4).
 
 use super::*;
 
@@ -50,7 +50,7 @@ const GATED: &str = concat!(
     "    // FS-003-note: a note on \u{a7}FS-001 \n}\n",
 );
 
-/// §FS-config-v2.schema.sources.declarations.gate: under v2's `doc-comments` a plain
+/// §FS-config-v2.schema.sources.declarations: under v2's `doc-comments` a plain
 /// `//` line declares nothing, so its shorthand expands, where its v1 twin is a
 /// declaration line the editor never rewrites (§FS-config.5.2).
 #[test]

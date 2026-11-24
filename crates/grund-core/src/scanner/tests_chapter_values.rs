@@ -2,7 +2,7 @@
 //! declared chapter may hold, which delimited forms become bindings, and the
 //! comparison that follows (§FS-config.3.4.13, §FS-values.2.5, §FS-values.3.1,
 //! §FS-values.5.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::PathBuf;
 
@@ -131,7 +131,7 @@ fn a_marked_numeric_root_keeps_its_own_origin_beside_a_chapter_root() {
 
 /// A marked root's section-map title drops the separating space and tag, as its
 /// anchor and LSP title do, while the raw heading `show` prints keeps it; a
-/// chapter root has no tag to drop (§FS-values.2.4.2).
+/// chapter root has no tag to drop (§FS-values.6.1).
 #[test]
 fn a_marked_roots_map_title_drops_its_tag() {
     let (config, findings) = scan_chapter(
@@ -182,8 +182,8 @@ fn a_marked_roots_map_title_drops_its_tag() {
 }
 
 /// `show --toc` and the editor give each section one title. A chapter root's tag
-/// is no mark (§FS-values.2.4.4), so both keep it; a marked root's is dropped
-/// by both (§FS-values.2.4.2), even when the tag is all its title holds.
+/// is no mark (§FS-values.2.4), so both keep it; a marked root's is dropped
+/// by both (§FS-values.6.1), even when the tag is all its title holds.
 #[test]
 fn toc_and_editor_title_a_tagged_chapter_root_alike() {
     let root = test_root("chapter_value_tagged_root_titles");

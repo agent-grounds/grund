@@ -88,7 +88,7 @@ fn clickable_citations_section_renders_the_configured_marker() {
     );
 }
 
-// §FS-config.3.1.6: the closed enum admits only `link` — `plain` is machine
+// §FS-config.3.1.3: the closed enum admits only `link` — `plain` is machine
 // state and stays user-scoped (§DF-repo-conversation-opinion.2.2).
 #[test]
 fn repository_config_rejects_non_link_conversation() {

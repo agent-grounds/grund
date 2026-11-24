@@ -1,7 +1,7 @@
 //! Real-server coverage for a mixed section coordinate, a name under a number
 //! (§FS-config.3.3.1): `### 1.goals: Goals` under `## 1. Overview` is one
 //! address, and the editor answers a citation of it as that section (§FS-lsp.1.3.3).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 
@@ -26,7 +26,7 @@ struct Fixture {
     usage: PathBuf,
 }
 
-/// §FS-citations.checks.mixed-path, §FS-lsp.1.1.2: ordinary error severity,
+/// §FS-citations.checks.mixed-path, §FS-lsp.1.1: ordinary error severity,
 /// codes, messages and lines reach the editor through the shared checker.
 #[test]
 fn unresolved_mixed_citations_publish_ordinary_errors() {

@@ -27,8 +27,6 @@ HEADING = re.compile(r"^(#{1,6}) (\S+?)(?::? )(.*)$")
 CHAPTERS = (
     "terms",
     "comment-block",
-    "comment-block.open", "comment-block.close", "comment-block.early-end",
-    "comment-block.forms",
     "comment-wrapper", "comment-wrapper.headings",
     "docstring",
     "fence",
@@ -40,15 +38,15 @@ CHAPTERS = (
 #  moved out of the source into that chapter)
 MOVES = (
     ("FS-show.md", "2.3.1", 'What counts as the "comment block"', {"comment-block": ()}),
-    ("FS-show.md", "2.3.1.1", "Find the open boundary", {"comment-block.open": (
+    ("FS-show.md", "2.3.1.1", "Find the open boundary", {"comment-block": (
         "Scan **backwards** from the declaration line over consecutive lines",
         "For Python triple-quoted docstrings: scan backward until the opening",
     )}),
-    ("FS-show.md", "2.3.1.2", "Find the close boundary", {"comment-block.close": (
+    ("FS-show.md", "2.3.1.2", "Find the close boundary", {"comment-block": (
         "Scan **forwards** from the declaration line by the symmetric rules",
         "a declaration written as a one-line `/* … */` closes on its own line",
     )}),
-    ("FS-show.md", "2.3.1.3", "Terminate early on another declaration", {"comment-block.early-end": (
+    ("FS-show.md", "2.3.1.3", "Terminate early on another declaration", {"comment-block": (
         "if another declaration line of any ID is encountered, the block ends at the line before it",
     )}),
     ("FS-show.md", "2.3.2", "Stripping comment prefixes", {
@@ -62,7 +60,7 @@ MOVES = (
             "For Python docstrings, no prefix is stripped",
         ),
     }),
-    ("FS-inline-citation-style.md", "1.2", "Comment blocks", {"comment-block.forms": (
+    ("FS-inline-citation-style.md", "1.2", "Comment blocks", {"comment-block": (
         "a run of adjacent lines whose first non-whitespace token is the same line-comment prefix",
         "Adjacency is broken by any line that is not part of the same block",
         "An empty comment line — the prefix alone",
@@ -110,7 +108,7 @@ KEPT = (
     ("FS-rules.md", "5.1.1", "a presence rule naming `Terms` counts either"),
     ("FS-values.md", "2.4.1", "The language adds no alternate spelling"),
     ("FS-fmt.md", "2.3.1", "Track an open-quote state per"),
-    ("FS-fmt.md", "2.3.1.1", "the line this scan reads is the docstring's **content**"),
+    ("FS-fmt.md", "2.3.1", "the line this scan reads is the docstring's **content**"),
     ("FS-fmt.md", "2.3.3", "Every pass stops at a Markdown fence"),
 )
 

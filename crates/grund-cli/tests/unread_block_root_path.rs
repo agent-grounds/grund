@@ -2,7 +2,7 @@
 //! is the unread tree (agent-grounds/grund#1145): a version-2 root listing
 //! `group`, `group/grund.toml` with `include_root = false` and one member `a`,
 //! and a `group/README.md` nobody scans. The tree is named under the block root,
-//! so the block root itself is `.`, from every run base (§FS-check.4.10.5).
+//! so the block root itself is `.`, from every run base (§FS-check.4.10).
 
 #[path = "support/temporary_root.rs"]
 mod temporary_root;
@@ -18,7 +18,7 @@ or configure another project's source scope to read it.\n";
 /// The issue's tree under the system temp directory, where no config above it
 /// is discovered.
 fn tree(name: &str) -> TemporaryRoot {
-    // §FS-repository-maintenance.4.2: claim a direct leaf without an unowned pid parent.
+    // §FS-repository-maintenance.4: claim a direct leaf without an unowned pid parent.
     let root = TemporaryRoot::new(
         &std::env::temp_dir(),
         &format!("grund-unread-block-root-{name}"),
@@ -66,7 +66,7 @@ fn check(cwd: &Path) -> (Option<i32>, String, String) {
     )
 }
 
-/// §FS-check.4.10.5: run from the block, the location is the block's own
+/// §FS-check.4.10: run from the block, the location is the block's own
 /// `grund.toml` and the unread tree, the block root, is `.`.
 #[test]
 fn block_root_is_named_dot_from_the_block() {
@@ -75,7 +75,7 @@ fn block_root_is_named_dot_from_the_block() {
     assert_eq!(check(&root.join("group")), (Some(0), String::new(), stderr));
 }
 
-/// §FS-check.4.10.5: run from the workspace root, the location moves to the
+/// §FS-check.4.10: run from the workspace root, the location moves to the
 /// run's root and the unread tree stays `.`, because it is named under the block root.
 #[test]
 fn block_root_is_named_dot_from_the_workspace_root() {

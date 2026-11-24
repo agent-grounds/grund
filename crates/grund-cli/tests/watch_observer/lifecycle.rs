@@ -264,7 +264,7 @@ fn watch_delete_during_scan_retires_dead_subscription() {
     h.stop(absent.status);
 }
 
-/// §FS-check.6.1.4: a root deleted after recovery resolved it, before it is subscribed,
+/// §FS-check.6.1: a root deleted after recovery resolved it, before it is subscribed,
 /// is a missing input met by its parent anchor, not a fatal failed recovery.
 #[test]
 fn watch_root_deleted_between_resolve_and_subscribe_stays_resident() {

@@ -253,7 +253,7 @@ fn a_snapshot_outside_every_member_keeps_the_members_under_it() {
     );
 }
 
-/// §FS-check.4.9.4: the announcement of an absent optional member is located at the
+/// §FS-check.4.9: the announcement of an absent optional member is located at the
 /// root's `grund.toml`, so an anchor outside it drops it as `check(tools/sub)` does,
 /// and the narrowed report, silent, earns the one empty-scan caution of the anchor.
 #[test]

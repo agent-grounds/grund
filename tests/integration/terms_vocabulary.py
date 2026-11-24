@@ -1,4 +1,4 @@
-"""§FS-terms.senses — one parse of a Terms home, for the two checks §FS-terms.senses.5
+"""§FS-terms.senses — one parse of a Terms home, for the two checks §FS-terms.senses
 keeps apart: the four fixed-syntax invariants that gate, and the advisory report that
 never may. Both read the same shared groups, the same lean lines and the same prose,
 so the gate and the advice can disagree about a document only where the specification
@@ -165,7 +165,7 @@ def _local_labels(body):
 
 
 def _token(word):
-    """§FS-terms.senses.2 — the word standing on its own, with no word character and
+    """§FS-terms.senses — the word standing on its own, with no word character and
     no hyphen on either side of it, so a compound is one name and not its parts."""
     return re.compile(r"(?<![\w-])" + re.escape(word) + r"(?![\w-])", re.IGNORECASE)
 
@@ -204,7 +204,7 @@ def invariant_findings(home):
     """The four fixed-syntax invariants of the lean-line grammar §FS-terms.terms
     states, as ((title, [finding, …]), …) in INVARIANTS order. Every one of them is
     a property of the text alone, which is what lets them gate where
-    §FS-terms.senses.5's report may not."""
+    §FS-terms.senses's report may not."""
     home, groups, duplicates, read = _read(home)
     shared = {word for words in groups.values() for word in words}
     unknown, duplicate_local, bare_collisions = [], [], []
@@ -240,10 +240,10 @@ def invariant_findings(home):
 
 
 def advisory_report(home):
-    """§FS-terms.senses.5 — what a lean line looks like it is missing and what it
+    """§FS-terms.senses — what a lean line looks like it is missing and what it
     looks like it no longer needs, in the fixed order that makes two runs over one
-    tree print the same bytes. Advice, never a verdict: it applies §FS-terms.senses.2
-    and §FS-terms.senses.4 and cannot apply the two exclusions that are read rather
+    tree print the same bytes. Advice, never a verdict: it applies §FS-terms.senses
+    and cannot apply the two exclusions that are read rather
     than matched, so a line it prints is a question for an author."""
     home, groups, _, read = _read(home)
     order = [(number, word) for number in sorted(groups) for word in groups[number]]

@@ -1,11 +1,11 @@
 //! Black-box: a `markdown link` row of fmt's dry run names every link its line writes, as the text
-//! the write replaces, `→`, and the text it writes (§FS-fmt.3.6.2), so a caller can apply one
+//! the write replaces, `→`, and the text it writes (§FS-fmt.3.6), so a caller can apply one
 //! line's link rewrite by hand. The fixture is grund#1378's own: three links with a missing or a
 //! stale anchor and one citation with no link. A second file holds a link whose title carries
-//! `, `, which the write drops and an item is read past by its brackets (§FS-fmt.3.6.2.2).
+//! `, `, which the write drops and an item is read past by its brackets (§FS-fmt.3.6).
 //!
 //! Each case first proves its expected items against `--write` itself: replacing every left side
-//! with its right side in the line on disk gives the line the write leaves (§FS-fmt.3.6.2.1). Only
+//! with its right side in the line on disk gives the line the write leaves (§FS-fmt.3.6). Only
 //! then does it compare the preview, `fmt --check` and the no-flag run alike (§FS-fmt.3.5).
 
 use std::fs;
@@ -149,7 +149,7 @@ impl Project {
         (output.status.code().expect("exited with a status"), shown)
     }
 
-    /// The expected items are what `--write` does (§FS-fmt.3.6.2.1), and the preview names them.
+    /// The expected items are what `--write` does (§FS-fmt.3.6), and the preview names them.
     fn assert_rows(&self, file: &str, rows: &[Row]) {
         let before = fs::read_to_string(self.0.join(file)).expect("read the file");
         let scratch = self.0.with_extension("write");

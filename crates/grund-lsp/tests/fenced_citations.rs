@@ -1,7 +1,7 @@
 //! Real-server coverage of §FS-languages.fence.language: a citation in a fence that
 //! `[schema.sources] fenced` selects is diagnosed and hovered where it sits, as the same
 //! citation in a `<pre>` block is (§FS-citations.recognized.contexts, §FS-lsp.1.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

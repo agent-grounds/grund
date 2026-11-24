@@ -50,7 +50,7 @@ fn v2_sources_example_loads() {
     assert_eq!(loads("v2_sources_example", &toml).version, 2);
 }
 
-/// §FS-config-v2.schema.sources.languages, §FS-config-v2.defaults.2: an omitted
+/// §FS-config-v2.schema.sources.languages, §FS-config-v2.defaults: an omitted
 /// list is the epoch's default set, and `[]` is a list that admits nothing.
 #[test]
 fn v2_sources_omitted_and_empty_languages_load() {

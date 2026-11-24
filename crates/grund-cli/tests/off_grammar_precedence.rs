@@ -13,7 +13,7 @@ use std::process::{Command, Output};
 #[path = "support/fixture_root_contract.rs"]
 mod fixture_root_contract;
 
-/// Own each fixture until its caller finishes (§FS-repository-maintenance.4.1).
+/// Own each fixture until its caller finishes (§FS-repository-maintenance.4).
 fn test_root(name: &str) -> TemporaryRoot {
     TemporaryRoot::new(
         &std::env::temp_dir(),

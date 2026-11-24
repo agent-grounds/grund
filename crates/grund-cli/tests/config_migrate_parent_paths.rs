@@ -1,6 +1,6 @@
 //! Issue #1284: refusal details use lexical config-relative paths, independently
-//! of an include or home's spelling (§FS-config-migrate.3.1.4.1,
-//! §FS-config-migrate.3.1.5.1). Ports tool report grund.267's run.sh to the CLI
+//! of an include or home's spelling (§FS-config-migrate.3.1.4,
+//! §FS-config-migrate.3.1.5). Ports tool report grund.267's run.sh to the CLI
 //! harness; the scanner remains the oracle for what version 1 reads.
 
 #[path = "support/fixture_cleanup.rs"]
@@ -256,7 +256,7 @@ fn equivalent_parent_home_spellings_protect_the_scan_root() {
     }
 }
 
-/// An include inside a home becomes no protected place (§FS-config-migrate.3.1.4.1).
+/// An include inside a home becomes no protected place (§FS-config-migrate.3.1.4).
 #[test]
 fn exclude_include_inside_home() {
     let fixture = Fixture::new("docs/x", "docs", false);

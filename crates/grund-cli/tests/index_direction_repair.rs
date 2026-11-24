@@ -1,4 +1,4 @@
-//! Black-box regression for index-specific direction repairs (§FS-check.3.12.2).
+//! Black-box regression for index-specific direction repairs (§FS-check.3.12).
 //! The CLI's verdict, site and JSON shape stay fixed; the suggested edit must
 //! preserve the marked index entry that §FS-check.3.18 requires.
 
@@ -149,7 +149,7 @@ fn preserves_entry(repair: &str) {
 fn default_repair(rules: &str, exit: i32, severity: &str) {
     let repo = Repo::new(rules);
     // Establish the accepted edit before judging advice, so an unrelated fixture
-    // error cannot produce the intended red result (§FS-check.3.12.2).
+    // error cannot produce the intended red result (§FS-check.3.12).
     repo.replace(
         "grund.toml",
         "may = [\"GOAL\"]",
@@ -274,7 +274,7 @@ fn markerless_index_link_still_fails_after_the_may_edit() {
     );
 }
 
-/// §FS-check.3.12.2: a different target in the same index is an ordinary site.
+/// §FS-check.3.12: a different target in the same index is an ordinary site.
 #[test]
 fn ordinary_index_citation_retains_plain_link_advice() {
     let repo = Repo::new("[rules.citations.REQ]\nmay = [\"REQ\"]\nmust-not = [\"GOAL\"]");
@@ -298,7 +298,7 @@ fn ordinary_index_citation_retains_plain_link_advice() {
     repo.check(0, false);
 }
 
-/// §FS-check.3.12.2: suggestion defaults keep the existing suffix-free wording.
+/// §FS-check.3.12: suggestion defaults keep the existing suffix-free wording.
 #[test]
 fn suggestion_default_keeps_its_existing_index_message() {
     let repo = Repo::new(&kind_default("should-not"));
@@ -315,8 +315,8 @@ fn suggestion_default_keeps_its_existing_index_message() {
     );
 }
 
-/// §FS-check.3.12.2: rule advice preserves entries, on a target pinned at the rule's own nested
-/// alias path too, which is the ordinary error since `0.19.0` (§FS-rules.7.9).
+/// §FS-check.3.12: rule advice preserves entries, on a target pinned at the rule's own nested
+/// alias path too, which is the ordinary error since `0.19.0` (§FS-rules.2).
 #[test]
 fn nested_alias_rule_index_repair_preserves_entries_as_an_error() {
     let repo = Repo::new(concat!(
@@ -355,7 +355,7 @@ fn nested_alias_rule_index_repair_preserves_entries_as_an_error() {
         .filter(|row| row["severity"] == "error")
         .collect::<Vec<_>>();
     assert_eq!(errors.len(), 2, "{rows:#?}");
-    // §FS-rules.7.9: the nested-alias window closed in 0.19.0, so no clause follows the advice.
+    // §FS-rules.2: the nested-alias window closed in 0.19.0, so no clause follows the advice.
     for line in [3, 4] {
         let row = errors
             .iter()

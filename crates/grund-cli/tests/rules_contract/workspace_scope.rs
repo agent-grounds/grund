@@ -1,7 +1,7 @@
 //! A rule object kind pinned at a workspace member, across the scopes a command
 //! can run in (§FS-rules.4.1). The sequence a single e2e case cannot express —
 //! write the managed block from inside a member, then check it from the
-//! workspace root — lives here, beside the classification table §FS-rules.4.1.1
+//! workspace root — lives here, beside the classification table §FS-rules.4.1
 //! fixes.
 
 use super::support::{assert_run, case_repo, run, scratch_from, text, write};
@@ -37,7 +37,7 @@ fn rule(root: &Path, project: &str, sentence: &str) {
     );
 }
 
-/// §FS-rules.9.1, §FS-check.3.5.4: the bytes a member-scoped `init` writes are
+/// §FS-rules.9.1, §FS-check.3.5: the bytes a member-scoped `init` writes are
 /// the bytes both scopes then accept. This is the obligation a tidier fix — one
 /// that omits the bullet it cannot verify — breaks: the member would write a
 /// block its own workspace root reports as drifted, so `grund init` inside a
@@ -101,7 +101,7 @@ fn init_verdict(root: &Path, project: &str) -> (i32, bool) {
     (output.status.code().unwrap_or(-1), after != before)
 }
 
-/// §FS-rules.4.1.1: the seven rows of the classification table, read through the
+/// §FS-rules.4.1: the seven rows of the classification table, read through the
 /// only thing a user can see — whether the managed block was written. Only the
 /// absence of every workspace namespace makes a sentence unverifiable, so an
 /// alias the scope could judge and rejected still withholds the write.
@@ -174,7 +174,7 @@ fn only_a_scope_with_no_workspace_at_all_makes_a_rule_unverifiable() {
     }
 }
 
-/// §FS-rules.4.1.2: one genuinely invalid rule beside an unverifiable one puts
+/// §FS-rules.4.1: one genuinely invalid rule beside an unverifiable one puts
 /// the whole run back under §FS-rules.4 — nothing written, exit nonzero. The
 /// narrow exception is not a general relaxation.
 #[test]
@@ -188,7 +188,7 @@ fn an_invalid_rule_beside_an_unverifiable_one_still_withholds_the_write() {
     assert_eq!(init_verdict(&root, "member"), (1, false));
 }
 
-/// §FS-rules.4.1, §FS-rules.4.1.2: one rule, invalid in its subject and
+/// §FS-rules.4.1: one rule, invalid in its subject and
 /// unverifiable in its object, reaches the same verdict as the same rule with a
 /// local object — because unverifiability is about the object's namespace and
 /// nothing else. The guard above pairs an invalid rule with a *separate*

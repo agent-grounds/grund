@@ -109,7 +109,7 @@ fn a_run_from_a_subdirectory_keeps_the_order_of_the_project() {
     );
 }
 
-/// §FS-declarations.stubs.pairing.3: a home reached through a stub is named at its target, and
+/// §FS-declarations.stubs.pairing: a home reached through a stub is named at its target, and
 /// its sites sort as `check` sorts them.
 #[test]
 fn a_stubs_target_declaring_the_id_twice_is_in_line_order() {

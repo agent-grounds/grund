@@ -3,7 +3,7 @@
 //! older block, the section rendered where there is none to keep, one note per
 //! absent member, each companion's own section, `--force` (§FS-init.3.4), the
 //! nested tree, and the expansion error that still suppresses the section.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::path::Path;

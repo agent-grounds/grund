@@ -1,6 +1,6 @@
 //! Embedding contracts for external facts (§FS-id.1.2, §FS-id.2.1,
 //! §AR-bindings.2).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::*;
 use crate::testing::{test_root, write};

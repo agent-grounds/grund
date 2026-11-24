@@ -121,7 +121,7 @@ fn is_migration_v1_key(key: &str) -> bool {
 const ABSORBED_SCAN_SENTENCE: &str = ": [workspace] members swallows this project's whole scan — ";
 
 /// A pinned `[citations]` target the run cannot accept was a load warning until
-/// `0.19.0` made it an error (§FS-config.3.9.5.2), so its line ends in this
+/// `0.19.0` made it an error (§FS-config.3.9.5), so its line ends in this
 /// clause and keeps the bytes that point fixes rather than the cap.
 const PROMOTED_LOAD_WARNING_SUFFIX: &str = "; this became an error in grund 0.19.0";
 
@@ -148,7 +148,7 @@ const SCAN_EXCLUDE_DIRECTORY_REPAIR_SUFFIX: &str =
     "to exclude every directory of that name at any depth";
 
 /// The repair of a value row says what removal costs and names the rewrite, which runs it past
-/// the cap (§FS-config-migrate.3.1.7.2), so it keeps the bytes that point fixes rather than the
+/// the cap (§FS-config-migrate.3.1.7), so it keeps the bytes that point fixes rather than the
 /// cap. A repair that opens otherwise keeps the cap.
 const MIGRATE_VALUE_KEY_REPAIR_PREFIX: &str = "  repair: removing value";
 
@@ -189,7 +189,7 @@ fn is_relayed_check_finding(line: &str) -> bool {
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
 /// line stays text and keeps the plain 180-byte cap, while a carried text
 /// warning keeps the bytes its own specification already fixes
-/// (§FS-check.4.10.5), and so does the absorbed-scan error (§FS-check.3.30). Only a line that opens a JSON object is parsed and
+/// (§FS-check.4.10), and so does the absorbed-scan error (§FS-check.3.30). Only a line that opens a JSON object is parsed and
 /// judged by its `message` field instead of its serialized length — the
 /// scaffolding around it (§FS-distribution.3.0.1's `severity`, `path`,
 /// `line`, `code`, `sites`, `authority`) is fixed cost the conciseness policy

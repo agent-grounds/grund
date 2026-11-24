@@ -2,7 +2,7 @@
 //! per scope, unverifiable where the run holds no workspace, named sections read
 //! under the project that configures the kind, the non-citable reason in both
 //! quotings (§FS-errors.2.5.1), the first of §FS-errors.2.5.1's final templates.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::BTreeSet;
 

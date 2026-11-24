@@ -1,6 +1,6 @@
 //! A value home's YAML sources (§FS-values.2.2): which files are sources in each
 //! config version, each read in its own format.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

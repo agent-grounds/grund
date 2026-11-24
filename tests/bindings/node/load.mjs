@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.3.2 — imports survive absent/corrupt native payloads.
+// §FS-distribution.3.2.3 — imports survive absent/corrupt native payloads.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import * as api from 'grund-cli';

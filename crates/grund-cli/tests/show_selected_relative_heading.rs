@@ -1,6 +1,6 @@
 //! Black-box: a read of a selected section opens with its own heading's canonical path, so the
 //! output names the section it read, while every other heading prints as written
-//! (§FS-declarations.section.relative.shown.selected, §FS-show.2.2). Ports the #1009 billing case.
+//! (§FS-declarations.section.relative.shown, §FS-show.2.2). Ports the #1009 billing case.
 
 use std::fs;
 use std::path::PathBuf;
@@ -143,7 +143,7 @@ fn with<'a>(head: &[&'a str], mode: &[&'a str]) -> Vec<&'a str> {
 }
 
 /// Every text mode of `FS-billing.retry.2` opens with `### retry.2: Ceiling`, and so does the
-/// twin's, whose body then tells the two apart (§FS-declarations.section.relative.shown.selected).
+/// twin's, whose body then tells the two apart (§FS-declarations.section.relative.shown).
 #[test]
 fn every_text_mode_names_the_selected_section() {
     let fx = Fixture::new();

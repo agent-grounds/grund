@@ -26,7 +26,7 @@ def node_runtime():
     """Use a supported installed runtime; hosted runners keep several in their cache.
 
     This is a tooling prerequisite, never a registry/native-package fallback
-    (§FS-distribution.3.2.3.2).
+    (§FS-distribution.3.2.3).
     """
     candidates = [shutil.which('node')]
     cache = os.environ.get('RUNNER_TOOL_CACHE')

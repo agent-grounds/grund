@@ -1,7 +1,7 @@
 //! Test module: the link of a `.<section>` citation names a section the scan
 //! records, so a numbered heading after the heading that closes the declaration's
 //! body gives no link, in a scanned home and in a stub's target the walk does not
-//! reach (§FS-fmt.6.4.1). The link is the one `fmt --cross-refs` writes
+//! reach (§FS-fmt.6.4). The link is the one `fmt --cross-refs` writes
 //! (§FS-fmt.6.2.1).
 //!
 //! Each case asks `markdown_link_target`, the derivation `fmt` calls, rather than
@@ -58,7 +58,7 @@ fn link_of_a_1(name: &str, files: &[(&str, &str)]) -> (Catalog, Option<String>) 
 }
 
 /// Premise of the stub cases: the walk's only record of `FS-a` is the stub, so
-/// the target's sections are read from outside it (§FS-check.3.2.1).
+/// the target's sections are read from outside it (§FS-check.3.2).
 fn assert_only_the_stub_is_recorded(findings: &Catalog) {
     let decls = findings
         .declarations
@@ -70,7 +70,7 @@ fn assert_only_the_stub_is_recorded(findings: &Catalog) {
     );
 }
 
-/// §FS-fmt.6.4.1: the reported tree. The scan ends `FS-a`'s body at
+/// §FS-fmt.6.4: the reported tree. The scan ends `FS-a`'s body at
 /// `# Other heading`, so the `## 1.` after it is no section of `FS-a`.
 #[test]
 fn a_section_heading_after_the_body_closes_gives_no_link() {
@@ -92,7 +92,7 @@ fn a_section_heading_after_the_body_closes_gives_no_link() {
     );
 }
 
-/// §FS-fmt.6.4.1: the same home behind a stub, outside the walk. The target is
+/// §FS-fmt.6.4: the same home behind a stub, outside the walk. The target is
 /// read by the same scan, so its body ends where the scanned home's does.
 #[test]
 fn a_section_heading_after_the_body_closes_in_an_unscanned_stub_target_gives_no_link() {
@@ -108,7 +108,7 @@ fn a_section_heading_after_the_body_closes_in_an_unscanned_stub_target_gives_no_
 }
 
 /// Guard, passing today: a section inside the body of a stub's target outside
-/// the walk is the section `check` finds there (§FS-check.3.2.1), and keeps its
+/// the walk is the section `check` finds there (§FS-check.3.2), and keeps its
 /// link to the target's heading (§FS-fmt.6.2.1).
 #[test]
 fn a_real_section_in_an_unscanned_stub_target_keeps_its_link() {

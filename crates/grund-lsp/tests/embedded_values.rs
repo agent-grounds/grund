@@ -1,8 +1,8 @@
 //! Embedded value roots keep ordinary section identity in editor ranges,
 //! navigation, raw previews, and CLI-equal diagnostics; a binding aimed at the
-//! root navigates to the root heading (§FS-lsp.1.2.1, §FS-lsp.1.3.5,
-//! §FS-lsp.4.2, §FS-values.3.1.2, §FS-values.7).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! root navigates to the root heading (§FS-lsp.1.2.1, §FS-lsp.1.3,
+//! §FS-lsp.4, §FS-values.3.1.2, §FS-values.7).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

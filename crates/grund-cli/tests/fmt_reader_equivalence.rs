@@ -5,12 +5,12 @@
 //!
 //! Equality is of the `<path>: <reason>` pairs and their order, not of the bytes
 //! of the line: a strict abort spells its lines `error: nothing was rewritten:
-//! …` on purpose (§FS-fmt.3.4), because the two exit `2`s mean opposite things.
+//! …` on purpose (§FS-fmt.3.2), because the two exit `2`s mean opposite things.
 //! `scan_error_pairs` removes that one licensed prefix and nothing else.
 //!
 //! The comparison is per walk rather than per argv, which is the part a scoped
 //! run makes visible. A `fmt` that needs the whole declaration set scans the
-//! project even under a narrowed path (§FS-fmt.2.4.5), so `grund fmt --check docs`
+//! project even under a narrowed path (§FS-fmt.2.4), so `grund fmt --check docs`
 //! on a tree whose unreadable file sits in `src/` names that file while `grund
 //! check docs` does not — and is compared against `grund check .`, which walks
 //! what it walked. A partial run scans only its scope and is compared against
@@ -90,7 +90,7 @@ fn a_scoped_fmt_gives_the_same_account_as_check_over_the_tree_it_walked() {
 #[test]
 /// The licensed difference is licensed in one direction only: the strict prefix
 /// says the tree was not touched, so a run that carries it must have written
-/// nothing, and a run that rewrote must not carry it (§FS-fmt.3.4).
+/// nothing, and a run that rewrote must not carry it (§FS-fmt.3.2).
 fn the_strict_prefix_appears_exactly_where_nothing_was_rewritten() {
     for shape in shapes() {
         let root = shape.materialize("reader-prefix");
@@ -169,7 +169,7 @@ fn e2e_case_shape(name: &str) -> Shape {
 /// One row: `check` over the scope names the manifest and exits 2, `fmt` over the
 /// same scope gives the same `(path, reason)` pairs, once each, and exits 2, and a
 /// `--write` leaves every byte of the tree where it was (§FS-fmt.3.2,
-/// §FS-fmt.7.4.3).
+/// §FS-fmt.7.4).
 fn assert_e2e_case_row(shape_name: &str, scope: Option<&str>, mode: &str) {
     let shape = e2e_case_shape(shape_name);
     let slot = format!(

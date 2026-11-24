@@ -2,7 +2,7 @@
 //! it speaks of, because the member's table holds that name. A place finding stands at its own
 //! spelling, and a content finding reaches each open name once (§FS-scan.identity.findings,
 //! §FS-lsp.1.1, §AR-scanner.1.8).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 #![cfg(unix)]
 
 mod support;

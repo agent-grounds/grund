@@ -1,9 +1,9 @@
-//! Test module: `kinds = []`, the empty kind set (§FS-config.3.4.4.5) — distinct
+//! Test module: `kinds = []`, the empty kind set (§FS-config.3.4.4) — distinct
 //! from an omitted `[[kinds]]`, which keeps the built-in rows a project with no
 //! config gets (§FS-config.3.4.4); refused when it is not empty or a table follows it;
 //! and what each template's config means against the built-in defaults
 //! (§FS-init.2.4.3, §FS-init.2.4.9).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::PathBuf;
 
@@ -24,7 +24,7 @@ fn refusal(name: &str, text: &str) -> String {
     }
 }
 
-/// §FS-config.3.4.4.5: `kinds = []` and an omitted `[[kinds]]` load to
+/// §FS-config.3.4.4: `kinds = []` and an omitted `[[kinds]]` load to
 /// different kind sets — none at all, and the nine built-in rows.
 #[test]
 fn an_empty_kind_set_is_not_an_omitted_one() {
@@ -64,7 +64,7 @@ fn no_config_and_an_omitted_kind_set_give_one_fs_home() {
     assert_eq!(fs.and_then(|kind| kind.file.as_deref()), None);
 }
 
-/// §FS-config.3.4.4.5: only the empty array is the empty kind set, spaces
+/// §FS-config.3.4.4: only the empty array is the empty kind set, spaces
 /// inside it included; a non-empty one is a kind table written the wrong way.
 #[test]
 fn only_the_empty_array_is_accepted() {
@@ -78,7 +78,7 @@ fn only_the_empty_array_is_accepted() {
     );
 }
 
-/// §FS-config.3.4.4.5: a table after the empty set would append to a static
+/// §FS-config.3.4.4: a table after the empty set would append to a static
 /// array, refused at the table's header; the key under a section stays unknown.
 #[test]
 fn a_kinds_table_after_the_empty_set_is_refused() {
@@ -96,7 +96,7 @@ fn a_kinds_table_after_the_empty_set_is_refused() {
     assert!(nested.contains("unknown config key `kinds`"), "{nested}");
 }
 
-/// §FS-config.3.4.4.5: the empty set is the one kind set with no citable kind
+/// §FS-config.3.4.4: the empty set is the one kind set with no citable kind
 /// v1 loads; a table whose every row is non-citable is still refused.
 #[test]
 fn a_table_of_non_citable_kinds_is_still_refused() {

@@ -84,7 +84,7 @@ fn printed_entries(check: &str) -> Vec<String> {
 
 /// The `missing-index-entry` and `unlinked-index-entry` findings a JSON `check`
 /// reports, read by code: the unused warning's explanation of a discounted
-/// index entry (§FS-check.4.1.2) also says "index" and is not one of them.
+/// index entry (§FS-check.4.1) also says "index" and is not one of them.
 fn index_findings(dir: &Path, case: &str) -> Vec<String> {
     let output = run_grund(&["check", "--format", "json", "."], dir);
     assert_eq!(output.status.code(), Some(0), "{case}: JSON check failed");

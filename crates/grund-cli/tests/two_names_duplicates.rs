@@ -1,7 +1,7 @@
 //! Black-box: a finding that names other sites prints one line from every scope, a file with a
 //! second name beside a third file or a name that is the tail of another site's path. A rule settles
 //! its anchor and sites on the names a whole run gives them and renders from those, and the pass that
-//! finishes the report reads no message (§FS-scan.identity.findings.content, §FS-check.1.3.6.2).
+//! finishes the report reads no message (§FS-scan.identity.findings.content, §FS-check.1.3.6).
 #![cfg(unix)]
 
 #[path = "support/two_names.rs"]

@@ -4,7 +4,7 @@
 //! read the `.agents/` name at all (§FS-config.1, §FS-config.1.1, §FS-config.1.2,
 //! §FS-check.4.3, §FS-check.4.11, §DF-config-file-location). Also the guard every
 //! zero-config case here leans on: no config covers a fixture root (§AR-ci.10.3).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::{Path, PathBuf};
 
@@ -176,7 +176,7 @@ fn the_bare_form_wins_a_tie_and_the_loser_is_recorded() {
     );
 }
 
-// §FS-check.4.3.1: the pair is a `warning:` — it never blocks a run, because it
+// §FS-check.4.3: the pair is a `warning:` — it never blocks a run, because it
 // is the ordinary transient state of a migration between the two forms.
 #[test]
 fn redundant_pair_is_reported_as_a_warning() {
@@ -208,7 +208,7 @@ fn the_bare_form_alone_warns_about_nothing() {
     );
 }
 
-/// §FS-config.1.2.1 / §FS-check.4.11: the config this run read is on the
+/// §FS-config.1.2 / §FS-check.4.11: the config this run read is on the
 /// deprecated path, so the run says so — naming the file it read and the bare
 /// `grund.toml` beside it that should hold it instead. The file is still read:
 /// deprecated is a location the tool asks you to leave, not one it refuses.
@@ -229,10 +229,10 @@ fn a_config_read_from_the_agents_location_is_reported_as_deprecated() {
     );
 }
 
-/// §FS-check.4.11.4 / §FS-config.1.1.1: the pair earns the pair's warning and no
+/// §FS-check.4.11 / §FS-config.1.1: the pair earns the pair's warning and no
 /// other. The run read the bare file, so nothing about the config in force is
 /// deprecated — two lines here would name one move twice and disagree about
-/// which of the two files is the problem. That is §FS-check.4.3.3 from the
+/// which of the two files is the problem. That is §FS-check.4.3 from the
 /// other side: the deprecated-location sibling fires where the run *read* the
 /// `.agents/` file, which is the one case the pair can never be in.
 #[test]

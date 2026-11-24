@@ -1,7 +1,7 @@
 //! Test module: a numbered or enabled named heading after a nested declaration, back inside the
 //! enclosing body, is recorded on the innermost declaration whose body holds it — never on the
 //! nested declaration the scan read last, and never dropped from every map
-//! (§FS-declarations.section.map.nested, over the body span of §FS-declarations.body). Issue
+//! (§FS-declarations.section.map, over the body span of §FS-declarations.body). Issue
 //! #1359: the scan offered the heading to the nested declaration alone, which refused it.
 
 use crate::checker::check_findings;

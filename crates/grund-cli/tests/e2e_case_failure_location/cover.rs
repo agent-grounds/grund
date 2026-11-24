@@ -1,4 +1,4 @@
-//! Black-box: a narrowed `grund cover` reads the E2E case its path holds (§FS-cover.1.2), so a
+//! Black-box: a narrowed `grund cover` reads the E2E case its path holds (§FS-cover.1), so a
 //! failure at a file the path holds as the tree spells it exits `2` and names it, as `check` does
 //! (§FS-declarations.e2e-case.failure): the file itself, the case, and a case that is a link out of
 //! the cases folder. A path holding none of the case's failing files prints what it printed
@@ -65,7 +65,7 @@ fn cover_over_a_case_linked_out_of_the_folder_holds_its_manifest() {
     assert_holds(&tree.run(&["cover", "e2e/cases/b"]), MANIFEST);
 }
 
-/// §FS-check.1.3.6.3: a readable file of the case holds only itself, linked or not.
+/// §FS-check.1.3.6: a readable file of the case holds only itself, linked or not.
 #[test]
 fn cover_naming_another_file_of_the_case_holds_no_failure() {
     for linked in [false, true] {
@@ -109,7 +109,7 @@ fn linked_folder(test: &str) -> Tree {
     tree
 }
 
-/// §FS-cover.1.2: a directory above the case as the tree spells it holds it, the folder a link.
+/// §FS-cover.1: a directory above the case as the tree spells it holds it, the folder a link.
 #[test]
 fn cover_above_a_linked_cases_folder_holds_its_manifest() {
     let tree = linked_folder("folder-above");
@@ -118,7 +118,7 @@ fn cover_above_a_linked_cases_folder_holds_its_manifest() {
     assert_holds(&tree.run(&["cover", "e2e/cases/b"]), MANIFEST);
 }
 
-/// §FS-cover.1.2: the folder link's target reads the cases where it resolves, as it did, and names
+/// §FS-cover.1: the folder link's target reads the cases where it resolves, as it did, and names
 /// the failure at the configured spelling.
 #[test]
 fn cover_over_a_linked_folders_target_reads_its_cases_as_it_did() {

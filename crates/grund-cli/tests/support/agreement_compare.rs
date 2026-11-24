@@ -41,7 +41,7 @@ pub fn hosts(
         super::agreement_truth::host(&surface_context, question, surface, answer, errors);
     });
     let python_context = question.context(context, "python");
-    // §FS-distribution.3.2.1.1: Node's `cover` takes no `lines`, so its pinned
+    // §FS-distribution.3.2.1: Node's `cover` takes no `lines`, so its pinned
     // refusal is the whole of its answer and it shares no domain with the peers.
     let node_peer = question.surface != "cover-lines";
     if matches!(question.surface, "show" | "show-batch")

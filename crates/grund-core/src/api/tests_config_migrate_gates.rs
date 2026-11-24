@@ -4,7 +4,7 @@
 //! ignores — a finding located in the config, moved through the key map, and
 //! the config-table names inside messages — pass. The records gate is
 //! `config/migrate/tests_gates.rs`.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 
@@ -299,7 +299,7 @@ fn guidance_refuses_a_changed_section_or_version() {
             .repair
             .starts_with("none keeps the generated guidance")
     );
-    // §FS-config-migrate.5.3.1: a grounding sentence whose subject moves still refuses.
+    // §FS-config-migrate.5.3: a grounding sentence whose subject moves still refuses.
     let sentence = |subject: &str| {
         format!(
             "- {subject} must cite FS. A file there that cites nothing is not checked; \
@@ -464,7 +464,7 @@ fn line_under(text: &str, under: &str, wanted: &str) -> usize {
     header + below.unwrap_or_else(|| panic!("no `{wanted}` under `{under}` in:\n{text}")) + 1
 }
 
-/// §FS-config-migrate.5.2.1: a `<config>:<line>` inside a message, where the key
+/// §FS-config-migrate.5.2: a `<config>:<line>` inside a message, where the key
 /// map holds no version-1 line for it, prints as the candidate's own line marked
 /// as the candidate's, never as a line neither file has.
 #[test]
@@ -495,7 +495,7 @@ fn report_gate_names_an_unmapped_line_in_a_message_as_the_candidates() {
     );
 }
 
-/// §FS-config-migrate.5.2.1: a finding located at a candidate line the key map
+/// §FS-config-migrate.5.2: a finding located at a candidate line the key map
 /// does not hold prints at the candidate's own line, marked, in its location and
 /// in the breadcrumb its message carries, and stays a difference where the run
 /// as read names the same line number for the same finding.

@@ -1,5 +1,5 @@
 //! The fresh config's one comment (§FS-init.2.4.3), in the sentence of
-//! §FS-config.4.2.3.1, through the ordinary e2e runner: the marker is a default,
+//! §FS-config.4.2, through the ordinary e2e runner: the marker is a default,
 //! so `grund config show` names it, not the file.
 
 use std::fs;
@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use super::case_runner::{CaseKind, assert_every_case_passed, run_case_inspecting};
 
-// §FS-examples.5.6.1: read the generated config while its invocation owner lives.
+// §FS-examples.5.6: read the generated config while its invocation owner lives.
 fn assert_fresh_comments(case: &str, comments: usize) {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
     let mut config = None;

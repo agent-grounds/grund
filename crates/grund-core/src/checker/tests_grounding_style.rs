@@ -118,7 +118,7 @@ fn inline_note_hard_caps_can_report_multiple_errors() {
     );
 }
 
-/// §FS-inline-citation-style.4.1.2: the site clause names every citation the
+/// §FS-inline-citation-style.4.1: the site clause names every citation the
 /// block carries, each exactly as written — marker and section included —
 /// in source order, and only once: a token repeated verbatim contributes
 /// nothing past its first occurrence.

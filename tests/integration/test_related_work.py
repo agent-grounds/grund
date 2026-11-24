@@ -3,7 +3,7 @@ comes from is part of its why (§GRUND-grund), so the `REL` kind names the
 ground it bears on (§FS-config.3.9), its folder's index fixes the three chapters
 every entry carries (§REQ-spec-section-names.shape), and every entry is cited
 from outside its folder: an index entry is not a citation of it
-(§FS-check.4.1.2), and the release self-check fails on the warning an uncited
+(§FS-check.4.1), and the release self-check fails on the warning an uncited
 entry raises. The roadmap does not count as that citer, because it deletes a
 point once the point ships. No architecture point describes this repository's
 own documents, so this test cites the points it holds them to instead.

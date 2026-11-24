@@ -1,6 +1,6 @@
 //! Real editor requests join equivalent numeric declaration/section citations
 //! while returning their authored spans (§FS-config.3.2.8, §FS-lsp.1.3.1,
-//! §FS-lsp.1.2.5).
+//! §FS-lsp.1.2.3).
 
 #[path = "../../grund-core/tests/support/numeric_spelling.rs"]
 mod fixture;

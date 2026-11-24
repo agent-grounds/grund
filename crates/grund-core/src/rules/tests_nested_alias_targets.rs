@@ -1,10 +1,10 @@
 //! A target pinned at the rule's own nested member by its whole alias path
 //! matches what the bare kind matches (§FS-rules.2, §FS-config.3.9.3), in both
 //! relations. Every required finding that match produces is the code's ordinary
-//! error since the window that warned closed in 0.19.0 (§FS-rules.7.9): a
+//! error since the window that warned closed in 0.19.0 (§FS-rules.2): a
 //! prohibition, an inbound ceiling, a count and a per-target finding alike, with
 //! no clause after the message. A numbered-section site counts as any other from
-//! 0.18.0 (§FS-rules.7.8), so neither closed window's clause is left to print.
+//! 0.18.0 (§FS-rules.5.1), so neither closed window's clause is left to print.
 
 use super::engine::bare::{evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
@@ -16,7 +16,7 @@ use crate::model::Diagnostic;
 use std::collections::BTreeMap;
 
 /// The required level's findings: the one list `evaluate` collapsed to once no
-/// required finding can warn (§FS-rules.7.9).
+/// required finding can warn (§FS-rules.2).
 pub(super) trait Required {
     fn required(self) -> Vec<Diagnostic>;
 }
@@ -152,8 +152,8 @@ pub(super) fn codes(diagnostics: &[Diagnostic]) -> Vec<(&str, Option<usize>)> {
         .collect()
 }
 
-/// The closing clauses the nested-alias window (§FS-rules.7.9) and the
-/// counted-section window (§FS-rules.7.8) appended; neither is printed now.
+/// The closing clauses the nested-alias window (§FS-rules.2) and the
+/// counted-section window (§FS-rules.5.1) appended; neither is printed now.
 const CLOSED_CLAUSES: [&str; 3] = [
     "; a target pinned at the rule's own nested alias path now matches",
     "; a citation to a numbered section now counts",
@@ -279,7 +279,7 @@ fn facts_with_uncited_own_target() -> RuleFacts {
 }
 
 /// [`facts`] with `API-a` citing `AR-b` twice more, once through its numbered
-/// section `<§>AR-b.1`, a site counted as any other since §FS-rules.7.8 closed.
+/// section `<§>AR-b.1`, a site counted as any other since §FS-rules.5.1 closed.
 fn facts_with_section_site() -> RuleFacts {
     let mut facts = facts();
     for (key, line) in [("again", 5), ("section", 6)] {

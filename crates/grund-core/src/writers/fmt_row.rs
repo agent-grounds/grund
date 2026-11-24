@@ -254,7 +254,7 @@ mod tests {
     const B1: &str = "[\u{a7}FS-b.1](functional-spec/FS-ab.md#1-overview) \u{2192} \
                       [\u{a7}FS-b.1](functional-spec/FS-ab.md#1-overview-1)";
 
-    // §FS-fmt.3.5.1: every kind is named once, in label order.
+    // §FS-fmt.3.5: every kind is named once, in label order.
     #[test]
     fn all_five_kinds_on_one_line_are_named_once_each() {
         assert_eq!(
@@ -274,7 +274,7 @@ mod tests {
         assert_eq!(rewrite([0; 4], &[], None, &[]), "");
     }
 
-    // §FS-fmt.3.6.2.3: re-pointed and fresh, each alone and in source order.
+    // §FS-fmt.3.6: re-pointed and fresh, each alone and in source order.
     #[test]
     fn a_link_row_lists_each_link_before_and_after() {
         assert_eq!(
@@ -291,7 +291,7 @@ mod tests {
         );
     }
 
-    // §FS-fmt.3.6.2.2, §FS-fmt.3.6.2.3: a dropped title holding `, ` is one item.
+    // §FS-fmt.3.6: a dropped title holding `, ` is one item.
     #[test]
     fn a_title_the_write_drops_stays_inside_its_item() {
         let login = "[\u{a7}FS-login](functional-spec/FS-login.md \"Login, again\") \u{2192} \
@@ -302,7 +302,7 @@ mod tests {
         );
     }
 
-    // §FS-fmt.3.6.2.3: trailing a marking, a trigger, and an expansion's detail.
+    // §FS-fmt.3.6: trailing a marking, a trigger, and an expansion's detail.
     #[test]
     fn a_trailing_link_names_its_items_after_its_label() {
         assert_eq!(
@@ -343,7 +343,7 @@ mod tests {
         );
     }
 
-    // §FS-fmt.3.6.2: the repeated-anchor note comes first, then `; ` and the items,
+    // §FS-fmt.3.6: the repeated-anchor note comes first, then `; ` and the items,
     // leading or trailing.
     #[test]
     fn a_link_keeps_its_anchor_note_before_its_items() {
@@ -357,7 +357,7 @@ mod tests {
         );
     }
 
-    // §FS-fmt.3.5.1, §FS-errors.3: the row an earlier release printed, which named
+    // §FS-fmt.3.5, §FS-errors.3: the row an earlier release printed, which named
     // no item, is a prefix of the row that names them.
     #[test]
     fn every_old_row_is_a_prefix_of_its_new_row() {

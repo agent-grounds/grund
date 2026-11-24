@@ -1,5 +1,5 @@
 //! Where the fetch of a qualified ID runs, and whether it can, has one answer, and `grund fetch`
-//! and `grund check` both print it (§FS-imports.writes.answer, §FS-check.3.1.3, §FS-check.4.12).
+//! and `grund check` both print it (§FS-imports.writes.answer, §FS-check.3.1, §FS-check.4.12).
 //! Each scenario builds real import trees in the temp directory and, where a command is named,
 //! follows it word for word: one command must be enough.
 #![cfg(unix)]
@@ -251,7 +251,7 @@ fn a_members_fetch_does_not_read_an_import_it_does_not_name() {
     assert_eq!(run.code, 0, "{}", run.stderr);
 }
 
-/// Near-ID hints keep their precedence over the tail through an import (§FS-check.3.1.3).
+/// Near-ID hints keep their precedence over the tail through an import (§FS-check.3.1).
 /// Passes today: the fix replaces the tail, and this holds the hint in front of it.
 #[test]
 fn a_near_id_hint_takes_the_tails_place_through_an_import() {

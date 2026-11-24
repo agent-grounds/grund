@@ -9,7 +9,7 @@ use super::integrations_user_config::*;
 use crate::grammar::INTEGRATIONS_BLOCK_VERSION;
 use crate::testing::{test_root, write};
 
-/// §FS-integrations.4.4.1: `[reference.agents.<agent>]` is a partial of the
+/// §FS-integrations.4.4: `[reference.agents.<agent>]` is a partial of the
 /// machine-wide keys — a key present under an agent replaces the base for
 /// that agent, an absent key inherits it.
 /// §FS-config.3.1.4: `conversation_target` is read out of the user-scope config
@@ -46,7 +46,7 @@ fn agent_partial_overrides_only_what_it_names() {
     );
 }
 
-/// §FS-integrations.4.4 / §FS-integrations.4.3.5.2: an override under an
+/// §FS-integrations.4.4 / §FS-integrations.4.3.5: an override under an
 /// unknown agent names the closed set rather than the key — the mistake is
 /// nearly always the spelling — and an unknown key inside a known agent is the
 /// ordinary unused-key warning.
@@ -87,7 +87,7 @@ fn agent_partial_reports_unknown_agents_and_keys() {
     assert_eq!(scan.problems.len(), 1);
 }
 
-// §FS-integrations.4.4.2: a scoped write lands in the agent's own table and
+// §FS-integrations.4.4: a scoped write lands in the agent's own table and
 // leaves the machine-wide base byte-for-byte alone.
 #[test]
 fn agent_override_installs_into_its_own_table() {
@@ -125,7 +125,7 @@ fn agent_override_installs_into_its_own_table() {
     assert_eq!(again, written);
 }
 
-// §FS-integrations.4.4.3 / §DF-conversation-link-target.2.5: the override sets
+// §FS-integrations.4.4 / §DF-conversation-link-target.2.5: the override sets
 // the request, the gate sets the verdict. Asking for a local scheme under an
 // agent that erases citations still resolves to `path`.
 #[test]
@@ -171,7 +171,7 @@ fn conversation_preference_appends_and_updates() {
     assert_eq!(again, linked);
 }
 
-/// §FS-integrations.4.3.4: every TOML spelling of the key is the same setting.
+/// §FS-integrations.4.3.5: every TOML spelling of the key is the same setting.
 /// A spelling grund failed to *see* would be silently reversed to the default
 /// and written back beside the original, so these are read, not ignored.
 /// §FS-integrations.6.1: idempotence reaches the preference file too — a
@@ -216,9 +216,9 @@ fn conversation_preference_rewrite_preserves_key_spelling() {
     );
 }
 
-/// §FS-integrations.4.3.5: nothing in this file fails. §FS-integrations.4.3.5.3:
+/// §FS-integrations.4.3.5: nothing in this file fails. §FS-integrations.4.3.5:
 /// a value grund cannot interpret leaves it with no preference — the state of a
-/// machine that never wrote one. §FS-integrations.4.3.5.4: a duplicate resolves
+/// machine that never wrote one. §FS-integrations.4.3.5: a duplicate resolves
 /// to the first, which is the occurrence a write rewrites, so a read and a
 /// write cannot disagree about which line is the setting.
 #[test]
@@ -254,7 +254,7 @@ fn user_config_reports_bad_values_and_duplicates_without_failing() {
     );
 }
 
-/// §FS-integrations.4.3.5.1: nothing else in this file has any effect, so every
+/// §FS-integrations.4.3.5: nothing else in this file has any effect, so every
 /// unconsumed key is reported with its line and the set grund does read — a
 /// typo, a retired spelling, and a repository-only key set here all read as
 /// "configured" otherwise.
@@ -332,9 +332,9 @@ fn agent_guidance_block_tracks_user_preference() {
         )
     );
     assert!(!linked.contains("write citations bare in local conversations"));
-    // §FS-integrations.4.3.10: user-global and written once, so neither text may
-    // hardcode a marker — `[reference] marker` is per-repo, and a `§` here
-    // would be wrong in every repository configured with another one.
+    // §FS-integrations.requirements.any-repository: user-global and written once, so
+    // neither text may hardcode a marker — `[reference] marker` is per-repo, and a
+    // `§` here would be wrong in every repository configured with another one.
     for text in [
         ConversationRendering::Plain.instruction(ConversationTarget::Path),
         ConversationRendering::Link.instruction(ConversationTarget::Path),

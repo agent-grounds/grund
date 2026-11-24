@@ -1,4 +1,4 @@
-//! §FS-config-migrate.3.1.7.2: the rewrite the repair of a value row names keeps its values
+//! §FS-config-migrate.3.1.7: the rewrite the repair of a value row names keeps its values
 //! compared across the migration, on a row without `fetch`, and adds no generated section.
 #[path = "support/fixture_cleanup.rs"]
 mod fixture_cleanup;

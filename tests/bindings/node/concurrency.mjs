@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.3.1 — copied requests, independent roots and read purity.
+// §FS-distribution.3.2.3 — copied requests, independent roots and read purity.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { cp, readFile, writeFile, readdir, lstat } from 'node:fs/promises';

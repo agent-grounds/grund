@@ -173,7 +173,7 @@ fn outside_every_member_no_path_is_the_workspace_and_a_member_narrows_to_dot() {
     ws.expect(&mut mismatches, "api/src", &all, NOTHING);
     let ids = ["complete", "ids", "--path", ".", "--prefix", "FS-"];
     ws.expect(&mut mismatches, "api/src", &ids, NOTHING);
-    // §FS-completions.2.1: an unqualified prefix has no current project to complete from
+    // §FS-completions.2: an unqualified prefix has no current project to complete from
     // outside every member, so this holds today and guards the narrowed run.
     ws.expect(&mut mismatches, "tools/sub", &ids, NOTHING);
     assert_none(&mismatches);
@@ -272,7 +272,7 @@ fn refs_below_the_root_outside_every_member_lists_no_site_outside_the_path() {
     assert_none(&mismatches);
 }
 
-/// §FS-completions.2.1: a path narrower than its config root bounds the candidates to
+/// §FS-completions.2: a path narrower than its config root bounds the candidates to
 /// the entries `list <path>` prints, so from `tools/sub/` an alias-path prefix completes
 /// no member's IDs or sections. Today it offers the member's whole catalog.
 #[test]
@@ -308,7 +308,7 @@ fn complete_ids_below_the_root_outside_every_member_offers_no_member_entry() {
 /// §FS-workspace.8.3 states: qualified IDs, JSON `project` and the project's own `refs`
 /// count, and the per-project `--size` and `--summary` rows. `show --batch --all`,
 /// `refs --glob` and `complete ids` are bounded the same way (§FS-scan.path.show,
-/// §FS-scan.path.refs, §FS-completions.2.1). Today each prints `web`'s entries too.
+/// §FS-scan.path.refs, §FS-completions.2). Today each prints `web`'s entries too.
 #[test]
 fn a_path_outside_every_member_reports_the_entries_of_the_members_under_it() {
     let ws = Workspace::nested("positive");

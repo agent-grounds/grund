@@ -3,7 +3,7 @@
 //! (§AR-checker.1.3), the managed-block and index-target reads go through those
 //! bytes (§AR-checker.2.7, §AR-checker.2.16), and the merge keeps the single
 //! driver's order (§AR-checker.1.4).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -62,7 +62,7 @@ fn copy_tree(from: &Path, to: &Path) {
     }
 }
 
-/// The e2e baseline of §FS-check.3.5.4 — a chapter rule, an `AGENTS.md` and a
+/// The e2e baseline of §FS-check.3.5 — a chapter rule, an `AGENTS.md` and a
 /// non-symlink `CLAUDE.md` whose managed blocks `init` wrote under
 /// `anchor_format = "github"`, a dangling citation and two rule violations — copied
 /// so a case may edit it. `None` from a packaged crate, which carries no e2e tree.

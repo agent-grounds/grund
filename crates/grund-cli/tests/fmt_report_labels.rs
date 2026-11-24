@@ -16,7 +16,7 @@ use std::process::Command;
 /// One project under `[reference] shorthand = "canonical"`, with
 /// `FS-042-user-login` to expand to and `FS-004-quick-actions` carrying `body`.
 fn fixture(name: &str, body: &str) -> TemporaryRoot {
-    // §FS-repository-maintenance.4.1: own the leaf before fallible setup.
+    // §FS-repository-maintenance.4: own the leaf before fallible setup.
     let root = TemporaryRoot::new(&std::env::temp_dir(), &format!("grund-fmt-labels-{name}"));
     fs::create_dir_all(root.join("docs/functional-spec")).expect("create fixture");
     fs::write(
@@ -56,7 +56,7 @@ const ONE_REWRITE_PER_LINE: &str = concat!(
     "## 1. One\n",
 );
 
-/// Lines that each fire more than one rewrite (§FS-fmt.3.5.1, §FS-fmt.3.5.2).
+/// Lines that each fire more than one rewrite (§FS-fmt.3.5).
 const SEVERAL_REWRITES_PER_LINE: &str = concat!(
     "# FS-004-quick-actions: Quick actions\n\n",
     "Typed and expanded: $$FS-042 here.\n\n",
@@ -93,11 +93,11 @@ fn report(root: &Path, flag: &str) -> Vec<String> {
 }
 
 /// `path:line: <kind>[: <from> → <to>][; |, ]<kind>, …` → `(line, kind)` for
-/// every kind the row names, the leading one first (§FS-fmt.3.5.1, §FS-fmt.3.6).
+/// every kind the row names, the leading one first (§FS-fmt.3.5, §FS-fmt.3.6).
 /// An expansion's detail begins with the marker, which no kind does. `markdown
-/// link` is the last kind and its detail ends the row (§FS-fmt.3.6.2): its items
+/// link` is the last kind and its detail ends the row (§FS-fmt.3.6): its items
 /// hold an author's destination, which may carry `, ` or `; `, so the row is cut
-/// after the label rather than split through them (§FS-fmt.3.6.2.2).
+/// after the label rather than split through them (§FS-fmt.3.6).
 fn reported_labels(root: &Path) -> Vec<(usize, String)> {
     let mut labels = Vec::new();
     for flag in ["--marker", "--cross-refs"] {
@@ -198,17 +198,17 @@ fn a_line_with_several_rewrites_is_one_row_under_the_first_label() {
     assert_eq!(
         report(&root, "--cross-refs"),
         [
-            // §FS-fmt.3.5.1: marked then expanded leads with the trigger, expanded
+            // §FS-fmt.3.5: marked then expanded leads with the trigger, expanded
             // then wrapped with the shorthand; both still name what they write, and
             // every other kind follows the detail after `; `.
             "3: trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)",
             "5: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)",
-            // §FS-fmt.3.5.2: one row however many local tokens, led by the local label
+            // §FS-fmt.3.5: one row however many local tokens, led by the local label
             // unless an earlier rewrite fired; a withheld token (§FS-fmt.2.4.6) has no detail.
             "7: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1, \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2; markdown link: \u{a7}FS-004-quick-actions.1 \u{2192} [\u{a7}FS-004-quick-actions.1](FS-004-quick-actions.md#1-one), \u{a7}FS-004-quick-actions.2 \u{2192} [\u{a7}FS-004-quick-actions.2](FS-004-quick-actions.md#2-two)",
             "9: trigger \u{2192} marker: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; local section \u{2192} canonical, markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login), \u{a7}FS-004-quick-actions.1 \u{2192} [\u{a7}FS-004-quick-actions.1](FS-004-quick-actions.md#1-one)",
             "11: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; markdown link: \u{a7}FS-004-quick-actions.1 \u{2192} [\u{a7}FS-004-quick-actions.1](FS-004-quick-actions.md#1-one)",
-            // §FS-fmt.3.5.1: wrapping never leads an expansion; it follows it.
+            // §FS-fmt.3.5: wrapping never leads an expansion; it follows it.
             "13: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)",
         ]
     );

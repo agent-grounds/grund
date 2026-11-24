@@ -1,7 +1,7 @@
 //! Test module: the escape position is not a citation (§FS-check.1.1.9) — the
 //! carve-out the bare-token pass of §FS-check.1.1 reaches before its strict gate
 //! (§AR-scanner.2.3.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::config::Config;
 use crate::grammar::in_escape_position;
@@ -131,7 +131,7 @@ fn the_escape_holds_under_both_strict_modes() {
 }
 
 /// §FS-check.1.1.9: both escape spellings are exempt **by the escape**, not by
-/// §FS-workspace.1.3's unmarked-`alias/ID` rule. No scan result can tell those two
+/// §FS-workspace.5.2's unmarked-`alias/ID` rule. No scan result can tell those two
 /// reasons apart — the qualified form yields no citation either way — so the claim
 /// is pinned where it is decidable: the escape predicate itself answers for the
 /// qualified token's start column, and the scanner asks it before the namespace

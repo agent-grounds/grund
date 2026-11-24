@@ -42,7 +42,7 @@ fn wrong_rows(root: &Path, rows: &[(&str, &str, &str)]) -> Vec<String> {
     wrong
 }
 
-/// §FS-rule-refusals.sentences.rewrite.fs-only: every row of the exact table, the refused sentence, the
+/// §FS-rule-refusals.sentences.rewrite.by-refusal: every row of the exact table, the refused sentence, the
 /// `error:` line's text and the line after it.
 fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
     let kinds = "known kinds: FS\n";
@@ -237,7 +237,7 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
     ]
 }
 
-/// §FS-rule-refusals.sentences.rewrite.fs-only, the issue's reproducer: in a repository that configures
+/// §FS-rule-refusals.sentences.rewrite.by-refusal, the issue's reproducer: in a repository that configures
 /// only `FS`, each refusal keeps what was typed, replaces the refused part, and
 /// offers nothing, followed by the kinds, where the part missing is a kind.
 #[test]
@@ -246,7 +246,7 @@ fn every_refusal_where_fs_is_the_only_kind_offers_the_typed_sentence_repaired() 
     let wrong = wrong_rows(&repo(), &rows);
     assert!(
         wrong.is_empty(),
-        "{} of {} refusals in an FS-only repository were not as FS-rule-refusals.sentences.rewrite.fs-only says:\n{}",
+        "{} of {} refusals in an FS-only repository were not as FS-rule-refusals.sentences.rewrite.by-refusal says:\n{}",
         wrong.len(),
         rows.len(),
         wrong.join("\n")

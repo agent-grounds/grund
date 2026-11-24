@@ -1,7 +1,7 @@
 //! Test module: the scanner reads what grounding needs it to record as
 //! `ScanDemand` (§AR-scanner.2.7.3) — no structure for a level-1 tree, and for
 //! a level-2 row its own files alone.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::config::load_config;
 use crate::testing::{canonical_test_path, scan_findings, test_root, write};

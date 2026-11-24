@@ -5,7 +5,7 @@
 //! These are the API seams rather than the CLI: the two e2e cases pin the bytes,
 //! and a Rust embedder reads `CoverCitation` and `RefHit` without going near a
 //! formatter, so the pair is pinned once on each side of that line.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 

@@ -1,7 +1,7 @@
 //! Black-box: one directory entry that failed for one reason is one line, however many names
 //! reach it (§FS-check.2.4.2), and a narrowed run names it under the path it was handed, in a
 //! plain project and at a workspace root alike, with the same exit code it has today
-//! (§FS-check.1.3.6.3). A link and its target stay two entries
+//! (§FS-check.1.3.6). A link and its target stay two entries
 //! (§FS-scan.scope.links.unresolvable). Git carries no mode and no fixture here can
 //! hold one, so each test builds its tree, and every test that bars something skips where the
 //! mode does not bar this user, as it does not bar root.

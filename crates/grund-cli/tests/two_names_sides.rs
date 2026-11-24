@@ -1,6 +1,6 @@
 //! Black-box: a finding about what the file holds names every spelling whether or not it came with
 //! sites of its own, and a run naming either spelling keeps it (§FS-scan.identity.findings.content,
-//! §FS-check.1.3.6.2, §FS-check.1.3.2). Which code stands on which side is one table, tested over
+//! §FS-check.1.3.6, §FS-check.1.3). Which code stands on which side is one table, tested over
 //! the whole catalog beside it.
 #![cfg(unix)]
 
@@ -128,7 +128,7 @@ fn a_run_naming_either_spelling_prints_the_whole_runs_lines() {
     }
 }
 
-/// `--full` reads a superset and adds nothing in scope (§FS-check.1.3.2).
+/// `--full` reads a superset and adds nothing in scope (§FS-check.1.3).
 #[test]
 fn plain_and_full_agree() {
     let tree = tree("full");

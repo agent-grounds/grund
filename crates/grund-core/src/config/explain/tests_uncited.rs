@@ -1,4 +1,4 @@
-//! §FS-config-v2.rules.citations.uncited, §FS-config.3.9.1.4: the obligation
+//! §FS-config-v2.rules.citations.uncited, §FS-config.3.9.1: the obligation
 //! keys' answers say that a file of a place or the complement that cites
 //! nothing is not judged, and name the setting that makes it a finding
 //! (agent-grounds/grund#151).

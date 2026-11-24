@@ -75,7 +75,7 @@ fn a_wrap_an_enclosing_link_and_an_unwrapped_citation() {
     assert_eq!(reading_at(line, 2), CitationLink::Unwrapped);
 }
 
-/// §FS-citations.wrap.enclosing.wrap-wins: a citation whose own brackets make a
+/// §FS-citations.wrap.recognized: a citation whose own brackets make a
 /// wrap is one whatever stands around it, so the line an older `fmt` nested reads
 /// its inner wrap; the citation-only image is no wrap
 /// (§FS-citations.wrap.enclosing.images).
@@ -119,11 +119,11 @@ fn every_enclosing_shape_encloses() {
 }
 
 /// §FS-citations.wrap.enclosing.shape, §FS-citations.wrap.enclosing.images,
-/// §FS-citations.wrap.enclosing.scope: what opens or closes no link leaves the
+/// §FS-citations.wrap.enclosing.shape: what opens or closes no link leaves the
 /// citation unwrapped — an escaped opener, an opener in a code span, an image's
 /// description, a destination that never closes, text that never closes, and
 /// brackets that close before the citation. A reference link and a definition
-/// label enclose (§FS-citations.wrap.enclosing.scope).
+/// label enclose (§FS-citations.wrap.enclosing.shape).
 #[test]
 fn what_makes_no_enclosing_link_leaves_the_citation_unwrapped() {
     for line in [

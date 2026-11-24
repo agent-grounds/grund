@@ -3,7 +3,7 @@
 Adapt issue-748's triage transport through the production runner injection:
 the HTML viewer answers 404, the underlying raw file answers 200. The actual
 document chooses the URL. Both §AR-ci.3.1.4 and §AR-ci.3.1.5 exercise it, while
-§FS-non-goals.1.1 still requires success and rejects a missing target.
+§FS-non-goals.1 still requires success and rejects a missing target.
 """
 
 import contextlib

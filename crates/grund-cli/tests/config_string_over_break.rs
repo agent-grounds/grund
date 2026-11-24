@@ -129,7 +129,7 @@ impl Drop for Fixture {
 /// grund.160's first case, §FS-config-v2.reader.5.strings: `"a` / `b",` loaded as
 /// `a b` through 0.21.x, and from 0.22.0 its open line, line 11, ends the array, which is
 /// refused at its key's line, naming that line and 0.22.0, where `config-not-toml` warned
-/// (§FS-config-v2.checks.config-not-toml.1).
+/// (§FS-config-v2.checks.config-not-toml).
 #[test]
 fn a_string_over_a_break_is_refused_naming_its_open_line() {
     Fixture::excluding("[\n  \"a\nb\",\n]\n").refused(&became(11));
@@ -201,7 +201,7 @@ fn a_comment_beside_a_triple_quoted_string_is_found_a_quote_at_a_time() {
 
 /// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string: from
 /// 0.22.0 nothing fires either code, so each is spent and stays
-/// (§FS-config-v2.checks.config-not-toml.1): `--ignore` still accepts it and drops nothing, and
+/// (§FS-config-v2.checks.config-not-toml): `--ignore` still accepts it and drops nothing, and
 /// `--only` judges nothing and says so, holding back `success` (§FS-check.1.4.1).
 #[test]
 fn both_codes_are_spent_and_say_so_when_selected() {

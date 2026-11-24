@@ -92,7 +92,7 @@ fn doc() -> &'static str {
 /// explicit `<complete-path>: <title>` colon form, an all-name path
 /// (`goals.performance.latency`), and a numeric component under a named prefix
 /// (`goals.3`) — read back by `show`, `refs`, the JSON surface and completion.
-/// §FS-config.4.2.3: an enabled repository's `config show` prints
+/// §FS-config.4.2: an enabled repository's `config show` prints
 /// `named_sections = true`.
 #[test]
 fn named_sections_drive_show_refs_json_and_completion() {
@@ -208,7 +208,7 @@ fn named_sections_drive_show_refs_json_and_completion() {
     assert!(stdout(&shown).contains("named_sections = true"));
 }
 
-/// §FS-config.3.3.3: `missing.performance` is an orphan because the prefix
+/// §FS-config.3.3.1: `missing.performance` is an orphan because the prefix
 /// `missing` is recorded nowhere in the declaration, however the Markdown
 /// nests it. §FS-config.3.3.1: a mixed path — `FS-doc.1.goals` — is one
 /// address and never an alias for section `1`, so where no `1.goals` heading
@@ -313,7 +313,7 @@ fn named_sections_preserve_full_ids_before_shorthand_and_findings_compose() {
     assert_eq!(findings.matches("section not found").count(), 2);
 }
 
-/// §FS-fmt.6.2.4, §FS-declarations.heading.rendered-text: the rendered text of
+/// §FS-fmt.6.2.2, §FS-declarations.heading.rendered-text: the rendered text of
 /// `## goals: Scope` carries the handle and colon, so the wrapper points at
 /// `#goals-scope`; retitling the heading to `## goals: Intent` refreshes that
 /// wrapper to `#goals-intent` on the next pass while the stored handle and the
@@ -348,7 +348,7 @@ fn named_section_formatting_uses_rendered_anchor_and_never_changes_handles() {
 }
 
 /// §FS-init.2.4.3: the v2 starter writes no section switch and its block
-/// teaches named section paths. §FS-config.4.2.3: in v1, `named_sections`
+/// teaches named section paths. §FS-config.4.2: in v1, `named_sections`
 /// prints only when enabled — an absent key and an explicit `false` produce
 /// byte-identical `config show` output, so a repository that never opted in
 /// keeps the bytes it had.

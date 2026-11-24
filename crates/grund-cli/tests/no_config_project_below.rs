@@ -33,11 +33,11 @@ const ROOT_WARNING: &str = "warning: nothing to scan — grund looked under [sca
     to scaffold the canonical docs/ and e2e/ trees, point `[scan] include` in `grund.toml` at your \
     sources, or pass a path explicitly (`grund check <dir>`).\n";
 
-/// §FS-output-shapes.6.1.2's refusal, for the report's ID: kept where nothing lies below.
+/// §FS-output-shapes.6.1's refusal, for the report's ID: kept where nothing lies below.
 const DEFAULT_FORMAT_REFUSAL: &str = "invalid ID `FS-login`\nhint: this repo's [id] format is \
     `{kind}-{number}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist\n";
 
-/// §FS-output-shapes.6.1.2: the JSON refusal carries no hint, whatever lies below.
+/// §FS-output-shapes.6.1: the JSON refusal carries no hint, whatever lies below.
 const JSON_REFUSAL: &str = "{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"invalid-id\",\
     \"message\":\"invalid ID `FS-login`\",\"sites\":null,\"authority\":null}\n";
 
@@ -274,7 +274,7 @@ fn json_warning_carries_the_new_message() {
     assert_eq!(run.stdout, "");
 }
 
-/// §FS-show.3.5, §FS-output-shapes.6.1.2: JSON carries no hint, so the
+/// §FS-show.3.5, §FS-output-shapes.6.1: JSON carries no hint, so the
 /// refusal there is the same object whatever lies below.
 #[test]
 fn json_refusal_stays_hint_free() {
@@ -367,7 +367,7 @@ fn a_config_below_a_found_one_is_not_named() {
     ));
 }
 
-/// §FS-check.2.2.2, §FS-output-shapes.6.1.2: with nothing below, both
+/// §FS-check.2.2.2, §FS-output-shapes.6.1: with nothing below, both
 /// messages keep today's bytes.
 #[test]
 fn nothing_below_keeps_both_messages() {

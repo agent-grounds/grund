@@ -106,7 +106,7 @@ KEPT = (
     ("FS-fmt.md", "2.3", "Declaration headings (the line that names the ID)"),
     ("FS-fmt.md", "2.3", "Everything in a **suppressed scope**"),
     ("FS-fmt.md", "2.3.1", "Track an open-quote state per"),
-    ("FS-fmt.md", "2.3.1.1", "the line this scan reads is the docstring's **content**"),
+    ("FS-fmt.md", "2.3.1", "the line this scan reads is the docstring's **content**"),
     ("FS-fmt.md", "2.3.3", "Every pass stops at a Markdown fence"),
     ("FS-fmt.md", "6.2", "The citation text inside the brackets is preserved verbatim"),
 )

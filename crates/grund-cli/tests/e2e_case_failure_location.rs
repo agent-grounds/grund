@@ -1,6 +1,6 @@
 //! Black-box: a failure reading an E2E case is located at the file or directory that failed
 //! (§FS-declarations.e2e-case.failure), so a run narrowed to a path holds the failure exactly when
-//! the path holds that file (§FS-check.1.3.6.3, §FS-check.2.4) and one a walk also met is one line
+//! the path holds that file (§FS-check.1.3.6, §FS-check.2.4) and one a walk also met is one line
 //! (§FS-check.2.4.2). The e2e corpus pins the bytes a committed manifest can make. These pin what
 //! it cannot hold: a working directory inside the tree, a mode, a link, and a parse failure, whose
 //! reason prints an absolute temporary path. The tests that need a mode skip where it does not bar
@@ -143,7 +143,7 @@ fn a_healthy_case_named_exits_on_its_own_finding() {
 }
 
 /// A guard: the same bytes in an ordinary file are what a case's manifest is being brought into
-/// line with, so a change to the partition itself shows here (§FS-check.1.3.6.3).
+/// line with, so a change to the partition itself shows here (§FS-check.1.3.6).
 #[test]
 fn the_same_bytes_in_an_ordinary_file_are_held_only_by_a_path_at_the_file() {
     let tree = Tree::new("ordinary");
@@ -178,7 +178,7 @@ fn standing_in_the_failing_case_holds_the_failure() {
     }
 }
 
-/// A path inside a member resolves against that member (§FS-check.1.3.6.3), and is reported from it.
+/// A path inside a member resolves against that member (§FS-check.1.3.6), and is reported from it.
 #[test]
 fn standing_in_a_workspace_member_holds_the_failure() {
     let tree = Tree::new("in-member");

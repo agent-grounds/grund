@@ -1,4 +1,4 @@
-//! What a count hands the checker beside its finding (§AR-rules.5, §FS-rules.7.3.1): one entry per
+//! What a count hands the checker beside its finding (§AR-rules.5, §FS-rules.7.3): one entry per
 //! citation the count read, the fact's own `SiteMeta` with its path, line, column and the citation
 //! as written, and nothing beside a zero count or any other finding.
 
@@ -129,7 +129,7 @@ fn findings(rule: ParsedRule, facts: &RuleFacts) -> Vec<(String, Vec<SiteMeta>)>
         .collect()
 }
 
-/// §FS-rules.7.3.1, §FS-rules.7.4: an inbound count reads every citing citation, with no cap,
+/// §FS-rules.7.3, §FS-rules.7.4: an inbound count reads every citing citation, with no cap,
 /// each in the file it is written in.
 #[test]
 fn twelve_citers_are_twelve_counted_citations() {
@@ -157,7 +157,7 @@ fn twelve_citers_are_twelve_counted_citations() {
     assert_eq!(found[0].1, expected);
 }
 
-/// §FS-rules.7.3.1: an under-count above zero names what it read, and a zero count reads nothing.
+/// §FS-rules.7.3: an under-count above zero names what it read, and a zero count reads nothing.
 #[test]
 fn an_under_count_above_zero_names_its_citations_and_zero_names_none() {
     let mut facts = Facts::new();
@@ -192,7 +192,7 @@ fn an_under_count_above_zero_names_its_citations_and_zero_names_none() {
     );
 }
 
-/// §FS-rules.7.3.1: a chapter subject's count reads only the citations written inside it.
+/// §FS-rules.7.3: a chapter subject's count reads only the citations written inside it.
 #[test]
 fn a_chapter_subject_reads_only_the_citations_inside_it() {
     let mut facts = Facts::new();
@@ -225,7 +225,7 @@ fn a_chapter_subject_reads_only_the_citations_inside_it() {
     );
 }
 
-/// §FS-rules.7.3.1: a `cite each` row reads only its own target's citations, a citation of that
+/// §FS-rules.7.3: a `cite each` row reads only its own target's citations, a citation of that
 /// target's section among them (§FS-rules.5.1), and not another target's.
 #[test]
 fn a_cite_each_row_reads_only_its_own_targets_citations() {

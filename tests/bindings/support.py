@@ -41,12 +41,12 @@ def python_target():
 
 
 def checkout_key(checkout):
-    """Keep the existing resolved-source digest (§FS-repository-maintenance.2.1)."""
+    """Keep the existing resolved-source digest (§FS-repository-maintenance.2)."""
     return hashlib.sha256(os.fsencode(checkout)).hexdigest()[:16]
 
 
 def _replace_record(temporary, record):
-    """Wait out a Windows reader's open handle on the record (§FS-repository-maintenance.2.4)."""
+    """Wait out a Windows reader's open handle on the record (§FS-repository-maintenance.2)."""
     deadline = time.monotonic() + 10
     while True:
         try:
@@ -59,9 +59,9 @@ def _replace_record(temporary, record):
 
 
 def _record_checkout(target):
-    """Publish complete ownership atomically (§FS-repository-maintenance.2.4)."""
+    """Publish complete ownership atomically (§FS-repository-maintenance.2)."""
     record = target / "checkout.json"
-    # Preserve nonregular ownership records (§FS-repository-maintenance.2.3).
+    # Preserve nonregular ownership records (§FS-repository-maintenance.2).
     try:
         if not stat.S_ISREG(record.lstat().st_mode):
             raise ValueError(f"build target ownership is not a regular file: {record}")
@@ -80,7 +80,7 @@ def _record_checkout(target):
 
 
 def _checkout_is_missing(target):
-    """Only trustworthy ownership permits deletion (§FS-repository-maintenance.2.3)."""
+    """Only trustworthy ownership permits deletion (§FS-repository-maintenance.2)."""
     try:
         if not stat.S_ISDIR(target.lstat().st_mode):
             return False
@@ -107,13 +107,13 @@ def _checkout_is_missing(target):
 
 
 def _ignore_removed_output(operation, path, error):
-    """Continue concurrent traversal after removals (§FS-repository-maintenance.2.4)."""
+    """Continue concurrent traversal after removals (§FS-repository-maintenance.2)."""
     if not isinstance(error[1], FileNotFoundError):
         raise error[1]
 
 
 def _remove_output(target):
-    """Bound Windows deletion contention per target (§FS-repository-maintenance.2.4).
+    """Bound Windows deletion contention per target (§FS-repository-maintenance.2).
 
     Retry the traversal, not the callback operation: shutil may report a failed
     lookup or scan as well as an unlink or rmdir. Share a ten-second budget across
@@ -132,7 +132,7 @@ def _remove_output(target):
             except FileNotFoundError:
                 return
             except PermissionError:
-                # Delete-pending output may deny lookup too (§FS-repository-maintenance.2.4).
+                # Delete-pending output may deny lookup too (§FS-repository-maintenance.2).
                 pass
             if time.monotonic() >= deadline:
                 raise
@@ -140,7 +140,7 @@ def _remove_output(target):
 
 
 def _reclaim_targets(root, current):
-    """Reclaim recorded dead siblings on every call (§FS-repository-maintenance.2.2)."""
+    """Reclaim recorded dead siblings on every call (§FS-repository-maintenance.2)."""
     for candidate in root.iterdir():
         if candidate == current or not re.fullmatch(r"[0-9a-f]{16}", candidate.name):
             continue
@@ -150,14 +150,14 @@ def _reclaim_targets(root, current):
 
 def checkout_target(root):
     """This checkout's own persistent build output under the shared `root`
-    (§FS-repository-maintenance.2.1).
+    (§FS-repository-maintenance.2).
 
     One per source checkout, keyed by a digest of its resolved root (§AR-ci.3.4.1.2); both
     bindings' acceptances derive their target here (§AR-ci.3.4.5).
     """
     target = root / checkout_key(REPO)
     target.mkdir(parents=True, exist_ok=True)
-    # Never write ownership through a target symlink (§FS-repository-maintenance.2.3).
+    # Never write ownership through a target symlink (§FS-repository-maintenance.2).
     if not stat.S_ISDIR(target.lstat().st_mode):
         raise ValueError(f"build target is not a regular directory: {target}")
     _record_checkout(target)

@@ -109,7 +109,7 @@ fn a_config_target_follows_xdg_config_home_and_every_other_target_follows_home()
     }
 }
 
-/// §FS-integrations.4.3.7: the user config is read and reported exactly once
+/// §FS-integrations.4.3.5: the user config is read and reported exactly once
 /// per invocation, **before** any client artifact is installed. Reported per
 /// target it would repeat itself once per file; reported after the installs it
 /// would arrive as an explanation of writes the reader has already scrolled
@@ -151,7 +151,7 @@ fn the_user_config_is_reported_once_and_before_any_install() {
     );
 }
 
-/// §FS-integrations.4.3.9: a global agent instruction file is written only
+/// §FS-integrations.4.3.8: a global agent instruction file is written only
 /// where the agent is in use on this machine — its own directory exists. An
 /// agent the machine does not have is reported `skipped <path> (no <dir>)` and
 /// nothing is created for it, because `--write` installs a rendering layer, not
@@ -190,7 +190,7 @@ fn only_an_agent_in_use_on_this_machine_receives_the_instruction_block() {
     );
 }
 
-/// §FS-integrations.3.1.6: the recorded false positive of the marker tolerance.
+/// §FS-integrations.3.1: the recorded false positive of the marker tolerance.
 /// A printed spec *path* carries ID-shaped segments no portable matcher can
 /// tell from a citation — `docs/functional-spec/FS-integrations.md` also matches
 /// at `/functional-spec/FS-integrations`. Following that fragment costs one
@@ -281,7 +281,7 @@ fn write_with_format_json_is_refused_before_anything_is_written() {
     }
 }
 
-/// §FS-integrations.3.1.6: the fragments the matcher claims inside a file
+/// §FS-integrations.3.1: the fragments the matcher claims inside a file
 /// name now that a section component may be named, the extension included:
 /// `/functional-spec/FS-integrations.md` in a printed path and
 /// `(FS-integrations.md` in a Markdown link destination. Each is one
@@ -379,7 +379,7 @@ fn titled_show_json_keeps_path_and_line_as_the_terminal_pair() {
     fs::remove_dir_all(&sandbox).expect("remove show JSON fixture");
 }
 
-/// §FS-integrations.4.1.5: the sandbox install is a client `--write`, and the
+/// §FS-integrations.4.1: the sandbox install is a client `--write`, and the
 /// checks below run `$HOME/.local/bin/grund-open` directly — so the resolver
 /// script has to have been written alongside the client's block, at the fixed
 /// resolver path, and left executable.

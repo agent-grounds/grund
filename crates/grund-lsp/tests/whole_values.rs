@@ -1,7 +1,7 @@
 //! A binding aimed at a whole value declaration navigates to the declaration
 //! itself — the Markdown heading or the JSON key — and its mismatch is the CLI
-//! finding (§FS-lsp.1.1.2, §FS-lsp.1.3.5, §FS-values.3.1.2, §FS-values.7).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! finding (§FS-lsp.1.1, §FS-lsp.1.3, §FS-values.3.1.2, §FS-values.7).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 
@@ -42,7 +42,7 @@ fn whole_value_bindings_navigate_to_the_declaration_and_match_the_cli() {
         .find(|error| error.code == "value-mismatch")
         .expect("CLI mismatch");
     // The root and the literal whole, alone, at the one component site
-    // (§FS-values.5.2.2).
+    // (§FS-values.5.2).
     let sites = cli_mismatch
         .sites
         .iter()

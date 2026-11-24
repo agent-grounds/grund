@@ -1,4 +1,4 @@
-//! Delivered LSP4IJ setup for the live citation transform (§FS-lsp.2.4.1.1).
+//! Delivered LSP4IJ setup for the live citation transform (§FS-lsp.2.4).
 //! Exercise the installed binary and the IntelliJ guide without claiming an IDE run.
 
 mod integrations_support;
@@ -9,7 +9,7 @@ use serde_json::Value;
 use std::fs;
 use std::path::Path;
 
-/// §FS-lsp.2.4.1.1: preview teaches the client setting, its location and purpose.
+/// §FS-lsp.2.4: preview teaches the client setting, its location and purpose.
 #[test]
 fn preview_teaches_live_transform_client_configuration() {
     let sandbox = Sandbox::with_binary(&workspace_binary(), "formatting-preview");
@@ -19,7 +19,7 @@ fn preview_teaches_live_transform_client_configuration() {
     assert_guidance(&[("preview", stdout(&output))]);
 }
 
-/// §FS-lsp.2.4.1.1: both successful write outcomes print the delivered README.
+/// §FS-lsp.2.4: both successful write outcomes print the delivered README.
 #[test]
 fn writes_teach_live_transform_client_configuration() {
     let sandbox = Sandbox::with_binary(&workspace_binary(), "formatting-write");

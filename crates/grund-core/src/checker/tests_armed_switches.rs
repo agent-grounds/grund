@@ -2,7 +2,7 @@
 //! one fixture per switch with it off, which arms none of its codes, and one
 //! with it on, which arms all of them — and a rule's empty subject reuses the
 //! obligation's conditions (§FS-check.2.2.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::api::{CheckOpts, check_with_run_warnings};
 use crate::model::{Finding, Switch};
@@ -187,7 +187,7 @@ fn a_value_kind_arms_the_value_codes() {
     pinned(Switch::Values, "value-mismatch", off, on);
 }
 
-/// §FS-values.2.2.4: the YAML window is closed, so its code is advised as spent
+/// §FS-values.2.2.3: the YAML window is closed, so its code is advised as spent
 /// from its *Severity* cell, with no switch to set, with or without a value kind
 /// (§FS-check.1.4.1).
 #[test]

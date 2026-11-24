@@ -2,7 +2,7 @@
 //! §FS-inline-citation-style.1.1.4 at a time. Each tree plants declaration-shaped
 //! lines in comments the family's doc profile admits and in comments it does not,
 //! with no citation anywhere, so eligibility cannot lean on the inline-style pass
-//! (§FS-config-v2.schema.sources.declarations.gate). Under v2's default `doc-comments` only the
+//! (§FS-config-v2.schema.sources.declarations). Under v2's default `doc-comments` only the
 //! admitted ones are listed; the v1 twin of each tree keeps every comment's
 //! declaration (§FS-config.5.2), which is what `any-comment` means in v2.
 
@@ -353,7 +353,7 @@ fn haskell_haddock_declares_and_plain_comments_do_not() {
     );
 }
 
-/// §FS-config-v2.schema.sources.declarations.eligible: a language whose profile is `none` — Lisp
+/// §FS-config-v2.schema.sources.declarations: a language whose profile is `none` — Lisp
 /// and Ada here — declares in any configured comment, so it can still declare.
 #[test]
 fn a_language_with_no_doc_notation_still_declares() {
@@ -436,7 +436,7 @@ fn opt_in_shell_and_r_declare_by_their_profiles() {
     );
 }
 
-/// §FS-config-v2.schema.sources.declarations.gate: the near-miss check runs behind the gate —
+/// §FS-config-v2.schema.sources.declarations: the near-miss check runs behind the gate —
 /// an off-grammar declaration in a plain comment is prose under v2, while the
 /// same line in a doc comment is still a near miss.
 #[test]

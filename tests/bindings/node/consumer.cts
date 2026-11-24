@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.3.2 — typed require conditions select the CJS declaration.
+// §FS-distribution.3.2.3 — typed require conditions select the CJS declaration.
 import api = require('grund-cli');
 const result: Promise<api.CheckResult> = api.check('./repo');
 // @ts-expect-error enum checking must also hold in CJS

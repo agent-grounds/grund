@@ -2,7 +2,7 @@
 //! that cannot be read, failed at the link, never an absent one; and a name that is not there at
 //! all stays absent (§FS-declarations.e2e-case.failure, §FS-scan.scope.links.unresolvable).
 //! Unix-only: every tree here is about a link.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::{Path, PathBuf};
 

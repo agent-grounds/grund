@@ -1,4 +1,4 @@
-//! Black-box place-subject guidance (§FS-rule-refusals.sentences.rewrite.no-form.place).
+//! Black-box place-subject guidance (§FS-rule-refusals.sentences.rewrite.no-form).
 //! No production parser is used: both refusal and suggested configuration run
 //! through the shipped executable, including the existing direction check.
 
@@ -35,7 +35,7 @@ impl Repo {
         repo.write("requirements.md", "# FS-demo: Demo\n");
         repo.write("architecture.md", "# AR-demo: Demo\n");
         // No FS citation: AR evidence puts this file in the existing direction
-        // check's domain (§FS-config.3.9.2.4); wholly uncited files are exempt.
+        // check's domain (§FS-config.3.9.1); wholly uncited files are exempt.
         repo.write("tests/e2e/uncited.rs", "// \u{a7}AR-demo\nfn main() {}\n");
         repo
     }
@@ -191,7 +191,7 @@ fn guidance_contract(version: u8, subject: &str) {
         );
         assert!(error.contains("e2e"), "missing configured place: {error}");
         assert!(!error.contains("citable = true"), "{error}");
-        // §FS-rule-refusals.sentences.rewrite.no-form.place: the row grounds
+        // §FS-rule-refusals.sentences.rewrite.no-form: the row grounds
         // nothing, so the entry alone would leave an uncited file unchecked.
         assert!(
             error.contains(&format!(
@@ -203,7 +203,7 @@ fn guidance_contract(version: u8, subject: &str) {
     }
 }
 
-/// §FS-rule-refusals.sentences.rewrite.no-form.place, #908: with no grounding
+/// §FS-rule-refusals.sentences.rewrite.no-form, #908: with no grounding
 /// row the hint names the grounding setting, and with one it names the entry
 /// alone, since that entry then judges a file that cites nothing as well.
 #[test]
@@ -235,7 +235,7 @@ fn place_hint_names_grounding_only_where_the_row_grounds_nothing() {
     }
 }
 
-/// §FS-rule-refusals.sentences.rewrite.no-form.place: the hint names the row, not a
+/// §FS-rule-refusals.sentences.rewrite.no-form: the hint names the row, not a
 /// place; `e2e` is the row and `tests/e2e` its place.
 #[test]
 fn v2_place_hint_names_the_configured_row() {
@@ -270,7 +270,7 @@ guidance_test!(v1_path_place_guidance, 1, "Each file in tests/e2e/");
 guidance_test!(v2_named_place_guidance, 2, "Each e2e");
 guidance_test!(v2_path_place_guidance, 2, "Each file in tests/e2e/");
 
-/// §FS-rule-refusals.sentences.rewrite.no-form.place: no guessed row or
+/// §FS-rule-refusals.sentences.rewrite.no-form: no guessed row or
 /// obligation, including an ancestor containing two configured places.
 #[test]
 fn unrelated_ambiguous_and_non_equivalent_inputs_have_no_place_hint() {
@@ -379,7 +379,7 @@ fn place_hint_preserves_other_surfaces_and_refusal_precedence() {
     }
 }
 
-/// §FS-rule-refusals.sentences.rewrite.no-form.place: rule declarations use
+/// §FS-rule-refusals.sentences.rewrite.no-form: rule declarations use
 /// the same refusal guidance without CLI-only known-kinds lines.
 #[test]
 fn rule_declarations_carry_place_guidance_in_both_versions() {
@@ -417,7 +417,7 @@ fn rule_declarations_carry_place_guidance_in_both_versions() {
     );
 }
 
-/// §FS-rule-refusals.sentences.rewrite.no-form.place: use the actual row
+/// §FS-rule-refusals.sentences.rewrite.no-form: use the actual row
 /// and target, including a configured file rather than only a folder.
 #[test]
 fn configured_file_place_guidance_uses_actual_row_and_target() {

@@ -1,5 +1,5 @@
 //! Shared recognition contract (§AR-scanner.2.3, §FS-check.1.1.10).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::checker::check_findings;
 use crate::config::Config;

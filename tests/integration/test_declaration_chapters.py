@@ -57,7 +57,7 @@ MOVES = (
     ("FS-fmt.md", "6.2.2", "heading.rendered-text",
      ("the destination URL is not part of the text",
       "exactly as a Markdown renderer treats them")),
-    ("FS-fmt.md", "6.2.4", "heading.rendered-text",
+    ("FS-fmt.md", "6.2.2", "heading.rendered-text",
      ("the rendered text includes the name and colon",)),
 )
 # A source whose every definition moved is left a pointer: its heading and a line.
@@ -73,7 +73,7 @@ KEPT = (
     ("FS-show.md", "2.5", "is content, never structure"),
     ("FS-fmt.md", "6.2.1", "for a bare-ID citation it is the declaration's own heading"),
     ("FS-fmt.md", "6.2.2", "slugified per the configured renderer profile"),
-    ("FS-fmt.md", "6.2.4", "produces `#goals-scope`"),
+    ("FS-fmt.md", "6.2.2", "produces `#goals-scope`"),
 )
 # Behaviour the page must not take with it: show's output form, fmt's slug profile,
 # and the fence rule, which stays at FS-show.2.5.
@@ -90,13 +90,13 @@ CITED = (
 )
 # Bytes on main at 3613f4e9fd; every source the move takes text from ends below it.
 # FS-fmt.md grew past its move baseline by one point of fmt's own, not a restatement:
-# §FS-fmt.6.3.3 (grund#642).
+# §FS-fmt.6.3 (grund#642).
 
-# It grew by the 815-byte §FS-fmt.2.3.2.3, the file `fmt` leaves unwritten because two names
+# It grew by the 815-byte §FS-fmt.2.3.2, the file `fmt` leaves unwritten because two names
 # read it differently, a point of fmt's own whose finding lives at §FS-scan.checks.reading-conflict
 # (grund#1274).
 
-# It grew again by the 217-byte clause of §FS-fmt.2.5.2.2: a directive inside a
+# It grew again by the 217-byte clause of §FS-fmt.2.5.2: a directive inside a
 # multi-line string literal is data (grund#702).
 
 # Its lead grew by 404 LF bytes teaching existing link and eligible-lock maintenance
@@ -117,58 +117,58 @@ CITED = (
 # restating it (grund#825).
 
 # FS-fmt.md grew by the 3881 bytes of fmt's own refusal of a conflict block, in §FS-fmt.3
-# and §FS-fmt.7.4 and the new §FS-fmt.7.4.3, citing §FS-declarations.checks.conflict-marker
+# and §FS-fmt.7.4, citing §FS-declarations.checks.conflict-marker
 # for the block and its message rather than restating them (grund#837).
 
 # FS-fmt.md grew by the 223 bytes of the lock pass's place in the list of
-# §FS-fmt.requirements.fixed-point, citing §FS-section-lock.write.same-run for which tree
+# §FS-fmt.requirements.fixed-point, citing §FS-section-lock.write.rules for which tree
 # the pass judges rather than restating it (grund#847).
 
 # FS-fmt.md grew by 162 bytes in §FS-fmt.1 and §FS-fmt.3.2, citing §FS-scan.path.none for
 # what a run with no path covers rather than restating it (grund#854).
 
 # FS-show.md grew 118 bytes in §FS-show.3.2 and FS-fmt.md 345 in §FS-fmt.6.4, citing
-# §FS-citations.wrap.enclosing.scope and .images rather than restating them (grund#839).
+# §FS-citations.wrap.enclosing.shape and .images rather than restating them (grund#839).
 
 # FS-show.md grew by 1498 bytes in §FS-show.requirements.authored-bytes, .2.2, .3.1.1,
-# .3.1.2 and .3.2.2, each citing §FS-declarations.section.relative.shown.selected for a
+# .3.1.2 and .3.2.2, each citing §FS-declarations.section.relative.shown for a
 # selected section's canonical heading rather than restating it (grund#1009).
 
 # FS-show.md grew by 119 bytes in §FS-show.3.1.1, saying a selected section's text read opens
 # with its heading line by citing §FS-show.2.2 rather than restating it (grund#1026).
 
-# FS-fmt.md grew by 3697 bytes in §FS-fmt.3.5, .3.5.1, .3.5.2, .3.6, .3.7, .7.3 and
+# FS-fmt.md grew by 3697 bytes in §FS-fmt.3.5, .3.6, .3.7, .7.3 and
 # .requirements.next-class: a dry-run row now names every kind its line receives and the
 # write summary totals them, new behaviour no other point states (grund#1021).
 
 # FS-show.md grew by 421 bytes in §FS-show.2.1.2.1, .2.2 and .3.1.3, saying the section
 # map, a section read and a JSON anchor answer for front-matter coordinates by citing
-# §FS-fields.front-matter.coordinates, .surfaces and §FS-output-shapes.4.4 (grund#1048).
+# §FS-fields.front-matter.coordinates, .surfaces and §FS-output-shapes.4 (grund#1048).
 
 # FS-show.md grew by 1228 bytes in §FS-show.3.5, saying an invalid-ID hint in a run that
 # loaded no config names the project config below it, as §FS-check.2.2.2 chooses it, in
 # place of the default format (grund#1079).
 
-# FS-fmt.md grew by 42 bytes in §FS-fmt.2.4, .2.4.1.2, .2.4.2, .2.4.3, .2.4.6 and .3.6: its
+# FS-fmt.md grew by 42 bytes in §FS-fmt.2.4, .2.4.1, .2.4.6 and .3.6: its
 # shorthand illustrations take the <§> escape, so none is an off-format citation (grund#1073).
 
 # FS-show.md grew by 185 bytes in §FS-show.3.5: its `grund fetch` hint excepts a kind whose
-# `file` home §FS-fetch.4 refuses, citing §FS-check.3.1.3.1 rather than restating it (grund#1133).
+# `file` home §FS-fetch.4 refuses, citing §FS-check.3.1 rather than restating it (grund#1133).
 
 # FS-fmt.md grew by 282 bytes in §FS-fmt.2.3.1: the string-literal rule follows how a file
 # is read, not its name, citing §FS-config-v2.schema.sources.definitions (grund#1208).
 
-# FS-fmt.md grew by 2080 bytes in §FS-fmt.7.4.4 and §FS-fmt.3.2: a rewrite into another project
+# FS-fmt.md grew by 2080 bytes in §FS-fmt.7.4 and §FS-fmt.3.2: a rewrite into another project
 # needs that project's proof, citing §REQ-no-wrong-citation.3 rather than restating it (grund#1266).
 
-# FS-fmt.md grew by 8358 bytes in §FS-fmt.3.6 and the new §FS-fmt.3.6.2: a markdown link row
+# FS-fmt.md grew by 8358 bytes in §FS-fmt.3.6: a markdown link row
 # names each link it writes, before and after, a point of fmt's own report that cites
 # §FS-non-goals.1 for why check does not read the anchor rather than restating it (grund#1378).
 
 # FS-show.md grew by 7393 bytes, most in §FS-show.3.3.1 and .3.3.2: every format answers a batch,
 # a text or md one heading each answer and keeping a failure's hint in place (grund#1385).
 
-# FS-fmt.md grew by 181 bytes in §FS-fmt.2.3.3 and §FS-fmt.2.5.2.2: every pass stops at a fence
+# FS-fmt.md grew by 181 bytes in §FS-fmt.2.3.3 and §FS-fmt.2.5.2: every pass stops at a fence
 # `[schema.sources] fenced` selects too, and a directive in any fence toggles nothing, citing
 # §DF-fenced-citations.2.3 for why rather than restating it (grund#1364).
 BASELINES = {"FS-show.md": 79355, "FS-fmt.md": 114926}

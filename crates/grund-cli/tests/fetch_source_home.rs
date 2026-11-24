@@ -1,5 +1,5 @@
 //! `grund fetch` refuses a `file` home the text scan reads as source (§FS-fetch.4.2), and
-//! `check` stops naming that command there (§FS-check.3.1.3.1). The e2e cases pin each
+//! `check` stops naming that command there (§FS-check.3.1). The e2e cases pin each
 //! refusal's exact bytes; these pin what a golden cannot: that every way out the refusal
 //! and the tail offer ends green, and that each comment form is refused alike.
 #![cfg(unix)]
@@ -181,7 +181,7 @@ fn declaring_it_in_that_source_file_answers_the_check_tail() {
     assert_code(&run(&dir, &["check"]), 0, "check after the declaration");
 }
 
-/// No comment in a source file is a valid value declaration, so §FS-check.3.1.3.1 sends a
+/// No comment in a source file is a valid value declaration, so §FS-check.3.1 sends a
 /// value kind to Markdown instead, and each home the tail names ends green. A value file
 /// home must exist before its first snapshot (§FS-fetch.4.1); a folder needs its index
 /// (§FS-check.3.18) and takes an H1 (§FS-fetch.3).

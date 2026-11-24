@@ -1,7 +1,7 @@
 //! Test module: the opt-in inline note layout check — its two config keys, the
 //! channel each level speaks through, and the sentence the managed entrypoint
 //! block teaches (§FS-inline-citation-style.4.4, §FS-inline-citation-style.5)
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::Path;
 
@@ -51,7 +51,7 @@ fn style_findings(config: &Config, root: &Path) -> (Vec<usize>, Vec<usize>) {
     (lines(&report.errors), lines(&report.warnings))
 }
 
-/// §FS-inline-citation-style.4.4.1: one error per nonconforming line, anchored
+/// §FS-inline-citation-style.4.4: one error per nonconforming line, anchored
 /// at the line — never at the site's opener, and never on a conforming sibling.
 ///
 /// §AR-checker.2.14: the rule is a pure pass over `Catalog`. The
@@ -75,7 +75,7 @@ fn layout_error_reports_one_finding_per_offending_line() {
 /// §FS-inline-citation-style.4.4: `warn` reports the same lines with the same
 /// message on the warning channel, which never moves the exit code.
 ///
-/// §FS-inline-citation-style.4.4.3: the level chooses the channel and nothing
+/// §FS-inline-citation-style.4.4: the level chooses the channel and nothing
 /// else — the same two lines come back in the same deterministic order as at
 /// `error`, on the other channel, with neither leaking into the first.
 #[test]
@@ -89,7 +89,7 @@ fn layout_warn_reports_the_same_lines_as_warnings() {
     assert_eq!(warnings, vec![4, 9]);
 }
 
-// §FS-inline-citation-style.4.4.2: the message is identical at both levels, so a
+// §FS-inline-citation-style.4.4: the message is identical at both levels, so a
 // project moving from `warn` to `error` changes the exit code and nothing else.
 #[test]
 fn layout_message_names_the_form_with_the_configured_marker() {
@@ -114,7 +114,7 @@ fn layout_message_names_the_form_with_the_configured_marker() {
 /// §FS-inline-citation-style.4.4: both keys default to the inert value, and the
 /// check key is inert on its own under `any` — an upgrade turns nothing red.
 ///
-/// §FS-inline-citation-style.3.3.10: `any` is the default, and it imposes
+/// §FS-inline-citation-style.3.3: `any` is the default, and it imposes
 /// nothing — the deviating lines this fixture holds are exactly the comments a
 /// tree that adopts `grund` mid-life already had, and they earn no finding.
 #[test]
@@ -134,7 +134,7 @@ fn layout_is_silent_when_either_key_is_inert() {
     assert_eq!(style_findings(&defaults, &root), (Vec::new(), Vec::new()));
 }
 
-// §FS-inline-citation-style.2.2: both keys are closed enums read from the
+// §FS-config.3.1.9: both keys are closed enums read from the
 // project's own config, and an unrecognized value fails on load.
 #[test]
 fn both_layout_keys_load_and_reject_unknown_values() {
@@ -185,7 +185,7 @@ fn both_layout_keys_load_and_reject_unknown_values() {
 /// §FS-inline-citation-style.5.2: the block sentence follows it under
 /// `citation-with-note` only, and no such sentence is added under
 /// `citation-only`.
-/// §FS-inline-citation-style.5.3.2: the enforcement level is not part of the
+/// §FS-inline-citation-style.5.3: the enforcement level is not part of the
 /// house style, so `off` renders byte-for-byte what `error` renders.
 #[test]
 fn agents_sentence_teaches_the_configured_layout() {
@@ -237,7 +237,7 @@ fn agents_sentence_teaches_the_configured_layout() {
     );
 }
 
-/// §FS-inline-citation-style.3.3.7: layout and size are judged independently.
+/// §FS-inline-citation-style.3.3: layout and size are judged independently.
 /// One line can deviate from the layout *and* exceed the column budget, and
 /// then it earns one finding for each — neither verdict absorbs the other, and
 /// neither is withheld because the other already fired.

@@ -1,6 +1,6 @@
 //! Applied version-specific repairs and quiet claim uncertainty for #1000.
 //! §FS-declarations.checks.misplaced-declaration;
-//! §FS-config.3.5.16; §FS-workspace.6.1.7.5; §FS-check.3.29.
+//! §FS-config.3.5.16; §FS-workspace.6.1.7; §FS-check.3.29.
 
 use super::*;
 

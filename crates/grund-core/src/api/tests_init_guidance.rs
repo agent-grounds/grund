@@ -1,5 +1,5 @@
 //! Test module: init next-step and scaffold guidance (§AR-core-module-layout.1.5)
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use crate::testing::{test_root, write};
 use crate::writers::{InitFsHome, InitOpts, InitOutput, docs_scaffold, init};

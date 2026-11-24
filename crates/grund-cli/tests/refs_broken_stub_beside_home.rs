@@ -1,6 +1,6 @@
 //! Black-box: a broken stub beside a real home does not make `refs` refuse; it lists every
 //! citation of the ID, exits `0`, and names the stub it set aside in one stderr warning
-//! (§FS-refs.4.1.1). Ports the #1006 reproducer: a module moved from `src/cache.rs` to
+//! (§FS-refs.4.1). Ports the #1006 reproducer: a module moved from `src/cache.rs` to
 //! `src/store/cache.rs`, its doc-comment still declaring `AR-cache`, its stub left pointing at
 //! the old file. Two real homes and `show` still refuse (§FS-refs.4, §FS-show.2.2.1).
 
@@ -189,7 +189,7 @@ fn refs_json_gives_the_repaired_trees_records_and_an_empty_stderr() {
 }
 
 /// Every stub that cannot be paired is set aside, not only one whose target is missing
-/// (§FS-refs.4.1.1): here the old path holds a file that declares no `AR-cache`.
+/// (§FS-refs.4.1): here the old path holds a file that declares no `AR-cache`.
 #[test]
 fn refs_lists_past_a_stub_whose_target_lacks_the_id_beside_a_real_home() {
     let fixture = Fixture::new("lacks-id", BROKEN_STUB);
@@ -202,7 +202,7 @@ fn refs_lists_past_a_stub_whose_target_lacks_the_id_beside_a_real_home() {
 }
 
 /// Several broken stubs with no real home beside them set nothing aside: `refs` lists the sites
-/// and warns of none (§FS-refs.4.1.1).
+/// and warns of none (§FS-refs.4.1).
 #[test]
 fn refs_lists_past_two_broken_stubs_with_no_real_home_and_warns_of_none() {
     let fixture = Fixture::new("two-broken", BROKEN_STUB);

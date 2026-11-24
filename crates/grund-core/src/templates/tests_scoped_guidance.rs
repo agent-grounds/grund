@@ -2,7 +2,7 @@
 //! (§FS-init.2.3.5) and what each destination's block renders
 //! (§FS-init.2.3.5): the deepest common directory over a row's places, the
 //! rows that stay at the root, and the grounding sentence each destination gets.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::scoped_guidance::destination;
 use super::*;

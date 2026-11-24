@@ -96,7 +96,7 @@ class SourceIdentityTests(unittest.TestCase):
 
     @unittest.skipIf(os.name == "nt", "the manylinux container route runs on Linux")
     def test_the_container_receives_only_a_set_commit_variable(self):
-        """§FS-distribution-candidate.6.1.1: optional Docker argv survives Bash 3.2.
+        """§FS-distribution-candidate.6.1: optional Docker argv survives Bash 3.2.
 
         §AR-ci.6: the real entrypoint stops at a stand-in, before any PGO build.
         The interpreter is the builder's normal Bash, including macOS's Bash 3.2.

@@ -1,4 +1,4 @@
-//! §FS-cli.2.3.1: every flag a subcommand's help page names has a one-line example —
+//! §FS-cli.2.3: every flag a subcommand's help page names has a one-line example —
 //! a command line running that subcommand with the flag, on the flag's own entry after
 //! `e.g.` or in the page's examples block. The sweep reads the subcommands off the
 //! top-level page, so a page added later is held to the same rule.
@@ -142,7 +142,7 @@ fn every_flag_on_every_subcommand_page_has_an_example() {
     }
     assert!(
         missing.is_empty(),
-        "{} flag(s) have no one-line example (§FS-cli.2.3.1):\n  {}",
+        "{} flag(s) have no one-line example (§FS-cli.2.3):\n  {}",
         missing.len(),
         missing.join("\n  ")
     );

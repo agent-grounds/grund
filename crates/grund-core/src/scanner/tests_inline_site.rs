@@ -165,7 +165,7 @@ fn the_recorded_layout_violations_are_ascending_and_shared_by_the_block() {
     );
 }
 
-/// §AR-scanner.3.1, §FS-inline-citation-style.4.1.1.1: every block form retains
+/// §AR-scanner.3.1, §FS-inline-citation-style.4.1: every block form retains
 /// all physical lines, including uncited lines, blank interiors and delimiters.
 /// Widths count Unicode scalars, tabs and indentation (§FS-inline-citation-style.2.3.2).
 /// A custom source with no doc profile lets a docstring be an inline site;

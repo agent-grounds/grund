@@ -54,7 +54,7 @@ fn held(calls: &[Call], row: &str) -> bool {
 /// A stub of `FS-alpha` at `docs/home.md` whose target, `src/<target>`, is
 /// outside the include (§REQ-one-answer.stubs.outside-include), and the real
 /// editor snapshot of the tree. Since 0.19.0 the snapshot lists no such stub:
-/// its target stands in for it (§FS-declarations.stubs.pairing.4). Placement,
+/// its target stands in for it (§FS-declarations.stubs.pairing). Placement,
 /// U03a and U03c ruled on the snapshot the editor gave before, which listed the
 /// stub beside an unscanned target, so that record is put back; the target
 /// staying unscanned is asserted on the real snapshot, not assumed.

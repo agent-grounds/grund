@@ -4,7 +4,7 @@
 //! [`declaration_id_on_line`], for a line read as comment-prefixed; the
 //! cross-line block state of a bare line is pinned by the e2e cases
 //! `bare-block-comment-line-*`.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::{declaration_id_on_line, render_id};
 use crate::testing::{numbered_config, test_root};

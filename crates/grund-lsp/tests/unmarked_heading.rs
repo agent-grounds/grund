@@ -1,6 +1,6 @@
 //! Real-server parity for the body-owned Markdown error (§FS-declarations.checks.unmarked-heading,
 //! §FS-lsp.1.1).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 mod support;
 

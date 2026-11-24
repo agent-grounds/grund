@@ -1,8 +1,8 @@
 //! Test module: a citation on a declaration heading in a kind's own index is a
 //! citation from the declaration that heading declares, never the entry
-//! (§FS-check.4.1.2.1, §FS-citations.recognized.title-lines). The entry rule
+//! (§FS-check.4.1, §FS-citations.recognized.title-lines). The entry rule
 //! and the unused carve-out give it the same answer (agent-grounds/grund#956).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use super::tests_kind_index_enrollment::scanned_index;
 use crate::api::{ListOpts, list};
@@ -40,7 +40,7 @@ fn title_citation_repo(name: &str) -> crate::testing::TemporaryRoot {
     root
 }
 
-/// §FS-check.4.1.2.1: the title citation on the index's line 1 is not the entry,
+/// §FS-check.4.1: the title citation on the index's line 1 is not the entry,
 /// while the list entry on line 4 still is.
 #[test]
 fn a_title_citation_in_its_own_index_is_not_the_entry() {
@@ -63,7 +63,7 @@ fn a_title_citation_in_its_own_index_is_not_the_entry() {
     );
 }
 
-/// §FS-check.4.1.2.1 / §FS-check.3.18: one run gives one answer. The index
+/// §FS-check.4.1 / §FS-check.3.18: one run gives one answer. The index
 /// holds no entry for `FS-session`, and its title citation is use, exactly as
 /// `FS-login`'s title citation of `FS-token` is.
 #[test]

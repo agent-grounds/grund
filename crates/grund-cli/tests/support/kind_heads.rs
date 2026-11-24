@@ -1,5 +1,5 @@
 //! Reciprocal citations, attribution, deletion and glob controls for both config
-//! readers (§FS-config.3.4.5.1, §FS-config.3.2,
+//! readers (§FS-config.3.4.5, §FS-config.3.2,
 //! §FS-coordinate-globs.errors.note, §FS-check.3.1).
 
 use super::case_runner::{CaseKind::E2e, assert_every_case_passed, copy_dir, run_case};

@@ -1,4 +1,4 @@
-//! §FS-config.3.9.5.2: a narrowed `cover` judges the root's pinned `[citations]`
+//! §FS-config.3.9.5: a narrowed `cover` judges the root's pinned `[citations]`
 //! targets against the kinds its declared workspace configures, and judges none
 //! where that workspace does not expand. One workspace root pins `api/API`, which
 //! its member `api` configures: the pin loads on every command while the member

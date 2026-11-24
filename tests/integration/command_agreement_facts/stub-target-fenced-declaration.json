@@ -11,11 +11,11 @@
     "repo/docs/uses.md": {"bytes":[85,115,101,115,32,194,167,70,83,45,115,101,99,111,110,100,46,10]},
     "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,116,114,117,101,10,10,91,105,100,93,10,102,111,114,109,97,116,32,61,32,34,123,107,105,110,100,125,45,123,115,108,117,103,125,34,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,70,83,34,10,102,111,108,100,101,114,32,61,32,34,100,111,99,115,34,10,105,110,100,101,120,32,61,32,102,97,108,115,101,10,10,91,115,99,97,110,93,10,105,110,99,108,117,100,101,32,61,32,91,34,100,111,99,115,34,93,10]},
     "repo/target.md": {"bytes":[35,32,78,111,116,101,115,10,10,65,110,32,101,120,97,109,112,108,101,58,10,10,96,96,96,109,97,114,107,100,111,119,110,10,35,32,70,83,45,115,101,99,111,110,100,58,32,83,101,99,111,110,100,10,10,70,101,110,99,101,100,32,108,101,97,100,46,10,96,96,96,10]},
-    "spec.refs": {"bytes":[70,83,45,100,101,99,108,97,114,97,116,105,111,110,115,46,115,116,117,98,115,46,116,97,114,103,101,116,46,50,10]}
+    "spec.refs": {"bytes":[70,83,45,100,101,99,108,97,114,97,116,105,111,110,115,46,115,116,117,98,115,46,116,97,114,103,101,116,10]}
   },
   "facts": {
-    "point": "§FS-declarations.stubs.target.2",
-    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, one FS kind homed at docs with no index and no title, `[scan] include = [\"docs\"]`; the only FS-second heading of target.md sits inside a fence (§FS-declarations.stubs.target.2), and the editor reads the target for the verdict), the FS stub heading at docs/second.md:1 whose link ../target.md resolves beside the stub to target.md, which declares no FS-second, the one marked citation in docs/uses.md, and the e2e golden's two check findings.",
+    "point": "§FS-declarations.stubs.target",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, one FS kind homed at docs with no index and no title, `[scan] include = [\"docs\"]`; the only FS-second heading of target.md sits inside a fence (§FS-declarations.stubs.target), and the editor reads the target for the verdict), the FS stub heading at docs/second.md:1 whose link ../target.md resolves beside the stub to target.md, which declares no FS-second, the one marked citation in docs/uses.md, and the e2e golden's two check findings.",
     "kinds": [
       {"kind":"FS","title":null,"home":"docs","index":false}
     ],

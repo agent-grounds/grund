@@ -1,5 +1,5 @@
 //! Black-box: a value source that exists and cannot be stated fails once, whichever names reach it
-//! (§FS-scan.identity.buffers, §FS-values.5.3.1). A directory listed but not searched is the tree:
+//! (§FS-scan.identity.buffers, §FS-values.5.3). A directory listed but not searched is the tree:
 //! the whole-path `canonicalize` is denied there, so only the prefix walk gives two names one key.
 //! Git cannot retain a directory's mode, so each tree is built here and skips where it does not
 //! bar this process, which supplies no evidence for the pin.
@@ -19,7 +19,7 @@ const REMEDY: &str = "make the path readable, or keep it out of the scan by movi
     value home, because exclude does not reach a value source";
 
 /// Version 1, because version 2 refuses two places with one target at load
-/// (§FS-config-v2.schema.places.boundaries.3).
+/// (§FS-config-v2.schema.places.boundaries).
 const TWO_HOMES: &str = "grund_config_version = 1\n\
     [[kinds]]\nkind = \"CONST\"\nfolder = \"values\"\nindex = false\nvalues = true\n\
     [[kinds]]\nkind = \"OTHER\"\nfolder = \"alias\"\nindex = false\nvalues = true\n";
@@ -73,7 +73,7 @@ fn each_command_fails_once(tree: &Tree, expected: &str) {
     }
 }
 
-/// §FS-scan.identity.buffers: spellings of one location share one key, so the failure §FS-values.5.3.1
+/// §FS-scan.identity.buffers: spellings of one location share one key, so the failure §FS-values.5.3
 /// reports for one candidate is not reported again under its other name.
 #[test]
 fn a_source_two_homes_reach_that_cannot_be_stated_fails_once() {
@@ -92,7 +92,7 @@ fn a_source_two_homes_reach_that_cannot_be_stated_fails_once() {
     );
 }
 
-/// §FS-values.5.3.1: a failed status is never a determination that the file is no source, and entry
+/// §FS-values.5.3: a failed status is never a determination that the file is no source, and entry
 /// stays on the spelling (§FS-scan.identity.reading), so a listed link whose target's own
 /// name would read as no value source still fails, named by the format its own name claims. `data`
 /// is out of the walk, whose own line would otherwise report `data/x.txt` at that name as well.

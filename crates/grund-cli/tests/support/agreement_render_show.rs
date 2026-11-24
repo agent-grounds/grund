@@ -239,7 +239,7 @@ impl View<'_> {
             if !self.declared_within(row.0) || !seen.insert(coordinate.clone()) {
                 continue;
             }
-            // §FS-workspace.8.1.5: generated IDs are spelled as the run qualifies
+            // §FS-show.2.6: generated IDs are spelled as the run qualifies
             // them, the current project's unqualified.
             let id = self.qualified(row.0);
             let id = match self.current() {

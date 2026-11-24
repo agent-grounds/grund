@@ -89,7 +89,7 @@ fn init_discovers_missing_aliases_for_existing_agent_workspaces() {
 fn an_unclaimed_generic_file_is_not_its_agent_s_entrypoint() {
     // §FS-init.2.1.1 / §FS-init.2.1.2: `.rules` is too generic to attribute to
     // Zed by filename alone, so a build-rules file that no `.zed/` and no
-    // managed block claims is somebody else's (§FS-check.3.5.1).
+    // managed block claims is somebody else's (§FS-check.3.5).
     let root = test_root("an_unclaimed_generic_file_is_not_its_agent_s_entrypoint");
     write(&root.join(".rules"), "# somebody else's build rules\n");
 
@@ -211,7 +211,7 @@ fn check_validates_managed_companion_without_canonical_agents_md() {
 
 #[test]
 fn check_validates_managed_zed_rules_without_canonical_agents_md() {
-    // §FS-check.3.5.1 / §FS-init.2.1.2: `.rules` is not discovered by filename
+    // §FS-check.3.5 / §FS-init.2.1.2: `.rules` is not discovered by filename
     // alone, but a managed block proves it is a grund-owned Zed companion
     // and must still get init-block drift detection.
     let root = test_root("check_validates_managed_zed_rules_without_canonical_agents_md");
@@ -244,7 +244,7 @@ fn check_validates_managed_zed_rules_without_canonical_agents_md() {
 
 #[test]
 fn check_validates_zed_workspace_rules_when_canonical_exists() {
-    // §FS-check.3.5.1 / §FS-init.2.1.2: in a Zed workspace, `.rules` is owned
+    // §FS-check.3.5 / §FS-init.2.1.2: in a Zed workspace, `.rules` is owned
     // by the Zed companion path and must be validated when AGENTS.md exists.
     let root = test_root("check_validates_zed_workspace_rules_when_canonical_exists");
     write(&root.join("AGENTS.md"), &current_block());

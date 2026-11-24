@@ -1,7 +1,7 @@
 //! Test module: a `.<section>` citation of a section its declaration does not
 //! have gives no link where the link would take no heading anchor - a source-file
 //! home behind a stub, walked or not, and any home under the `none` profile - as it
-//! gives none where the link would carry one (§FS-fmt.6.4.1). On the same homes the
+//! gives none where the link would carry one (§FS-fmt.6.4). On the same homes the
 //! section the declaration has and the bare ID keep their file link with no
 //! fragment (§FS-fmt.6.2, §FS-fmt.6.7.1).
 //!
@@ -97,7 +97,7 @@ fn assert_home_has_only_section_1(findings: &Catalog) {
 }
 
 /// Premise of the unwalked stub case: the walk's only record of `FS-a` is the
-/// stub, so the target's sections are read from outside it (§FS-check.3.2.1).
+/// stub, so the target's sections are read from outside it (§FS-check.3.2).
 fn assert_only_the_stub_is_recorded(findings: &Catalog) {
     let decls = findings
         .declarations
@@ -109,8 +109,8 @@ fn assert_only_the_stub_is_recorded(findings: &Catalog) {
     );
 }
 
-/// §FS-fmt.6.4.1: a source-file home behind a stub, outside `[scan] include`.
-/// `check` reads its sections from the target (§FS-check.3.2.1) and reports
+/// §FS-fmt.6.4: a source-file home behind a stub, outside `[scan] include`.
+/// `check` reads its sections from the target (§FS-check.3.2) and reports
 /// `FS-a.2` missing, so `fmt` gives it no link.
 #[test]
 fn a_missing_section_of_an_unwalked_source_home_gives_no_link() {
@@ -126,7 +126,7 @@ fn a_missing_section_of_an_unwalked_source_home_gives_no_link() {
     );
 }
 
-/// §FS-fmt.6.4.1: the same home with `src` inside `[scan] include`, so the walk
+/// §FS-fmt.6.4: the same home with `src` inside `[scan] include`, so the walk
 /// records it.
 #[test]
 fn a_missing_section_of_a_walked_source_home_gives_no_link() {
@@ -143,7 +143,7 @@ fn a_missing_section_of_a_walked_source_home_gives_no_link() {
     );
 }
 
-/// §FS-fmt.6.4.1: a Markdown home under the `none` profile, whose link would carry
+/// §FS-fmt.6.4: a Markdown home under the `none` profile, whose link would carry
 /// no fragment (§FS-fmt.6.7.1).
 #[test]
 fn a_missing_section_under_the_none_profile_gives_no_link() {
@@ -159,7 +159,7 @@ fn a_missing_section_under_the_none_profile_gives_no_link() {
     );
 }
 
-/// §FS-fmt.6.4.1: grund#546's closed-body home under the `none` profile. The scan
+/// §FS-fmt.6.4: grund#546's closed-body home under the `none` profile. The scan
 /// ends the body at `# Other heading`, so the `## 1.` after it is no section of
 /// `FS-a`, and no anchor is asked for to find that out.
 #[test]
@@ -191,7 +191,7 @@ fn a_section_heading_after_the_body_closes_gives_no_link_under_the_none_profile(
     );
 }
 
-/// §FS-fmt.6.4.1, §FS-workspace.8.5: a qualified citation across projects, into a
+/// §FS-fmt.6.4, §FS-workspace.8.5: a qualified citation across projects, into a
 /// member on the `none` profile, takes its path from the workspace root and its
 /// sections from the member's scan, so the missing one gives no link there either.
 #[test]

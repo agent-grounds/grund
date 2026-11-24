@@ -4,7 +4,7 @@
 //! configured rule declaration's `invalid-rule` finding; a `NAME` the point
 //! does not reach keeps the whitespace refusal's bytes
 //! (§FS-rule-refusals.sentences.whitespace). The `check --rule` fixture is the
-//! repository of §FS-rule-refusals.sentences.rewrite.fs-only, one kind `FS`;
+//! repository of §FS-rule-refusals.sentences.rewrite.by-refusal, one kind `FS`;
 //! the declaration fixture is the `check-rules-modal-chapter-declaration`
 //! case's, which adds a `rules = true` kind. Reproducer of
 //! agent-grounds/grund#1374.
@@ -45,8 +45,8 @@ fn wrong_rows(root: &Path, rows: &[(&str, &str)]) -> Vec<String> {
     wrong
 }
 
-/// §FS-rule-refusals.sentences.presence-or: the point's exact rows, and the
-/// `FS-login` row of §FS-rule-refusals.sentences.rewrite.fs-only.
+/// §FS-rule-refusals.sentences.presence-or: the point's exact rows, and its
+/// `FS-login` row.
 #[test]
 fn check_rule_refuses_or_between_chapter_names_for_the_or() {
     let rows = [

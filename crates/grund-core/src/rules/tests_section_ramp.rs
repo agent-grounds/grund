@@ -1,4 +1,4 @@
-//! The counted-section window closed at 0.18.0 (§FS-rules.7.8), over hand-built
+//! The counted-section window closed at 0.18.0 (§FS-rules.5.1), over hand-built
 //! facts: a required finding that only a numbered-section site produces, a site
 //! §FS-rules.5.1 counts, is the same code's ordinary error with no clause after
 //! its message, and nothing is left on the warnings channel.

@@ -1,6 +1,6 @@
 //! Black-box regression for #824: maintenance already works, but the installed
 //! help and freshly generated guidance must teach it (§FS-cli.2.2,
-//! §FS-cli.2.3.3, §FS-init.2.3.4). Ported from the ticket-local reproducer.
+//! §FS-cli.2.3, §FS-init.2.3.4). Ported from the ticket-local reproducer.
 
 #[path = "support/fixture_cleanup.rs"]
 mod fixture_cleanup;
@@ -124,7 +124,7 @@ fn top_level_fmt_summary_names_link_and_section_lock_maintenance() {
     );
 }
 
-/// §FS-cli.2.3.3: the full page teaches the remedy and a practical invocation.
+/// §FS-cli.2.3: the full page teaches the remedy and a practical invocation.
 #[test]
 fn fmt_help_teaches_root_scoped_post_rename_maintenance() {
     let page = grund(Path::new(env!("CARGO_MANIFEST_DIR")), &["fmt", "--help"]);

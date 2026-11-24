@@ -1,4 +1,4 @@
-//! The canonicalizing boundary must retain ownership too (§FS-repository-maintenance.4.1).
+//! The canonicalizing boundary must retain ownership too (§FS-repository-maintenance.4).
 
 use super::physical_test_root as test_root;
 

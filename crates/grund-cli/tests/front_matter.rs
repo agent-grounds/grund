@@ -1,6 +1,6 @@
 //! Black-box: a Markdown file's front matter is a region of its own. No line of it is a
 //! heading, its citations are live and belong to the file's first declaration, and `fmt`
-//! rewrites nothing in it (§FS-check.1.1.5.2, §FS-check.1.1.5.2.1). Ports the #1046 metric and
+//! rewrites nothing in it (§FS-check.1.1.5.2). Ports the #1046 metric and
 //! policy bundle and its reproducer.
 
 use std::fs;
@@ -268,7 +268,7 @@ fn what_is_not_front_matter_reads_as_today() {
 }
 
 /// The front-matter citation belongs to the file's first declaration, under no section, so
-/// `refs --from` lists it and a `must cite` rule sees it (§FS-check.1.1.5.2.1).
+/// `refs --from` lists it and a `must cite` rule sees it (§FS-check.1.1.5.2).
 #[test]
 fn a_front_matter_citation_belongs_to_the_first_declaration() {
     let fx = Fixture::new(&cited());

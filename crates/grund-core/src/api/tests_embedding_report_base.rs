@@ -1,6 +1,6 @@
 //! Test module: what a binding publishes for a path that names the report base reads `.`
 //! (§FS-cli.3.4), a scan failure's `path` and a declaration record's alike (§AR-bindings.2).
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -150,7 +150,7 @@ fn scanned_case(dir: &Path) -> Value {
         .clone()
 }
 
-/// §FS-distribution.3.2.2.3: `dir` is spelled as the same record's `path`.
+/// §FS-distribution.3.2.2: `dir` is spelled as the same record's `path`.
 fn assert_dir_reads(record: &Value, expected: &str) {
     assert_eq!(record["path"], expected, "{record}");
     assert_eq!(record["e2e_case"]["dir"], expected, "{record}");

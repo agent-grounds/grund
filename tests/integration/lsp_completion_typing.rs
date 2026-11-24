@@ -1,5 +1,5 @@
 //! This issue's eleven keys, typed one at a time over stdio, each answered for its
-//! own text (§FS-lsp.responsiveness.4, §FS-lsp.1.6.2): in a Markdown note and in a
+//! own text (§FS-lsp.responsiveness.4, §FS-lsp.1.6): in a Markdown note and in a
 //! Java `//` comment, every key is a `didChange` followed by a `completion`, and
 //! each completion offers exactly the declarations the prefix typed so far names.
 //! A guard rather than a red test: today's server already answers each key for its

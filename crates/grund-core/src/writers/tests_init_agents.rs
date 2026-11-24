@@ -411,7 +411,7 @@ fn agents_update_refuses_malformed_delimiters() {
 
 #[test]
 fn check_reports_malformed_agents_block() {
-    // §FS-check.3.5.2: broken delimiters are an agents-init error anchored at
+    // §FS-check.3.5: broken delimiters are an agents-init error anchored at
     // the offending delimiter line, and the file is never rewritten.
     let root = test_root("check_reports_malformed_agents_block");
     write(

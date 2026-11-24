@@ -120,7 +120,7 @@ def artifact(package, kind, for_row=True):
 
 def _hidden(entry):
     """Whether a directory holding Rust keeps `entry` off the fresh `PATH`: the toolchain and the
-    candidate's own commands (§FS-distribution-candidate.5.2.1), by the name `PATH` finds them
+    candidate's own commands (§FS-distribution-candidate.5.2), by the name `PATH` finds them
     under. On Windows that has no case and no `PATHEXT` suffix, and `Path.stem` will not do: it
     reads `cargo-1.75` as `cargo-1`."""
     name = entry
@@ -138,7 +138,7 @@ def _hidden(entry):
 def _shadow(directory):
     """A directory of links to all that the absolute `directory` holds but what `_hidden` names, or
     `None` with nothing left, so that case makes no scratch and no link
-    (§FS-distribution-candidate.5.2.1). Made once per directory, because `/usr/bin` holds thousands
+    (§FS-distribution-candidate.5.2). Made once per directory, because `/usr/bin` holds thousands
     of entries and every subtest asks. A link keeps the entry's name, for a multi-call binary that
     reads its own, and targets the entry's absolute path, never what a link there says, whose
     relative target would leave the shadow. Directories are linked too, because a Windows `.cmd`
@@ -159,7 +159,7 @@ def _shadow(directory):
 def _without_rust(directory):
     """What stands on the fresh `PATH` for a directory holding Rust, or `None`. A command it cannot
     keep fails the rehearsal, naming the directory as `PATH` gave it, because running on without
-    the command reads as a broken candidate (§FS-distribution-candidate.5.2.1)."""
+    the command reads as a broken candidate (§FS-distribution-candidate.5.2)."""
     try:
         return _shadow(os.path.abspath(directory))
     except OSError as error:
@@ -169,7 +169,7 @@ def _without_rust(directory):
 
 def fresh_env(home, **extra):
     """§FS-distribution-candidate.5.2: no Rust on `PATH`, and nothing else lost from it
-    (§FS-distribution-candidate.5.2.1), no cache, no index, own home."""
+    (§FS-distribution-candidate.5.2), no cache, no index, own home."""
     home = Path(home)
     home.mkdir(parents=True, exist_ok=True)
     rust = ("cargo", "rustc", "rustup")
@@ -183,9 +183,9 @@ def fresh_env(home, **extra):
            if not k.startswith(("CARGO", "RUSTUP", "RUST", "PIP_", "PIPX_", "VIRTUAL_ENV",
                                 "PYTHON", "NODE_"))
            # npm reads `npm_config_` in any case, so every case goes
-           # (§FS-distribution-candidate.5.2.2).
+           # (§FS-distribution-candidate.5.2).
            and not k.lower().startswith("npm_config_")
-           # Each chooses the global npmrc npm reads (§FS-distribution-candidate.5.2.2).
+           # Each chooses the global npmrc npm reads (§FS-distribution-candidate.5.2).
            and k not in ("PREFIX", "DESTDIR")}
     env.update({
         "PATH": os.pathsep.join(path), "HOME": str(home), "USERPROFILE": str(home),

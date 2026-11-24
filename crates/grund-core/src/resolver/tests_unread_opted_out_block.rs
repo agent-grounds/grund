@@ -24,7 +24,7 @@
 //! not, and both exist to hold a named release ahead of the running version.
 //! This finding names no release (§DF-unread-opted-out-block.2.3), so there is
 //! no deadline to guard and no version constant for a golden to disagree with.
-//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4).
 
 use std::path::{Path, PathBuf};
 
@@ -52,7 +52,7 @@ fn repo_text(relative: &str) -> Option<String> {
     std::fs::read_to_string(repo_file(relative)).ok()
 }
 
-/// §FS-check.4.10.5: the message the spec shows and the message the binary
+/// §FS-check.4.10: the message the spec shows and the message the binary
 /// prints are one string. Without this the wording could be corrected in the
 /// golden and left stale in the document a reader reaches by citation, and
 /// every e2e case would still be green — the goldens compare the binary
@@ -117,7 +117,7 @@ fn cautioned_blocks(root: &Path) -> usize {
     .count()
 }
 
-/// §FS-check.4.10.2, §FS-workspace.6.2: the block's only scope root **is** a
+/// §FS-check.4.10, §FS-workspace.6.2: the block's only scope root **is** a
 /// link into the enclosing project's own `docs`. Those files are read — by
 /// the root project — so the answer to "would this block have read
 /// something, had it been a project?" is no, and the caution must not fire.
@@ -134,7 +134,7 @@ fn silent_when_the_scope_root_links_into_another_project() {
     assert_eq!(cautioned_blocks(&root), 0);
 }
 
-/// §FS-check.4.10.2, §FS-workspace.6.2: the same, for a scope root that is a
+/// §FS-check.4.10, §FS-workspace.6.2: the same, for a scope root that is a
 /// **file**. It reaches the probe without a directory anywhere in it, so a
 /// gate written into the walk alone would miss it — and `requirements.md` is
 /// a default `[scan] include` entry, so no configuration has to ask for this
@@ -149,7 +149,7 @@ fn silent_when_a_file_scope_root_links_into_another_project() {
     assert_eq!(cautioned_blocks(&root), 0);
 }
 
-/// §FS-check.4.10.2, §FS-config.3.5.1: the probe shares the reporting walk's
+/// §FS-check.4.10, §FS-config.3.5.1: the probe shares the reporting walk's
 /// canonical-root fence. A scope root that is an outward directory link is
 /// pruned even when no loaded project owns its target, so it is not evidence
 /// that this opted-out block would have read content as a project.

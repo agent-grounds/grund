@@ -1,6 +1,6 @@
 //! §FS-examples.2 (issue #1078): the downstream-citers recipe is taught by a
 //! guide section and a multi-run example (§FS-examples.5.5). The behaviour it
-//! teaches already ships (§FS-cover.2.1, §FS-check.4.1.4), so what these tests
+//! teaches already ships (§FS-cover.2, §FS-check.4.1), so what these tests
 //! pin is the teaching: the example's three runs, the guide section with the
 //! regeneration step and its four limits, and the links that lead to them.
 use std::fs;

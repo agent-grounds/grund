@@ -1,4 +1,4 @@
-//! CLI regression contract for §FS-inline-citation-style.4.1.1.1:
+//! CLI regression contract for §FS-inline-citation-style.4.1:
 //! append every over-limit line without changing the diagnostic or its prefix.
 
 #[path = "support/fixture_cleanup.rs"]
