@@ -38,12 +38,8 @@ CHAPTERS = (
 #  moved out of the source into that chapter)
 MOVES = (
     ("FS-show.md", "2.3.1", 'What counts as the "comment block"', {"comment-block": ()}),
-    ("FS-show.md", "2.3.1.1", "Find the open boundary", {"comment-block": (
-        "Scan **backwards** from the declaration line over consecutive lines",
-        "For Python triple-quoted docstrings: scan backward until the opening",
-    )}),
+    ("FS-show.md", "2.3.1.1", "Find the open boundary", {"comment-block": ()}),
     ("FS-show.md", "2.3.1.2", "Find the close boundary", {"comment-block": (
-        "Scan **forwards** from the declaration line by the symmetric rules",
         "a declaration written as a one-line `/* … */` closes on its own line",
     )}),
     ("FS-show.md", "2.3.1.3", "Terminate early on another declaration", {"comment-block": (
