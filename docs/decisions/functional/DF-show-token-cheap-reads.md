@@ -42,7 +42,7 @@ The token economy applies to the read/query surface only. `grund check` diagnost
 
 - New [§FS-show.2.1.2](../../functional-spec/FS-show.md#212-section-map---toc) / [§FS-show.2.1.3](../../functional-spec/FS-show.md#213-full-body---full) and the `--head | --outline | --brief | --full` mutual-exclusion group in [§FS-show.1](../../functional-spec/FS-show.md#1-inputs); the format-variant bullets in [§FS-show.3.1](../../functional-spec/FS-show.md#31-format-variants) gain `sections` / `head` JSON fields.
 - New [§FS-refs.3.3](../../functional-spec/FS-refs.md#33---summary) (`--summary`) and [§FS-list.3.3](../../functional-spec/FS-list.md#33---summary) (`--summary`, multi-value `--kind`).
-- [§FS-init.2.3](../../functional-spec/FS-init.md#23-generated-agent-entrypoints) and [§FS-init.2.3.3](../../functional-spec/FS-init.md#233-citation-form) describe the brief/section-first workflow; landing it bumps the `AGENTS.md` managed-block version and refreshes `templates/AGENTS.md` and the `init-agents-*` e2e fixtures.
+- [§FS-init.2.3](../../functional-spec/FS-init.md#23-generated-agent-entrypoints) and [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections) describe the brief/section-first workflow; landing it bumps the `AGENTS.md` managed-block version and refreshes `templates/AGENTS.md` and the `init-agents-*` e2e fixtures.
 - New [§FS-non-goals.14](../../functional-spec/FS-non-goals.md#14-generated-summaries-token-saving-inside-check) records the "no generated summaries, no abridged `check`" boundary.
 - E2E fixtures cover `show --outline`, `show --brief`, `refs --summary`, `list --kind FS,AR`, `list --summary` in text and JSON, plus the bumped `init-agents-*` block.
 

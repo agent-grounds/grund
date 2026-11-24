@@ -17,7 +17,7 @@ spelling needs a notice of its own, and this record carries it.
 In 0.19.0 (agent-grounds/grund#881):
 
 - `--docs` is an unknown flag: `grund init --docs` prints ``error: unknown flag `--docs` ``,
-  writes nothing and exits `2`, as every unknown flag does ([§FS-init.1.7](../../functional-spec/FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold),
+  writes nothing and exits `2`, as every unknown flag does ([§FS-init.1](../../functional-spec/FS-init.md#1-inputs),
   [§FS-init-fixtures.4](../../functional-spec/FS-init-fixtures.md#4-target-and-flag-failures));
 - `grund init --help` names `--scaffold` alone ([§FS-cli.2.3](../../functional-spec/FS-cli.md#23-a-subcommands-help-page));
 - the bindings keep their `docs` option, `InitOpts.docs` and `next.docs`, which were never a
@@ -30,8 +30,8 @@ In 0.19.0 (agent-grounds/grund#881):
   ([§FS-distribution.4.2](../../functional-spec/FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)). Moving the date would make the warning 0.18.0 printed false.
 - **Refuse `--docs` with a message naming `--scaffold`.** It would be a second refusal for one
   flag, kept forever; the unknown-flag refusal is the one every removed spelling gets, and the
-  release note and [§FS-init.1.7](../../functional-spec/FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold) name the replacement.
+  release note and [§FS-init.1](../../functional-spec/FS-init.md#1-inputs) name the replacement.
 
 ## release-note: Release note
 
-- [§DF-docs-flag-removed-in-0-19](DF-docs-flag-removed-in-0-19.md#df-docs-flag-removed-in-0-19-grund-init---docs-is-an-unknown-flag-from-0190), [§FS-init.1.7](../../functional-spec/FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **`grund init --docs` is removed; spell it `--scaffold`.** What grund 0.18.0 announced lands: `--docs` is now an unknown flag, so `grund init --docs` prints ``error: unknown flag `--docs` ``, writes nothing and exits `2`, and `grund init --help` no longer mentions it. `--scaffold` lays the same starter files `--docs` did. **Who this affects:** a script or CI step that still runs `grund init --docs`, which saw the deprecation warning in 0.18.0: change it to `grund init --scaffold`. The Rust, Python and Node `docs` option keeps its name and is unaffected. Closes [issue #881](https://github.com/agent-grounds/grund/issues/881).
+- [§DF-docs-flag-removed-in-0-19](DF-docs-flag-removed-in-0-19.md#df-docs-flag-removed-in-0-19-grund-init---docs-is-an-unknown-flag-from-0190), [§FS-init.1](../../functional-spec/FS-init.md#1-inputs), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **`grund init --docs` is removed; spell it `--scaffold`.** What grund 0.18.0 announced lands: `--docs` is now an unknown flag, so `grund init --docs` prints ``error: unknown flag `--docs` ``, writes nothing and exits `2`, and `grund init --help` no longer mentions it. `--scaffold` lays the same starter files `--docs` did. **Who this affects:** a script or CI step that still runs `grund init --docs`, which saw the deprecation warning in 0.18.0: change it to `grund init --scaffold`. The Rust, Python and Node `docs` option keeps its name and is unaffected. Closes [issue #881](https://github.com/agent-grounds/grund/issues/881).

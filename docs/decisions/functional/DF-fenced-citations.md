@@ -30,7 +30,7 @@ Under a `canonical` shorthand policy, a shorthand in a selected fence draws the 
 
 ### 2.5 No new block pair
 
-The managed block's marker bullet names only the unselected fences when `fenced` lists a tag ([§FS-init.2.3.4.2](../../functional-spec/FS-init.md#2342-citation-scheme)). That changes no block a release can write, because every released grund refuses `fenced` at load, so the block keeps its versions ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)).
+The managed block's marker bullet names only the unselected fences when `fenced` lists a tag ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)). That changes no block a release can write, because every released grund refuses `fenced` at load, so the block keeps its versions ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)).
 
 ## 3. Consequences
 

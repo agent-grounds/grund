@@ -113,7 +113,7 @@ impl KindConfig {
         })
     }
 
-    /// How this kind is named where a name would be useless (§FS-init.2.3.4.4.1,
+    /// How this kind is named where a name would be useless (§FS-init.2.3.4,
     /// §FS-check.3.11.2): by its place, with a trailing `/` on a folder so it
     /// reads as the directory it is. `None` for a kind with no home. Used for
     /// non-citable kinds, whose name exists only to key `[citations.*]` on and

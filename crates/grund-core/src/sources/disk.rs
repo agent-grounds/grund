@@ -57,7 +57,7 @@ pub(crate) fn path_is_dir(path: impl AsRef<Path>) -> bool {
 }
 
 /// What resolving `path` meets, links followed: the one classifier of a link's
-/// resolution the walk and the explicit path both ask (§FS-scan.scope.links.owed.cycle).
+/// resolution the walk and the explicit path both ask (§FS-scan.scope.links.owed).
 /// A loop is told apart from every other failure because the filesystem says what went
 /// wrong: the target is not missing, resolving it never arrives.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -66,13 +66,13 @@ pub(crate) enum Resolution {
     Directory,
     /// The path resolves to something that is not a directory.
     NotDirectory,
-    /// Resolving the path loops: a self-link, a cycle of links (§FS-scan.scope.links.owed.cycle).
+    /// Resolving the path loops: a self-link, a cycle of links (§FS-scan.scope.links.owed).
     Loop,
     /// Resolving the path failed another way, a missing target among them.
     Unresolved(ErrorKind),
 }
 
-/// How resolving `path` ends, links followed (§FS-scan.scope.links.owed.cycle).
+/// How resolving `path` ends, links followed (§FS-scan.scope.links.owed).
 pub(crate) fn path_resolution(path: impl AsRef<Path>) -> Resolution {
     match std::fs::metadata(path) {
         Ok(meta) if meta.is_dir() => Resolution::Directory,
@@ -81,7 +81,7 @@ pub(crate) fn path_resolution(path: impl AsRef<Path>) -> Resolution {
     }
 }
 
-/// How a failed resolution ended, by its error (§FS-scan.scope.links.owed.cycle).
+/// How a failed resolution ended, by its error (§FS-scan.scope.links.owed).
 ///
 /// The kind the standard library gives ELOOP, `FilesystemLoop`, cannot be named on stable
 /// Rust (`io_error_more`, rust-lang/rust#86442), though every error carries it; its derived
@@ -125,11 +125,11 @@ pub(crate) fn path_lookup(path: impl AsRef<Path>) -> std::io::Result<bool> {
     }
 }
 
-/// The one refusal of a path that names nothing (§FS-scan.scope.homes.lookup.path): its
+/// The one refusal of a path that names nothing (§FS-scan.scope.homes.lookup): its
 /// [`path_lookup`] says not found, a file on the way, or a name the file system cannot hold. A
 /// lookup that fails any other way, for permission among them, is no missing path and passes.
 /// `open()` asks it of every scanning run's path once discovery has answered, marked or not
-/// (§FS-scan.scope.homes.lookup.path.library), and the walk of a marked path asks it again.
+/// (§FS-scan.scope.homes.lookup), and the walk of a marked path asks it again.
 pub(crate) fn refuse_missing_path(path: &Path) -> anyhow::Result<()> {
     match path_lookup(path) {
         Ok(false) => Err(anyhow::anyhow!("path does not exist: {}", path.display())),
@@ -138,7 +138,7 @@ pub(crate) fn refuse_missing_path(path: &Path) -> anyhow::Result<()> {
 }
 
 /// Whether a failed lookup was refused for lack of permission, the one failure that says the
-/// path may well be there (§FS-scan.scope.links.owed.refused). Every caller asks this one question,
+/// path may well be there (§FS-scan.scope.links.owed). Every caller asks this one question,
 /// so every other failure, a loop among them, keeps the route it had.
 pub(crate) fn lookup_refused(error: &Error) -> bool {
     error.kind() == ErrorKind::PermissionDenied
@@ -211,7 +211,7 @@ pub(crate) fn io_reason(error: &Error) -> String {
     }
 }
 
-/// The classifier itself tells a loop from a missing target (§FS-scan.scope.links.owed.cycle), so a
+/// The classifier itself tells a loop from a missing target (§FS-scan.scope.links.owed), so a
 /// toolchain that renames the loop's kind fails here rather than only in the walk's tests.
 #[cfg(all(test, unix))]
 mod tests {

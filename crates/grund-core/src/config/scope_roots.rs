@@ -116,7 +116,7 @@ pub(crate) fn root_scope_roots(schema: &Schema, root: &Path, full: bool) -> Vec<
 
 /// Each configured key that can make a single file a scan root, as the path
 /// `root_scope_roots` spells that root, with the row and the line that named it
-/// (§FS-scan.checks.unread-scan-root.location): every `[scan] include` entry, then
+/// (§FS-scan.checks.unread-scan-root): every `[scan] include` entry, then
 /// every walked `file` home, in the roots' own order, so the first row naming a path
 /// is the one that spelled it (§AR-scanner.1.8). A key the file did not write, a
 /// built-in row or a version-2 file's derived `include`, has no line and no entry.

@@ -283,7 +283,7 @@ pub(crate) fn builtin(name: &str) -> Option<Language> {
 }
 
 /// The epoch reader of the required class that would claim `suffix` if admitted
-/// (§FS-scan.checks.unread-scan-root.folder): rule homes need a document reader.
+/// (§FS-scan.checks.unread-scan-root): rule homes need a document reader.
 pub(crate) fn builtin_text_for_suffix(suffix: &str, document: bool) -> Option<&'static str> {
     EPOCH
         .iter()

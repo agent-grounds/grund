@@ -12,7 +12,7 @@ Two contracts met in agent-grounds/grund#983. A release helper moves `main` only
 
 ### 2.1 Follow the move, in bounded rounds
 
-A helper not pinned to a tip gives a round up as soon as `main` moves - cancels its runs, deletes its branches - waits for `main` to hold still for three minutes, rebuilds both candidates on the new tip by the whole preparation, and runs all three runs again ([§FS-distribution.4.4.1.1](../../functional-spec/FS-distribution.md#4411-a-moved-main-is-followed-not-refused)). It runs at most six rounds in a 300-minute job, starts one only with 90 minutes left, and gives its watch a deadline that leaves room to publish ([§FS-distribution.4.4.1.2](../../functional-spec/FS-distribution.md#4412-six-rounds-within-five-hours)). `main` only fast-forwards, to commits the last round's runs passed, and a push the queue beat is a move like any other ([§FS-distribution.4.4.1.3](../../functional-spec/FS-distribution.md#4413-the-push-to-main-reads-main-back)).
+A helper not pinned to a tip gives a round up as soon as `main` moves - cancels its runs, deletes its branches - waits for `main` to hold still for three minutes, rebuilds both candidates on the new tip by the whole preparation, and runs all three runs again ([§FS-distribution.4.4.1](../../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). It runs at most six rounds in a 300-minute job, starts one only with 90 minutes left, and gives its watch a deadline that leaves room to publish ([§FS-distribution.4.4.1](../../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). `main` only fast-forwards, to commits the last round's runs passed, and a push the queue beat is a move like any other ([§FS-distribution.4.4.1](../../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)).
 
 ### 2.2 Rebuild, never replay
 
@@ -24,7 +24,7 @@ A run given `expected_main_sha` was dispatched to release that tip and no other,
 
 ### 2.4 Only a failure leaves branches
 
-A run that did not pass keeps its round's branches for a person; an abandoned round, exhaustion and a pinned refusal delete theirs, because nothing on them is evidence ([§FS-distribution.4.4.1.4](../../functional-spec/FS-distribution.md#4414-only-a-failure-leaves-branches)).
+A run that did not pass keeps its round's branches for a person; an abandoned round, exhaustion and a pinned refusal delete theirs, because nothing on them is evidence ([§FS-distribution.4.4.1](../../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)).
 
 ## 3. Rejected alternatives
 

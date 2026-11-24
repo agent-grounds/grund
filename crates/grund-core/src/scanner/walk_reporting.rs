@@ -69,10 +69,10 @@ pub(crate) struct WalkedTree {
     /// (§FS-section-lock.write).
     pub(crate) root_scope: bool,
     /// Refused file roots and folder homes with eligible refused content. Either successful
-    /// read pass discharges a folder row (§FS-scan.checks.unread-scan-root.folder).
+    /// read pass discharges a folder row (§FS-scan.checks.unread-scan-root).
     pub(crate) unread_roots: Vec<RootRow>,
     /// Eligible text spellings in candidate unread homes, before identity deduplication
-    /// (§FS-scan.checks.unread-scan-root.folder).
+    /// (§FS-scan.checks.unread-scan-root).
     pub(crate) folder_names: Vec<PathBuf>,
     /// The files read under neither name, gone from `files` (§FS-scan.checks.reading-conflict).
     pub(crate) reading_conflicts: Vec<ReadingConflict>,
@@ -144,7 +144,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     let mut aliasable = BTreeSet::new();
     let mut files = Vec::new();
     let mut errors = Vec::new();
-    // §FS-check.3.29.11: the directories the walk met, for the rule that asks which of
+    // §FS-check.3.29: the directories the walk met, for the rule that asks which of
     // them carries a `[workspace]` block nothing claims. Collected here because the
     // entries are already being enumerated — no second traversal (§GOAL-fast-feedback).
     let mut dirs = Vec::new();
@@ -155,7 +155,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     // §AR-scanner.1.6: the file roots a name rule refused, with their rows,
     // and the rows themselves, read only once a root is refused.
     let mut unread_roots = Vec::new();
-    // §FS-scan.checks.unread-scan-root.folder: record evidence in this traversal alone.
+    // §FS-scan.checks.unread-scan-root: record evidence in this traversal alone.
     let mut folder_homes = super::folder_homes::FolderHomes::new(schema, frame);
     let mut file_rows = None;
     let mut value_homes: Option<Option<Vec<PathBuf>>> = None;
@@ -186,7 +186,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         // the same canonical project-root boundary as a link met during descent.
 
         // §AR-scanner.1.6: the path this walk was handed, unlooked-up, has no other reader, so
-        // no member boundary or owner takes it (§FS-scan.scope.homes.lookup.path).
+        // no member boundary or owner takes it (§FS-scan.scope.homes.lookup).
         let unread_passed = looked_up.is_err() && explicit_scope && !root_scope && position == 0;
         // §AR-workspace.6: a root scan starts outside member namespaces; an
         // included path at or below a member boundary belongs to the member scan,
@@ -228,7 +228,7 @@ pub(crate) fn walk_scannable_files_with_sources(
                     files.push(scan_root);
                 }
                 // §AR-scanner.1.13: the predicate's own answer, kept with the row
-                // that made the file a root (§FS-scan.checks.unread-scan-root.location).
+                // that made the file a root (§FS-scan.checks.unread-scan-root).
                 Some(refusal) => {
                     // §AR-scanner.1.6: the hidden rule is asked first, so a hidden root
                     // also asks the one extension test, and the record names both.
@@ -239,7 +239,7 @@ pub(crate) fn walk_scannable_files_with_sources(
                     };
                     let rows =
                         file_rows.get_or_insert_with(|| file_root_rows(schema, frame.root()));
-                    // §FS-scan.checks.unread-scan-root.silent: a value row's value-source
+                    // §FS-scan.checks.unread-scan-root: a value row's value-source
                     // home is read by the value pass; when that pass cannot list them,
                     // record none.
                     let value_homes = value_homes.get_or_insert_with(|| {
@@ -320,7 +320,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             if let Some(err) = entry.error() {
                 report_walk_error(err.clone(), dirs[first_dir..].last().map(PathBuf::as_path));
             }
-            // §FS-check.3.29.11: a directory is not a scannable file, so it falls out
+            // §FS-check.3.29: a directory is not a scannable file, so it falls out
             // one line below. Its path is what the unlisted-`[workspace]` rule needs,
             // and the scan root itself — the entry at depth 0 — is one of them.
             if entry.file_type().is_some_and(is_directory) {
@@ -386,7 +386,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         handed = files.len();
         files.extend(rest.into_iter().filter(&kept));
     }
-    // §FS-scan.checks.unread-scan-root.folder: retain entry eligibility before choosing a name.
+    // §FS-scan.checks.unread-scan-root: retain entry eligibility before choosing a name.
     unread_roots.extend(folder_homes.rows());
     let folder_names = files
         .iter()
@@ -457,7 +457,7 @@ pub(crate) fn walk_scannable_files_with_sources(
 
 /// Record the row that made `scan_root` a root, once however many roots spell it:
 /// under version 2 a `files` entry is an `include` root and a home at once
-/// (§FS-scan.checks.unread-scan-root.location). A root no configured key names, a
+/// (§FS-scan.checks.unread-scan-root). A root no configured key names, a
 /// path typed on the command line, has no row to report at. The record carries the
 /// rules that refused the root, so one root is one record (§DF-unread-hidden-root.2.1).
 fn record_unread_root(

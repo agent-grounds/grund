@@ -1,6 +1,6 @@
 //! What one `grund init` run feeds the templates (§FS-init.2.3.8): the effective
 //! config it will leave governing the target, and the workspace guidance
-//! that reads the tree rather than the config (§FS-init.2.3.4.16).
+//! that reads the tree rather than the config (§FS-init.2.3.4).
 //!
 //! The split this file is the writers' half of. What a block *says* is a
 //! function of config alone and is `templates/` (§AR-system.2.11); everything
@@ -23,7 +23,7 @@ use crate::templates::{
 use crate::templates::{Template, WorkspaceGuidance, render_grund_toml};
 use crate::workspace::open;
 
-/// Workspace presence (§FS-init.2.3.4.16) and the member section (§FS-init.2.3.4.15),
+/// Workspace presence (§FS-init.2.3.4) and the member section (§FS-init.2.3.4),
 /// built here rather than inside the block substitutions so it is built
 /// **once**. It does not vary by `ConversationSurface`, and a run that writes
 /// both `AGENTS.md` and a `CLAUDE.md` companion renders two blocks from one
@@ -34,7 +34,7 @@ use crate::workspace::open;
 /// Canonical target identity omits self regardless of whether this run selected
 /// the canonical `AGENTS.md` or only a companion. The same walk names the
 /// optional members absent from the tree, which every entrypoint's write reads
-/// (§FS-init.2.3.4.15.8).
+/// (§FS-init.2.3.4).
 pub(super) fn agents_workspace_guidance(
     name: &str,
     config: &Config,
@@ -50,7 +50,7 @@ pub(super) fn agents_workspace_guidance(
         Some(name),
         // Collect effective pending metadata. The renderer omits self (and its
         // description); the pending name still participates in alias validation
-        // (§FS-init.2.3.4.15.4).
+        // (§FS-init.2.3.4).
         config.project_description.as_deref(),
         config.marker.as_str(),
         canonical_agent_entrypoint_selected,
@@ -68,7 +68,7 @@ pub(super) fn agents_workspace_guidance(
 /// here — `init` always writes a config *in* `target` when one is absent.
 ///
 /// A config that fails to load is an error, not a fallback to defaults
-/// (§FS-init.2.3.8.3): the block is rendered *from* this config, so silently
+/// (§FS-init.2.3.8): the block is rendered *from* this config, so silently
 /// substituting defaults writes agent instructions that describe a repository
 /// the user does not have — an invalid `[reference] conversation`, marker, or
 /// kind set would drop the guidance it selects while `init` still reported
@@ -93,7 +93,7 @@ pub(super) fn init_pending_effective_config(
         Some(name) => name.to_string(),
         None => derive_default_name(target)?,
     };
-    // §FS-init.2.4.10: the block describes the file `init` writes, read as it will
+    // §FS-init.2.4.3: the block describes the file `init` writes, read as it will
     // be read, so a row with no built-in default (`REQ`) reaches the map too.
     let text = render_grund_toml(template, &name, description);
     let invocation = Invocation::new(target, true, Selection::Discovery);
@@ -102,7 +102,7 @@ pub(super) fn init_pending_effective_config(
 
 /// The project `grund init --scaffold` would leave at `root`, where no config
 /// file is: the default template's `grund.toml`, read as init reads it before
-/// writing it (§FS-init.2.4.10). The no-config schema note is derived from it
+/// writing it (§FS-init.2.4.3). The no-config schema note is derived from it
 /// (§FS-schema.8.2), so the note follows the template and names nothing of its own.
 pub(crate) fn scaffold_project(root: &Path, name: &str) -> Result<Project> {
     let text = render_grund_toml(Template::default(), name, None);
@@ -110,8 +110,8 @@ pub(crate) fn scaffold_project(root: &Path, name: &str) -> Result<Project> {
     Ok(pending_config(&text, root, &invocation)?.project().clone())
 }
 
-/// `templates::render_agents_append_block` with the §FS-init.2.3.4.16 discovery
-/// and §FS-init.2.3.4.15 section
+/// `templates::render_agents_append_block` with the §FS-init.2.3.4 discovery
+/// and §FS-init.2.3.4 section
 /// rendered for it — the shape `command_init` had before the section was hoisted
 /// out of the substitutions, kept for the tests that render one block from a
 /// target and have no second surface for the walk-up to be repeated by.

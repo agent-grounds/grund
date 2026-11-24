@@ -19,7 +19,7 @@ $
 
 ## 2. Decision
 
-The file stays unread, and `check` names it with the same `unread-scan-root` warning, carrying a second reason ([§FS-scan.checks.unread-scan-root](../../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)): one located warning at the `grund.toml` line of the row that made it a root, naming the row and the file, saying its name begins with `.`, and ending in the rename that fixes it ([§FS-scan.checks.unread-scan-root.message](../../functional-spec/FS-scan.md#checksunread-scan-rootmessage-the-message)). The exit code does not move and `success` is withheld.
+The file stays unread, and `check` names it with the same `unread-scan-root` warning, carrying a second reason ([§FS-scan.checks.unread-scan-root](../../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)): one located warning at the `grund.toml` line of the row that made it a root, naming the row and the file, saying its name begins with `.`, and ending in the rename that fixes it ([§FS-scan.checks.unread-scan-root](../../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)). The exit code does not move and `success` is withheld.
 
 It is the same finding rather than a sibling code because it is the same fact (a file the configuration names was not read), at the same place, on the same channel, with the same shape of fix. A second code would split one question in two, and `--ignore unread-scan-root` would silence only half of the unread roots.
 
@@ -29,7 +29,7 @@ A root that is hidden and whose extension the list also refuses, such as `.notes
 
 ### 2.2 What it leaves as it was
 
-The hidden rule itself does not change: no file whose own name begins with `.` is read, by any run, `--full` included. A hidden file inside a directory root stays silent, because nothing in the configuration named it. A hidden home that does not exist, a `scan = false` row and a value row's JSON home stay silent too ([§FS-scan.checks.unread-scan-root.silent](../../functional-spec/FS-scan.md#checksunread-scan-rootsilent-what-stays-silent)). A path typed on the command line keeps its stderr caution, because it has no row behind it. `list`, `refs`, `show`, `cover` and `fmt` stay silent, as [§DF-unread-scan-root.2.1](DF-unread-scan-root.md#21-check-alone-says-it) ruled.
+The hidden rule itself does not change: no file whose own name begins with `.` is read, by any run, `--full` included. A hidden file inside a directory root stays silent, because nothing in the configuration named it. A hidden home that does not exist, a `scan = false` row and a value row's JSON home stay silent too ([§FS-scan.checks.unread-scan-root](../../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)). A path typed on the command line keeps its stderr caution, because it has no row behind it. `list`, `refs`, `show`, `cover` and `fmt` stay silent, as [§DF-unread-scan-root.2.1](DF-unread-scan-root.md#21-check-alone-says-it) ruled.
 
 ## 3. Consequences
 

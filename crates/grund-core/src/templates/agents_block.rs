@@ -7,8 +7,8 @@
 //! render the whole block into `Expected`, which `check` byte-compares for
 //! drift (§FS-check.3.5.4): rendering is deterministic, so a fresh render is
 //! the hash.
-//! Nothing here reads the tree — workspace presence (§FS-init.2.3.4.16) and
-//! member text (§FS-init.2.3.4.15) arrive from the run that walked for them
+//! Nothing here reads the tree — workspace presence (§FS-init.2.3.4) and
+//! member text (§FS-init.2.3.4) arrive from the run that walked for them
 //! (`writers/init_render.rs`).
 
 use super::assets::{AGENTS_PROJECT_NAMESPACES_TEMPLATE, AGENTS_TEMPLATE, canonical_template_text};
@@ -23,16 +23,16 @@ use crate::grammar::{
 };
 use crate::model::plural;
 
-/// Workspace discovery and member-list expansion are independent (§FS-init.2.3.4.16).
+/// Workspace discovery and member-list expansion are independent (§FS-init.2.3.4).
 /// A discovered workspace retains project-boundary guidance even when its members
-/// cannot be rendered (§FS-init.2.3.4.15). Writers settle both once per invocation.
+/// cannot be rendered (§FS-init.2.3.4). Writers settle both once per invocation.
 #[derive(Default)]
 pub(crate) struct WorkspaceGuidance {
     pub present: bool,
     pub members: String,
 }
 
-/// The fixed workspace-only fragment, with the configured marker (§FS-init.2.3.4.16).
+/// The fixed workspace-only fragment, with the configured marker (§FS-init.2.3.4).
 pub(crate) fn render_project_namespaces_section(marker: &str) -> String {
     format!(
         "\n\n{}",
@@ -49,8 +49,8 @@ pub(crate) fn render_project_namespaces_section(marker: &str) -> String {
 /// kinds show up in the kind set, and so on. Everything *not* substituted here is
 /// fixed for the block version. `{ID_SHAPE_SEC}` is listed before `{ID_SHAPE}`
 /// only for readability; neither placeholder is a substring of the other.
-/// `workspace` arrives already discovered (§FS-init.2.3.4.16), with its members
-/// rendered (§FS-init.2.3.4.15): these read the tree rather than the config and do not vary
+/// `workspace` arrives already discovered (§FS-init.2.3.4), with its members
+/// rendered (§FS-init.2.3.4): these read the tree rather than the config and do not vary
 /// by surface, and its walk-up must run once per `init` invocation rather than
 /// once per entrypoint file — see `writers/init_render.rs`. Which is also why
 /// nothing here needs the target directory any more.
@@ -69,10 +69,10 @@ fn agents_template_substitutions(
     let marker = project.schema.citation.marker.as_str();
     let id_shape = id_shape(&ids.format);
     let id_example = example_id(&ids.format, "FS");
-    // §FS-init.2.3.8.2: the worked example illustrates a non-existent ID, so it is
+    // §FS-init.2.3.8: the worked example illustrates a non-existent ID, so it is
     // rendered in the `<marker>`-escaped form (§FS-workspace.1).
     let cite_example = format!("<{marker}>{id_example}{sep}3{sep}1");
-    // §FS-init.2.3.4.4.2: a config with no citable kind says so rather than
+    // §FS-init.2.3.4: a config with no citable kind says so rather than
     // naming the empty set.
     let kind_configs = project.kind_configs();
     let trigger_example = trigger_example(project, &kind_configs);
@@ -82,7 +82,7 @@ fn agents_template_substitutions(
     } else {
         format!("`KIND ∈ {{{}}}`", citable.join(", "))
     };
-    // §FS-init.2.3.8.1: v2 fixes marked-only recognition; only v1 has a strict switch.
+    // §FS-init.2.3.8: v2 fixes marked-only recognition; only v1 has a strict switch.
     let bare_note = if project.version == 2 {
         format!(
             "Bare ID-shaped tokens are ignored — config version 2 recognizes only `{marker}`-prefixed citations, with no opt-out."
@@ -98,13 +98,13 @@ fn agents_template_substitutions(
     };
     let section_heading_note = section_heading_note(project, marker);
     let inline_citation_style = inline_citation_style_sentence(project, compiled);
-    // §FS-init.2.3.4.3.1: `<KIND>`, the literal the format writes after `{kind}`, then `*`.
+    // §FS-init.2.3.4: `<KIND>`, the literal the format writes after `{kind}`, then `*`.
     let glob_pattern = format!(
         "<KIND>{}*",
         literal_after_kind_placeholder(&ids.format).unwrap_or("")
     );
     vec![
-        // §FS-init.2.3.9.3: the base revision; `Guidance` moves it to the run's.
+        // §FS-init.2.3.9: the base revision; `Guidance` moves it to the run's.
         (
             "{BLOCK_HEADING}",
             agents_block_heading(AGENTS_BLOCK_BASE_VERSION),
@@ -144,10 +144,10 @@ fn agents_template_substitutions(
     ]
 }
 
-/// The `### Rules` marker bullet's fence clause (§FS-init.2.3.4.2): empty where
+/// The `### Rules` marker bullet's fence clause (§FS-init.2.3.4): empty where
 /// `[schema.sources] fenced` lists no tag, so the bullet keeps its bytes, and otherwise
 /// ` not tagged ` and the tags, in written order, joined as a prohibition's targets are
-/// (§FS-init.2.3.5.4), since a fence they select is no longer a way not to cite.
+/// (§FS-init.2.3.5), since a fence they select is no longer a way not to cite.
 fn unselected_fences(project: &Project) -> String {
     let tags: Vec<String> = project
         .schema
@@ -163,8 +163,8 @@ fn unselected_fences(project: &Project) -> String {
 }
 
 /// `format` filled with `kind` and the worked citation example's number and slug
-/// (§FS-init.2.3.8.2): the one example ID both the citation example and the
-/// trigger example (§FS-init.2.3.8.4) are built from.
+/// (§FS-init.2.3.8): the one example ID both the citation example and the
+/// trigger example (§FS-init.2.3.8) are built from.
 fn example_id(format: &str, kind: &str) -> String {
     format
         .replace("{kind}", kind)
@@ -172,13 +172,13 @@ fn example_id(format: &str, kind: &str) -> String {
         .replace("{slug}", "user-login")
 }
 
-/// The trigger sentence's example clause (§FS-init.2.3.8.4): `, e.g.` and the
+/// The trigger sentence's example clause (§FS-init.2.3.8): `, e.g.` and the
 /// configured trigger written straight before an example ID of the kind init's
 /// guidance names, in that kind's effective format, so typing it converts in the
 /// host repo; `FS` in the repository format where no kind is citable. Empty in
 /// the non-strict compatibility mode, read from the switch the scanner reads,
 /// where a bare ID-shaped token is a citation and the block must stay clean
-/// (§FS-init.2.3.8.2).
+/// (§FS-init.2.3.8).
 fn trigger_example(project: &Project, kinds: &[KindConfig]) -> String {
     if !project.schema.citation.strict {
         return String::new();
@@ -191,7 +191,7 @@ fn trigger_example(project: &Project, kinds: &[KindConfig]) -> String {
     format!(", e.g. `{}{id}`,", project.presentation.trigger)
 }
 
-/// The discovery rung (§FS-init.2.3.4.3): its `--kind` example names the kind
+/// The discovery rung (§FS-init.2.3.4): its `--kind` example names the kind
 /// init's guidance names, then the first other citable kind with a `folder`
 /// home, in config order, so the recipe runs in the project it was rendered for;
 /// a config with no citable kind gets the bare `grund list` alone.
@@ -212,7 +212,7 @@ fn kind_discovery_bullet(kinds: &[KindConfig]) -> String {
 fn section_heading_note(project: &Project, marker: &str) -> String {
     let ids = &project.schema.ids;
     let sep = ids.section_separator.as_str();
-    // §FS-init.2.3.4.5: since v16 the relative form, and the lock a citation of it needs;
+    // §FS-init.2.3.4: since v16 the relative form, and the lock a citation of it needs;
     // since v23 in a doc-comment declaration body too.
     let (parent, child, path) = if ids.named_sections {
         ("## format: Formatting", "### .1: Username", "format.1")
@@ -222,7 +222,7 @@ fn section_heading_note(project: &Project, marker: &str) -> String {
     let heading_policy = format!(
         " In a declaration body, Markdown or doc-comment, a heading may instead write only the component it adds and take the rest from the heading one level up: `{child}` under `{parent}` declares `{marker}<ID>{sep}{path}`, the one coordinate it is cited and reported by. After citing such a heading, run `grund fmt --write` so the section lock records it, and commit the lock. Every non-declaration heading inside a Markdown declaration body must carry a numbered or enabled named section path; file titles, headings that close the body, fenced examples, non-ATX text, and source doc-comments stay exempt, while bold labels remain the non-citable alternative."
     );
-    // §FS-init.2.3.4.5: enabled repositories teach explicit complete handles, and since
+    // §FS-init.2.3.4: enabled repositories teach explicit complete handles, and since
     // v17 a name under a number, in a doc-comment too since v23, which the section lock guards.
     if ids.named_sections {
         let verdict = match ids.section_heading_levels.as_str() {
@@ -320,10 +320,10 @@ pub(crate) fn markdown_link_destination(raw: &str) -> String {
 }
 
 /// The title of an untitled complement row in the Project map
-/// (§FS-init.2.3.4.4.3): rendered wording, never a config default.
+/// (§FS-init.2.3.4): rendered wording, never a config default.
 const COMPLEMENT_ROW_TITLE: &str = "Every scanned file no other row claims";
 
-/// The Project map rows (§FS-init.2.3.4.4): one per configured kind, linking
+/// The Project map rows (§FS-init.2.3.4): one per configured kind, linking
 /// its home. A **citable** kind is named by its kind name — the prefix an agent
 /// will type in a citation. A **non-citable** kind is named by its *place*: it
 /// has no ID namespace, so its name is a config handle and the only useful thing
@@ -333,11 +333,11 @@ const COMPLEMENT_ROW_TITLE: &str = "Every scanned file no other row claims";
 /// of them: its row is why it is configured.
 fn declaration_map(project: &Project) -> String {
     // The homeless kind gets no row unless a v2 `code` row lists places
-    // (§FS-init.2.3.4.4.1, §FS-config-v2.schema.places.complement); its
+    // (§FS-init.2.3.4, §FS-config-v2.schema.places.complement); its
     // citation directions still render (§FS-init.2.3.5).
     let homeless = project.schema.complement_name();
     let rows = project.schema.rows.iter().filter_map(|row| {
-        // An untitled complement row says it is the complement (§FS-init.2.3.4.4.3).
+        // An untitled complement row says it is the complement (§FS-init.2.3.4).
         let untitled = if row.name == homeless {
             COMPLEMENT_ROW_TITLE
         } else {
@@ -364,7 +364,7 @@ fn declaration_map(project: &Project) -> String {
         }
         // A citable kind is named by its name, a non-citable or unwalked one
         // (§FS-config.3.4.7, §FS-init.2.3.5) by its place; each further place is
-        // one more link, in place order (§FS-init.2.3.4.4.1).
+        // one more link, in place order (§FS-init.2.3.4).
         let links = places.iter().enumerate().map(|(index, place)| {
             let home = place.path().unwrap_or_default();
             let label = match (&row.kind, index) {
@@ -386,7 +386,7 @@ fn declaration_map(project: &Project) -> String {
     rows.join("\n")
 }
 
-/// §FS-init.2.3.4.4.2: the Project map of a config with no row to list — one
+/// §FS-init.2.3.4: the Project map of a config with no row to list — one
 /// paragraph teaching the first kind in the config's own spelling, rather than
 /// an empty map.
 fn first_kind_paragraph(project: &Project) -> String {
@@ -407,8 +407,8 @@ fn link(label: &str, home: &str) -> String {
 
 /// The managed block — just the H2 section that `init` appends to, or replaces
 /// inside, an existing `AGENTS.md` (§FS-init.2.3.10). The template *is* the block;
-/// the H2 line carrying the version is its own begin marker (§FS-init.2.3.1).
-/// `workspace` carries the §FS-init.2.3.4.16 discovery and §FS-init.2.3.4.15
+/// the H2 line carrying the version is its own begin marker (§FS-init.2.3.10).
+/// `workspace` carries the §FS-init.2.3.4 discovery and §FS-init.2.3.4
 /// member section, settled once per `init` invocation by `writers/init_render.rs`
 /// and handed to every surface that block is written to.
 pub(crate) fn render_agents_append_block(
@@ -432,7 +432,7 @@ pub(crate) fn render_agents_append_block(
 /// block (§FS-init.2.3.10) — the H1 scaffolding line, which is *unmanaged*, then
 /// the block. Taking the block rather than rendering it is what lets one `init`
 /// run reuse it as both the full body *and* the append/update payload, so the
-/// workspace-members walk-up (§FS-init.2.3.4.15) runs once per invocation.
+/// workspace-members walk-up (§FS-init.2.3.4) runs once per invocation.
 pub(crate) fn render_agents_md_from_block(name: &str, block: &str) -> String {
     format!("# {name} — agent instructions\n\n{block}")
 }

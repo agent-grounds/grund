@@ -71,7 +71,7 @@ pub struct CheckOutput {
     /// vocabulary — but a caller renders each as a CLI-level `warning:`
     /// (§FS-check.2.1.1) and a run that earns one prints no `success`
     /// (§FS-check.2.1.3). §FS-check.3.29 is one of the report's errors
-    /// (§FS-check.3.29.13) and is not here, and §FS-check.3.30's absorbed scan
+    /// (§FS-check.3.29) and is not here, and §FS-check.3.30's absorbed scan
     /// refuses the run as a config error.
     pub warnings: Vec<Finding>,
 }

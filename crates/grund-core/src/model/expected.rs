@@ -27,12 +27,12 @@ pub struct Expected {
     /// both sides (§FS-check.3.5.5).
     pub workspace_sections: bool,
     /// `fmt`'s bare-ID link destination keyed by (index file, ID), for each ID
-    /// the index cites and each declaration its folders own (§FS-check.3.18.3,
-    /// §FS-check.3.18.5.2, §DF-index-entry-form.2.7).
+    /// the index cites and each declaration its folders own (§FS-check.3.18,
+    /// §DF-index-entry-form.2.7).
     pub index_targets: BTreeMap<(PathBuf, Id), String>,
     /// The scoped `AGENTS.md` files and their companions that no row's `files`
     /// lists: guidance about a directory's units, never a unit of it
-    /// (§FS-init.2.3.5.11).
+    /// (§FS-init.2.3.5).
     pub non_units: BTreeSet<PathBuf>,
     /// Whether a genuinely invalid rule left every block of the project
     /// uncompared, which carries `invalid-rule` with `--only agents-init`
@@ -41,7 +41,7 @@ pub struct Expected {
 }
 
 /// §AR-checker.1.3: one entrypoint and the sections its managed block should
-/// carry, each rendered for this file's conversation surface (§FS-init.2.3.6.1):
+/// carry, each rendered for this file's conversation surface (§FS-init.2.3.6):
 /// a root entrypoint's whole block, cut into the parts a stale finding names
 /// (§FS-check.3.5.3, §FS-check.3.5.4), and a scoped one's generated sections.
 #[derive(Clone, Debug, PartialEq)]
@@ -51,13 +51,13 @@ pub struct ExpectedEntrypoint {
     pub require_block: bool,
     pub sections: Vec<ExpectedSection>,
     /// What the file's whole managed block should be, for a scoped entrypoint
-    /// (§FS-init.2.3.5.12): the block of a destination of the live render, or
-    /// `None` for an orphan the list on disk names (§FS-init.2.3.5.13.1). Root
+    /// (§FS-init.2.3.5): the block of a destination of the live render, or
+    /// `None` for an orphan the list on disk names (§FS-init.2.3.5). Root
     /// entrypoints are held to their sections, which cover the whole block.
     pub scoped: Option<ScopedExpectation>,
 }
 
-/// §FS-init.2.3.5.8: what a scoped entrypoint is held to.
+/// §FS-init.2.3.5: what a scoped entrypoint is held to.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ScopedExpectation {
     /// A destination's block, byte for byte.

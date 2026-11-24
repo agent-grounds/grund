@@ -44,7 +44,7 @@ pub use super::init_output::{InitError, InitEvent, InitOpts, InitOutput};
 /// entrypoint. Two base surfaces at most: the local-conversation sentence differs
 /// between the Claude entrypoints and everything else. The chapter-rule section
 /// is inserted per entrypoint so its citation destinations are relative to that
-/// file (§FS-init.2.3.5.10). The linked base is rendered only when a Claude
+/// file (§FS-init.2.3.5). The linked base is rendered only when a Claude
 /// entrypoint is actually selected, so the common run still walks the workspace once.
 ///
 /// Why the duplicate-entrypoint notes and the Claude companions are computed
@@ -115,7 +115,7 @@ fn init_run(
             "--description must be a single line".to_string(),
         ));
     }
-    // §FS-init.1.6.3, §FS-init.1.6.4: a refused template is a flag error, settled
+    // §FS-init.1.6: a refused template is a flag error, settled
     // before the target is even looked at, so nothing is read or written.
     let template = resolve_template(template_name.as_deref(), docs).map_err(InitError::new)?;
     // §FS-init.1, §FS-init.1.2: what `<path>` is, and whether it may be
@@ -128,7 +128,7 @@ fn init_run(
     // §FS-init.2.3.8: render agent instructions against the config `init` leaves
     // in place; select the name from explicit flag, target config, then basename.
 
-    // §FS-init.2.1.1.1, §FS-init.2.3.4.17: do both before the entrypoint plan,
+    // §FS-init.2.1.1, §FS-init.2.3.6: do both before the entrypoint plan,
     // so each renderer consumes the same identity and effective grammar.
     let (mut init_config, resolved_name) =
         init_pending_effective_config(&target, template, name.as_deref(), description.as_deref())
@@ -221,8 +221,8 @@ fn init_run(
     } else {
         Vec::new()
     };
-    // §FS-init.2.3.5.11: one placement for the root block and every scoped file,
-    // counting the directories the scaffold lays below (§FS-init.2.3.5.11.4).
+    // §FS-init.2.3.5: one placement for the root block and every scoped file,
+    // counting the directories the scaffold lays below (§FS-init.2.3.5).
     let guidance = Guidance::laying(
         &init_config,
         rule_kind_enabled.then_some(RuleGuidance {
@@ -244,7 +244,7 @@ fn init_run(
         }
     };
 
-    // §FS-init.1.2.2: the planned entrypoint paths are known now, so check them
+    // §FS-init.1.2: the planned entrypoint paths are known now, so check them
     // against the user-global instruction files `grund integrations --write`
     // owns (§FS-integrations.4.3.8) before any of them is written.
     if let Some(message) =
@@ -252,14 +252,14 @@ fn init_run(
     {
         return Err(InitError::new(message));
     }
-    // §FS-init.1.2.6: a malformed or newer block in any planned entrypoint
+    // §FS-init.1.2: a malformed or newer block in any planned entrypoint
     // refuses the run before the first write or report line, not mid-plan.
     if let Some((path, err)) = refuse_planned_agent_blocks(&target, &agent_entrypoints, force) {
         let (source, message) = super::init_companions::update_failure(&path, &err);
         *diagnostic = Some(source);
         return Err(InitError::new(message));
     }
-    // §FS-init.2.3.5.14.1: the scoped files are read before the first write too,
+    // §FS-init.2.3.5: the scoped files are read before the first write too,
     // and the list on disk before the root block is rewritten.
     let scoped = plan_scoped(&guidance, &init_config.root, &target);
     if let Some((path, err)) = refuse_scoped(&scoped) {
@@ -268,7 +268,7 @@ fn init_run(
         return Err(InitError::new(message));
     }
 
-    // §FS-init.2.3.4.16, §FS-check.3.29: walked once and handed to both surfaces —
+    // §FS-init.2.3.4, §FS-check.3.29: walked once and handed to both surfaces —
     // the section does not vary by surface, and this walk is where every block is
     // asked whether its members swallowed its scan, once per run.
     let (workspace, run_warnings, absent) = agents_workspace_guidance(
@@ -279,8 +279,8 @@ fn init_run(
     );
     // §FS-distribution.3.3.2: later write failures retain these run cautions.
     *cautions = run_warnings.clone();
-    // Render the base once per conversation surface (§FS-init.2.3.4.17.2).
-    // §FS-init.2.3.5.10: the shared rule renderer adds destinations per file.
+    // Render the base once per conversation surface (§FS-init.2.3.6).
+    // §FS-init.2.3.5: the shared rule renderer adds destinations per file.
     let render_block = |surface| {
         render_agents_append_block(
             &resolved_name,
@@ -292,7 +292,7 @@ fn init_run(
         )
     };
     let add_chapter_rules = |block: String, path: &Path| {
-        // §FS-init.2.3.5.10: a pending entrypoint cannot be canonicalized yet;
+        // §FS-init.2.3.5: a pending entrypoint cannot be canonicalized yet;
         // give the resolver a path under the loaded config's root instead.
         let path = init_config
             .root
@@ -311,7 +311,7 @@ fn init_run(
         agents_block.clone(),
         &target.join(CANONICAL_AGENT_ENTRYPOINT),
     );
-    // §FS-init.2.1.1, §FS-init.2.3.4.17.4: both computed before the companion loop
+    // §FS-init.2.1.1, §FS-init.2.3.6: both computed before the companion loop
     // consumes the plan.
     let claude_companions = agent_entrypoints.companions_of_claude(&target);
     let mut notes = duplicate_agent_entrypoint_notes(&target, &agent_entrypoints, reach, dry_run);
@@ -320,7 +320,7 @@ fn init_run(
     // Under `--scaffold`, an all-`exists ` run suppresses the `next:` block (§FS-init.2.2.2).
     let mut any_change = false;
     let mut events = Vec::new();
-    // §FS-init.2.3.4.15.8: what each root entrypoint did with its member list.
+    // §FS-init.2.3.4: what each root entrypoint did with its member list.
     let mut members = Vec::new();
     if agent_entrypoints.canonical {
         match write_or_update_canonical_agent_entrypoint(
@@ -370,7 +370,7 @@ fn init_run(
         workflow_entrypoint: &mut workflow_entrypoint,
         any_change: &mut any_change,
     })?;
-    // §FS-init.2.3.5.14.4: after the root entrypoints' lines, before the config's.
+    // §FS-init.2.3.5: after the root entrypoints' lines, before the config's.
     let scoped_from = events.len();
     match write_scoped(&scoped, dry_run, &mut events) {
         Ok(changed) => any_change |= changed,
@@ -384,13 +384,13 @@ fn init_run(
 
     // `grund.toml` is the project's configuration (§GOAL-configurable): written
     // only when the target has none (§FS-config.1), never overwritten, reported
-    // under the name found (§FS-init.2.4.1, §FS-check.4.3, §FS-init.3).
+    // under the name found (§FS-init.2.4, §FS-check.4.3, §FS-init.3).
     if let Some(existing) = config_file_in(&target) {
         let rel = existing
             .strip_prefix(&target)
             .unwrap_or(&existing)
             .to_path_buf();
-        // §FS-init.1.6.5: an explicit template must not silently do nothing.
+        // §FS-init.1.6: an explicit template must not silently do nothing.
         if template_name.is_some() {
             notes.push(template_config_note(template, &format_path(&rel)));
         }
@@ -456,11 +456,11 @@ fn init_run(
         diagnostic,
         events: &mut events,
     })?;
-    // §FS-init.2.2.2.3: one selection names the guidance's kind and place and
+    // §FS-init.2.2.2: one selection names the guidance's kind and place and
     // answers the refresh test; none at all is a config with no citable kind.
     let allocation = init_allocation(&init_config, &target);
 
-    // §FS-init.2.2.2.1: only `exists`/`updated` lines, no `--scaffold`, and no
+    // §FS-init.2.2.2: only `exists`/`updated` lines, no `--scaffold`, and no
     // selected home left to create — the refresh `grund check` sends people down.
     let refresh_of_complete_setup = !docs
         && events
@@ -498,7 +498,7 @@ fn init_run(
             scan_reads_file,
         }
     });
-    // §FS-init.2.3.4.17.4: silence here would read as the committed `link` opinion
+    // §FS-init.2.3.6: silence here would read as the committed `link` opinion
     // simply not working.
     if reach == CanonicalSurfaceReach::PlainEntrypointsOnly {
         match shadowed_claude_entrypoint_note(&target, &claude_companions, dry_run) {

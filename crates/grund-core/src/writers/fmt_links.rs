@@ -198,7 +198,7 @@ pub(super) fn wrap_markdown_links_with_targets(
         if let CitationLink::Enclosing { .. } | CitationLink::Image(_) = reading {
             continue;
         }
-        // §FS-fmt.2.5.3, §FS-check.3.18.6: where the ordinary pass is off, only the
+        // §FS-fmt.2.5.3, §FS-check.3.18: where the ordinary pass is off, only the
         // entry is written, and a surveying walk writes nothing.
         if let Some(CarveOutPass::Entries(carve_out)) = owed
             && (carve_out.surveying() && matches!(reading, CitationLink::Wrap(_))

@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-16
 
-Settles how the managed block teaches the `$$`-trigger, as [§FS-init.2.3.8.4](../../functional-spec/FS-init.md#2384-the-trigger-sentence-names-the-id-that-follows) specifies, and why that moves the block's version ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)). Serves [§GOAL-token-economy](../../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file): a reader who follows the block should not spend time checking an install that works. Reported as [grund#1370](https://github.com/agent-grounds/grund/issues/1370).
+Settles how the managed block teaches the `$$`-trigger, as [§FS-init.2.3.8](../../functional-spec/FS-init.md#238-substituted-content) specifies, and why that moves the block's version ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)). Serves [§GOAL-token-economy](../../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file): a reader who follows the block should not spend time checking an install that works. Reported as [grund#1370](https://github.com/agent-grounds/grund/issues/1370).
 
 ## status: Accepted
 
@@ -18,7 +18,7 @@ The sentence names the ID that follows, with an example built from the configure
 
 ### 2.2 What it costs
 
-The block's fixed text changes, and 0.21.0 already wrote v43–v46, so the change cannot share those pairs: both advance four, to v47/v48 and v49/v50 ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)).
+The block's fixed text changes, and 0.21.0 already wrote v43–v46, so the change cannot share those pairs: both advance four, to v47/v48 and v49/v50 ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)).
 
 ## 3. Consequences
 
@@ -32,4 +32,4 @@ The block's fixed text changes, and 0.21.0 already wrote v43–v46, so the chang
 
 ## release-note: Release note
 
-- [§FS-init.2.3.8.4](../../functional-spec/FS-init.md#2384-the-trigger-sentence-names-the-id-that-follows): **The managed block says the trigger converts once an ID follows it.** The `grund init` block now reads, for the default trigger and a project whose kind is `FS`, "Type `$$` followed by an ID, e.g. `$$FS-user-login`, in a grund-aware editor; the trigger becomes `§` as soon as the ID has its kind's shape." The example follows the project's own trigger, kind and ID format. A version-1 config with `[reference] strict = false` gets the sentence without the example. The block moves from v43/v44 and v45/v46 to **v47/v48** and **v49/v50**, so `grund check` reports a block an earlier release wrote as outdated. **What an upgrader does:** run `grund init` once to re-render the block; unmanaged content is kept. (agent-grounds/grund#1370)
+- [§FS-init.2.3.8](../../functional-spec/FS-init.md#238-substituted-content): **The managed block says the trigger converts once an ID follows it.** The `grund init` block now reads, for the default trigger and a project whose kind is `FS`, "Type `$$` followed by an ID, e.g. `$$FS-user-login`, in a grund-aware editor; the trigger becomes `§` as soon as the ID has its kind's shape." The example follows the project's own trigger, kind and ID format. A version-1 config with `[reference] strict = false` gets the sentence without the example. The block moves from v43/v44 and v45/v46 to **v47/v48** and **v49/v50**, so `grund check` reports a block an earlier release wrote as outdated. **What an upgrader does:** run `grund init` once to re-render the block; unmanaged content is kept. (agent-grounds/grund#1370)

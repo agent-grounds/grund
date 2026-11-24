@@ -20,7 +20,7 @@ The command is `grund guide`, an ordinary row first in the *Set up* group of the
 - Bare `grund guide` prints the front page: the core's own *Fresh repository* section, then every section with its size and a one-line summary ([§FS-init.5.6](../../functional-spec/FS-init.md#56-the-front-page)).
 - `grund guide <section>` prints one section. The core is the section `setup`, so the eleven sections are named one way, and `--full` prints them all in the order it did ([§FS-init.5.5](../../functional-spec/FS-init.md#55-the-core-and-its-sections)).
 - An unknown name is refused with the `known sections:` line, which now opens with `setup` ([§FS-init.5](../../functional-spec/FS-init.md#5-the-guide)).
-- `agent-setup-instructions` stayed through 0.19.0 as a deprecated name and was removed in 0.20.0 ([§FS-init.5.7](../../functional-spec/FS-init.md#57-agent-setup-instructions-is-the-deprecated-name-of-guide)). The window closed as planned, and [§DF-agent-setup-instructions-removed-in-0-20](DF-agent-setup-instructions-removed-in-0-20.md#df-agent-setup-instructions-removed-in-0-20-grund-agent-setup-instructions-is-no-command-from-0200) carries the notice of the release that removed it.
+- `agent-setup-instructions` stayed through 0.19.0 as a deprecated name and was removed in 0.20.0 ([§FS-init.5](../../functional-spec/FS-init.md#5-the-guide)). The window closed as planned, and [§DF-agent-setup-instructions-removed-in-0-20](DF-agent-setup-instructions-removed-in-0-20.md#df-agent-setup-instructions-removed-in-0-20-grund-agent-setup-instructions-is-no-command-from-0200) carries the notice of the release that removed it.
 
 ### 2.1 The section is a positional, which the previous record rejected
 

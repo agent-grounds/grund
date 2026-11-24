@@ -54,7 +54,7 @@ required of grund users, and it adds no network I/O to verification
 
 ## 4. Cross-workspace ID renaming
 
-`grund` does not provide a "rename ID" refactoring. A rename is the author's edit of the declaration and of the citations that name it, the steps [§FS-init.2.3.4.9](FS-init.md#2349-declaration-blast-radius) teaches. The optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) omits the affordance, and no first-party editor wrapper would add it ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)).
+`grund` does not provide a "rename ID" refactoring. A rename is the author's edit of the declaration and of the citations that name it, the steps [§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections) teaches. The optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) omits the affordance, and no first-party editor wrapper would add it ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)).
 
 ## 5. Documentation generation
 

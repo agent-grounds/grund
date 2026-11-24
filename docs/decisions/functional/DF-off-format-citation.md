@@ -37,7 +37,7 @@ section path included, then the kind's template with the key that owns it and th
 each component the template uses, because the template alone does not say why `999` fails. Last
 come the two remedies: cite an ID in that format, or escape the illustration. It guesses no
 corrected ID. Under `--full` an out-of-scope site is `out-of-scope-off-format-citation`
-([§FS-check.3.14.5](../../functional-spec/FS-check.md#3145-a-compound-code-per-rule)).
+([§FS-check.3.14](../../functional-spec/FS-check.md#314-out-of-scope-unresolvable-citation---full-only)).
 
 It fires wherever a dangling citation fires: in prose, inline code, comments, doc-comments,
 string literals and raw strings. It is silent exactly where a dangling citation is. An earlier
@@ -70,7 +70,7 @@ requirement forbade. Here nothing `check` reported was wrong; what it left out w
 requirement named a verdict to correct.
 
 The finding names the releases it moved between, `— unchecked in grund 0.20.0, an error in
-0.21.0`, as the local-section citation's does (§FS-check.3.24.1), and §FS-check.checks.off-format-citation.1 records
+0.21.0`, as the local-section citation's does (§FS-check.3.24), and §FS-check.checks.off-format-citation.1 records
 the flip. No single command fixes it. Only the author can tell whether a token meant a missing
 ID, a mistyped one, or an illustration, so `grund fmt` rewrites nothing. grund's own tree is
 rewritten in the change that lands this rule. In a Rust string the marker is spelled `\u{a7}`, in

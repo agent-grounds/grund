@@ -181,7 +181,7 @@ not name the offending line.
   which is what they already write.
 - [§FS-config.3.9](../../functional-spec/FS-config.md#39-citations--citation-direction-rules) citation-direction rules take the same path form
   (`group/api/AR`), split at the last `/` like every other consumer.
-- [§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members) walks to the outermost workspace root that
+- [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections) walks to the outermost workspace root that
   *claims* the target — the same claimed chain a command run there follows — and
   renders full paths, so a generated entrypoint anywhere in the tree lists the
   alias paths CI resolves, while a repository merely sitting under an unrelated

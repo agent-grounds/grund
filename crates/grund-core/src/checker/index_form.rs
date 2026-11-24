@@ -1,5 +1,5 @@
 //! How one citation of an indexed ID sits in its kind's index — the entry form
-//! the kind-index invariant reads (§FS-check.3.18.5, §FS-check.3.17.1,
+//! the kind-index invariant reads (§FS-check.3.18, §FS-check.3.17,
 //! §DF-index-entry-form.2.1), in a file of its own beside `index`
 //! (§AR-checker.2.16, §AR-core-module-layout.1).
 
@@ -8,7 +8,7 @@ use crate::grammar::{
 };
 
 /// How one citation of an indexed ID sits in the index file — the entry's form
-/// (§FS-check.3.18.5, §FS-check.3.17.1, §DF-index-entry-form.2.1).
+/// (§FS-check.3.18, §FS-check.3.17, §DF-index-entry-form.2.1).
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(super) enum IndexCitationForm {
     /// A link a reader can follow, which is what the entry has to be
@@ -18,11 +18,11 @@ pub(super) enum IndexCitationForm {
     /// (§FS-citations.wrap.enclosing).
     Link,
     /// A recognized citation of the ID, unwrapped, **and one the
-    /// cross-reference pass would wrap on its next `--write`**. §FS-check.3.17.4's
+    /// cross-reference pass would wrap on its next `--write`**. §FS-check.3.17's
     /// finding, and the only form that earns it.
     Bare,
     /// Everything else: a citation `fmt` declines to wrap, so it is neither an
-    /// entry nor a §FS-check.3.17.5 finding, and the ID falls to §FS-check.3.18's
+    /// entry nor a §FS-check.3.17 finding, and the ID falls to §FS-check.3.18's
     /// error (§DF-index-entry-form.2.3).
     Ignored,
 }
@@ -40,8 +40,8 @@ pub(super) enum IndexCitationForm {
 /// turn this occurrence into that link, and only an occurrence the
 /// cross-reference pass actually reaches may answer yes: marker-prefixed
 /// (§FS-fmt.6.5), outside §FS-fmt.2.3's never-rewrite zones, and outside an
-/// enclosing link (§FS-check.3.17.4). Anything else is `Ignored` —
-/// §FS-check.3.17.4 names `grund fmt --write` as its fix, and an error whose
+/// enclosing link (§FS-check.3.17). Anything else is `Ignored` —
+/// §FS-check.3.17 names `grund fmt --write` as its fix, and an error whose
 /// named fix the tool declines to perform is an error a repository can never
 /// clear (§DF-index-entry-form.2.3), the same trap `shorthand_rewritable` keeps
 /// §FS-check.3.13.1 out of.
@@ -78,7 +78,7 @@ pub(super) fn index_citation_form(
     form
 }
 
-/// The same entry-form judgment for one exact occurrence (§FS-check.3.18.5),
+/// The same entry-form judgment for one exact occurrence (§FS-check.3.18),
 /// also used by §FS-check.3.12.2's repair so another link on the line cannot
 /// turn an ordinary citation into a required marked entry. `links` places `line`
 /// in the index, so a reference or a link spanning lines is read as `fmt` reads it.
@@ -90,7 +90,7 @@ pub(super) fn index_citation_form_at(
     marker: &str,
 ) -> IndexCitationForm {
     match citation_link(links, line, start, end) {
-        // §FS-check.3.17.4: the formatter's own bracket test, with a destination
+        // §FS-check.3.17: the formatter's own bracket test, with a destination
         // closed by its balancing `)` and holding something before it.
         CitationLink::Wrap(wrap) if wrap.close > wrap.url_start => {
             if is_inside_inline_code(line, start - 1) {
@@ -98,7 +98,7 @@ pub(super) fn index_citation_form_at(
             }
             return IndexCitationForm::Link;
         }
-        // §FS-check.3.18.5: the author's link is the entry where it goes somewhere,
+        // §FS-check.3.18: the author's link is the entry where it goes somewhere,
         // its destination never compared. `fmt` leaves it either way, so one that
         // goes nowhere is no entry and the ID falls to §FS-check.3.18.
         CitationLink::Enclosing { entry } => {
@@ -126,7 +126,7 @@ pub(super) fn index_citation_form_at(
 }
 
 /// What an index says about one ID: whether any citation of it is a full link,
-/// and where the first bare one sits (§FS-check.3.17.6 anchors there).
+/// and where the first bare one sits (§FS-check.3.17 anchors there).
 #[derive(Default)]
 pub(super) struct IndexEntryState {
     pub(super) linked: bool,

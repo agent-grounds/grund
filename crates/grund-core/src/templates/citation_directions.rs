@@ -21,7 +21,7 @@ use super::citation_grounding::citation_grounding_sentence;
 /// fixed phrases — because `grund check` re-renders it and byte-compares for
 /// drift (§FS-check.3.5): the render *is* the hash.
 
-/// The legend (§FS-init.2.3.5.1): which of the five levels are `grund check`
+/// The legend (§FS-init.2.3.5): which of the five levels are `grund check`
 /// errors and which are suggestions. Fixed text, rendered whenever `[citations]`
 /// is declared, because a bullet's verb is unreadable without it — an agent that
 /// cannot tell `should` from `must` treats every rule as one or the other.
@@ -29,8 +29,8 @@ pub(crate) const CITATION_LEVEL_LEGEND: &str = "`must`/`never` are `grund check`
 
 /// Render the `### Citation directions` managed-block section (§FS-init.2.3.5)
 /// from the effective config, every row in it: the root block of a config whose
-/// guidance all renders at the root (§FS-init.2.3.5.11.5). `None` where the
-/// section has nothing to state (§FS-init.2.3.4.10).
+/// guidance all renders at the root (§FS-init.2.3.5). `None` where the
+/// section has nothing to state (§FS-init.2.3.5).
 pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> Option<String> {
     root_citation_directions(project, run, &|_| true)
 }
@@ -38,7 +38,7 @@ pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> Optio
 /// The `{CITATION_DIRECTIONS}` placeholder's value for `section`: the section
 /// behind its own leading blank line, as `{PROJECT_NAMESPACES}` carries its own,
 /// or nothing, so a block without the section keeps one blank line between
-/// `### Rules` and the next section (§FS-init.2.3.4.10). Both the template's
+/// `### Rules` and the next section (§FS-init.2.3.5). Both the template's
 /// substitution and the scoped swap that replaces it read this one value.
 pub(crate) fn citation_directions_placeholder(section: Option<String>) -> String {
     section
@@ -46,7 +46,7 @@ pub(crate) fn citation_directions_placeholder(section: Option<String>) -> String
         .unwrap_or_default()
 }
 
-/// The root block's `### Citation directions` (§FS-init.2.3.5.1), holding the
+/// The root block's `### Citation directions` (§FS-init.2.3.5), holding the
 /// rows `here` says land at the root. Where rules are declared it renders the
 /// legend and the closing line even when every bullet lands in a scoped block,
 /// because the closing line's global default still governs the root's rows.
@@ -70,7 +70,7 @@ pub(crate) fn root_citation_directions_in(
     directions_section(project, run, here, true, grammar)
 }
 
-/// A scoped block's `### Citation directions` (§FS-init.2.3.5.12.1): the legend
+/// A scoped block's `### Citation directions` (§FS-init.2.3.5): the legend
 /// and this destination's grounding sentence, its rows' bullets and the closing
 /// line for the global default — or nothing, when no bullet and no grounding
 /// clause lands here.
@@ -83,11 +83,11 @@ pub(crate) fn scoped_citation_directions(
 }
 
 /// The one render of a destination's `### Citation directions`, for the root
-/// (`at_root`, §FS-init.2.3.5.1) and for a scoped block (§FS-init.2.3.5.12.1)
+/// (`at_root`, §FS-init.2.3.5) and for a scoped block (§FS-init.2.3.5)
 /// alike, so a config without rules answers one way at both. The grounding
 /// sentence renders whether or not rules are declared, because it is generated
 /// from each row's effective grounding and not from the direction rules
-/// (§FS-init.2.3.5.7). `grammar` spells the grounding setting a bullet names.
+/// (§FS-init.2.3.5). `grammar` spells the grounding setting a bullet names.
 fn directions_section(
     project: &Project,
     run: &Run,
@@ -97,7 +97,7 @@ fn directions_section(
 ) -> Option<String> {
     let grounding = citation_grounding_sentence(project, run, here);
     if !project.rules.citations.declared {
-        // §FS-init.2.3.4.10: no rule declared states no direction — the heading
+        // §FS-init.2.3.5: no rule declared states no direction — the heading
         // and the grounding sentence alone where it lands here, else no section.
         return grounding.map(|sentence| format!("### Citation directions\n\n{sentence}"));
     }
@@ -115,7 +115,7 @@ fn directions_section(
         String::new(),
     ];
     lines.extend(bullets);
-    // Load-bearing (§FS-init.2.3.5.6): silence is open only when the global default
+    // Load-bearing (§FS-init.2.3.5): silence is open only when the global default
     // leaves it open, and a per-kind default never reaches it — that one is
     // folded into its own bullet, which is *listed above*.
     lines.push(citation_closing_line(
@@ -124,11 +124,11 @@ fn directions_section(
     Some(lines.join("\n"))
 }
 
-/// The rows a bullet is rendered for, in the order §FS-init.2.3.5.1 lays them
+/// The rows a bullet is rendered for, in the order §FS-init.2.3.5 lays them
 /// out: `[[kinds]]` order, then the homeless kind last — wherever in the table a
 /// project happened to declare it, because it is the complement of every row
 /// above it and reads as the closing case. Placement walks the same order, so
-/// the pointer lists destinations as the bullets would (§FS-init.2.3.5.13).
+/// the pointer lists destinations as the bullets would (§FS-init.2.3.5).
 pub(crate) fn bullet_row_order(project: &Project) -> Vec<&str> {
     let homeless = project.schema.complement_name();
     let mut rows: Vec<&str> = project
@@ -142,7 +142,7 @@ pub(crate) fn bullet_row_order(project: &Project) -> Vec<&str> {
     rows
 }
 
-/// Whether `row` renders a citation-direction bullet (§FS-init.2.3.5.1).
+/// Whether `row` renders a citation-direction bullet (§FS-init.2.3.5).
 pub(crate) fn row_has_bullet(project: &Project, row: &str) -> bool {
     project.rules.citations.declared
         && project
@@ -190,13 +190,13 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
     }
 }
 
-/// What one bullet's rules are checked *per* (§FS-init.2.3.5.2) — the unit the
+/// What one bullet's rules are checked *per* (§FS-init.2.3.5) — the unit the
 /// ticket's first defect was that no bullet stated — and, for a non-citable home
 /// whose row grounds nothing, the sentence that follows the bullet.
 ///
 /// A citable kind's unit is the top-level declaration (§FS-check.3.11). A
 /// non-citable kind's is every scanned file in its home, so the bullet names the
-/// place, as the Project map does (§FS-init.2.3.4.4) — naming the kind would name
+/// place, as the Project map does (§FS-init.2.3.4) — naming the kind would name
 /// something an agent can never write. The homeless kind has no place, so it
 /// keeps its name and says what it covers: its `title` where the project wrote
 /// one. Its unit is narrower again — a *source* file (not read as Markdown, §FS-fmt.2.3.1) that already
@@ -207,7 +207,7 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
 /// reaches its files and `grund check` judges that defect. Where the row grounds
 /// nothing, a file there that cites nothing is no unit either (§FS-check.3.11), so
 /// the subject is narrowed as the homeless kind's is and the second sentence says
-/// so and names the setting that makes it a finding (§FS-init.2.3.5.2.2).
+/// so and names the setting that makes it a finding (§FS-init.2.3.5).
 fn citation_direction_subject(
     project: &Project,
     run: &Run,
@@ -264,7 +264,7 @@ fn citation_direction_subject(
     if grounds {
         return (subject, None);
     }
-    // §FS-init.2.3.5.2.2: the one setting that closes the hole, in `grammar`: the
+    // §FS-init.2.3.5: the one setting that closes the hole, in `grammar`: the
     // live version, but for `config migrate`'s comparison (§FS-config-migrate.5.3.1).
     let setting = grounding_setting(kind, grammar, |fragment| format!("`{fragment}`"));
     (
@@ -275,7 +275,7 @@ fn citation_direction_subject(
 
 /// The verb-phrase clauses for one citing kind's rules, joined by "; " in the
 /// order obligations, permissions, prohibitions, then the default
-/// (§FS-init.2.3.5.3). `None` when the kind has no renderable rule.
+/// (§FS-init.2.3.5). `None` when the kind has no renderable rule.
 ///
 /// A prohibition leads with the modal (`must not cite`, the wording
 /// §FS-check.3.12 already uses in its findings) and follows with the short form
@@ -302,7 +302,7 @@ fn citation_direction_clauses(project: &Project, rules: &KindCitationRules) -> O
         ));
     }
     if !rules.may.is_empty() {
-        // §FS-init.2.3.5.5: a closed per-kind default plus a `may` list is one
+        // §FS-init.2.3.5: a closed per-kind default plus a `may` list is one
         // rule — "only these" — and takes one clause, not a permission followed
         // by a prohibition of everything else.
         let only = if folded { "only " } else { "" };
@@ -354,7 +354,7 @@ fn citation_direction_clauses(project: &Project, rules: &KindCitationRules) -> O
 }
 
 /// Whether this kind's `may` list is the whole of what it permits, so a closed
-/// per-kind default folds into it as `may cite only …` (§FS-init.2.3.5.5). With a
+/// per-kind default folds into it as `may cite only …` (§FS-init.2.3.5). With a
 /// `must` or a `should` beside it the permitted set is wider than the `may`
 /// list, and "only" would name the wrong set — those bullets keep the explicit
 /// closing clause instead.
@@ -366,7 +366,7 @@ fn citation_permission_is_closed(rules: &KindCitationRules) -> bool {
         && rules.should.is_empty()
 }
 
-/// The clause a per-kind `default` adds to its bullet (§FS-init.2.3.5.5), or
+/// The clause a per-kind `default` adds to its bullet (§FS-init.2.3.5), or
 /// `None` when it changes nothing a reader could act on.
 ///
 /// Only `must-not` and `should-not` defaults are load-bearing: §FS-config.3.9.4
@@ -393,7 +393,7 @@ fn citation_default_clause(
     }
 }
 
-/// The section's closing line (§FS-init.2.3.5.6) — load-bearing either way, so an
+/// The section's closing line (§FS-init.2.3.5) — load-bearing either way, so an
 /// agent neither over-infers prohibitions from silence nor misses a closed
 /// world. A global default of `must` or `should` closes as open: it obliges
 /// nothing and forbids nothing (§FS-config.3.9.4).
@@ -420,7 +420,7 @@ fn citation_default_is_closed(level: Option<CitationLevel>) -> bool {
 }
 
 /// Render an obligation's or a permission's rule array as a target phrase
-/// (§FS-init.2.3.5.4): alternatives inside one entry are joined with "or",
+/// (§FS-init.2.3.5): alternatives inside one entry are joined with "or",
 /// conjunctive entries with "and". When there is
 /// more than one entry, an entry that has alternatives of its own is
 /// parenthesised — `must = ["FS|GOAL", "AR"]` is *(FS or GOAL) and AR*, and the
@@ -446,7 +446,7 @@ fn citation_rule_targets(disjunctions: &[CitationDisjunction]) -> String {
     join_english_list(&entries, "and")
 }
 
-/// Render a prohibition's rule array as a target phrase (§FS-init.2.3.5.4,
+/// Render a prohibition's rule array as a target phrase (§FS-init.2.3.5,
 /// §DF-prohibition-targets-join-with-or): each target is banned on its own, so every entry's
 /// alternatives join one "or" list, unparenthesised — `must-not = ["FS", "AR"]`
 /// is `FS or AR`, as `["FS|AR"]` is, where "and" read as banning only the pair.
@@ -458,7 +458,7 @@ fn citation_prohibition_targets(disjunctions: &[CitationDisjunction]) -> String 
     join_english_list(&targets, "or")
 }
 
-/// One rule target as prose (§FS-init.2.3.5.4). A pinned alias stays exactly as
+/// One rule target as prose (§FS-init.2.3.5). A pinned alias stays exactly as
 /// spelled, because that is how the citation itself is written; `*/K` is rule
 /// grammar that is never a citation (§FS-config.3.9.3), so it is said in words
 /// instead of leaked into the entrypoint.
@@ -471,7 +471,7 @@ fn citation_target_phrase(target: &CitationTarget) -> String {
 }
 
 /// An English list: `A`, `A or B`, `A, B, or C` — the Oxford comma from three
-/// items on, so a three-way rule cannot be read as a two-way one (§FS-init.2.3.5.4).
+/// items on, so a three-way rule cannot be read as a two-way one (§FS-init.2.3.5).
 pub(super) fn join_english_list(items: &[String], conjunction: &str) -> String {
     match items {
         [] => String::new(),

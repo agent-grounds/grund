@@ -7,7 +7,7 @@
 D5 of [§DF-one-answer-rulings-run.decision](DF-one-answer-rulings-run.md#decision-decision) schedules one eligibility answer:
 a stub target honors exclude and enabled ignore rules with only the include gate
 removed. grund 0.18.0 shipped the warning under
-[§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190). This is the subsequent activation,
+[§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-a-spent-check). This is the subsequent activation,
 using the deprecation route [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
 
 ## decision: Activate the recorded refusal
@@ -18,7 +18,7 @@ lending content ([§FS-declarations.stubs.target.5](../../functional-spec/FS-dec
 recorded verdict ([§FS-declarations.checks.broken-stub.4](../../functional-spec/FS-declarations.md#checksbroken-stub4-every-command-reads-the-one-verdict)).
 Outside include alone remains allowed. No additional boundary refusal is introduced.
 The old warning code stays accepted as a spent selector; its permanent explanation
-is [§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190).
+is [§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-a-spent-check).
 
 ## release-note: Release note
 
@@ -29,7 +29,7 @@ is [§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-decl
   Move the target or change the refusing rule named in the error.
   An old `--ignore excluded-stub-target` no longer suppresses this finding;
   select or ignore `broken-stub` instead. `--only excluded-stub-target` still
-  parses but selects no findings ([§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190)).
+  parses but selects no findings ([§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-a-spent-check)).
   Targets outside include alone and explicit scan-root precedence keep their behavior.
   The shared 0.19.0 release floor ([§FS-distribution.release-floor](../../functional-spec/FS-distribution.md#release-floor-one-shared-minimum-publishable-release)) independently prevents publishing
   this activation in a 0.18.x patch even without diagnostic text; delivery relies

@@ -116,17 +116,17 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// entrypoint with the whole block `grund init` would write there, rendered by
 /// the same two calls `init` makes and split into the sections the comparison
 /// names (§FS-check.3.5.3, §FS-check.3.5.4), each for its own conversation
-/// surface (§FS-init.2.3.6.1); at the outermost root of a full checkout, the
+/// surface (§FS-init.2.3.6); at the outermost root of a full checkout, the
 /// workspace's project list the two workspace sections render from, and
 /// elsewhere the mark that leaves them out (§FS-check.3.5.5); the
 /// entrypoint probe's io error kept as data, the canonical link target of
 /// each index-file citation that external enrollment inspects
-/// (§FS-check.3.18.3). The
+/// (§FS-check.3.18). The
 /// chapter-rule section is rendered from the check run's own catalog, so
-/// building it adds no walk (§FS-init.2.3.4.15). Under scoped guidance
-/// (§FS-init.2.3.5.11) it also lists every destination with the bytes its
+/// building it adds no walk (§FS-init.2.3.4). Under scoped guidance
+/// (§FS-init.2.3.5) it also lists every destination with the bytes its
 /// scoped block should carry, and the orphans the root block's `### Scoped
-/// guidance` list on disk names (§FS-init.2.3.5.13.1), read from that one file
+/// guidance` list on disk names (§FS-init.2.3.5), read from that one file
 /// rather than by a walk; `grund init` plans its writes and removals from the
 /// same value, so `init --check` and `check` cannot disagree about a file.
 /// A presentation-only change can
@@ -222,7 +222,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// When `<root>/AGENTS.md` exists, verify its versioned `grund init` block (and the
 /// matching block in any non-symlink companion entrypoint that is present, and
 /// under scoped guidance every destination and orphan `Expected` names,
-/// §FS-init.2.3.5.8): a
+/// §FS-init.2.3.5): a
 /// missing block, an older version, or a newer unsupported version is one error at
 /// the entrypoint's line. When only companion entrypoints exist, validate the ones
 /// that already contain a managed block and leave project-owned unmanaged files
@@ -325,7 +325,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// outside it is invisible rather than merely unchecked. `grund check --full`
 /// widens the walk to the whole config root and the run then has two scopes.
 /// `references.rs` owns both halves of that: the tier is read off the
-/// *whole* walk first — only the tier §FS-check.3.14.2 admits, so a directory
+/// *whole* walk first — only the tier §FS-check.3.14 admits, so a directory
 /// nobody configured is never judged against conventions it never adopted — and the
 /// findings are then narrowed in place to the configured scope, so every rule
 /// above sees exactly the tree a run without the flag sees. That ordering is
@@ -372,7 +372,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// answered that once, which is what makes `show`'s refusal (§FS-show.2.2.2) name
 /// exactly the coordinates this rule reports. A heading in the next item's
 /// doc-comment and a stub's prose are outside the body and never reach the list,
-/// so neither is filtered here (§FS-declarations.checks.duplicate-section.2).
+/// so neither is filtered here (§FS-declarations.checks.duplicate-section).
 ///
 /// ### 2.16 Kind indexes (§FS-check.3.18, §FS-check.3.17, §DF-index-entry-form)
 ///
@@ -380,18 +380,18 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// (§FS-config.3.4). For each, membership is the declarations under that
 /// folder's whole subtree — a stub and the inline body it points at collapsing
 /// to one ID, as in §AR-checker.2.1 — plus an external inline declaration whose canonical
-/// bare-ID source link enrolls it directly (§FS-check.3.18.3). The citations already
+/// bare-ID source link enrolls it directly (§FS-check.3.18). The citations already
 /// recorded in the index file say which members it names. The index file itself
 /// is re-read (§AR-checker.placement), because wrapper form and an external
 /// enrollment's exact destination are facts about the line, not the citation
 /// record. Which form a citation's brackets give it is the grammar's one reading
 /// (§FS-citations.wrap), the one `fmt`'s link pass asks, so `check` never calls a
 /// link "not a link" where `fmt` leaves it. An ordinary in-folder entry is either
-/// form of §FS-check.3.18.5, and neither has its destination compared: the wrap
+/// form of §FS-check.3.18, and neither has its destination compared: the wrap
 /// `fmt` writes, or a citation in the text of an enclosing link its author wrote
 /// whose destination is not empty (§FS-citations.wrap.enclosing). Only external
 /// enrollment is narrower: it takes the canonical wrap alone, never an enclosing
-/// link (§FS-check.3.18.3), and compares its destination to the one `fmt` derives
+/// link (§FS-check.3.18), and compares its destination to the one `fmt` derives
 /// (§AR-system.2.10, §DF-index-entry-form.2.7). That destination arrives as
 /// `Expected`'s index target for the (index file, ID) pair (§AR-checker.1.3):
 /// the anchor profile is presentation's, and this pass only looks it up.
@@ -407,7 +407,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// a declaration heading is decided once, in `index_entries.rs`: the entry rule
 /// and that carve-out, and with it `list --unused` and the `refs` label, read the
 /// same answer, so such a citation is the entry for none of them
-/// (§FS-check.3.18.5.1, §FS-check.4.1.2.1). The finding pass lives in
+/// (§FS-check.3.18, §FS-check.4.1.2.1). The finding pass lives in
 /// `index.rs` and its shared membership derivation in
 /// `index_entries.rs`, one file per invariant family and bounded helper
 /// (§AR-core-module-layout.1, §AR-core-module-layout.3).

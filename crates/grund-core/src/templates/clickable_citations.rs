@@ -1,6 +1,5 @@
 //! Which local-conversation rendering one entrypoint teaches, and the
-//! `### Clickable citations` section it renders into (§FS-init.2.3.6,
-//! §FS-init.2.3.4.17).
+//! `### Clickable citations` section it renders into (§FS-init.2.3.6).
 //!
 //! A function of the config and the entrypoint path and nothing else, which is
 //! what lets `init` write the section and the writers render it into the
@@ -13,7 +12,7 @@ use crate::config::Project;
 
 /// Render the `### Clickable citations` section (§FS-init.2.3.6): the fixed
 /// repository-web convention always, plus the config-derived local-conversation
-/// sentence when the repo commits the `link` opinion (§FS-init.2.3.4.17,
+/// sentence when the repo commits the `link` opinion (§FS-init.2.3.6,
 /// §DF-repo-conversation-opinion). Without the opinion, local conversation
 /// rendering belongs to user-level instructions installed by
 /// `grund integrations --write` (§FS-integrations.4.3.8).
@@ -66,7 +65,7 @@ pub(crate) fn clickable_citations_section(
 }
 
 /// Which local-conversation form one entrypoint file teaches
-/// (§FS-init.2.3.4.17.2). A pure function of the target path, so the generated
+/// (§FS-init.2.3.6). A pure function of the target path, so the generated
 /// block stays reproducible (§FS-non-goals.13).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum ConversationSurface {

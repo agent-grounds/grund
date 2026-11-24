@@ -28,21 +28,21 @@ pub struct UnmarkedHeading {
     pub title: String,
     pub owner: Id,
     /// The concrete owner's heading line, so field guidance uses that site's
-    /// depth even for duplicate IDs (§FS-declarations.checks.unmarked-heading.2.2).
+    /// depth even for duplicate IDs (§FS-declarations.checks.unmarked-heading).
     pub(crate) owner_line: usize,
     pub suggested_path: String,
     /// For a dotted heading whose suggested coordinate has a usable parent, the
-    /// relative heading that declares it (§FS-declarations.checks.unmarked-heading.2.1).
+    /// relative heading that declares it (§FS-declarations.checks.unmarked-heading).
     pub relative_hint: Option<RelativeHint>,
     /// For a heading whose complete path lacks only a title, has a `_`, or is
     /// purely numeric before a `:`, and whose repair would declare a section,
-    /// that fault and the repairing heading (§FS-declarations.checks.unmarked-heading.2.3).
+    /// that fault and the repairing heading (§FS-declarations.checks.unmarked-heading).
     pub(crate) fault_hint: Option<PathFaultHint>,
 }
 
 /// The clause an unmarked heading whose path is already in place appends: the
 /// authored path, which faults it has, and the heading that repairs them with
-/// the path kept (§FS-declarations.checks.unmarked-heading.2.3).
+/// the path kept (§FS-declarations.checks.unmarked-heading).
 #[derive(Clone)]
 pub(crate) struct PathFaultHint {
     pub(crate) path: String,
@@ -58,7 +58,7 @@ pub(crate) struct PathFaultHint {
 
 /// The clause a dotted unmarked heading's message appends: the parent's path
 /// (empty for the declaration) and the relative heading written under it
-/// (§FS-declarations.checks.unmarked-heading.2.1).
+/// (§FS-declarations.checks.unmarked-heading).
 #[non_exhaustive]
 #[derive(Clone)]
 pub struct RelativeHint {
@@ -98,7 +98,7 @@ pub(crate) struct UnmarkedHeadingCandidate {
 }
 
 /// One heading that opens with a configured kind and the literal an ID puts
-/// after it, without parsing as an ID (§FS-declarations.checks.declaration-near-miss.1). `text` is the token as
+/// after it, without parsing as an ID (§FS-declarations.checks.declaration-near-miss). `text` is the token as
 /// written, so the finding can quote it back beside `format`, the candidate
 /// kind's effective template that it missed.
 #[non_exhaustive]

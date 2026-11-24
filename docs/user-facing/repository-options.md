@@ -94,7 +94,7 @@ membership — adding or removing a member, or editing a `project_description` �
 makes the other projects' blocks stale too. Initializing a project does not:
 each member is listed by its directory, never by whether its `AGENTS.md` exists,
 so a fresh workspace needs one `grund init` per project, in any order
-([§FS-init.2.3.4.15.6](../functional-spec/FS-init.md#234156-the-link-target)). The
+([§FS-init.2.3.4](../functional-spec/FS-init.md#234-managed-block-content-sections)). The
 root's `grund check` reports each one and names the directory to run
 `grund init` in, as in ``run `grund init` in packages/billing to refresh``;
 running it in each named directory clears them
@@ -110,7 +110,7 @@ passes when that list is the only difference. A block written there for the
 first time lists only the members the checkout has, and the full checkout's root
 `check` reports it until `grund init` runs there. The member list itself changes
 only from a full checkout, whose root `check` names every block still waiting
-([§FS-init.2.3.4.15.8](../functional-spec/FS-init.md#234158-while-an-optional-member-is-absent)).
+([§FS-init.2.3.4](../functional-spec/FS-init.md#234-managed-block-content-sections)).
 
 An independently checked project's canonical root also bounds directory
 symlinks: outward directory targets are not scanned, including from inside a
@@ -156,7 +156,7 @@ An entry reached through an in-root link fails once. With `e2e -> realE` and
 are one directory entry ([§FS-check.2.4.2](../functional-spec/FS-check.md#242-one-failure-one-line)).
 A link and its target are two entries, so a link to an unreadable directory the
 scan also walks prints a line for each
-([§FS-scan.scope.links.unresolvable.unopenable](../functional-spec/FS-scan.md#scopelinksunresolvableunopenable-a-directory-link-whose-target-cannot-be-opened-fails-at-the-link-once)).
+([§FS-scan.scope.links.unresolvable](../functional-spec/FS-scan.md#scopelinksunresolvable-a-link-the-scan-cannot-resolve-is-reported-and-not-scanned-into)).
 
 ### A sibling project the build places beside you
 

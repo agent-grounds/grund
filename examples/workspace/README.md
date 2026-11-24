@@ -132,7 +132,7 @@ membership and checks successfully, keeping the declaration at heading level 2.
 It then restores the unlisted configuration and demonstrates the exclusion
 alternative. A nested config alone does not change ownership, and promoting the
 declaration's heading does not repair it
-([§FS-declarations.checks.misplaced-declaration.unlisted-project](../../docs/functional-spec/FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)).
+([§FS-declarations.checks.misplaced-declaration](../../docs/functional-spec/FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)).
 In v1 use `[scan] exclude = ["notify"]`, excluding every directory named `notify`
 at every depth. In v2 use `[schema.sources] exclude = ["packages/notify/"]` to
 exclude this path.

@@ -36,7 +36,7 @@ pub(super) fn body_end(record: &FileRecord, decl: &Declaration, next_decl: Optio
 /// The Markdown declaration bodies of one file, each as its heading line, the
 /// line it ends on (`body_end`) and its heading level: the one answer to which
 /// declaration owns a heading (§FS-declarations.body,
-/// §FS-declarations.checks.unmarked-heading.1), asked by the parent pass before
+/// §FS-declarations.checks.unmarked-heading), asked by the parent pass before
 /// the extents are written and by the unmarked-heading pass after.
 pub(super) struct DeclarationBodies(Vec<(usize, usize, usize)>);
 

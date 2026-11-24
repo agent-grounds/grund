@@ -170,7 +170,7 @@ pub(super) fn check_reading_names(
     if catalog.reading_conflicts.is_empty() && catalog.reading_moves.is_empty() {
         return;
     }
-    // §FS-scan.identity.reading.plain: where the plain run reaches no name, the line is the tier's.
+    // §FS-scan.identity.reading: where the plain run reaches no name, the line is the tier's.
     let plain = WalkBounds::plain(schema, frame.root());
     let tiered = |finding: Diagnostic, names: &[PathBuf]| {
         if names.iter().any(|name| plain.contains(name)) {

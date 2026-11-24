@@ -317,7 +317,7 @@ pub(crate) struct AncestorWorkspaces {
     /// *names* the tree below it — an alias path is built from it, so a segment
     /// that may be missing is the reader's business. False for a climb that only
     /// asks whether some directory is claimed and treats "cannot say" as "no
-    /// answer" (§FS-check.3.29.2): there is no alias path to protect, and the
+    /// answer" (§FS-check.3.29): there is no alias path to protect, and the
     /// sentence about one would be printed into runs that never asked the chain
     /// anything (§FS-workspace.6.1.7).
     warn_undecidable: bool,
@@ -361,8 +361,8 @@ impl AncestorWorkspaces {
     /// §FS-workspace.6.1.7.5: the cached uncertainty about ancestor member text
     /// that could not be obtained, kept whether or not this climb emits the
     /// warning. Both quiet consumers honour it, through one predicate: the
-    /// standalone unlisted-workspace finding (§FS-check.3.29.2) and the placement
-    /// context (§FS-declarations.checks.misplaced-declaration.unlisted-project).
+    /// standalone unlisted-workspace finding (§FS-check.3.29) and the placement
+    /// context (§FS-declarations.checks.misplaced-declaration).
     pub(super) fn has_undecidable_ancestor(&self, child: &Path) -> bool {
         child
             .ancestors()

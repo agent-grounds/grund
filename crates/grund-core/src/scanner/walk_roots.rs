@@ -62,7 +62,7 @@ pub(crate) fn scan_roots_for(
 }
 
 /// The scan failure at a `<path>` whose lookup failed for a reason other than absence, for a run
-/// no walk of which starts at the path (§FS-scan.scope.homes.lookup.path). A workspace run walks
+/// no walk of which starts at the path (§FS-scan.scope.homes.lookup). A workspace run walks
 /// each project whole and narrows its report to the path afterwards (§FS-check.1.3.6.1), so
 /// nothing would say the path went unread, and a run over a tree it never read would pass. It is
 /// the failure the walk raises at such a root (§AR-scanner.1.9), placed `passed`
@@ -106,9 +106,9 @@ fn resolve_scan_roots(
 ) -> Result<(Vec<PathBuf>, bool)> {
     if explicit_scope {
         let scope = scope.unwrap_or(Path::new("."));
-        // §FS-scan.scope.homes.lookup.path: absent only when the lookup says so, as the walk
-        // asks of every root; a refused path, link or not (§FS-scan.scope.links.owed.refused),
-        // and a looping link (§FS-scan.scope.links.unresolvable.named) are the walk's to report.
+        // §FS-scan.scope.homes.lookup: absent only when the lookup says so, as the walk
+        // asks of every root; a refused path, link or not (§FS-scan.scope.links.owed),
+        // and a looping link (§FS-scan.scope.links.unresolvable) are the walk's to report.
         refuse_missing_path(scope)?;
         let lexical_scope = if scope.is_absolute() {
             normalize_path_lexically(scope)

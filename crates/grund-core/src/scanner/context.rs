@@ -63,7 +63,7 @@ pub(crate) fn section_path_is_numeric(path: &str) -> bool {
 }
 
 /// The level of a Markdown ATX heading line (`#` count), or `None` when the line
-/// is not a heading (§FS-declarations.checks.unmarked-heading.1). ATX syntax permits at most three leading
+/// is not a heading (§FS-declarations.checks.unmarked-heading). ATX syntax permits at most three leading
 /// ASCII spaces and one through six `#`s followed by an ASCII space/tab or EOL.
 pub(crate) fn markdown_heading_level(line: &str) -> Option<usize> {
     let indentation = line.bytes().take_while(|byte| *byte == b' ').count();

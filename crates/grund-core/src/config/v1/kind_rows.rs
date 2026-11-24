@@ -132,7 +132,7 @@ pub(super) fn lower_parsed_kinds(
             ));
         }
         // §FS-config.3.4: an index lists the folder's declarations
-        // (§FS-check.3.18.1), and a non-citable kind has none — so the key is not a
+        // (§FS-check.3.18), and a non-citable kind has none — so the key is not a
         // no-op here, it is a statement about a set that can never be non-empty.
         if k.index != KindIndex::Default && !k.citable {
             return Err(anyhow!(
@@ -287,7 +287,7 @@ fn lower_row(
         places: extent
             .into_iter()
             .map(|extent| Place {
-                // §FS-scan.checks.unread-scan-root.location: each home anchors at its key.
+                // §FS-scan.checks.unread-scan-root: each home anchors at its key.
                 source: source.clone(),
                 extent,
                 scanned: k.scan,

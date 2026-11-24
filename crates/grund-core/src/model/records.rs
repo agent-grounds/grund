@@ -391,7 +391,7 @@ pub struct Catalog {
     pub walked_dirs: Vec<PathBuf>,
     /// The configured file roots the name rules kept out, and folder homes where neither pass
     /// read anything despite an eligible refused file, with the row that named each root
-    /// (§FS-scan.checks.unread-scan-root.folder, §FS-scan.checks.unread-scan-root.message).
+    /// (§FS-scan.checks.unread-scan-root).
     pub(crate) unread_roots: Vec<RootRow>,
     /// The files the walk reached only by a link whose target leaves the config root, as the
     /// walk recorded them (§FS-fmt.2.3.2): `fetch` asks it of the file it would write

@@ -1,7 +1,7 @@
 //! A heading whose complete section path is already written in place, read for
 //! the fault that keeps it from declaring a section: a missing title, a `_` in a
 //! named component, or a `:` after a purely numeric path
-//! (§FS-declarations.checks.unmarked-heading.2.3). This file only reads the text;
+//! (§FS-declarations.checks.unmarked-heading). This file only reads the text;
 //! whether the repair would declare a section of the owning declaration is the
 //! scanner's question.
 
@@ -9,7 +9,7 @@ use super::section_paths::{named_mode_section_path, named_section_component};
 use crate::model::named_section_path;
 
 /// The fault a path-bearing heading text carries, and the path that repairs it
-/// (§FS-declarations.checks.unmarked-heading.2.3).
+/// (§FS-declarations.checks.unmarked-heading).
 pub(crate) struct PathFault<'a> {
     /// The authored path, without a trailing `:` or `.`.
     pub(crate) path: &'a str,
@@ -20,14 +20,14 @@ pub(crate) struct PathFault<'a> {
     /// Whether some named component of the authored path carries a `_`.
     pub(crate) underscore: bool,
     /// Whether the authored path is purely numeric and followed by the `:` only a
-    /// name-bearing path takes (§FS-declarations.checks.unmarked-heading.2.3).
+    /// name-bearing path takes (§FS-declarations.checks.unmarked-heading).
     pub(crate) colon: bool,
 }
 
 impl PathFault<'_> {
     /// The heading that repairs the fault at `level`: the `#` run, the corrected
     /// path, the title syntax that path takes (§FS-config.3.3.1), and the authored
-    /// title or `Untitled` (§FS-declarations.checks.unmarked-heading.2.3).
+    /// title or `Untitled` (§FS-declarations.checks.unmarked-heading).
     pub(crate) fn shown_heading(&self, level: usize) -> String {
         format!(
             "{} {}{} {}",
@@ -47,10 +47,10 @@ impl PathFault<'_> {
 /// read as a complete path that lacks only a title, has a `_` in a named
 /// component, or is purely numeric before a `:`, or `None` when it has none of
 /// these faults, is a dotted heading, or would not be a section path once its
-/// `_`s are hyphens (§FS-declarations.checks.unmarked-heading.2.3).
+/// `_`s are hyphens (§FS-declarations.checks.unmarked-heading).
 pub(crate) fn path_fault(text: &str) -> Option<PathFault<'_>> {
     if text.starts_with('.') {
-        return None; // §FS-declarations.checks.unmarked-heading.2.1's.
+        return None; // §FS-declarations.checks.unmarked-heading's.
     }
     let text = text.trim();
     let (token, rest) = text
@@ -89,7 +89,7 @@ pub(crate) fn path_fault(text: &str) -> Option<PathFault<'_>> {
 }
 
 /// `path` when it is components joined by `.`, each a number `[0-9]+` or a word
-/// `[a-z][a-z0-9_-]*` (§FS-declarations.checks.unmarked-heading.2.3).
+/// `[a-z][a-z0-9_-]*` (§FS-declarations.checks.unmarked-heading).
 fn authored_path(path: &str) -> Option<&str> {
     path.split('.')
         .all(|part| {

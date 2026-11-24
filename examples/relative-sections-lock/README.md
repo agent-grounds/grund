@@ -23,7 +23,7 @@ Run `grund fmt --write` on a copy of the repository: it adds the missing line, a
 
 This exercise enables link emission in the copy, records the baseline, then
 renames the declaration and authored citation IDs. Leave generated URLs and lock
-files to fmt ([§FS-init.2.3.4.9](../../docs/functional-spec/FS-init.md#2349-declaration-blast-radius),
+files to fmt ([§FS-init.2.3.4](../../docs/functional-spec/FS-init.md#234-managed-block-content-sections),
 [§FS-fmt.6.3](../../docs/functional-spec/FS-fmt.md#63-idempotency-and-re-derive)).
 Start at the grund repository root with `grund` on PATH:
 

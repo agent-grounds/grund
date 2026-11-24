@@ -1,5 +1,5 @@
 //! External enrollment, the half of the kind-index membership a canonical link adds to what the
-//! folder owes (§AR-checker.2.16, §FS-check.3.18.3), split from `index_entries.rs` along that seam
+//! folder owes (§AR-checker.2.16, §FS-check.3.18), split from `index_entries.rs` along that seam
 //! (§AR-core-module-layout.1).
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -18,7 +18,7 @@ use crate::model::{
 use crate::sources::Sources;
 
 /// Add every canonical external-inline enrollment to `owed`, returning the
-/// exact citation sites that are navigation rather than use (§FS-check.3.18.3).
+/// exact citation sites that are navigation rather than use (§FS-check.3.18).
 /// Citations are already scanner records; index text is read once per target
 /// solely to inspect the persisted Markdown wrapper and destination.
 pub(super) fn enroll_external_inline_declarations(
@@ -72,7 +72,7 @@ pub(super) fn enroll_external_inline_declarations(
         else {
             continue;
         };
-        // §FS-check.3.18.3: a citation on a declaration heading never enrolls, so it is
+        // §FS-check.3.18: a citation on a declaration heading never enrolls, so it is
         // not the entry that satisfies either.
         if names
             .keys(relative.as_ref())
@@ -167,7 +167,7 @@ fn link_target_at_citation<'a>(
         return None;
     }
     // §FS-citations.wrap.recognized: a wrap enrolls; an authored link never does
-    // (§FS-check.3.18.3), nor a citation-only image (§FS-citations.checks.image-index-entry).
+    // (§FS-check.3.18), nor a citation-only image (§FS-citations.checks.image-index-entry).
     let CitationLink::Wrap(wrap) = citation_link(links, line, start, end) else {
         return None;
     };

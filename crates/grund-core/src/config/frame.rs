@@ -120,7 +120,7 @@ impl<'a> Frame<'a> {
     }
 
     /// Why the walk's name rules keep `path` out of the scan, in the words of `check`'s unread
-    /// warning (§FS-scan.checks.unread-scan-root.message), `None` where they read it.
+    /// warning (§FS-scan.checks.unread-scan-root), `None` where they read it.
     fn unread_reason(&self, schema: &Schema, path: &Path) -> Option<String> {
         let refused = Refused {
             hidden: is_hidden(path),

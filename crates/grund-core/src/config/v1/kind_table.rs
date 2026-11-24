@@ -35,9 +35,9 @@ pub(super) struct ParsedKind {
     /// at (§FS-config.3.4.13).
     pub(super) value_chapter_line: Option<usize>,
     /// The line `file` was written on, which a finding about the home anchors at
-    /// (§FS-scan.checks.unread-scan-root.location).
+    /// (§FS-scan.checks.unread-scan-root).
     pub(super) file_line: Option<usize>,
-    /// The authored folder key anchors its unread-home warning (§FS-scan.checks.unread-scan-root.folder).
+    /// The authored folder key anchors its unread-home warning (§FS-scan.checks.unread-scan-root).
     pub(super) folder_line: Option<usize>,
     /// The line `fetch` was written on, which a report about the key anchors at (§FS-fetch.2.1).
     pub(super) fetch_line: Option<usize>,
@@ -389,7 +389,7 @@ pub(super) fn parse_kinds_key(
 /// * **It names a Markdown file.** `--cross-refs` runs only on files read as
 ///   Markdown (§FS-fmt.6.1), which version 1 reads by the name `.md`
 ///   (§FS-fmt.2.3.1), so an index with any other extension is one the formatter can
-///   never linkify — and §FS-check.3.17.3, whose whole licence is that
+///   never linkify — and §FS-check.3.17, whose whole licence is that
 ///   `grund fmt --write` fixes it, would be an error no command could clear
 ///   (§DF-index-entry-form.2.3).
 fn kind_index_name_error(name: &str) -> Option<String> {

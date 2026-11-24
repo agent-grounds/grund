@@ -331,4 +331,4 @@ the alias-pinned rule with the full vocabulary
 ([init exits](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#41-what-earns-the-1)).
 Operational failures earn `2` before either verdict. Without findings or
 operational errors, `--dry-run` keeps `0` even with pending paths
-([preview exits](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#43-why---dry-run-keeps-0)).
+([preview exits](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#4-exit-codes)).

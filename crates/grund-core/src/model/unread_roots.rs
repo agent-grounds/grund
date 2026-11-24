@@ -1,12 +1,12 @@
 //! Configured roots the scan did not read (§FS-scan.checks.unread-scan-root): a file's
 //! name refusals, or a folder's first eligible refused file when neither pass read anything
-//! in it (§FS-scan.checks.unread-scan-root.folder). The record names the configured row,
-//! and the shared reason names its reader (§FS-scan.checks.unread-scan-root.message).
+//! in it (§FS-scan.checks.unread-scan-root). The record names the configured row,
+//! and the shared reason names its reader (§FS-scan.checks.unread-scan-root).
 
 use std::path::PathBuf;
 
 /// Why the configuration reads no file by this extension, or by a name with none: the
-/// one wording of §FS-scan.checks.unread-scan-root.message, cell by cell, for the warning
+/// one wording of §FS-scan.checks.unread-scan-root, cell by cell, for the warning
 /// and the broken-stub line of §FS-declarations.stubs.target.3 alike.
 pub(crate) fn unread_name_reason(
     extension: Option<&str>,
@@ -32,7 +32,7 @@ pub(crate) fn unread_name_reason(
 
 /// Why the scan reads no file at a name the name rules refuse: the hidden reason, naming the
 /// extension too where the list refuses it as well, or the extension reason alone
-/// (§FS-scan.checks.unread-scan-root.message, §DF-unread-hidden-root.2.1). `check`'s unread
+/// (§FS-scan.checks.unread-scan-root, §DF-unread-hidden-root.2.1). `check`'s unread
 /// warning and `fetch`'s refusal of an unread home both give it (§FS-fetch.4.2.1), so a
 /// correction to it moves both.
 pub(crate) fn unread_reason(
@@ -54,7 +54,7 @@ pub(crate) fn unread_reason(
 
 /// The configuration row that made a file or folder a scan root, and where it was written:
 /// the `grund.toml` and the line of the key that named the file
-/// (§FS-scan.checks.unread-scan-root.location).
+/// (§FS-scan.checks.unread-scan-root).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct RootRow {
     pub(crate) origin: RootOrigin,
@@ -72,14 +72,14 @@ pub(crate) struct RootRow {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(crate) struct Refused {
     /// Its name begins with `.`: the hidden reason of
-    /// §FS-scan.checks.unread-scan-root.message.
+    /// §FS-scan.checks.unread-scan-root.
     pub(crate) hidden: bool,
     /// Its extension is not read for declarations, including a data language's reading:
-    /// the extension/language reason of §FS-scan.checks.unread-scan-root.message.
+    /// the extension/language reason of §FS-scan.checks.unread-scan-root.
     pub(crate) extension: bool,
 }
 
-/// Which key made a file a scan root (§FS-scan.checks.unread-scan-root.message).
+/// Which key made a file a scan root (§FS-scan.checks.unread-scan-root).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum RootOrigin {
     /// An `[scan] include` entry.
@@ -88,7 +88,7 @@ pub(crate) enum RootOrigin {
     /// whether it declares IDs, which decides whether `scan = false` is offered.
     Home { kind: String, citable: bool },
     /// A configured folder home, carrying the first eligible refused file from the walk
-    /// (§FS-scan.checks.unread-scan-root.folder).
+    /// (§FS-scan.checks.unread-scan-root).
     FolderHome {
         kind: String,
         citable: bool,
@@ -99,7 +99,7 @@ pub(crate) enum RootOrigin {
 
 impl RootRow {
     /// Whether a non-hidden spelling sits in this folder home. Eligibility and a successful
-    /// read of its identity are joined by the scanner (§FS-scan.checks.unread-scan-root.folder).
+    /// read of its identity are joined by the scanner (§FS-scan.checks.unread-scan-root).
     pub(crate) fn folder_contains(&self, path: &std::path::Path) -> bool {
         !super::is_hidden(path)
             && matches!(&self.origin, RootOrigin::FolderHome { home, .. } if path.starts_with(home))

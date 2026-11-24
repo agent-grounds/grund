@@ -161,7 +161,7 @@ pub(super) fn scan_file_text(
     // rules, so the caller asks for it: `check`, the LSP, `cover` and `refs` pass `true`;
     // `list`, `show`, `fmt`, ID completion, `sizes` and `batch` pass `false`.
     let classify = frame.run.scope.classify_citation_sources;
-    // §AR-scanner.2.2.7 / §FS-declarations.checks.unmarked-heading.1: declaration and section
+    // §AR-scanner.2.2.7 / §FS-declarations.checks.unmarked-heading: declaration and section
     // recognition happen in this same fence-aware pass. Plain ATX headings wait until body spans
     // are known before becoming reportable candidates.
     let mut held_headings = HeldHeadings::default();
@@ -268,7 +268,7 @@ pub(super) fn scan_file_text(
             declared = true;
         }
 
-        // §FS-declarations.checks.declaration-near-miss.1: the line was not a declaration. Ask the
+        // §FS-declarations.checks.declaration-near-miss: the line was not a declaration. Ask the
         // near-miss pattern whether it looked like one, here rather than in a second read of the
         // tree — the scan has the line, the position rules and the fence/docstring state.
         if heading_position
@@ -324,7 +324,7 @@ pub(super) fn scan_file_text(
                 heading_level,
                 stub,
             ));
-            // §FS-declarations.checks.declaration-near-miss.5: its title is read below.
+            // §FS-declarations.checks.declaration-near-miss: its title is read below.
             declared = true;
         }
         // §AR-scanner.2.3: a declaration's heading is read for its citations below,
@@ -597,7 +597,7 @@ pub(super) fn scan_file_text(
     due.settle_sections(findings, schema, text, is_md, record.front_matter);
     if has_unmarked_headings {
         let homes = due.value_declarations.then_some((schema, frame, path));
-        // §FS-declarations.checks.unmarked-heading.2.3: a value root's own lines.
+        // §FS-declarations.checks.unmarked-heading: a value root's own lines.
         let lines = ValueLines::new(text, &reading, value_line_contexts.as_deref());
         let unmarked = held_headings.unmarked;
         assign_unmarked_heading_owners(findings, unmarked, &record, grammar, &lines, homes);

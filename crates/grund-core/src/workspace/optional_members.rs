@@ -228,8 +228,8 @@ pub(super) fn qualify_absent_optional(
 ///
 /// A **located** finding on stdout, where its nearest neighbour §FS-check.3.30 is a
 /// config error on stderr, and §FS-check.3.29 a CLI-level `warning:` line on the
-/// five walking surfaces that have no report to put it in (§FS-check.3.29.9),
-/// though in `check` it is a located error on stdout now (§FS-check.3.29.13). Those
+/// five walking surfaces that have no report to put it in (§FS-check.3.29),
+/// though in `check` it is a located error on stdout now (§FS-check.3.29). Those
 /// two report a misconfiguration that makes every command in the tree wrong; nothing is
 /// misconfigured here — the repository declared this may happen and it happened —
 /// and what is at stake is only the coverage of `check`'s own report. Exit `2` is
@@ -270,7 +270,7 @@ pub(crate) fn absent_optional_member_warnings(
 /// The optional members absent anywhere in the tree the run's expansion walked
 /// from `config`, each named by the whole alias path a citation writes: the one
 /// fact `check` leaves the blocks' workspace sections out on (§FS-check.3.5.5) and
-/// `init` keeps the member list on (§FS-init.2.3.4.15.8), so both commands draw
+/// `init` keeps the member list on (§FS-init.2.3.4), so both commands draw
 /// one boundary. Expansion records it on the root config it walked from.
 pub(crate) fn absent_optional_members(config: &Config) -> &[AbsentOptionalNamespace] {
     &config.workspace_absent_optional
@@ -278,7 +278,7 @@ pub(crate) fn absent_optional_members(config: &Config) -> &[AbsentOptionalNamesp
 
 /// How a report names an absent optional entry, as the config wrote it: the
 /// opening words of `check`'s warning (§FS-check.4.9.2) and of `init`'s note
-/// (§FS-init.2.3.4.15.8) alike, so the two lines name one member one way.
+/// (§FS-init.2.3.4) alike, so the two lines name one member one way.
 pub(crate) fn absent_optional_member_subject(written: &str) -> String {
     format!("optional workspace member `{written}`")
 }

@@ -41,7 +41,7 @@ After an authored declaration rename or file move, use the
 authored citation IDs, run `grund fmt --write` from the config/project or workspace
 root, then verify with `grund check` and `grund fmt --check`. Review and commit
 the generated link and eligible section-lock changes with the authored edits
-([§FS-init.2.3.4.9](../functional-spec/FS-init.md#2349-declaration-blast-radius)).
+([§FS-init.2.3.4](../functional-spec/FS-init.md#234-managed-block-content-sections)).
 
 Before reviewing a diff, group the citation graph by file so you can join changed files to the specs they touch. Name the changed file and a pattern, and `cover` keeps only the citations the pattern matches ([§FS-cover.globs](../functional-spec/FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)):
 

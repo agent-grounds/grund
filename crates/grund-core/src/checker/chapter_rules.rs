@@ -263,7 +263,7 @@ pub(crate) struct ConfiguredRules {
     /// (§FS-rules.9).
     pub(crate) rows: Vec<(String, String)>,
     /// Each rendered rule's subject kind, by qualified rule ID: the kind whose
-    /// destination its bullet lands in (§FS-init.2.3.5.11). A rule about another
+    /// destination its bullet lands in (§FS-init.2.3.5). A rule about another
     /// project's kind, or a declaration no local kind names, has none and lands
     /// at the root.
     pub(crate) subjects: BTreeMap<String, String>,
@@ -357,7 +357,7 @@ pub(crate) fn check_chapter_rules(
 /// Append configured and optional ad-hoc rule results to the shared report.
 /// An incomplete scan passes an explicitly incomplete snapshot to the engine.
 /// `non_units` are the generated scoped entrypoints, which a rule's `applies to
-/// nothing` line does not count as content of a folder (§FS-init.2.3.5.15).
+/// nothing` line does not count as content of a folder (§FS-init.2.3.5).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn check_chapter_rules_with_non_units(
     findings: &Catalog,
@@ -458,7 +458,7 @@ pub(crate) fn check_chapter_rules_with_non_units(
     pair_fields_with_rules(findings, schema, frame, report);
 }
 
-/// §FS-declarations.checks.unmarked-heading.2.2: an unmarked heading a chapter rule's
+/// §FS-declarations.checks.unmarked-heading: an unmarked heading a chapter rule's
 /// `named` case shows ends its own finding in that form, after every clause it has.
 fn show_named_headings(shown: &BTreeSet<NamedHeading>, report: &mut CheckReport) {
     for named in shown {
@@ -496,7 +496,7 @@ fn invalid_rule(origin: &str, path: &str, line: usize, message: &str) -> Diagnos
     }
 }
 
-/// The local kind a rule is about (§FS-init.2.3.5.11): a kind subject's own, or
+/// The local kind a rule is about (§FS-init.2.3.5): a kind subject's own, or
 /// the kind whose prefix names the declaration an exact subject selects.
 fn subject_kind(subject: &RuleSubject, schema: &Schema) -> Option<String> {
     let named = match subject {

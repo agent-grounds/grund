@@ -208,7 +208,7 @@ A root rewritten as a marked section ([§FS-values.2.4](FS-values.md#24-embedded
 
 #### 3.1.8 A string that closes early
 
-Version 1 reads a string from its opening quote to the last quote of its value or its element, every quote between kept, and keeps that reading for good ([§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)); version 2 ends a string at its first unescaped quote ([§FS-config-v2.reader.6](FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). Writing the value out would carry the same string into version 2 escaped, `"docs\" \"x"`, so a forgotten comma or a stray quote would become valid TOML that means what the typo meant. Migration refuses instead, at the key's line, naming the string as version 1 reads it, with the repair version 2's warning gave through grund 0.21.x ([§FS-config-v2.reader.6.window](FS-config-v2.md#reader6window-through-grund-021x-a-string-that-closes-early-is-read-as-before-and-warns)), made under version 1: the first half alone for a scalar, and both halves for a list element.
+Version 1 reads a string from its opening quote to the last quote of its value or its element, every quote between kept, and keeps that reading for good ([§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)); version 2 ends a string at its first unescaped quote ([§FS-config-v2.reader.6](FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). Writing the value out would carry the same string into version 2 escaped, `"docs\" \"x"`, so a forgotten comma or a stray quote would become valid TOML that means what the typo meant. Migration refuses instead, at the key's line, naming the string as version 1 reads it, with the repair version 2's warning gave through grund 0.21.x ([§DF-v2-string-closes-at-its-quote.2.3](../decisions/functional/DF-v2-string-closes-at-its-quote.md#23-one-code-with-a-remedy-for-where-the-string-stands)), made under version 1: the first half alone for a scalar, and both halves for a list element.
 
 ```text
 refused: grund.toml:8: [[kinds]] folder reads the one string `docs" "x`, and version 2 ends a string at its first unescaped quote
@@ -217,7 +217,7 @@ refused: grund.toml:12: [scan] include reads the one string `a"b`, and version 2
   repair: end the string at its closing quote under version 1: write `\"` for a quote inside it, or a `,` between two strings; grund check shows its effect
 ```
 
-A key earns one block, naming the first string in its value that closes early, and the text in backticks is that string as written from its opening quote to the last quote, as version 1 reads it. The refusal stays after grund 0.22.0 refuses such a string in version 2 ([§FS-config-v2.reader.6.refusal](FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)): a version-1 file reads it for good, and only its migration meets the rule.
+A key earns one block, naming the first string in its value that closes early, and the text in backticks is that string as written from its opening quote to the last quote, as version 1 reads it. The refusal stays after grund 0.22.0 refuses such a string in version 2 ([§FS-config-v2.reader.6](FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)): a version-1 file reads it for good, and only its migration meets the rule.
 
 #### 3.1.9 An empty string in `[scan] extensions`
 
@@ -401,11 +401,11 @@ refused: grund.toml: the AGENTS.md block grund init writes would go from v19 to 
   repair: none keeps the generated guidance; keep version 1 until that block may change
 ```
 
-The Project map row the complement gains once its places are listed is a `note:` line rather than a refusal, because the Project map is not one of the generated sections ([§FS-init.2.3.7.2](FS-init.md#2372-what-check-compares)): `` note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then ``.
+The Project map row the complement gains once its places are listed is a `note:` line rather than a refusal, because the Project map is not one of the generated sections ([§FS-init.2.3.7](FS-init.md#237-the-block-version)): `` note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then ``.
 
 #### 5.3.1 The grounding sentence's setting is compared in one grammar
 
-The Citation directions section renders one piece of config grammar: the setting the second sentence of a home whose row grounds nothing names, spelled in the live config's version ([§FS-init.2.3.5.2.2](FS-init.md#23522-a-home-whose-row-grounds-nothing-says-so)). Compared as bytes, that sentence differs between version 1 and the candidate on every such row however the rule stands, so the comparison renders the setting in the candidate's grammar on both sides, from the one place `grund init` spells it, and compares the section then. `grund init` and `grund check` still spell it in the live config's version; only the comparison sets the spelling aside.
+The Citation directions section renders one piece of config grammar: the setting the second sentence of a home whose row grounds nothing names, spelled in the live config's version ([§FS-init.2.3.5](FS-init.md#235-citation-directions)). Compared as bytes, that sentence differs between version 1 and the candidate on every such row however the rule stands, so the comparison renders the setting in the candidate's grammar on both sides, from the one place `grund init` spells it, and compares the section then. `grund init` and `grund check` still spell it in the live config's version; only the comparison sets the spelling aside.
 
 What the sentence says is still compared. A row that grounds on one side and not on the other changes the bullet's subject and whether the sentence is there at all, and a different row or home changes the subject and the row the setting names; each is a difference, refused as the rest of 5.3 refuses it, with `repair: none`. Setting the spelling aside moves no rule: on both sides a file there that cites anything is held to the row's rules, and one that cites nothing is not checked.
 

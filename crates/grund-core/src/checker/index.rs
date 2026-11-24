@@ -138,7 +138,7 @@ fn index_home_declaration(decls: &[Declaration]) -> Option<&Declaration> {
 }
 
 /// Whether any of `decls` sits in `folder` — the recursive membership test of
-/// §FS-check.3.18.2: a stub in the folder is what puts an inline-homed ID in it,
+/// §FS-check.3.18: a stub in the folder is what puts an inline-homed ID in it,
 /// and a folder's whole subtree counts, not its top level, short of a nested
 /// place that owns the file (§FS-config-v2.schema.places.ownership).
 pub(super) fn declarations_under_folder(
@@ -158,7 +158,7 @@ pub(super) fn declarations_under_folder(
         })
 }
 
-/// The two releases §FS-check.3.17.3's message names
+/// The two releases §FS-check.3.17's message names
 /// (§DF-index-compatibility-ramp.2.3) — the pair
 /// §REQ-backwards-compatibility.3 asks of a verdict that flipped in one
 /// release. Both are literals in message text, so both are part of the release
@@ -166,7 +166,7 @@ pub(super) fn declarations_under_folder(
 /// they still say what they mean (§FS-distribution.4.5), and
 /// `index_rule_releases_are_ordered_and_behind_us` below holds them to it.
 ///
-/// §FS-check.3.18.9's message names a third, the release its own ramp ended in.
+/// §FS-check.3.18's message names a third, the release its own ramp ended in.
 /// That one is written into the message text rather than kept here, the way the
 /// `[[kinds]] prefix` removal writes its own (§FS-config.3.4.6): a landed
 /// release is read back out of the line a user sees, by the release gate that
@@ -177,7 +177,7 @@ pub(super) fn declarations_under_folder(
 /// verdict-flipping finding to name.
 pub(crate) const INDEX_RULE_PRIOR_RELEASE: &str = "0.11.0";
 
-/// The release the kind-index rules arrive in, and in which §FS-check.3.17.3 is an
+/// The release the kind-index rules arrive in, and in which §FS-check.3.17 is an
 /// error on arrival — the "to" half of that pair.
 pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 
@@ -197,7 +197,7 @@ pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 /// with.
 ///
 /// Why only the bare form is gated on the cited section resolving and the index
-/// target staying inside the physical config root: §FS-check.3.17.4 is the finding
+/// target staying inside the physical config root: §FS-check.3.17 is the finding
 /// that names `grund fmt --write`, so it may only reach an occurrence the pass
 /// would in fact rewrite, while a link already written stands whatever `fmt`
 /// would do with it (§DF-index-entry-form.2.4). The tree is already red for the
@@ -251,7 +251,7 @@ pub(super) fn check_kind_indexes(
             }
         }
     }
-    // §FS-check.3.18.8: which index files *this run* read. The entries come from the
+    // §FS-check.3.18: which index files *this run* read. The entries come from the
     // scan and the form from the index's text, so an index the run never scanned
     // would otherwise look empty and report every declaration in the folder as unlisted.
     let mut index_scanned: BTreeSet<&Path> = BTreeSet::new();
@@ -283,7 +283,7 @@ pub(super) fn check_kind_indexes(
     for target in &targets {
         // `is_file`, not `exists`: a path that is not a readable file is not an index
         // this run failed to read, it is an index that is not there — a missing one or
-        // a directory wearing the name — which is §FS-check.3.18.7's finding, not silence.
+        // a directory wearing the name — which is §FS-check.3.18's finding, not silence.
         if !index_scanned.contains(target.index_key.as_path())
             && sources.is_file(&target.index_file)
         {
@@ -303,7 +303,7 @@ pub(super) fn check_kind_indexes(
             continue;
         }
         let index_display = frame.display_path(&target.index_file);
-        // §FS-check.3.18.7: an absent index is reported once per declaration;
+        // §FS-check.3.18: an absent index is reported once per declaration;
         // distinguish missing files, directories and unreadable files.
         // §FS-check.6.1.1: cover this effective input before its shared read.
         let text = sources.text(&target.index_file).ok();
@@ -319,12 +319,12 @@ pub(super) fn check_kind_indexes(
             .unwrap_or_default();
         // §FS-citations.wrap: the index is the document a reference is read in.
         let links = MarkdownLinks::new(text.as_deref().unwrap_or_default());
-        // §FS-check.3.17.4: `fmt` writes no link in front matter (§FS-check.1.1.5.2), nor
+        // §FS-check.3.17: `fmt` writes no link in front matter (§FS-check.1.1.5.2), nor
         // in a fence, though a selected one's citations are read
         // (§FS-config-v2.schema.sources.fenced).
         let front_matter = front_matter_extent(lines.iter().copied());
         let in_fence = selected_fence_lines(&lines, schema.sources.fenced());
-        // §FS-check.3.17.4: a bare citation is an entry only where `fmt --write`
+        // §FS-check.3.17: a bare citation is an entry only where `fmt --write`
         // may wrap it. A link through this index path to a target outside the
         // physical config root is readable but not writable by the formatter.
         let bare_repairable = physical_path_key(&target.index_file).starts_with(&physical_root);
@@ -345,14 +345,14 @@ pub(super) fn check_kind_indexes(
             if index_entries.on_declaration_heading(&citation.file, citation.line) {
                 continue;
             }
-            // §FS-check.3.17.4: `fmt` leaves a value binding's citation, and a refused
+            // §FS-check.3.17: `fmt` leaves a value binding's citation, and a refused
             // attempt's, unwrapped (§FS-values.8), so neither is an entry.
             if protected_values.contains(&(citation.file.as_path(), citation.line, citation.column))
             {
                 continue;
             }
             // An `Ignored` form creates no entry: a citation `fmt` will not wrap
-            // neither satisfies the rule nor triggers §FS-check.3.17.5
+            // neither satisfies the rule nor triggers §FS-check.3.17
             // (§DF-index-entry-form.2.3), so the ID is reported as unlisted.
             let form = index_citation_form(
                 line,
@@ -368,7 +368,7 @@ pub(super) fn check_kind_indexes(
                 .is_none_or(|section| section_resolves(findings, &citation.id, section));
             // §FS-fmt.6.4.1: `fmt` skips a section citation with no link target and
             // reports `rewrote 0 lines`. The physical-root predicate above is the
-            // other §FS-check.3.17.4 gate; only the bare form is gated.
+            // other §FS-check.3.17 gate; only the bare form is gated.
             let unlinkable = front_matter.is_some_and(|last| citation.line <= last)
                 || in_fence.contains(&citation.line);
             let form = if form == IndexCitationForm::Bare
@@ -387,9 +387,9 @@ pub(super) fn check_kind_indexes(
                 .record(form, citation.line, citation.column);
         }
 
-        // §FS-check.3.18.5.1: one look at the index text, only where a finding is
+        // §FS-check.3.18: one look at the index text, only where a finding is
         // owed. An unreadable file leaves `lines` empty, so nothing appears in it
-        // and §FS-check.3.18.7's parenthesis stands alone.
+        // and §FS-check.3.18's parenthesis stands alone.
         let mut unentered: Vec<(&Id, &Declaration)> = Vec::new();
         for (id, decl) in &covered {
             if !entries.contains_key(id) {
@@ -433,11 +433,11 @@ pub(super) fn check_kind_indexes(
                     authority: Vec::new(),});
                 }
                 Some(_) => {}
-                // §FS-check.3.18.7: no entry at all, anchored at the declaration's
+                // §FS-check.3.18: no entry at all, anchored at the declaration's
                 // own heading — the one line that exists whether or not the
                 // index file does (§DF-index-entry-form.2.6).
                 None => {
-                    // §FS-check.3.18.5.1: "is not listed", said about a line the
+                    // §FS-check.3.18: "is not listed", said about a line the
                     // reader is looking at, is a diagnosis the reader argues with.
                     // Both forms keep §FS-distribution.4.2.3's past-tense release.
                     let rendered = render_catalog_id(frame.grammar(), &findings.declarations, id);
@@ -447,7 +447,7 @@ pub(super) fn check_kind_indexes(
                             "{rendered} appears in {index_display} but not as an entry: {form} — became an error in grund 0.13.0"
                         )
                     } else {
-                        // §FS-check.3.18.5.2: the form, then the entry `fmt` would
+                        // §FS-check.3.18: the form, then the entry `fmt` would
                         // write here, or the form alone where `fmt` derives no link.
                         let entry = index_targets
                             .get(&(target.index_file.clone(), id.clone()))
@@ -481,7 +481,7 @@ pub(super) fn check_kind_indexes(
 }
 
 /// The form an index entry takes, the one clause both wordings of
-/// `missing-index-entry` name (§FS-check.3.18.5, §FS-check.3.18.5.2). It follows
+/// `missing-index-entry` name (§FS-check.3.18). It follows
 /// `[reference] strict`, so it is true of the index it is said about.
 fn entry_form(schema: &Schema) -> String {
     let marker = &schema.citation.marker;

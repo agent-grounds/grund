@@ -1,8 +1,8 @@
-//! The managed blocks one run renders under scoped guidance (§FS-init.2.3.5.11):
+//! The managed blocks one run renders under scoped guidance (§FS-init.2.3.5):
 //! the root block, whole, and every destination's scoped block, from one
 //! placement. `grund init` writes these bytes and `Expected` carries them to the
 //! drift check, so the two ask one component for one answer (§AR-checker.2.7,
-//! §FS-init.2.3.5.8).
+//! §FS-init.2.3.7).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -20,7 +20,7 @@ use crate::templates::{
     render_agents_append_block,
 };
 
-/// The validated chapter rules a run renders (§FS-init.2.3.5.10): the catalog
+/// The validated chapter rules a run renders (§FS-init.2.3.5): the catalog
 /// their citations resolve against, the `(rule ID, sentence)` rows in order,
 /// and each rule's subject kind.
 #[derive(Clone, Copy)]
@@ -37,21 +37,21 @@ pub(crate) struct Guidance<'a> {
     /// (§FS-check.3.5.4).
     run: Run,
     pub(crate) layout: Layout,
-    /// The version every block of the run carries (§FS-init.2.3.7.1).
+    /// The version every block of the run carries (§FS-init.2.3.7).
     pub(crate) version: u32,
     rules: Option<RuleGuidance<'a>>,
 }
 
 impl<'a> Guidance<'a> {
     /// Place every row against the directories that exist under the config root
-    /// now (§FS-init.2.3.5.11.4).
+    /// now (§FS-init.2.3.5).
     pub(crate) fn new(config: &'a Config, rules: Option<RuleGuidance<'a>>) -> Self {
         Self::laying(config, rules, &[])
     }
 
     /// Place every row against the directories that exist under the config root
     /// or that `laid`, the starter files `--scaffold` writes in this run, lay
-    /// (§FS-init.2.3.5.11.4). Each laid path is relative to the config root.
+    /// (§FS-init.2.3.5). Each laid path is relative to the config root.
     pub(crate) fn laying(
         config: &'a Config,
         rules: Option<RuleGuidance<'a>>,
@@ -72,7 +72,7 @@ impl<'a> Guidance<'a> {
         let layout = Layout::of(config.project(), &run, &subjects, &|dir| {
             path_is_dir(root.join(dir)) || lays(dir)
         });
-        // §FS-init.2.3.7.1: a scoped file or a declaration shape selects the scoped pair.
+        // §FS-init.2.3.7: a scoped file or a declaration shape selects the scoped pair.
         let shapes = declaration_shapes_section(config.project(), &|_| true).is_some();
         let version = AgentsBlockMember {
             scoped: layout.is_scoped() || shapes,
@@ -89,7 +89,7 @@ impl<'a> Guidance<'a> {
     }
 
     /// `dir`'s `### Chapter rules`, its links relative to `path`
-    /// (§FS-init.2.3.5.10): the rules whose subject kind lands there. The root
+    /// (§FS-init.2.3.5): the rules whose subject kind lands there. The root
     /// keeps the section, bullets or not, unless every rule landed elsewhere.
     fn chapter_rules(&self, path: &Path, dir: &str) -> Option<String> {
         let rules = self.rules?;
@@ -114,7 +114,7 @@ impl<'a> Guidance<'a> {
     }
 
     /// The root entrypoint's five generated sections, rendered for `path`'s
-    /// surface (§FS-init.2.3.6.1); a section with no content is expected absent.
+    /// surface (§FS-init.2.3.6); a section with no content is expected absent.
     /// They are what `config migrate`'s guidance gate refuses a change to
     /// (§FS-config-migrate.5.3); `check` compares the whole block. The grounding
     /// setting the citation directions name is spelled in config `grammar`
@@ -165,7 +165,7 @@ impl<'a> Guidance<'a> {
     }
 
     /// The whole root block `grund init` writes at `path`, by the two calls
-    /// `init` makes (§FS-init.2.3.5.8): the template rendered for `path`'s
+    /// `init` makes (§FS-init.2.3.7): the template rendered for `path`'s
     /// surface, then finished for this run's placement.
     pub(crate) fn root_block(&self, path: &Path, workspace: &WorkspaceGuidance) -> String {
         let block = render_agents_append_block(
@@ -207,12 +207,12 @@ impl<'a> Guidance<'a> {
     /// Finish a root block rendered from the template: the version this run
     /// carries, the citation directions of the rows that stay at the root, and
     /// the declaration shapes, chapter rules and pointer before `### Clickable
-    /// citations` (§FS-init.2.3.5.12.2, §FS-init.2.3.5.13). `path` is the
+    /// citations` (§FS-init.2.3.5). `path` is the
     /// entrypoint under the config root the chapter-rule links are relative to.
-    /// §FS-init.2.3.7.1: select the version paired with this config's rendered guidance.
+    /// §FS-init.2.3.7: select the version paired with this config's rendered guidance.
     pub(crate) fn finish_root_block(&self, mut block: String, path: &Path) -> String {
         let (project, run) = (self.config.project(), &self.run);
-        // §FS-init.2.3.9.3: the template renders the base revision's heading.
+        // §FS-init.2.3.9: the template renders the base revision's heading.
         block = block.replacen(
             &agents_block_heading(AGENTS_BLOCK_BASE_VERSION),
             &agents_block_heading(self.version),
@@ -220,7 +220,7 @@ impl<'a> Guidance<'a> {
         );
         // The placeholder's whole value, separator included, is both needle and
         // replacement, so an absent root section leaves one blank line; with no
-        // all-rows section there is nothing to swap (§FS-init.2.3.4.10).
+        // all-rows section there is nothing to swap (§FS-init.2.3.5).
         let all_rows = citation_directions_placeholder(citation_directions_section(project, run));
         if self.layout.is_scoped() && !all_rows.is_empty() {
             let root =
@@ -247,7 +247,7 @@ impl<'a> Guidance<'a> {
     }
 
     /// The managed block of `dir`'s scoped entrypoint at `path`
-    /// (§FS-init.2.3.5.12.1).
+    /// (§FS-init.2.3.5).
     pub(crate) fn scoped_block(&self, dir: &str, path: &Path) -> String {
         let chapter_rules = self.chapter_rules(path, dir);
         self.layout.scoped_block(
@@ -260,7 +260,7 @@ impl<'a> Guidance<'a> {
     }
 
     /// `dir`'s scoped entrypoint at `path` as the drift check holds it: each
-    /// section, then the block byte for byte (§FS-init.2.3.5.8).
+    /// section, then the block byte for byte (§FS-init.2.3.5).
     pub(crate) fn scoped_entrypoint(
         &self,
         dir: &str,

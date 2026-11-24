@@ -21,13 +21,13 @@ one file each got the pair, and each had to be checked by hand against the
 document it named before the escape turned out to be the fix every time.
 
 `grund` already knew. The finding withholds `` ; run `grund fmt --write` `` at
-these sites because the formatter refuses the rewrite ([§FS-check.3.24.1](../../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld),
+these sites because the formatter refuses the rewrite ([§FS-check.3.24](../../functional-spec/FS-check.md#324-declaration-local-section-citation),
 [§FS-fmt.2.4.6](../../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and it decides that from the same lookup the `missing section`
 error is reported from. It used that answer to drop the command and kept the
 remedy.
 
 The message is text a tool may match ([§FS-errors.3](../../functional-spec/FS-errors.md#3-message-text),
-[§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered)), and [§FS-check.3.24.2](../../functional-spec/FS-check.md#3242-an-append-not-a-wording-change) said its wording was
+[§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered)), and [§FS-check.3.24](../../functional-spec/FS-check.md#324-declaration-local-section-citation) said its wording was
 final. So changing it is a decision rather than a fix.
 
 ## 2. Decision
@@ -35,7 +35,7 @@ final. So changing it is a decision rather than a fix.
 Where the owner has no section at the cited path, the owned finding names the
 absence and gives the full-citation-or-escape guidance the other two shapes
 give, with the escape echoing the token as written, the release attribution
-last, and no command clause ([§FS-check.3.24.3](../../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)). Where the owner has the
+last, and no command clause ([§FS-check.3.24](../../functional-spec/FS-check.md#324-declaration-local-section-citation)). Where the owner has the
 section, the finding keeps every byte. The new text replaces the old in place,
 in one release, under the pre-release licence of
 [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise), as [§DF-rule-after-enabling-rewrites](DF-rule-after-enabling-rewrites.md#df-rule-after-enabling-rewrites-a-rule-subject-that-needs-named-sections-is-answered-with-one-they-make-valid-in-place) did for the
@@ -46,7 +46,7 @@ same question on another finding.
   nothing that worked can have depended on it. Where the advice does work,
   because the section exists, it is kept.
 - The finding already has a stable code, `local-section-citation`, and
-  [§FS-check.3.24.2](../../functional-spec/FS-check.md#3242-an-append-not-a-wording-change) already sends an exact-line consumer to it. A migration
+  [§FS-check.3.24](../../functional-spec/FS-check.md#324-declaration-local-section-citation) already sends an exact-line consumer to it. A migration
   window would give that consumer nothing new and keep the failing advice in
   front of every reader for another release.
 - A consumer keeps the code, severity, location, `sites`, count, ordering, exit
@@ -92,7 +92,7 @@ say the same.
 
 ## release-note: Release note
 
-- [§FS-check.3.24.3](../../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape): **where a declaration-local section citation names a section
+- [§FS-check.3.24](../../functional-spec/FS-check.md#324-declaration-local-section-citation): **where a declaration-local section citation names a section
   its owner does not have, the finding says so and offers the escape.** Inside a
   declaration whose sections stop at 2, a marked `5.1` used to be told to write
   the owner's full citation of section 5.1, which the same run reports as

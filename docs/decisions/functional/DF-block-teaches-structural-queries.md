@@ -10,11 +10,11 @@
 
 ## 2. Decision
 
-The block's cheap-read ladder gains one bullet carrying the pipeline inline and the absolute URL of the Querying grund guide ([§FS-init.2.3.4.3.1](../../functional-spec/FS-init.md#23431-structural-queries)). The pipeline is inline because the block is read in sessions that do not follow links; the link is absolute because the block lands in repositories with no `docs/user-facing/` of their own ([§REQ-shipped-surfaces](../../requirements/REQ-shipped-surfaces.md#req-shipped-surfaces-what-grund-ships-or-prints-resolves-where-it-lands)).
+The block's cheap-read ladder gains one bullet carrying the pipeline inline and the absolute URL of the Querying grund guide ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)). The pipeline is inline because the block is read in sessions that do not follow links; the link is absolute because the block lands in repositories with no `docs/user-facing/` of their own ([§REQ-shipped-surfaces](../../requirements/REQ-shipped-surfaces.md#req-shipped-surfaces-what-grund-ships-or-prints-resolves-where-it-lands)).
 
 ## 3. Consequences
 
-- The block's fixed text changes, so its version moves ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)): v12 to v14, and v13 to v15 where a rule kind is enabled, keeping rule-enabled at base plus one and every number naming one text ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)).
+- The block's fixed text changes, so its version moves ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)): v12 to v14, and v13 to v15 where a rule kind is enabled, keeping rule-enabled at base plus one and every number naming one text ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)).
 - The guide and the `grund-init` skill carry the rest of the recipes; the block carries one line, because every line in it is read in every session.
 
 ## 4. Alternatives considered
@@ -26,4 +26,4 @@ The block's cheap-read ladder gains one bullet carrying the pipeline inline and 
 
 ## release-note: Release note
 
-- [§FS-init.2.3.4.3.1](../../functional-spec/FS-init.md#23431-structural-queries), [§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version): **the managed `AGENTS.md` block moves v12 → v14, and v13 → v15 where a rule kind is enabled.** It gains one bullet teaching `grund list --selector "<selector>" --format json | jq -c '{id,section}' | grund show --batch --toc --format json` and linking the new [Querying grund](../../user-facing/querying.md) guide. **Who this breaks:** every repository with a grund block — `grund check` reports it outdated until it is re-rendered. Migration: run `grund init`. (agent-grounds/grund#491)
+- [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections), [§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version): **the managed `AGENTS.md` block moves v12 → v14, and v13 → v15 where a rule kind is enabled.** It gains one bullet teaching `grund list --selector "<selector>" --format json | jq -c '{id,section}' | grund show --batch --toc --format json` and linking the new [Querying grund](../../user-facing/querying.md) guide. **Who this breaks:** every repository with a grund block — `grund check` reports it outdated until it is re-rendered. Migration: run `grund init`. (agent-grounds/grund#491)

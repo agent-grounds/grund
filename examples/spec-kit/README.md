@@ -239,7 +239,7 @@ Write a citation bare, `<§>SPEC-001-photo-upload`, and run `grund fmt --write` 
 root. Each citation in Markdown becomes a link to its heading, so the plan's `**Spec**: [link]`
 is written for you; source comments keep the bare form. Before the first `grund init`, keep
 `[presentation] rules = "root"`: without it, `grund init` writes an `AGENTS.md` into
-`.specify/memory/`, `specs/`, `src/` and `tests/` ([§FS-init.2.3.5.11](../../docs/functional-spec/FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)); with it, one at the
+`.specify/memory/`, `specs/`, `src/` and `tests/` ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)); with it, one at the
 root.
 
 ## Break it

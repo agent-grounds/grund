@@ -118,7 +118,7 @@ pub(crate) fn judge(
         workspace.unread,
         &mut report,
     );
-    // §FS-check.3.14.2: a verdict on the citing token and the catalog it names.
+    // §FS-check.3.14: a verdict on the citing token and the catalog it names.
     check_off_format_citations(findings, schema, None, &mut report);
     // §AR-checker.2.18 / §FS-values.5: ordinary resolution runs first and the
     // focused pass suppresses comparison at every unresolved or ambiguous site.
@@ -188,7 +188,7 @@ pub(crate) fn judge(
         &mut report,
     );
 
-    // §FS-init.2.3.5.11: a scoped `AGENTS.md` no row's `files` lists is not a
+    // §FS-init.2.3.5: a scoped `AGENTS.md` no row's `files` lists is not a
     // unit, so neither pass below holds it to its directory's rules.
     let mut units = CheckReport::default();
 

@@ -21,7 +21,7 @@ In 0.22.0 (agent-grounds/grund#1098):
 
 - a comma before a version-2 array's `]` comes off only where it is the one trailing comma
   after an element; any other stays for the element reader, which refuses the empty element
-  it leaves as `expected string` at the key's line ([§FS-config-v2.reader.5.commas.refusal](../../functional-spec/FS-config-v2.md#reader5commasrefusal-from-grund-0220-a-comma-with-no-element-before-it-is-expected-string)), so
+  it leaves as `expected string` at the key's line ([§FS-config-v2.reader.5.commas](../../functional-spec/FS-config-v2.md#reader5commas-an-array-takes-one-trailing-comma-after-an-element)), so
   `check` and `config show` exit `2` and `config validate` exits `1`;
 - where the array's text loaded through the window, the refusal ends `; this became an error
   in grund 0.22.0`. The text decides it, not the key: the suffix is there exactly where taking
@@ -39,7 +39,7 @@ In 0.22.0 (agent-grounds/grund#1098):
 - the ancestor climb reads such a `[workspace] members` value as not a list, as it reads any
   value the full load refuses ([§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable));
 - version 1, whose list reader already refuses every comma before a `]`, does not move;
-- the window's point, [§FS-config-v2.reader.5.commas.window](../../functional-spec/FS-config-v2.md#reader5commaswindow-through-grund-021x-the-run-of-commas-before-the--is-taken-off-as-before-and-warns), stays as a past-tense account of
+- the window's point, <§>FS-config-v2.reader.5.commas.window, stays as a past-tense account of
   what 0.21.x did, because a section name that has shipped is kept
   ([§REQ-spec-section-names.permanence](../../requirements/REQ-spec-section-names.md#permanence-a-name-is-permanent)) and the accepted record above cites it.
 
@@ -55,7 +55,7 @@ In 0.22.0 (agent-grounds/grund#1098):
 
 ## release-note: Release note
 
-- [§DF-v2-array-comma-window-closes-in-0-22](DF-v2-array-comma-window-closes-in-0-22.md#df-v2-array-comma-window-closes-in-0-22-the-version-2-trailing-comma-window-closes-in-0220), [§FS-config-v2.reader.5.commas.refusal](../../functional-spec/FS-config-v2.md#reader5commasrefusal-from-grund-0220-a-comma-with-no-element-before-it-is-expected-string), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path):
+- [§DF-v2-array-comma-window-closes-in-0-22](DF-v2-array-comma-window-closes-in-0-22.md#df-v2-array-comma-window-closes-in-0-22-the-version-2-trailing-comma-window-closes-in-0220), [§FS-config-v2.reader.5.commas](../../functional-spec/FS-config-v2.md#reader5commas-an-array-takes-one-trailing-comma-after-an-element), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path):
   **a comma before a version-2 array's `]` with no element before it is now refused.** What
   grund 0.21.0 announced lands. `exclude = ["ab",,]`, `["ab" ,, ]`, `["ab",,,]`, an array whose
   last line is `"ab",,`, and `[,]`, `[ , ]`, `[,,]` and an array of one comma written across

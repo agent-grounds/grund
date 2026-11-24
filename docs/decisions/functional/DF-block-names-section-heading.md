@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-26
 
-Settles how the managed block's first grounding rung describes what `grund <ID>` prints, as [§FS-init.2.3.4.3](../../functional-spec/FS-init.md#2343-cheap-grounding) specifies, and why that moves the block's version ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)). Serves [§GOAL-token-economy](../../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file): an agent that writes its checks from the block should not spend a second round finding out what the command prints. Reported as [grund#1026](https://github.com/agent-grounds/grund/issues/1026).
+Settles how the managed block's first grounding rung describes what `grund <ID>` prints, as [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections) specifies, and why that moves the block's version ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)). Serves [§GOAL-token-economy](../../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file): an agent that writes its checks from the block should not spend a second round finding out what the command prints. Reported as [grund#1026](https://github.com/agent-grounds/grund/issues/1026).
 
 ## status: Accepted
 
@@ -18,7 +18,7 @@ The rung keeps its one line and names both reads: heading-less for a whole decla
 
 ### 2.2 What it costs
 
-The block's fixed text changes, and 0.20.0 already wrote v39–v42, so the change cannot share those pairs: both advance four, to v43/v44 and v45/v46 ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)).
+The block's fixed text changes, and 0.20.0 already wrote v39–v42, so the change cannot share those pairs: both advance four, to v43/v44 and v45/v46 ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)).
 
 ## 3. Consequences
 
@@ -32,4 +32,4 @@ The block's fixed text changes, and 0.20.0 already wrote v39–v42, so the chang
 
 ## release-note: Release note
 
-- [§FS-init.2.3.4.3](../../functional-spec/FS-init.md#2343-cheap-grounding): **The managed block says a section read opens with its heading line.** The `grund <ID>` rung of the `grund init` block now reads that the lead is heading-less for a whole declaration, while `grund <ID>.<section>` opens with that section's heading line, as `grund show` has always printed it. The block moves from v39/v40 and v41/v42 to **v43/v44** and **v45/v46**, so `grund check` reports a block 0.20.0 wrote as outdated. **What an upgrader does:** run `grund init` once to re-render the block; unmanaged content is kept. (agent-grounds/grund#1026)
+- [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections): **The managed block says a section read opens with its heading line.** The `grund <ID>` rung of the `grund init` block now reads that the lead is heading-less for a whole declaration, while `grund <ID>.<section>` opens with that section's heading line, as `grund show` has always printed it. The block moves from v39/v40 and v41/v42 to **v43/v44** and **v45/v46**, so `grund check` reports a block 0.20.0 wrote as outdated. **What an upgrader does:** run `grund init` once to re-render the block; unmanaged content is kept. (agent-grounds/grund#1026)

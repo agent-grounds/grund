@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-22
 
-Widens the drift check of [§FS-init.2.3.5.8](../../functional-spec/FS-init.md#2358-the-drift-check) from five generated sections to the whole block, as [§FS-check.3.5.4](../../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison) and [§FS-check.3.5.5](../../functional-spec/FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout) specify. Serves [§GOAL-agent-grounding](../../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work): the block is what the next agent reads instead of `grund.toml`, and a gate that passes a block describing a config or a workspace the repository no longer has hands that agent the wrong rules. Reported as [grund#906](https://github.com/agent-grounds/grund/issues/906).
+Widens the drift check of [§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version) from five generated sections to the whole block, as [§FS-check.3.5.4](../../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison) and [§FS-check.3.5.5](../../functional-spec/FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout) specify. Serves [§GOAL-agent-grounding](../../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work): the block is what the next agent reads instead of `grund.toml`, and a gate that passes a block describing a config or a workspace the repository no longer has hands that agent the wrong rules. Reported as [grund#906](https://github.com/agent-grounds/grund/issues/906).
 
 ## status: Accepted
 
@@ -26,7 +26,7 @@ That is a blind spot, declared and bounded ([§REQ-no-missed-citation.2](../../r
 
 ### 2.3 The finding says where to run `grund init`
 
-A root run reports other projects' blocks, and `grund init` at the root does not refresh them ([§FS-init.2.3.4.15.7](../../functional-spec/FS-init.md#234157-what-init-does-not-do)). The new workspace variant names the directory inside its text, and the existing variants that name a command append `; run it in <dir>` after their last byte ([§FS-errors.3.6](../../functional-spec/FS-errors.md#36-the-agents-init-messages)), so a consumer matching their prefix still matches.
+A root run reports other projects' blocks, and `grund init` at the root does not refresh them ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)). The new workspace variant names the directory inside its text, and the existing variants that name a command append `; run it in <dir>` after their last byte ([§FS-errors.3.6](../../functional-spec/FS-errors.md#36-the-agents-init-messages)), so a consumer matching their prefix still matches.
 
 ### 2.4 `migrate` refuses what it refused before
 
@@ -39,7 +39,7 @@ A root run reports other projects' blocks, and `grund init` at the root does not
 ## 3. Consequences
 
 - A tree whose block no longer matches its config or its workspace is red where it was green: edits to kinds, titles, the ID format, the marker, named sections or the inline-style keys; a migration; a member joining or leaving; a member's description. Adding one member can turn up to N+1 blocks red, each naming its directory. A member's first `grund init` turns no other block red, since no block says which projects have been initialized ([§DF-member-link-names-the-directory](DF-member-link-names-the-directory.md#df-member-link-names-the-directory-a-workspace-member-link-names-the-members-directory)), so one `grund init` per project, in any order, sets up a fresh workspace.
-- This change shares the unreleased v39–v42 pairs ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)), so every block 0.19.0 wrote is already outdated in this release and one `grund init` re-renders it whole; from then on the wider comparison turns nothing red by itself ([§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)).
+- This change shares the unreleased v39–v42 pairs ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)), so every block 0.19.0 wrote is already outdated in this release and one `grund init` re-renders it whole; from then on the wider comparison turns nothing red by itself ([§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)).
 - `migrate`'s Project map note changes its ending rather than growing, because kept as it was it would state the opposite of what `check` does. That is a message, not a verdict, and pre-1.0 ([§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise)).
 - `grund init` is unchanged by this record. In a checkout without an optional member it dropped the member from the lists; [§DF-init-keeps-the-member-list](DF-init-keeps-the-member-list.md#df-init-keeps-the-member-list-grund-init-keeps-a-blocks-member-list-while-an-optional-member-is-absent) has it keep an existing member list there instead.
 

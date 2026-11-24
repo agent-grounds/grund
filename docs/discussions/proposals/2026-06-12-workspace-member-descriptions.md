@@ -9,7 +9,7 @@ listed under "Spec changes this drafts into" below.
 ## 2. Context
 
 [§DISC-init-workspace-members](2026-05-17-init-workspace-members.md#disc-init-workspace-members-have-init-mention-workspace-members) gave the root `AGENTS.md` a "Workspace members"
-section ([§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members)) that maps each alias to its entrypoint:
+section ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)) that maps each alias to its entrypoint:
 
 ```markdown
 - `common` → [common/AGENTS.md](common/AGENTS.md)
@@ -51,7 +51,7 @@ Rules:
   derivation, citation resolution, or `check` semantics. Omitting it changes
   nothing but the rendered bullet.
 
-The [§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members) renderer appends the description after the existing
+The [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections) renderer appends the description after the existing
 link, em-dash separated; bullets without a description keep today's exact
 form, and the *(not yet initialized)* suffix stays last:
 
@@ -69,7 +69,7 @@ Two companion touches:
   teaching line under `project_name`, since the template writes its surface
   explicitly.
 - `grund init --description "<text>"` joins `--name` so a member can be
-  bootstrapped with both, and the [§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members) self-exception renders the
+  bootstrapped with both, and the [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections) self-exception renders the
   pending description the same way it already renders the pending alias.
 
 ## 4. Alternatives considered
@@ -94,7 +94,7 @@ Two companion touches:
   single-line validation under [§FS-config.4.3](../../functional-spec/FS-config.md#43-invalid-config-behavior).
 - [§FS-workspace.3](../../functional-spec/FS-workspace.md#3-aliases): description resolution alongside alias resolution (member
   config, else none; root config for the root row).
-- [§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members): the extended bullet rendering, the template teaching
+- [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections): the extended bullet rendering, the template teaching
   line, and the `--description` flag with its pending-config self-exception.
 
 ## 6. Boundaries

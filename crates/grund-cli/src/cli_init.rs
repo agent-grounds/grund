@@ -61,7 +61,7 @@ fn command_init(args: &[String]) -> ExitCode {
             other if other.starts_with("--description=") => {
                 description = Some(other.trim_start_matches("--description=").to_string());
             }
-            // §FS-init.1.7: `--docs` is refused here too (§DF-docs-flag-removed-in-0-19).
+            // §FS-init.1: `--docs` is refused here too (§DF-docs-flag-removed-in-0-19).
             other if other.starts_with('-') => {
                 eprintln!("error: unknown flag `{other}`");
                 return ExitCode::from(2);
@@ -89,7 +89,7 @@ fn command_init(args: &[String]) -> ExitCode {
     opts.agent_selection = agent_selection;
     let output = match init(opts) {
         Ok(output) => output,
-        // §FS-init.4.2: `2` wins over `1` — a run that could not be performed
+        // §FS-init.4.1: `2` wins over `1` — a run that could not be performed
         // produced no report to gate on.
         Err(err) => {
             render_init_output(&err.output);
@@ -103,7 +103,7 @@ fn command_init(args: &[String]) -> ExitCode {
         return ExitCode::from(1);
     }
     // §FS-init.4.1: pending paths independently earn `1` under `--check`.
-    // Without findings, `--dry-run` keeps `0` even with pending paths (§FS-init.4.3).
+    // Without findings, `--dry-run` keeps `0` even with pending paths (§FS-init.4).
     if check && output.has_pending_changes() {
         return ExitCode::from(1);
     }
@@ -128,7 +128,7 @@ fn render_init_output(output: &InitOutput) {
     for event in &output.events {
         eprintln!("{} {}", event.verb, event.path);
     }
-    // §FS-init.2.3.4.17.4: reported, never fatal — a note names something the run
+    // §FS-init.2.3.6: reported, never fatal — a note names something the run
     // could not do that the caller would otherwise have to notice for itself.
     for note in &output.notes {
         eprintln!("note: {note}");

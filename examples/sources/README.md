@@ -82,4 +82,4 @@ language or extension. For example, removing the `note` mapping and `notes` from
 `notes/glossary.note`; admitting a data
 language alone does not read declarations there. Empty or hidden-only homes stay
 silent, and a value source read by a value kind counts as read
-([§FS-scan.checks.unread-scan-root.folder](../../docs/functional-spec/FS-scan.md#checksunread-scan-rootfolder-a-folder-home-in-which-nothing-is-read)).
+([§FS-scan.checks.unread-scan-root](../../docs/functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).

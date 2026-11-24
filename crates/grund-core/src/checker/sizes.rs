@@ -28,7 +28,7 @@ pub(super) fn check_oversized_leads(
     report.armed.arm(Switch::LeadWords);
     let budgets = budgets.as_slice();
     for (id, declarations) in &findings.declarations {
-        // §FS-declarations.checks.oversized-lead.4: the scanned sites, so a stub that
+        // §FS-declarations.checks.oversized-lead: the scanned sites, so a stub that
         // stands for a declaration outside the walk is passed over by the slicer.
         let paired = paired_declarations(declarations);
         for declaration in paired.stand_ins() {
@@ -98,7 +98,7 @@ pub(super) fn lead_budgets(schema: &Schema) -> Vec<(Strength, LeadSizeWarning)> 
 }
 
 /// A lead site's coordinate as a finding names it: local in a member-local check,
-/// workspace-qualified at a workspace root (§FS-declarations.checks.oversized-lead.1).
+/// workspace-qualified at a workspace root (§FS-declarations.checks.oversized-lead).
 pub(super) fn site_coordinate(
     schema: &Schema,
     frame: Frame<'_>,
@@ -117,7 +117,7 @@ pub(super) fn site_coordinate(
 }
 
 /// Judge and, when needed, report one declaration or section site using the
-/// exact fixed warning contract (§FS-declarations.checks.oversized-lead.1).
+/// exact fixed warning contract (§FS-declarations.checks.oversized-lead).
 #[allow(clippy::too_many_arguments)]
 fn check_oversized_lead_site(
     findings: &Catalog,
@@ -133,7 +133,7 @@ fn check_oversized_lead_site(
         point_body_pair(&findings.files, schema, frame, id, declaration, section)
     else {
         // A stub is broken or has its home outside the scan, unjudged either way
-        // (§FS-declarations.checks.oversized-lead.4). A read failure is the scan's.
+        // (§FS-declarations.checks.oversized-lead). A read failure is the scan's.
         return;
     };
     // The strongest budget the lead is over: one finding, on its channel.

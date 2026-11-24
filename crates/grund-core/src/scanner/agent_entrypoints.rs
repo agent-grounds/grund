@@ -80,7 +80,7 @@ pub(crate) const COMPANION_AGENT_ENTRYPOINTS: &[CompanionAgentEntrypoint] = &[
         discovery: true,
         create_on_request: true,
     },
-    // §FS-init.2.1.2 / §FS-init.2.3.12.1: the modern `.cursor/rules/*.mdc` form is
+    // §FS-init.2.1.2 / §FS-init.2.3.12: the modern `.cursor/rules/*.mdc` form is
     // created for new adopters; the legacy `.cursorrules` row below is only
     // updated when it already exists.
     CompanionAgentEntrypoint {
@@ -104,7 +104,7 @@ pub(crate) const COMPANION_AGENT_ENTRYPOINTS: &[CompanionAgentEntrypoint] = &[
         discovery: true,
         create_on_request: true,
     },
-    // §FS-init.2.3.12.1: `.rules` is too generic to attribute to Zed by filename
+    // §FS-init.2.3.12: `.rules` is too generic to attribute to Zed by filename
     // alone, so we only touch it when the `.zed/` workspace already exists or
     // `--zed` is explicit — discovery-by-file-existence is disabled.
     CompanionAgentEntrypoint {
@@ -142,7 +142,7 @@ impl AgentEntrypoint {
     }
 }
 
-/// How far the canonical entrypoint's own render reaches (§FS-init.2.1.1.1) — the
+/// How far the canonical entrypoint's own render reaches (§FS-init.2.1.1) — the
 /// one question a companion *symlinked* to `AGENTS.md` turns on: does the agent
 /// reading through that link get the block it should, or a form it is not meant
 /// to read? The answer is a property of the effective config, not of any one
@@ -155,7 +155,7 @@ pub(crate) enum CanonicalSurfaceReach {
     /// to it is simply its agent's copy of the block.
     EveryEntrypoint,
     /// `[reference] conversation = "link"` gates the Claude form away from the
-    /// canonical file, which every other agent reads too (§FS-init.2.3.4.17.2), so
+    /// canonical file, which every other agent reads too (§FS-init.2.3.6), so
     /// the canonical render can only speak for entrypoints on the plain surface.
     PlainEntrypointsOnly,
 }
@@ -172,9 +172,9 @@ impl CanonicalSurfaceReach {
     }
 
     /// Whether a companion symlinked to the canonical entrypoint leaves its
-    /// agent without the block it should read (§FS-init.2.1.1.1). Only when the
+    /// agent without the block it should read (§FS-init.2.1.1). Only when the
     /// canonical render is gated *and* this path's surface is one it cannot
-    /// carry: the surfaces are what differ (§FS-init.2.3.4.17.3), so a symlink
+    /// carry: the surfaces are what differ (§FS-init.2.3.6), so a symlink
     /// whose surface is the canonical file's own carries exactly the bytes that
     /// file carries.
     pub(crate) fn leaves_uncovered(self, path: &Path) -> bool {
@@ -282,7 +282,7 @@ pub(crate) fn existing_init_companion_agent_entrypoints(
 /// beside it would hand the agent the same bytes twice, which is the thing this
 /// rule exists to stop. The one exception is the one that makes the two files
 /// differ — a repository committing `[reference] conversation = "link"`, whose
-/// canonical file cannot carry the Claude form (§FS-init.2.3.4.17.2). There the
+/// canonical file cannot carry the Claude form (§FS-init.2.3.6). There the
 /// symlink resolves to the plain form, the agent has no file carrying its own,
 /// and an explicit request writes it the first path the symlink has not taken.
 ///

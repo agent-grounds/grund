@@ -2,7 +2,7 @@
 //! the one wording of its shape line — the heading to write, its presence and
 //! placement, and what the chapter holds — which `grund schema` pads into columns,
 //! labels Mermaid and DOT nodes with, and the managed block prints as is
-//! (§FS-init.2.3.5.12.2). No view words a slot itself (§AR-system.principle).
+//! (§FS-init.2.3.5). No view words a slot itself (§AR-system.principle).
 
 use super::fields::{FieldContent, FrontMatterKey, FrontMatterShape, Placement};
 use super::project::Strength;
@@ -105,7 +105,7 @@ pub struct ShapeLine {
     pub depth: usize,
     /// What a view prints before the text: `field <name>`, `key <name>` or `closed`.
     pub key: String,
-    /// The shape line, which the managed block's bullet is (§FS-init.2.3.5.12.2).
+    /// The shape line, which the managed block's bullet is (§FS-init.2.3.5).
     pub text: String,
 }
 

@@ -13,7 +13,7 @@
 //! refusing rule (§FS-declarations.stubs.target.3). And a link the walker could
 //! not resolve asks `name_refusal`, `directory_refusal` or, for a directory whose
 //! target cannot be opened, `WalkDirFilter::refusal`, with `ignored`, whether the
-//! walk would have read it (§FS-config.3.5.6, §FS-scan.scope.links.owed.fence),
+//! walk would have read it (§FS-config.3.5.6, §FS-scan.scope.links.owed),
 //! since the walker filters no error entry itself. That last reader is the one that
 //! tells `Unread::AnotherProject` from `Unread::OutsideProject`.
 
@@ -51,10 +51,10 @@ pub(crate) enum Unread {
     /// Inside a home the config lists without walking (§AR-scanner.1.4).
     UnwalkedHome,
     /// Inside a tree this walk leaves to another reader of the run: another project's
-    /// root (§AR-scanner.1.3), or an import's (§FS-scan.scope.links.owed.fence).
+    /// root (§AR-scanner.1.3), or an import's (§FS-scan.scope.links.owed).
     AnotherProject,
     /// Behind a link out of the project, to a target in no tree the run reads
-    /// (§AR-scanner.1.2, §FS-scan.scope.links.owed.fence).
+    /// (§AR-scanner.1.2, §FS-scan.scope.links.owed).
     OutsideProject,
     /// Inside an end-to-end case directory, which the manifest pass owns
     /// (§AR-scanner.6.4).
@@ -103,7 +103,7 @@ pub(super) fn excluded_entry<'a>(path: &Path, exclude: &'a [String]) -> Option<&
 
 /// Whether the ignore file at `path` plays no part in the walk that met it, so a line of it that
 /// does not parse costs that walk nothing and is no failure of it
-/// (§FS-scan.scope.ignore-files.unparsed): it governs nothing the walk reads, or it is a
+/// (§FS-scan.scope.ignore-files): it governs nothing the walk reads, or it is a
 /// `.gitignore` no repository encloses. A repository's `info/exclude` governs the repository
 /// rather than the directory it sits in, so what `exclude` says of that directory says nothing.
 pub(super) fn ignore_file_unapplied(path: &Path, filter: &WalkDirFilter, frame: Frame<'_>) -> bool {
@@ -137,7 +137,7 @@ pub(crate) fn excluding_rule(
     }
     let mut refusal = None;
     let globs = ExcludeGlobs::of(schema);
-    // §FS-scan.scope.ignore-files.pathname: resolve once for the whole target probe.
+    // §FS-scan.scope.ignore-files: resolve once for the whole target probe.
     let mounted = frame.run.workspace.mounted_root.as_deref();
     let global = schema
         .sources
@@ -261,7 +261,7 @@ fn under_root(
         &link_roots,
         &looping_links,
     );
-    // §FS-scan.scope.ignore-files.pathname: every component asks the same resolved file.
+    // §FS-scan.scope.ignore-files: every component asks the same resolved file.
     let mounted = frame.run.workspace.mounted_root.as_deref();
     let global = schema
         .sources
@@ -302,7 +302,7 @@ fn under_root(
 /// matched against the name in the walker's order of precedence, so a link the
 /// walker could not resolve faces the directory patterns the followed link does
 /// (§FS-scan.scope.links.owed).
-/// Both use one resolved global file (§FS-scan.scope.ignore-files.pathname), and
+/// Both use one resolved global file (§FS-scan.scope.ignore-files), and
 /// under a mounted root none, with only the ignore files at and below it
 /// (§FS-remote-projects.ignore).
 pub(super) fn ignored(path: &Path, is_dir: bool, mounted: Option<&Path>) -> bool {
@@ -312,7 +312,7 @@ pub(super) fn ignored(path: &Path, is_dir: bool, mounted: Option<&Path>) -> bool
 }
 
 /// The on-disk probe and rule fallback share one resolved global file
-/// (§FS-scan.scope.ignore-files.pathname). Resolution errors stop the owning
+/// (§FS-scan.scope.ignore-files). Resolution errors stop the owning
 /// scan through `scannable_walker`; these optional rule queries add no verdict.
 fn ignored_with(path: &Path, is_dir: bool, global: &Arc<GlobalExcludes>) -> bool {
     // §FS-scan.scope.links.owed: a link naming a directory is judged as one, opens or not.
@@ -326,7 +326,7 @@ fn ignored_with(path: &Path, is_dir: bool, global: &Arc<GlobalExcludes>) -> bool
 /// The ignore file and the line of it that drop `path`, for a reader that names the
 /// rule (§FS-declarations.stubs.target.3): the rule `ignored` matches,
 /// kept only where the walker, asked of an entry on disk, drops it too.
-/// Both read the supplied global matcher (§FS-scan.scope.ignore-files.pathname).
+/// Both read the supplied global matcher (§FS-scan.scope.ignore-files).
 fn ignoring_rule(path: &Path, is_dir: bool, global: &Arc<GlobalExcludes>) -> Option<IgnoredBy> {
     let rule = ignored_by_rules(path, is_dir, global)?;
     // §FS-scan.scope.links.names: a directory link faces directory ignore patterns
@@ -353,7 +353,7 @@ fn walker_ignores(path: &Path, follow_links: bool, global: &Arc<GlobalExcludes>)
     if global.mounted().is_some() {
         mounted_ignore_mode(&mut builder);
     }
-    // §FS-scan.scope.ignore-files.pathname: no dependency fallback, even for an empty file.
+    // §FS-scan.scope.ignore-files: no dependency fallback, even for an empty file.
     let global = Arc::clone(global);
     builder.filter_entry(move |entry| !globally_ignored(&global, entry));
     Some(
@@ -384,7 +384,7 @@ fn decision(found: Match<&Glob>) -> Option<Option<IgnoredBy>> {
 }
 
 /// Whether a walker that leaves the global file to its filter drops `entry` for it
-/// (§FS-scan.scope.ignore-files.global): a global pattern anchored at the entry's
+/// (§FS-scan.scope.ignore-files): a global pattern anchored at the entry's
 /// repository top ignores it, and no file before the global one in git's precedence
 /// re-includes it. The walker has applied those files already, but an entry one of
 /// them re-includes reaches the filter looking like one nothing matched, so they are
@@ -407,7 +407,7 @@ pub(super) fn globally_ignored(global: &GlobalExcludes, entry: &ignore::DirEntry
 /// The walker's precedence for a name, and the rule that ignores it: `.ignore`
 /// files, deepest first; then, inside a repository, its `.gitignore` files up to
 /// the repository top, its `info/exclude`, and the global excludes anchored at that
-/// same top (§FS-scan.scope.ignore-files.global). A top that holds only `.jj` has
+/// same top (§FS-scan.scope.ignore-files). A top that holds only `.jj` has
 /// no `info/exclude`, so none is read there and none from a repository around it.
 fn ignored_by_rules(path: &Path, is_dir: bool, global: &GlobalExcludes) -> Option<IgnoredBy> {
     let dirs: Vec<&Path> = path

@@ -117,11 +117,11 @@ section names" in [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-
 covers it. For `oversized-lead` and the spent stub codes it does not. Their
 silence was written into the spec: `--only oversized-lead` "never activates" the
 check and the absent key left the output "byte-identical"
-([§FS-declarations.checks.oversized-lead.3](../../functional-spec/FS-declarations.md#checksoversized-lead3-only-the-key-activates-it),
+([§FS-declarations.checks.oversized-lead](../../functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in),
 [§FS-check.1.4](../../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore)),
 and an old `--only excluded-stub-target` kept "normal selected-report exit
 semantics"
-([§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190)).
+([§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-a-spent-check)).
 An objector can say those skips were named. They were named in the spec, not to
 the caller: the run that asked about them could not tell an off check from a
 pass, and a blind spot is declared only where it is answerable on demand. That

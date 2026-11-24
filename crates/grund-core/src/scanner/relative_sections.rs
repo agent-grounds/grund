@@ -146,7 +146,7 @@ fn take_marker(
 /// (§FS-declarations.checks.relative-section-parent); and one that is outside
 /// every body, or whose title syntax its parent's path refuses, is handed back
 /// as the unmarked candidate it is without this form
-/// (§FS-declarations.section.relative.where, §FS-declarations.checks.unmarked-heading.1).
+/// (§FS-declarations.section.relative.where, §FS-declarations.checks.unmarked-heading).
 ///
 /// Candidates are taken shallowest first, so every parent is settled — accepted,
 /// failed or a claimant of a duplicated path — before a child asks for it. An
@@ -261,7 +261,7 @@ fn resolve_relative_sections(
 
 /// Record `path` on `decl` by the first-claimant rule (§AR-scanner.2.2.3): the
 /// heading earliest in the file holds it and every later one is a duplicate,
-/// whichever form each was written in (§FS-declarations.checks.duplicate-section.5).
+/// whichever form each was written in (§FS-declarations.checks.duplicate-section).
 /// Returns the line of the heading that became the duplicate, with its value
 /// marker's column if it was a marked root.
 pub(super) fn claim(
@@ -388,7 +388,7 @@ fn usable(decl: &Declaration, end: usize, line: usize) -> Option<String> {
 /// Whether `path` is a usable section of `decl`, whose body ends on `end`:
 /// recorded, the only claimant of its path in the body, and not an orphan
 /// (§FS-declarations.section.relative.parent). The unmarked-heading clause asks
-/// the same of a suggested coordinate's parent (§FS-declarations.checks.unmarked-heading.2.1).
+/// the same of a suggested coordinate's parent (§FS-declarations.checks.unmarked-heading).
 pub(super) fn usable_section(decl: &Declaration, end: usize, path: &str) -> bool {
     let in_body = |at: usize| decl.line < at && at <= end;
     let Some(first) = decl.sections.get(path).filter(|info| in_body(info.line)) else {

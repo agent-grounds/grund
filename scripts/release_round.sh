@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One round's two candidates, built on the commit checked out (§FS-distribution.4.4.1.1):
+# One round's two candidates, built on the commit checked out (§FS-distribution.4.4.1):
 # the release commit and the `-dev` advance over it, by the whole preparation, every
 # round anew. `scripts/release_candidates.py` runs it and pushes what it commits.
 #
@@ -7,7 +7,7 @@
 #
 # It commits and pushes nothing else: on success HEAD is the advance and HEAD^ the
 # release commit. A refusal of any step stops the helper before a branch is pushed
-# (§FS-distribution.4.4.1.4).
+# (§FS-distribution.4.4.1).
 
 set -euo pipefail
 

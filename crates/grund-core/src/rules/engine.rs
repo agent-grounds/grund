@@ -281,7 +281,7 @@ fn evaluate_one(
                         .then(|| named_form(input.headings.get(&subject), name, &chapters))
                         .flatten();
                     let named = named.map_or(String::new(), |(heading, shown)| {
-                        // §FS-declarations.checks.unmarked-heading.2.2: its own finding too.
+                        // §FS-declarations.checks.unmarked-heading: its own finding too.
                         if let Some(file) = &heading.unmarked {
                             let clause = format!(
                                 "; the chapter {name} that {authority} counts is written {shown}"

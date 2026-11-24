@@ -24,7 +24,7 @@ pub(super) fn reporting(
 /// sections from, or `None` where it leaves them out — a run at a nested group's
 /// root, whose projects carry the group's alias path, and one with an optional
 /// member absent anywhere in the tree, the fact `init` keeps the member list on
-/// (§FS-init.2.3.4.15.8). The list is the projects already loaded, so the
+/// (§FS-init.2.3.4). The list is the projects already loaded, so the
 /// comparison adds no walk. An import is no member, so the block lists none, and a
 /// block of imports alone renders as no block (§FS-imports.declaration.table).
 pub(super) fn workspace_block_projects(

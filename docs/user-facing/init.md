@@ -70,16 +70,16 @@ The managed block teaches Project namespaces only for workspace roots and
 claimed members. Standalone repositories omit it. A discovered workspace keeps
 that guidance even if a missing member or duplicate alias prevents its Workspace
 members list from rendering
-([§FS-init.2.3.4.16](../functional-spec/FS-init.md#23416-project-boundaries)).
+([§FS-init.2.3.4](../functional-spec/FS-init.md#234-managed-block-content-sections)).
 Each other project in the workspace is one bullet that links its directory,
 as in ``- [`billing`](packages/billing/)``, whether or not that project has been
 initialized yet, so the order in which you run one `grund init` per project
 does not matter
-([§FS-init.2.3.4.15.6](../functional-spec/FS-init.md#234156-the-link-target)).
+([§FS-init.2.3.4](../functional-spec/FS-init.md#234-managed-block-content-sections)).
 In a checkout without one of the workspace's `optional_members`, `init` keeps
 each block's Workspace members list as it is and says so in a note, so the list
 is refreshed only from a full checkout
-([§FS-init.2.3.4.15.8](../functional-spec/FS-init.md#234158-while-an-optional-member-is-absent)).
+([§FS-init.2.3.4](../functional-spec/FS-init.md#234-managed-block-content-sections)).
 For when and how to split off an independently checked app, package, service or
 subproject, run `grund guide members`, which prints
 “Splitting off a member”
@@ -90,10 +90,10 @@ subproject, run `grund guide members`, which prints
 The managed block opens with a labelled heading such as
 `## Grounding with grund`. The revision in that heading describes the block's
 text, not a grund release: `grund -V` prints the release you are running
-([§FS-init.2.3.9.3](../functional-spec/FS-init.md#2393-the-headings-two-spellings)). A
+([§FS-init.2.3.9](../functional-spec/FS-init.md#239-delimiters)). A
 config selects one of four current revisions: v47, v48 once a kind declares rules,
 and v49 or v50 when its guidance lands in a scoped `AGENTS.md` or a declaration
-shape renders ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)).
+shape renders ([§FS-init.2.3.7](../functional-spec/FS-init.md#237-the-block-version)).
 `grund check` reports an older block as outdated, and one `grund init` re-renders
 it. A current block whose text no longer matches what `init` would write — after a
 config edit, a migration, or a member joining the workspace — is reported stale,
@@ -113,7 +113,7 @@ runs. Independently, `--check` exits `1` when a path is pending. Operational
 errors earn `2` before either verdict. Otherwise the run exits `0`;
 `--dry-run` alone keeps `0` even with pending paths
 ([§FS-init.4.1](../functional-spec/FS-init.md#41-what-earns-the-1),
-[§FS-init.4.3](../functional-spec/FS-init.md#43-why---dry-run-keeps-0)).
+[§FS-init.4](../functional-spec/FS-init.md#4-exit-codes)).
 
 Read the two reports separately: located rule errors are on stdout; path
 events are on stderr. Under `--check`, `would-write`, `would-append` and
@@ -145,7 +145,7 @@ repository, or one that wants to move to the canonical layout.
 
 `--scaffold` used to be spelled `--docs`. grund 0.18.0 still took the old
 spelling with a warning; since grund 0.19.0 it is an unknown flag, and the run
-writes nothing ([§FS-init.1.7](../functional-spec/FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold)):
+writes nothing ([§FS-init.1](../functional-spec/FS-init.md#1-inputs)):
 
 ```text
 error: unknown flag `--docs`
@@ -157,7 +157,7 @@ A script or CI step that still runs `grund init --docs` spells it `--scaffold`.
 
 A repository with a taxonomy of its own — ADRs, RFCs, runbooks — does not want
 the default template's kinds. `--template=none` writes a version-2 `grund.toml`
-that declares none ([§FS-init.1.6.2](../functional-spec/FS-init.md#162-none)):
+that declares none ([§FS-init.1.6](../functional-spec/FS-init.md#16-templates)):
 
 ```bash
 $ grund init --template=none
@@ -216,7 +216,7 @@ exists grund.toml
 ```
 
 The guidance only ever names a kind the config declares
-([§FS-init.2.2.2.3](../functional-spec/FS-init.md#2223-the-kind-the-guidance-names)): `FS` when it has a home, otherwise the first citable
+([§FS-init.2.2.2](../functional-spec/FS-init.md#222-the-next-block)): `FS` when it has a home, otherwise the first citable
 kind that has one, here `ADR`. Its home `docs/adr` already exists, so a
 refresh has nothing left to teach. Allocate the first ID with
 `grund id ADR "…"`, and run `grund check` to see what the repository already
@@ -241,7 +241,7 @@ error: unknown template `docs` — the built-in templates are software-developme
 
 In a version-2 config, `init` writes each row's guidance into the managed
 block of an `AGENTS.md` in the deepest directory holding the row's places,
-not into the root entrypoint ([§FS-init.2.3.5.11](../functional-spec/FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)). A row's guidance is its
+not into the root entrypoint ([§FS-init.2.3.5](../functional-spec/FS-init.md#235-citation-directions)). A row's guidance is its
 citation directions, its clause of the grounding sentence, its kind's
 declaration shape and the chapter rules about its kind. Folders
 `docs/spec/core` and `docs/spec/plugins` land in `docs/spec/AGENTS.md`, a
@@ -250,13 +250,13 @@ directory stays in the root block, as does a destination directory that does
 not exist yet. A scoped block holds the citation-directions legend, the
 bullets of the rows that land there and the closing line; the root block keeps
 the bullets of the rows that land at the root
-([§FS-init.2.3.5.12.1](../functional-spec/FS-init.md#235121-what-a-scoped-block-holds-in-order)), so the single section the
+([§FS-init.2.3.5](../functional-spec/FS-init.md#235-citation-directions)), so the single section the
 [citation-directions page](citation-directions.md) shows is split by
 directory. A config that declares no citation rule has no bullets and no
 legend to split: a scoped block whose rows ground holds the grounding sentence
 alone, `Every file under tests/e2e/ must cite one.`, and a block where no
 grounding clause lands has no citation-directions section at all
-([§FS-init.2.3.4.10](../functional-spec/FS-init.md#23410-citation-direction)). The example under
+([§FS-init.2.3.5](../functional-spec/FS-init.md#235-citation-directions)). The example under
 [`examples/scoped-guidance`](../../examples/scoped-guidance/) records one run:
 
 ```text
@@ -268,7 +268,7 @@ exists grund.toml
 
 A scoped file `init` creates holds the managed block and nothing else. The
 root block lists every scoped file under `### Scoped guidance`
-([§FS-init.2.3.5.13](../functional-spec/FS-init.md#23513-the--scoped-guidance-pointer)), and that list is what `init` owns: a later run updates
+([§FS-init.2.3.5](../functional-spec/FS-init.md#235-citation-directions)), and that list is what `init` owns: a later run updates
 those files, and removes the ones the config no longer places, deleting a file
 only when the block was all of it. The entrypoint flag `--claude` creates a real
 `CLAUDE.md`; it does not create a symlink to `AGENTS.md`. Where the root
@@ -302,7 +302,7 @@ there. As read from each tool's own documentation
 
 `init` never writes over an existing `grund.toml`, whichever template you name.
 When you name one anyway, it says so rather than doing nothing silently
-([§FS-init.1.6.5](../functional-spec/FS-init.md#165-a-config-that-is-already-there)):
+([§FS-init.1.6](../functional-spec/FS-init.md#16-templates)):
 
 ```text
 note: grund.toml exists, so the none template's grund.toml is not written — init never overwrites a config

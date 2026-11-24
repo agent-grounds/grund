@@ -6,7 +6,7 @@ version, the substantive-change filter and CI on the dispatch tip.
 
     release_candidates.py --helper <workflow> --next <version> [--pinned <sha>]
 
-A round (§FS-distribution.4.4.1.1) builds both candidates on a tip of `main` with
+A round (§FS-distribution.4.4.1) builds both candidates on a tip of `main` with
 `scripts/release_round.sh`, pushes them to two branches of its own, dispatches
 the three runs and watches them with `scripts/candidate_runs.py`. When `main`
 moves under it, the round is given up - its runs cancelled, its branches
@@ -33,7 +33,7 @@ HERE = Path(__file__).resolve().parent
 RUNS = HERE / "candidate_runs.py"
 # The watch's exits (§AR-ci.11), as `candidate_runs.py` defines them.
 PASSED, FAILED, MOVED, DEADLINE = 0, 1, 3, 4
-# §FS-distribution.4.4.1.2: at most six rounds.
+# §FS-distribution.4.4.1: at most six rounds.
 ROUNDS = 6
 
 
@@ -43,7 +43,7 @@ def seconds(name: str, default: float) -> float:
 
 # How long `main` must hold still before the next round builds on it.
 SETTLE = seconds("GRUND_RELEASE_SETTLE", 180)
-# §FS-distribution.4.4.1.2: the job's 300 minutes, less ten for the steps before this one.
+# §FS-distribution.4.4.1: the job's 300 minutes, less ten for the steps before this one.
 BUDGET = seconds("GRUND_RELEASE_BUDGET", 290 * 60)
 # A round starts only with 90 minutes left.
 ROUND_MIN = seconds("GRUND_RELEASE_ROUND_MIN", 90 * 60)
@@ -95,7 +95,7 @@ class Helper:
         return self.ends - time.time()
 
     def branches(self, round_: int) -> tuple[str, str]:
-        """One path component under `release-candidate/`, never reused (§FS-distribution.4.4.1.1)."""
+        """One path component under `release-candidate/`, never reused (§FS-distribution.4.4.1)."""
         branch = f"release-candidate/v{self.next}-{self.run_name}-r{round_}"
         return branch, f"{branch}-dev"
 
@@ -109,7 +109,7 @@ class Helper:
     def out_of_time(self) -> Stop:
         return Stop(f"out of time: {self.left():.0f}s of the helper's budget remain and a round needs "
                     f"{ROUND_MIN:.0f}s, so v{self.next} was not published; dispatch {self.workflow} again "
-                    "(§FS-distribution.4.4.1.2)")
+                    "(§FS-distribution.4.4.1)")
 
     # -- a round ---------------------------------------------------------------------------
 
@@ -130,10 +130,10 @@ class Helper:
                            f"dispatch {self.workflow} again with expected_main_sha={moved}")
             say(f"round {round_} given up: main moved from {base} to {moved}")
         raise Stop(f"out of rounds: {ROUNDS} rounds were given up to a moving main, so v{self.next} was not "
-                   f"published; dispatch {self.workflow} again (§FS-distribution.4.4.1.2)")
+                   f"published; dispatch {self.workflow} again (§FS-distribution.4.4.1)")
 
     def settle(self) -> str:
-        """Wait until `main` has held still for SETTLE seconds, then fetch it (§FS-distribution.4.4.1.1)."""
+        """Wait until `main` has held still for SETTLE seconds, then fetch it (§FS-distribution.4.4.1)."""
         tip, since = main_tip(), time.time()
         while time.time() - since < SETTLE:
             if self.left() < ROUND_MIN:
@@ -146,7 +146,7 @@ class Helper:
         return git("rev-parse", "refs/remotes/origin/main")
 
     def check(self, base: str) -> None:
-        """What a merge can change, checked before the round pushes anything (§FS-distribution.4.4.1.1)."""
+        """What a merge can change, checked before the round pushes anything (§FS-distribution.4.4.1)."""
         if subprocess.run(["git", "rev-parse", "-q", "--verify", f"refs/tags/{self.tag}"],
                           capture_output=True).returncode == 0:
             raise Stop(f"the tag {self.tag} now exists, so v{self.next} is no longer this helper's to release; "
@@ -161,7 +161,7 @@ class Helper:
         say(f"round {round_}: building v{self.next} and {self.dev} on {base}")
         git("checkout", "-q", "-f", "--detach", base)
         self.check(base)
-        # §FS-distribution.4.4.1.4: a refused rebuild stops before any branch or run.
+        # §FS-distribution.4.4.1: a refused rebuild stops before any branch or run.
         if subprocess.run(["bash", "scripts/release_round.sh", self.next, self.dev]).returncode != 0:
             raise Stop(f"the preparation of v{self.next} on {base} was refused; no branch of round {round_} "
                        "was pushed and no run started")
@@ -192,9 +192,9 @@ class Helper:
             self.delete(branch, dev_branch)
             raise Stop(f"out of time: round {round_}'s runs had not finished by the watch's deadline and were "
                        f"cancelled, so v{self.next} was not published; dispatch {self.workflow} again "
-                       "(§FS-distribution.4.4.1.2)")
+                       "(§FS-distribution.4.4.1)")
         if watched != PASSED:
-            # §FS-distribution.4.4.1.4: only a failure leaves branches.
+            # §FS-distribution.4.4.1: only a failure leaves branches.
             raise Stop(f"a candidate run of round {round_} did not pass; {kept}")
 
         moved = self.push(release, base, kept)
@@ -207,7 +207,7 @@ class Helper:
     # -- publication -----------------------------------------------------------------------
 
     def push(self, release: str, base: str, kept: str) -> str | None:
-        """§FS-distribution.4.4.1.3: a plain push, read back when git refuses it."""
+        """§FS-distribution.4.4.1: a plain push, read back when git refuses it."""
         pushed = subprocess.run(["git", "push", "origin", f"{release}:refs/heads/main"], capture_output=True,
                                 encoding="utf-8", errors="replace")
         sys.stderr.write(pushed.stderr)
@@ -223,7 +223,7 @@ class Helper:
         return tip
 
     def publish(self, branch: str, release: str, dev_branch: str, dev: str) -> None:
-        """§FS-distribution.4.4.1.3: dispatch the publisher on the commit the runs passed, then advance."""
+        """§FS-distribution.4.4.1: dispatch the publisher on the commit the runs passed, then advance."""
         dispatched = subprocess.run([sys.executable, str(RUNS), "dispatch", "release.yml", branch, release,
                                      f"version={self.next}", "publish_crates=true", "create_github_release=true",
                                      f"expected_release_sha={release}"],

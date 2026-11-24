@@ -69,7 +69,7 @@ requirements.
 | a steering file | kind `STEER`, one declaration per file, below its front matter | `STEER-tech.money` |
 | front matter, and `#[[file:…]]` references | text grund does not read | `testing.md`, `structure.md` |
 | a test tagged `// Feature: …, Property 1` and `// **Validates: Requirements 1.1**` | a doc comment citing the property and its criteria ([§FS-check.3.6](../../docs/functional-spec/FS-check.md#36-ungrounded-unit-opt-in)) | `test/coupons.test.ts` |
-| `AGENTS.md`, which Kiro loads as steering | the guidance `grund init` writes ([§FS-init.2.3.5.11](../../docs/functional-spec/FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) | written on demand; see [Writing a spec](#writing-a-spec) |
+| `AGENTS.md`, which Kiro loads as steering | the guidance `grund init` writes ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)) | written on demand; see [Writing a spec](#writing-a-spec) |
 
 A task line keeps Kiro's shape with each number replaced by its citation, so
 `_Requirements: 1.1, 2.1_` becomes:
@@ -281,7 +281,7 @@ writes the lock only there.
 `grund init` writes the schema's rules as agent guidance. One `AGENTS.md` goes
 at the root, and one beside each row's places: `.kiro/specs/AGENTS.md`,
 `.kiro/steering/AGENTS.md`, `src/AGENTS.md` and `test/AGENTS.md`
-([§FS-init.2.3.5.11](../../docs/functional-spec/FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)). Kiro loads all five as always-included steering. It reads
+([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)). Kiro loads all five as always-included steering. It reads
 an `AGENTS.md` at the root or in any subdirectory, and every Markdown file in
 `.kiro/steering/`. So Kiro's agent reads the citation rules before it writes a
 task. `structure.md` also pulls `grund.toml` itself into Kiro's context, with

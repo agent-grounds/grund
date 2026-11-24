@@ -341,7 +341,7 @@ error: kind `<KIND>` cannot fetch into <home>: <reason>, so the scan would not r
 ```
 
 `<home>` is spelled from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]). `<reason>` is the one `check`'s
-unread warning gives for that name ([[§FS-scan.checks.unread-scan-root.message](FS-scan.md#checksunread-scan-rootmessage-the-message)]), so a
+unread warning gives for that name ([[§FS-scan.checks.unread-scan-root](FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)]), so a
 correction to that reason moves both: ``no language in [schema.sources] languages reads `.dat` ``
 or ``its name begins with `.`, and grund reads no hidden file`` in a version-2 file, the data row
 ``the scan reads `.json` as `json`, a data language only a value kind reads`` for a name a listed

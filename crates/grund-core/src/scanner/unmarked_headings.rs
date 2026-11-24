@@ -57,7 +57,7 @@ pub(super) fn assign_unmarked_heading_owners(
     // This pass is per file, so the inclusive body span identifies a concrete
     // declaration site even when another site declares the same logical ID.
     let mut suggested_by_body: BTreeMap<(usize, usize), Vec<KnownPath>> = BTreeMap::new();
-    // §FS-declarations.checks.unmarked-heading.2.3: a repair is shown once per body.
+    // §FS-declarations.checks.unmarked-heading: a repair is shown once per body.
     let mut repaired_by_body: BTreeMap<(usize, usize), BTreeSet<String>> = BTreeMap::new();
 
     for candidate in candidates {
@@ -87,9 +87,9 @@ pub(super) fn assign_unmarked_heading_owners(
                 value_declaration_is_in_home(schema, frame, path, &decl.id)
             })
         });
-        // §FS-declarations.checks.unmarked-heading.2.1: a dotted heading is shown the relative
+        // §FS-declarations.checks.unmarked-heading: a dotted heading is shown the relative
         // form where the suggested coordinate's parent could hold one and a value run would
-        // take it there (§FS-declarations.checks.unmarked-heading.2.3).
+        // take it there (§FS-declarations.checks.unmarked-heading).
         let relative_hint = decl
             .filter(|_| candidate.title.starts_with('.'))
             .and_then(|decl| {
@@ -133,7 +133,7 @@ pub(super) fn assign_unmarked_heading_owners(
             heading_level: candidate.heading_level,
             title: candidate.title,
             owner: owner.clone(),
-            // §FS-declarations.checks.unmarked-heading.2.2: retain the concrete owner site.
+            // §FS-declarations.checks.unmarked-heading: retain the concrete owner site.
             owner_line: body_start,
             suggested_path,
             relative_hint,
@@ -195,7 +195,7 @@ pub(super) fn assign_unmarked_heading_owners(
 
     // Section coordinates accept an unbounded digit run. Compare and increment those runs as
     // decimal text so repair guidance stays above every authored sibling without imposing an
-    // integer-width ceiling (§FS-declarations.checks.unmarked-heading.3).
+    // integer-width ceiling (§FS-declarations.checks.unmarked-heading).
     fn compare_decimal(left: &str, right: &str) -> std::cmp::Ordering {
         let left = normalize_decimal(left);
         let right = normalize_decimal(right);
@@ -228,7 +228,7 @@ pub(super) fn assign_unmarked_heading_owners(
 
 /// The fault of a heading whose complete path is already in place, where writing
 /// the repairing heading instead would declare a recognized section of `decl`,
-/// whose body ends on `end` (§FS-declarations.checks.unmarked-heading.2.3): named
+/// whose body ends on `end` (§FS-declarations.checks.unmarked-heading): named
 /// sections on for a name-bearing path, one component per ATX level below the
 /// declaration, a parent [`usable_section`] accepts, and a path not already
 /// declared. Where the path lies in a value run — the body of a value declaration
@@ -265,7 +265,7 @@ fn fault_hint(
 }
 
 /// The root path of the value run `corrected` would join in `decl`, if any
-/// (§FS-declarations.checks.unmarked-heading.2.3): the empty path, the whole body,
+/// (§FS-declarations.checks.unmarked-heading): the empty path, the whole body,
 /// in a value declaration (`value`, §FS-values.2.1); otherwise the outermost proper
 /// prefix of `corrected` that is a value root of `decl`, embedded (§FS-values.2.4)
 /// or by a declared chapter (§FS-values.2.5). Outermost, because a root nested in
@@ -286,7 +286,7 @@ fn value_run<'a>(decl: &Declaration, corrected: &'a str, value: bool) -> Option<
 
 /// Whether `corrected`, written at `line`, is the component the value run rooted at
 /// `root` in `decl`, whose body ends on `end`, expects there
-/// (§FS-declarations.checks.unmarked-heading.2.3). In a value declaration (`root` empty,
+/// (§FS-declarations.checks.unmarked-heading). In a value declaration (`root` empty,
 /// §FS-values.2.1) that is one number, one more than the sections the body declares, all
 /// of them above `line`. Under a root it is `root` and one number, one more than the
 /// lines above `line` that the root's own cursor advances on (§FS-values.2.4.3): every

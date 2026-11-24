@@ -4,7 +4,7 @@ This example teaches setting up a conformant repository that already has a
 document taxonomy of its own ([§FS-examples.2](../../docs/functional-spec/FS-examples.md#2-canonical-use-cases)). It is for a maintainer, or an agent
 running the `grund-init` skill, who wants grund's citations without grund's
 nine default kinds: the existing-structure adoption model
-([§FS-init.5.2](../../docs/functional-spec/FS-init.md#52-adopting-an-existing-docs-heavy-repo)).
+([§FS-init.5.1](../../docs/functional-spec/FS-init.md#51-what-the-instructions-tell-the-agent)).
 
 Open `1-template-none/repo/` first. It holds an architecture decision under
 `docs/adr/` and a runbook under `docs/runbooks/`, and no grund config. The
@@ -31,10 +31,10 @@ The run writes two files and touches nothing under `docs/`
   ([§FS-config.4.2](../../docs/functional-spec/FS-config.md#42-grund-config-show-path)), and `grund config explain` every setting
   ([§FS-config.4.2.3.1](../../docs/functional-spec/FS-config.md#4231-what-sends-a-reader-to-show-names-explain)).
 - `AGENTS.md`, whose Project map teaches the first `[schema.kinds]` table rather
-  than listing an empty one ([§FS-init.2.3.4.4.2](../../docs/functional-spec/FS-init.md#23442-no-kinds-yet)).
+  than listing an empty one ([§FS-init.2.3.4](../../docs/functional-spec/FS-init.md#234-managed-block-content-sections)).
 
 On stderr it reports those two paths, then a `next:` block whose first step is
-to declare a first kind ([§FS-init.2.2.2.2](../../docs/functional-spec/FS-init.md#2222-a-project-with-no-kinds)). Stdout is empty.
+to declare a first kind ([§FS-init.2.2.2](../../docs/functional-spec/FS-init.md#222-the-next-block)). Stdout is empty.
 
 Before declaring that kind, ask what the current config recognizes:
 
@@ -92,7 +92,7 @@ exists grund.toml
 
 No `next:` block follows. The guidance would name `ADR`, the first citable kind
 with a home, and its home `docs/adr` already exists, so this refresh leaves
-nothing to teach ([§FS-init.2.2.2.3](../../docs/functional-spec/FS-init.md#2223-the-kind-the-guidance-names)). Allocate the first ID in
+nothing to teach ([§FS-init.2.2.2](../../docs/functional-spec/FS-init.md#222-the-next-block)). Allocate the first ID in
 it with `grund id ADR "…"`. The runbook kind is not citable, so the guidance
 never names it.
 

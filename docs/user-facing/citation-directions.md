@@ -63,7 +63,7 @@ plain-link advice, and suggestions keep their existing wording
 ([the index-entry repair specification](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).
 
 The generated entrypoint states the directions a config declares and no
-others ([the citation-direction rule of `grund init`](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#23410-citation-direction)).
+others ([the citation-direction rule of `grund init`](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#235-citation-directions)).
 A config that declares no citation rule has no `### Citation directions`
 section in its managed block, whatever kinds it declares. A grounding ladder
 declares no rule, so where grounding is on, with

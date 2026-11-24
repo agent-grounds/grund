@@ -34,7 +34,7 @@
 //!   lead-budget rule read upward out of a sibling's answer (§FS-declarations.checks.oversized-lead).
 //! - `link_targets.rs` out of `writers/fmt_link_targets.rs`, the link a
 //!   declaration's ID resolves to, which the checker's index-entry rule read the
-//!   same way (§FS-check.3.18.5).
+//!   same way (§FS-check.3.18).
 //! - `unread_block.rs` out of `workspace/members.rs`, the one half of
 //!   §FS-check.4.10.2 that has to run the walker to answer — and, with it, the
 //!   whole of the run's warning channel settled, since this is the lowest

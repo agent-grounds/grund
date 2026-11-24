@@ -254,7 +254,7 @@ fn check_workspace_context(
             context.render_config().display(),
         ));
     }
-    // §FS-check.3.29.13, §FS-check.3.29.11: per project, the blocks that walk met that
+    // §FS-check.3.29: per project, the blocks that walk met that
     // no enclosing one lists — located report errors, the decision `run_workspace_check`
     // makes, so an editor and a terminal place one diagnostic at one line (§FS-lsp.4.1).
     for project in reporting(&context.projects) {
@@ -315,12 +315,12 @@ fn check_workspace_context(
     report
 }
 
-/// §FS-lsp.1.1.3, §FS-check.3.29.15: the run's warning channel as the editor sees it —
+/// §FS-lsp.1.1.3, §FS-check.3.29: the run's warning channel as the editor sees it —
 /// the three `[workspace]` cautions the run settled, without the unlisted block.
 ///
 /// The five walking surfaces that have no report of their own keep that finding on this
-/// channel, which is why the context still settles it (§FS-check.3.29.9). The editor
-/// takes it off `report` instead, located and as an error (§FS-check.3.29.13), and a copy
+/// channel, which is why the context still settles it (§FS-check.3.29). The editor
+/// takes it off `report` instead, located and as an error (§FS-check.3.29), and a copy
 /// left here would publish a second, warning-severity squiggle on the same line — the one
 /// way the flip can go wrong invisibly, so the drop is a named step rather than a filter
 /// buried in the call.

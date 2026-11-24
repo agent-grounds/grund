@@ -331,9 +331,9 @@ sections against, and the two count one section set ([§FS-show.2.2.2](../functi
 
 `section_resolves` in `model/stub_resolution.rs` is the one test. Every reader in `check` asks it: the
 missing-section finding ([§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), the `grund fmt --write` clause that
-finding carries ([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)), the escape a local section citation offers in
-place of a full citation of a section its owner lacks ([§FS-check.3.24.3](../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)), the bare
-index entry the index rule admits ([§FS-check.3.17.4](../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), the local-section expansion
+finding carries ([§FS-check.3.24](../functional-spec/FS-check.md#324-declaration-local-section-citation)), the escape a local section citation offers in
+place of a full citation of a section its owner lacks ([§FS-check.3.24](../functional-spec/FS-check.md#324-declaration-local-section-citation)), the bare
+index entry the index rule admits ([§FS-check.3.17](../functional-spec/FS-check.md#317-index-entry-is-not-a-link)), the local-section expansion
 `fmt` writes ([§FS-fmt.2.4.6](../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the `cites` fact a rule reads ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)).
 Where no recorded declaration holds the path, it answers from the ID's one
 declaration where a stub stands for it: the target's record of it. A broken stub
@@ -355,7 +355,7 @@ leaves out of the body gives a section no anchor ([§FS-fmt.6.4.1](../functional
 of `list --size` measures each declaration's record, so a healthy stub whose target
 the walk missed is measured at the target's declaration, with its sections, and a target declaring the
 ID twice at both ([§FS-list.3.4.6](../functional-spec/FS-list.md#346-a-home-outside-the-scan)). `check`'s lead budget does not: it judges
-scanned sites only ([§FS-declarations.checks.oversized-lead.4](../functional-spec/FS-declarations.md#checksoversized-lead4-which-sites-it-judges)).
+scanned sites only ([§FS-declarations.checks.oversized-lead](../functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
 
 Nothing here is read after the scan, so nothing here keeps slots, observes an
 input, or carries the editor's text: the one read of a target, its observation

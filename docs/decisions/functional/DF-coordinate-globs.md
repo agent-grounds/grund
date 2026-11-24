@@ -45,7 +45,7 @@ disputes, with these changes:
   ([§FS-coordinate-globs.errors](../../functional-spec/FS-coordinate-globs.md#errors-refusals-notes-and-hints)). Each spelling freezes at 1.0.
 - **The block is taught from the format.** The managed block's recipe builds its pattern from
   the project's `[id] format`, so a `{kind}{number}` project is never taught a `-` its IDs do
-  not have ([§FS-init.2.3.4.3.1](../../functional-spec/FS-init.md#23431-structural-queries)).
+  not have ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)).
 
 `--selector` and every rule sentence are unchanged, and no rule admission moves ([§FS-rules.2](../../functional-spec/FS-rules.md#2-subject-selectors)).
 
@@ -60,7 +60,7 @@ carrying this issue's design and its two open questions, and the relation flags 
 
 Teaching the glob recipe in place of the `jq` pipe changes the managed block's fixed text, so
 both current version pairs advance: v23/v24 becomes v27/v28 and v25/v26 becomes v29/v30, and
-one `grund init` re-renders an outdated block ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)).
+one `grund init` re-renders an outdated block ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)).
 
 ## 4. The citation guard's verdict correction
 

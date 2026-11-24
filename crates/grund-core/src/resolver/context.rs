@@ -110,7 +110,7 @@ pub(crate) struct WorkspaceContext {
     /// every project in the block was the absent one (§FS-lsp.4.1).
     pub(crate) render_config: ProjectRecords,
     /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
-    /// cautions of §FS-check.3.29.15, §FS-check.4.10.11 and
+    /// cautions of §FS-check.3.29, §FS-check.4.10.11 and
     /// §FS-workspace.6.1.7, settled and in the order the run earned them, for
     /// whichever frontend asked to render. Every command that walks passes
     /// through this loader, which is what puts all three on `list`, `refs`,
@@ -333,7 +333,7 @@ pub(crate) fn load_resolved_workspace_context(
     // `include_root = true` (the helper always emits the root first).
     let current = root_config.project().workspace.include_root.then_some(0);
     let mut projects = load_workspace_projects(&mut root_config)?;
-    // §FS-scan.scope.homes.lookup.path: the path bounds the report, and no walk starts at it;
+    // §FS-scan.scope.homes.lookup: the path bounds the report, and no walk starts at it;
     // §AR-scanner.1.6: a failure no project holds is the run's, refused as `show` refuses one.
     if let Some(failure) = report_unwalked_path(&mut projects, &root_config, path, path_provided) {
         let all = std::slice::from_ref(&failure);
@@ -342,7 +342,7 @@ pub(crate) fn load_resolved_workspace_context(
     // Cloned *after* the expansion, not before: what the walk learns about the
     // tree is what the report is rendered from (§FS-check.4.9).
     let render_config = root_config.clone();
-    // §FS-check.3.29.15: the query surfaces have no report to carry the finding, so it
+    // §FS-check.3.29: the query surfaces have no report to carry the finding, so it
     // joins the run's warning channel here (§DF-unlisted-workspace-block.2.3),
     // after the three the workspace pass settled — the order they were emitted in.
     let mut run_warnings = settled_run_warnings(render_config.run());
@@ -539,7 +539,7 @@ pub(super) fn load_projects_with(
 
     // §FS-remote-projects.mount.rule: every mount this tree declares, loaded natively.
     let (grafted, mounted_roots) = mounts.graft_all(root_config)?;
-    // §FS-scan.scope.links.owed.fence: a walk tells a link into an import from one
+    // §FS-scan.scope.links.owed: a walk tells a link into an import from one
     // out of the run, so each knows the import trees before its scan below.
     if !mounted_roots.is_empty() {
         for (_, records) in &mut entries {

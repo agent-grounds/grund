@@ -8,7 +8,7 @@
 
 ## 1. Context
 
-The generated "Workspace members" section ([§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members)) maps each
+The generated "Workspace members" section ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)) maps each
 foreign workspace alias to its `AGENTS.md`, but carries no semantic hint about
 what each foreign namespace is for — an agent picking an alias for a
 cross-project citation must open each member's entrypoint or guess from path names
@@ -42,7 +42,7 @@ project_name = "gradle"
 project_description = "Gradle plugin that builds native images from JVM projects"
 ```
 
-The [§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members) renderer appends a foreign project's description after the bullet's
+The [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections) renderer appends a foreign project's description after the bullet's
 link as `: <description>`; a
 foreign project without a description keeps the link-only bullet. The project
 whose entrypoint is being rendered has no row, so its description is
@@ -57,7 +57,7 @@ generated `grund.toml` teaches the key with a commented line ([§DF-config-file-
 `grund init --description <text>` sets it at bootstrap time. Self omission
 keeps that pending description out of the local list; it appears when another
 entrypoint renders the project as foreign. The contract lives in
-[§FS-config.3](../../functional-spec/FS-config.md#3-keys-version-1), [§FS-workspace.3](../../functional-spec/FS-workspace.md#3-aliases), and [§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members).
+[§FS-config.3](../../functional-spec/FS-config.md#3-keys-version-1), [§FS-workspace.3](../../functional-spec/FS-workspace.md#3-aliases), and [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections).
 
 ## 3. Why this shape
 

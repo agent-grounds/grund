@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-23
 
-Settles whether the managed block's cheap-grounding list names `grund list --unused`, as [§FS-init.2.3.4.3](../../functional-spec/FS-init.md#2343-cheap-grounding) specifies. Serves [§GOAL-token-economy](../../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file): one call that lists the declarations nothing cites replaces one `grund refs` per ID. Reported as [grund#937](https://github.com/agent-grounds/grund/issues/937), left open by #925 on purpose because it moves the block.
+Settles whether the managed block's cheap-grounding list names `grund list --unused`, as [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections) specifies. Serves [§GOAL-token-economy](../../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file): one call that lists the declarations nothing cites replaces one `grund refs` per ID. Reported as [grund#937](https://github.com/agent-grounds/grund/issues/937), left open by #925 on purpose because it moves the block.
 
 ## status: Accepted
 
@@ -14,7 +14,7 @@ Settles whether the managed block's cheap-grounding list names `grund list --unu
 
 ### 2.1 One bullet after the `--kind` one
 
-The list gains `` - `grund list --unused` — the declarations nothing cites yet, in one call ``, directly after the `grund list --kind` bullet ([§FS-init.2.3.4.3](../../functional-spec/FS-init.md#2343-cheap-grounding)). It is one line with no recipe.
+The list gains `` - `grund list --unused` — the declarations nothing cites yet, in one call ``, directly after the `grund list --kind` bullet ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)). It is one line with no recipe.
 
 ### 2.2 Why it clears the block's bar
 
@@ -22,7 +22,7 @@ The list gains `` - `grund list --unused` — the declarations nothing cites yet
 
 ### 2.3 What it costs
 
-The block's fixed text changes, so its version moves. The change shares the unreleased v39–v42 pairs rather than adding one, since no release wrote them before it ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)).
+The block's fixed text changes, so its version moves. The change shares the unreleased v39–v42 pairs rather than adding one, since no release wrote them before it ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)).
 
 ## 3. Consequences
 
@@ -38,4 +38,4 @@ The block's fixed text changes, so its version moves. The change shares the unre
 
 ## release-note: Release note
 
-- [§FS-init.2.3.4.3](../../functional-spec/FS-init.md#2343-cheap-grounding): **The managed block teaches `grund list --unused`.** The cheap-grounding list in the `grund init` block gains one bullet, `` - `grund list --unused` — the declarations nothing cites yet, in one call ``, directly after the `grund list --kind` one, so an agent that reads only the block lists the uncited declarations in one call instead of running `grund refs` per ID. **What an upgrader does:** run `grund init` once, which the block versions v39/v40 and v41/v42 of this release already ask for. (agent-grounds/grund#937)
+- [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections): **The managed block teaches `grund list --unused`.** The cheap-grounding list in the `grund init` block gains one bullet, `` - `grund list --unused` — the declarations nothing cites yet, in one call ``, directly after the `grund list --kind` one, so an agent that reads only the block lists the uncited declarations in one call instead of running `grund refs` per ID. **What an upgrader does:** run `grund init` once, which the block versions v39/v40 and v41/v42 of this release already ask for. (agent-grounds/grund#937)

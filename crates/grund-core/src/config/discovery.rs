@@ -27,12 +27,12 @@ use crate::sources::{
 /// told to write is the file that governs it.
 const CONFIG_NAMES: [&[&str]; 2] = [&["grund.toml"], &[".agents", "grund.toml"]];
 
-/// §FS-declarations.checks.misplaced-declaration.unlisted-project: an unread
+/// §FS-declarations.checks.misplaced-declaration: an unread
 /// config's optional identity, using the same top-level/string grammar as both
 /// readers. No project load, regex compilation, or refusal for malformed input,
 /// and no finding: a version-2 name is read as the load reads it, and one the load
 /// refuses, a string that closes early among them, is passed over
-/// (§FS-config-v2.reader.6.refusal).
+/// (§FS-config-v2.reader.6).
 pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
     let version_2 = v2::selects(text);
     let mut name = None;
@@ -65,7 +65,7 @@ pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
 /// A string list read by a reader that reads one key of a config without loading it: as
 /// the load of a version-2 file reads it when `version_2`, of a version-1 file otherwise,
 /// `None` for a value the load refuses, and no finding recorded
-/// (§FS-config-v2.reader.6.refusal). The ancestor climb reads `[workspace] members`
+/// (§FS-config-v2.reader.6). The ancestor climb reads `[workspace] members`
 /// through this (§FS-workspace.6.1.7.5).
 pub(crate) fn unloaded_string_list(
     version_2: bool,
@@ -155,7 +155,7 @@ pub(crate) fn config_file_under(root: &Path, read: &Path) -> PathBuf {
 /// part, whose `parent()` is the empty path rather than `None` (§FS-config.1.4);
 /// any other path is its own start. A link whose resolution loops starts where a file
 /// does, at its directory: it has no inside to start from, and its own spelling cannot be
-/// resolved, so the climb from it would lose the root (§FS-scan.scope.links.unresolvable.named).
+/// resolved, so the climb from it would lose the root (§FS-scan.scope.links.unresolvable).
 /// Relative still: [`discovery_start`] makes it absolute, so `.` resolves the way every
 /// other relative start does.
 fn discovery_start_dir(path: &Path) -> &Path {
@@ -233,7 +233,7 @@ pub(crate) fn cli_base_of(start: &Path, root: &Path) -> PathBuf {
 /// The CLI base of a run for the path argument `start`, discovered from `walk_start` and
 /// rooted at `root` (§FS-cli.3.4). A path whose lookup is refused is known as neither a
 /// directory nor a file, so its report is spelled from the working directory, never from
-/// where discovery climbs (§FS-scan.scope.homes.lookup.path); every other path keeps
+/// where discovery climbs (§FS-scan.scope.homes.lookup); every other path keeps
 /// [`cli_base_of`].
 fn run_cli_base(start: &Path, walk_start: &Path, root: &Path) -> PathBuf {
     let refused = fs::canonicalize(start).is_err()
@@ -248,7 +248,7 @@ fn run_cli_base(start: &Path, walk_start: &Path, root: &Path) -> PathBuf {
 
 /// Where `start` resolves, links followed: its canonical path, else, for a lookup
 /// refused for lack of permission, the place the walk gives such a root, as far as the
-/// disk answers (§AR-scanner.1.9, §FS-scan.scope.links.owed.refused). `None` for any
+/// disk answers (§AR-scanner.1.9, §FS-scan.scope.links.owed). `None` for any
 /// other failure, a missing target among them, which keeps the route it had.
 fn resolved_start(start: &Path) -> Option<PathBuf> {
     match fs::canonicalize(start) {
@@ -446,7 +446,7 @@ fn read_config(
 /// to, before it is on disk: `text` read as `root`'s `grund.toml` by the reader
 /// a discovered file goes through, so the managed block `init` renders describes
 /// exactly the file it writes, a kind with no built-in default included
-/// (§FS-init.2.3.8, §FS-init.2.4.10).
+/// (§FS-init.2.3.8, §FS-init.2.4.3).
 pub(crate) fn pending_config(text: &str, root: &Path, invocation: &Invocation) -> Result<Config> {
     let run = Run::of(root.to_path_buf(), root.to_path_buf(), invocation);
     config_from_text(text, Path::new("grund.toml"), root, run, invocation)

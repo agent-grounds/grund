@@ -77,7 +77,7 @@ impl Installed {
             }
             // §FS-lsp.1.1.3: the three run-level `[workspace]` warnings, each on the
             // `grund.toml` it anchors at, never a location read back out of the text
-            // (§AR-bindings.2). The unlisted block is a `report` error (§FS-check.3.29.13).
+            // (§AR-bindings.2). The unlisted block is a `report` error (§FS-check.3.29).
             for finding in project.snapshot.run_warnings.clone() {
                 if let Some((uri, diagnostic)) =
                     self.diagnostic_for_finding(project, finding, DiagnosticSeverity::WARNING)
@@ -274,7 +274,7 @@ impl Installed {
         }
         // Rejected section headings and unresolved local-section forms retain their exact range
         // solely for diagnostics; they remain absent from every navigation collection
-        // (§FS-declarations.checks.section-outside-declaration.2, §FS-lsp.1.1).
+        // (§FS-declarations.checks.section-outside-declaration, §FS-lsp.1.1).
         if let Some(range) = index
             .finding_ranges
             .on_line(&path, line)

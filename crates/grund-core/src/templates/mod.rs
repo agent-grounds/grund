@@ -21,14 +21,14 @@
 //! and its newline canonicalization, the block substitutions, the
 //! `### Citation directions` renderer and its grounding sentence, and the
 //! `### Clickable citations` renderer with the entrypoint surface it varies by
-//! (§FS-init.2.3.4.17).
+//! (§FS-init.2.3.6).
 //!
 //! What it does **not** hold is anything a run decides. Which entrypoint files
 //! a repository has is a probe over the tree and is
 //! `scanner/agent_entrypoints.rs`; which of them this invocation writes is
 //! `writers/init_plan.rs`; the effective config a run leaves governing the
-//! target and workspace discovery (§FS-init.2.3.4.16) are `writers/init_render.rs`,
-//! which hands presence and the rendered members (§FS-init.2.3.4.15) in together.
+//! target and workspace discovery (§FS-init.2.3.4) are `writers/init_render.rs`,
+//! which hands presence and the rendered members (§FS-init.2.3.4) in together.
 
 mod agents_block;
 mod assets;

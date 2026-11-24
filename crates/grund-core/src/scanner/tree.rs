@@ -223,7 +223,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     // §FS-config.3.5: a link the walk could not resolve is already a scan failure
     // before a single file is opened — it joins the per-file ones (§FS-check.2.4).
     let walked = walk_scannable_files_reporting(schema, frame, scope, explicit_scope)?;
-    // §FS-check.3.29.11: the walk's directories travel with its files, for the rule that
+    // §FS-check.3.29: the walk's directories travel with its files, for the rule that
     // asks which of them holds a `[workspace]` block nothing claims. Carried, not
     // judged: the scanner never asks that question itself (§AR-workspace.1).
     let mut findings = Catalog {
@@ -316,7 +316,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         &mut errors,
         &mut findings,
     );
-    // §FS-scan.checks.unread-scan-root.folder: both passes must finish before coverage is joined.
+    // §FS-scan.checks.unread-scan-root: both passes must finish before coverage is joined.
     let coverage = scan_value_sources(schema, frame, &mut findings, &mut errors);
     coverage.discharge(walked.folder_names, frame, &mut findings);
     read_section_locks(frame, &mut findings, &mut errors);

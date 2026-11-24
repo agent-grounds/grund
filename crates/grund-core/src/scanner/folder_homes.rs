@@ -1,5 +1,5 @@
 //! Folder-home evidence recorded during the existing walk, never a second traversal
-//! (§FS-scan.checks.unread-scan-root.folder). The text and value passes discharge a row
+//! (§FS-scan.checks.unread-scan-root). The text and value passes discharge a row
 //! when they actually read a file in it.
 
 use std::collections::HashSet;
@@ -12,7 +12,7 @@ use crate::model::{
 };
 
 /// Spelling eligibility and actual reads are separate evidence. Join them only after both
-/// passes, through the run's existing identities (§FS-scan.checks.unread-scan-root.folder).
+/// passes, through the run's existing identities (§FS-scan.checks.unread-scan-root).
 #[derive(Default)]
 pub(super) struct FolderReads {
     eligible: Vec<PathBuf>,
@@ -21,7 +21,7 @@ pub(super) struct FolderReads {
 
 impl FolderReads {
     /// Discovery admits this spelling, even if the file's one reading is not a value format
-    /// (§FS-scan.checks.unread-scan-root.folder). Neither resolution nor discovery proves a read.
+    /// (§FS-scan.checks.unread-scan-root). Neither resolution nor discovery proves a read.
     pub(super) fn entered(&mut self, path: &Path, findings: &Catalog) {
         if findings
             .unread_roots
@@ -32,7 +32,7 @@ impl FolderReads {
         }
     }
 
-    /// Record only a successful body read (§FS-scan.checks.unread-scan-root.folder).
+    /// Record only a successful body read (§FS-scan.checks.unread-scan-root).
     pub(super) fn read(&mut self, path: &Path) {
         self.read.push(path.to_path_buf());
     }
@@ -69,12 +69,12 @@ impl FolderReads {
 }
 
 /// Configured, walked folder homes and the first eligible refusal each walk met
-/// (§FS-scan.checks.unread-scan-root.folder).
+/// (§FS-scan.checks.unread-scan-root).
 pub(super) struct FolderHomes(Vec<(PathBuf, RootRow, Option<PathBuf>)>);
 
 impl FolderHomes {
     /// Every authored folder place, including later entries and non-citable rows
-    /// (§FS-scan.checks.unread-scan-root.folder).
+    /// (§FS-scan.checks.unread-scan-root).
     pub(super) fn new(schema: &Schema, frame: Frame<'_>) -> Self {
         Self(
             schema
@@ -112,7 +112,7 @@ impl FolderHomes {
 
     /// Only an extension/language refusal of a non-hidden file counts. Ignore/exclude gates
     /// already kept their files out before the walker hands them here
-    /// (§FS-scan.checks.unread-scan-root.folder).
+    /// (§FS-scan.checks.unread-scan-root).
     pub(super) fn refused(&mut self, path: &Path, refusal: Option<Unread>) {
         if refusal != Some(Unread::Extension) {
             return;
@@ -129,7 +129,7 @@ impl FolderHomes {
     }
 
     /// A row without eligible refused content is silent, even if the home is empty or absent
-    /// (§FS-scan.checks.unread-scan-root.folder).
+    /// (§FS-scan.checks.unread-scan-root).
     pub(super) fn rows(self) -> impl Iterator<Item = RootRow> {
         self.0.into_iter().filter_map(|(_, mut row, first)| {
             let first = first?;

@@ -31,7 +31,7 @@ pub struct Place {
     pub extent: Extent,
     pub scanned: bool,
     /// The line of the key that named the place, which a finding about the place
-    /// itself anchors at (§FS-scan.checks.unread-scan-root.location); `None` for a
+    /// itself anchors at (§FS-scan.checks.unread-scan-root); `None` for a
     /// built-in row.
     pub source: Option<ConfigLocation>,
 }

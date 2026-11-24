@@ -1,4 +1,4 @@
-"""Read the core-concerns plan for release preflight. §FS-distribution.4.2.2.1
+"""Read the core-concerns plan for release preflight. §FS-distribution.4.2.2
 
 §DISC-core-concerns.9.9 defines the ledger table and the due-notice consistency
 rule, and the phase leads of §DISC-core-concerns.9 say whether each phase shipped.
@@ -58,7 +58,7 @@ def planned_notice_due(notice, status, release):
 
 
 def notice_problems(root, release):
-    """§FS-distribution.4.2.2.1: refuse only planned notices due by this release."""
+    """§FS-distribution.4.2.2: refuse only planned notices due by this release."""
     path = root / LEDGER_PATH
     if not path.exists():
         return []
@@ -80,7 +80,7 @@ def notice_problems(root, release):
 
 
 def unshipped_phases(text, bound):
-    """§FS-distribution.4.2.2.1: each §DISC-core-concerns.9 phase whose lead opens
+    """§FS-distribution.4.2.2: each §DISC-core-concerns.9 phase whose lead opens
     `Not shipped` and plans it for a release at or below the bound, as the phase's
     number and name beside the release as the lead writes it."""
     found = []
@@ -105,7 +105,7 @@ def unshipped_phases(text, bound):
 
 
 def phase_lead_problems(root, release):
-    """§FS-distribution.4.2.2.1: refuse only phases still planned for this release."""
+    """§FS-distribution.4.2.2: refuse only phases still planned for this release."""
     path = root / LEDGER_PATH
     if not path.exists():
         return []

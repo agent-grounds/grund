@@ -88,7 +88,7 @@ pub(crate) fn relative_to_ancestor(line: &str, written: &str, below: &str) -> St
 }
 
 /// The relative heading an unmarked dotted heading would be written as under the
-/// parent of `suggested` (§FS-declarations.checks.unmarked-heading.2.1): the `#`
+/// parent of `suggested` (§FS-declarations.checks.unmarked-heading): the `#`
 /// run, `.` and the last component, the title syntax the suggested heading uses,
 /// and the authored title less its leading dotted token, or `Untitled`.
 pub(crate) fn relative_heading_hint(level: usize, suggested: &str, title: &str) -> String {

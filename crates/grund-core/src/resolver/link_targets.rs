@@ -9,7 +9,7 @@
 //! where the walk did not reach it (§FS-fmt.6.2.1.1, §AR-resolver.placement,
 //! §AR-resolver.5). Two components ask it for the same answer —
 //! `grund fmt --cross-refs` for the link it writes (§FS-fmt.6) and the checker's
-//! index-entry rule for the link it compares against (§FS-check.3.18.5) — so it
+//! index-entry rule for the link it compares against (§FS-check.3.18) — so it
 //! sat in `writers/fmt_link_targets.rs` while the checker read it upward out of a
 //! component above it (§AR-system.4). The derivation of an anchor *from* heading
 //! text is the lexical half and is `grammar/anchors.rs`.
@@ -70,7 +70,7 @@ pub(crate) fn markdown_link_target(
 /// name, keyed by (index file, ID): what `Expected` hands the kind-index pass so
 /// it compares a page against `fmt`'s destination, and names the entry a
 /// not-listed declaration owes, without the checker reading the anchor profile
-/// (§AR-checker.1.3, §AR-checker.2.16, §FS-check.3.18.3, §FS-check.3.18.5.2).
+/// (§AR-checker.1.3, §AR-checker.2.16, §FS-check.3.18).
 /// An index is a citable folder row's Markdown `index`, and an ID is looked up
 /// under the first row of its own kind that keeps that file, as the kind-index
 /// pass looks it up. Two sets of IDs, and no more: every ID the index cites,
@@ -198,8 +198,8 @@ pub(crate) fn index_link_targets_for<'c>(
             }
         }
     }
-    // §FS-check.3.18.5.2: the declarations under the index's folders, by the
-    // membership test the kind-index pass owes entries by (§FS-check.3.18.2),
+    // §FS-check.3.18: the declarations under the index's folders, by the
+    // membership test the kind-index pass owes entries by (§FS-check.3.18),
     // asked only of the folders above each declaration.
     let owners = Owners::new(schema, frame);
     for (id, decls) in &findings.declarations {

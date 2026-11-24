@@ -249,8 +249,8 @@ pub(super) fn run_check_with_run_warnings(
         // a repository mid-migration keeps the scope caution beside its config pair.
         config_diagnostics(&config, config.display()),
     );
-    // §FS-check.3.29.13: the blocks this walk met that no enclosing one lists — one of
-    // the report's *errors* since the ramp ended (§FS-check.3.29.14), and located, so it
+    // §FS-check.3.29: the blocks this walk met that no enclosing one lists — one of
+    // the report's *errors* since the ramp ended (§FS-check.3.29), and located, so it
     // reaches the exit code rather than standing in place of `success` (§FS-check.2.1.3).
     let mut unlisted =
         unlisted_workspace_block_errors(&config, &config, None, &findings.walked_dirs);
@@ -427,7 +427,7 @@ fn run_workspace_check(
         );
         // §AR-scanner.1.8: every rule has run, and the path has not yet narrowed.
         name_every_spelling(&mut project_report, project.config.schema(), frame);
-        // §FS-scan.checks.unread-scan-root.scope: each project in its own `grund.toml`.
+        // §FS-scan.checks.unread-scan-root: each project in its own `grund.toml`.
         project_report
             .warnings
             .extend(unread_root_warnings(&project.config, &project.findings));
@@ -484,7 +484,7 @@ fn run_workspace_check(
     if full {
         report.armed.arm(Switch::Full);
     }
-    // §FS-check.3.29.11: per project — the candidates are what *that* walk reached, and
+    // §FS-check.3.29: per project — the candidates are what *that* walk reached, and
     // the absorbing namespace is its own. Rendered against the workspace root like
     // every other message here (§FS-workspace.8.1).
     for project in reporting(&projects) {

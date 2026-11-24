@@ -23,9 +23,9 @@ In 0.20.0 (agent-grounds/grund#930), `check` reads a citation-only image as `fmt
 - in a kind's index the image is no entry and enrolls nothing;
 - an ID it was the only entry for is reported `missing-index-entry`, an error at the
   declaration's heading, saying the ID appears in the index but not as an entry
-  ([§FS-check.3.18](../../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index), [§FS-check.3.18.5](../../functional-spec/FS-check.md#3185-what-an-entry-is)), and never `unlinked-index-entry`, because `fmt` leaves the
+  ([§FS-check.3.18](../../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)), and never `unlinked-index-entry`, because `fmt` leaves the
   image as written;
-- an external source declaration it alone enrolled is no longer a member ([§FS-check.3.18.4](../../functional-spec/FS-check.md#3184-what-does-not-enroll)), and
+- an external source declaration it alone enrolled is no longer a member ([§FS-check.3.18](../../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)), and
   the image is an ordinary citation of it;
 - the code `image-index-entry` is spent: it never fires, `--only` and `--ignore` still accept it,
   and `--only image-index-entry` says so and names `missing-index-entry` ([§FS-check.1.4.1](../../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so),

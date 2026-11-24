@@ -41,7 +41,7 @@ authorization; merging this helper capability performs no release.
 A helper no longer needs a quiet hour. Both `release-minor.yml` and
 `auto-bump.yml` hand everything from their candidates on to
 `scripts/release_candidates.py`, which works in rounds and follows `main`
-([§FS-distribution.4.4.1.1](../functional-spec/FS-distribution.md#4411-a-moved-main-is-followed-not-refused)). Run 39962684811 of
+([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). Run 39962684811 of
 `release-minor.yml` shows why: it was dispatched on `853e88959a`, its three
 candidate runs passed an hour later, and it was refused because the queue had
 landed #975 (`c5362e3936`) three minutes before they finished. Today that run
@@ -52,7 +52,7 @@ candidates on the new tip, and runs all three runs again on
 `release-candidate/v0.20.0-39962684811-1-r2`. Only the commits the last round's
 runs passed reach `main`, and the release section lists #975.
 
-The rounds are bounded ([§FS-distribution.4.4.1.2](../functional-spec/FS-distribution.md#4412-six-rounds-within-five-hours)): at most six, in a job of 300
+The rounds are bounded ([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)): at most six, in a job of 300
 minutes, and a round starts only with 90 minutes left. A helper that runs out
 of either publishes nothing and says which ran out; dispatch it again. It also
 stops, before pushing anything, when the target tag appeared or a merged pull
@@ -68,7 +68,7 @@ gh workflow run release-minor.yml --ref main \
   -f version=1.0.0 -f expected_main_sha=THE_TIP_THE_REFUSAL_NAMED
 ```
 
-Only a failure leaves branches ([§FS-distribution.4.4.1.4](../functional-spec/FS-distribution.md#4414-only-a-failure-leaves-branches)): a candidate run
+Only a failure leaves branches ([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)): a candidate run
 that did not pass, or a push to `main` git refused while `main` was still the
 round's base, keeps that round's two branches for you to read, and `main` is
 untouched. A round given up for a move, a helper out of rounds or time and a
@@ -76,7 +76,7 @@ pinned refusal delete theirs.
 
 Once the release commit is on `main`, the helper dispatches `release.yml` on
 the round's release-candidate branch with `expected_release_sha` set to that
-commit ([§FS-distribution.4.4.1.3](../functional-spec/FS-distribution.md#4413-the-push-to-main-reads-main-back)); the publisher refuses any other source before it
+commit ([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)); the publisher refuses any other source before it
 builds, and removes the branch once it has published
 ([§FS-distribution.4.3](../functional-spec/FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)). If that dispatch fails, the helper says so and does not start
 over: dispatch `release.yml` on the branch it names, with the version and the
@@ -108,7 +108,7 @@ python3 scripts/check_release_ramps.py <version>
 ```
 
 This run also reads the core-concerns plan as that release would record it
-([§FS-distribution.4.2.2.1](../functional-spec/FS-distribution.md#4221-the-preflight-reads-the-plan-as-the-release-would-record-it)). It refuses the version while a `planned`
+([§FS-distribution.4.2.2](../functional-spec/FS-distribution.md#422-the-release-guard-reads-the-releases-the-tree-names)). It refuses the version while a `planned`
 notice in the deprecation ledger, or a phase whose lead still opens
 `Not shipped`, is due at or below it, and names the plan's file, the notice's
 surface or the phase's number, and the release it is planned for. Record that

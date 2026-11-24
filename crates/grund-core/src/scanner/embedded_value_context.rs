@@ -147,7 +147,7 @@ impl<'a> ValueLines<'a> {
 /// That is the path the record holds for a relative heading (`relative`, §FS-values.2.4),
 /// else the heading's authored coordinate, title or none, name-bearing only under a
 /// chapter root (§FS-values.2.5). The root's own check walks it, and so does the repair
-/// shown under the root (§FS-declarations.checks.unmarked-heading.2.3), so both count the
+/// shown under the root (§FS-declarations.checks.unmarked-heading), so both count the
 /// same components.
 pub(super) fn root_cursor<'n>(
     normalized: &'n [ValueLine],

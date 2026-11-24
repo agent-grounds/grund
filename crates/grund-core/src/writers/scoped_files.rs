@@ -1,4 +1,4 @@
-//! The scoped files a run owns on disk (§FS-init.2.3.5.13.1, §FS-init.2.3.5.14.3):
+//! The scoped files a run owns on disk (§FS-init.2.3.5):
 //! the list the root block records, the companions beside a scoped `AGENTS.md`,
 //! which root companions a scoped directory mirrors, and which files of an
 //! orphan's directory lose their block. Read the same way by `init` before it
@@ -12,7 +12,7 @@ use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, companion_agent_entrypoints, is
 use crate::sources::{Sources, link_metadata, observe_input, path_is_entry};
 
 /// The companions a scoped directory can carry; the root-only entrypoints are
-/// never mirrored (§FS-init.2.3.5.14.3).
+/// never mirrored (§FS-init.2.3.5).
 pub(crate) const SCOPED_COMPANIONS: [&str; 2] = ["CLAUDE.md", "GEMINI.md"];
 
 /// What the root entrypoints say about scoped files: whether any carries a
@@ -49,7 +49,7 @@ impl ScopedRecord {
     }
 
     /// The directories the list on disk names that no destination in `live`
-    /// is, in list order: the orphans (§FS-init.2.3.5.13.1).
+    /// is, in list order: the orphans (§FS-init.2.3.5).
     pub(crate) fn orphans<'a>(&'a self, live: &[&str]) -> Vec<&'a str> {
         self.listed
             .iter()
@@ -61,7 +61,7 @@ impl ScopedRecord {
 
 /// The paths a root block's `### Scoped guidance` list names: each line
 /// `` - `<path>`: … `` of that section whose path is relative, climbs nowhere,
-/// and ends in `/AGENTS.md` (§FS-init.2.3.5.13.1).
+/// and ends in `/AGENTS.md` (§FS-init.2.3.5).
 pub(crate) fn listed_scoped_files(block_text: &str) -> Vec<String> {
     let Some(section) = section_in_block(block_text, "### Scoped guidance") else {
         return Vec::new();
@@ -81,12 +81,12 @@ pub(crate) fn listed_scoped_files(block_text: &str) -> Vec<String> {
 }
 
 /// Whether the root's `name` is a symlink to the root `AGENTS.md`, which is
-/// what a scoped directory mirrors (§FS-init.2.3.5.14.3).
+/// what a scoped directory mirrors (§FS-init.2.3.5).
 pub(crate) fn mirrored(root: &Path, name: &str) -> bool {
     is_symlink_to(&root.join(name), &root.join(CANONICAL_AGENT_ENTRYPOINT)).unwrap_or(false)
 }
 
-/// What a live destination's companion is to `init` (§FS-init.2.3.5.14.3).
+/// What a live destination's companion is to `init` (§FS-init.2.3.5).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum OwnedCompanion {
     /// The name is free: `init` links it to the `AGENTS.md` beside it.
@@ -97,7 +97,7 @@ pub(crate) enum OwnedCompanion {
 }
 
 /// The companions of the live destination `dir` under `root` that `init`
-/// owns, each with its name and what it is (§FS-init.2.3.5.14.3): only a
+/// owns, each with its name and what it is (§FS-init.2.3.5): only a
 /// mirrored name, and never a symlink, which is left as it is. `init` plans
 /// its writes from this and `Expected` its comparisons, so the two agree.
 pub(crate) fn owned_companions(root: &Path, dir: &str) -> Vec<(&'static str, OwnedCompanion)> {
@@ -112,7 +112,7 @@ pub(crate) fn owned_companions(root: &Path, dir: &str) -> Vec<(&'static str, Own
         .collect()
 }
 
-/// What a file in an orphan's directory is to `init` (§FS-init.2.3.5.14.3).
+/// What a file in an orphan's directory is to `init` (§FS-init.2.3.5).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum OrphanFile {
     /// The orphan's own `AGENTS.md`: its block is cut.
@@ -124,7 +124,7 @@ pub(crate) enum OrphanFile {
 }
 
 /// The files of the orphan directory `dir` under `root` that `init` touches,
-/// each with its name and what it is, `AGENTS.md` first (§FS-init.2.3.5.14.3):
+/// each with its name and what it is, `AGENTS.md` first (§FS-init.2.3.5):
 /// the `AGENTS.md` and each standalone companion lose their block on their own
 /// account, and of the symlinks only one to that `AGENTS.md`, which goes with
 /// it. `init` cuts from this and `Expected` compares it, so the two agree.

@@ -27,7 +27,7 @@ env:
 jobs:
   patch-release:
     runs-on: ubuntu-latest
-    # §FS-distribution.4.4.1.2: six rounds within five hours.
+    # §FS-distribution.4.4.1: six rounds within five hours.
     timeout-minutes: 300
     env:
       GH_TOKEN: ${{ github.token }}
@@ -155,7 +155,7 @@ jobs:
         if: steps.gate_substantive.outputs.ok == 'true'
         uses: dtolnay/rust-toolchain@stable
 
-      # §FS-distribution.4.4.1.1: the controller builds and runs both candidates in rounds
+      # §FS-distribution.4.4.1: the controller builds and runs both candidates in rounds
       # that follow main, pushes them, dispatches the publisher and advances to -dev.
       # §FS-distribution.4.1: a quiet run opens no -dev version.
       - name: Build, run and publish the candidates

@@ -127,7 +127,7 @@ pub(crate) fn check_agent_block_path(
     // §FS-check.6.1.1: observed before its read, as a save would write it
     // (§AR-system.2.13).
     if !sources.exists(path) {
-        // §FS-init.2.3.5.8: a destination of the live render with no file is a
+        // §FS-init.2.3.5: a destination of the live render with no file is a
         // missing block.
         if matches!(entrypoint.scoped, Some(ScopedExpectation::Block(_))) {
             report
@@ -177,7 +177,7 @@ pub(crate) fn check_agent_block_path(
         let line = line_for_byte_index(&text, block.start);
         let block_text = text[block.start..block.end].replace('\r', "");
         if let Some(ScopedExpectation::Orphan) = entrypoint.scoped {
-            // §FS-init.2.3.5.13.1: an orphan still carrying a block is stale.
+            // §FS-init.2.3.5: an orphan still carrying a block is stale.
             report
                 .errors
                 .push(stale_block(path, line, "scoped guidance", owner, None));
@@ -201,7 +201,7 @@ pub(crate) fn check_agent_block_path(
                 authority: Vec::new(),
             });
         } else if block.version > AGENTS_BLOCK_VERSION {
-            // §FS-init.2.3.7.3.1: only above the maximum, which the message names.
+            // §FS-init.2.3.7: only above the maximum, which the message names.
             report.errors.push(Diagnostic {
                 code: Code::AGENTS_INIT,
                 path: Some(path.to_path_buf()),
@@ -252,7 +252,7 @@ pub(crate) fn check_agent_block_path(
                     }
                 }
             }
-            // §FS-init.2.3.7.3.2: another known member is stale even when no
+            // §FS-init.2.3.7: another known member is stale even when no
             // compared section tells it apart, named by what its selection turns on.
             if !stale && block.version != expected_version {
                 stale = true;
@@ -261,7 +261,7 @@ pub(crate) fn check_agent_block_path(
                     .errors
                     .push(stale_block(path, line, noun, owner, None));
             }
-            // §FS-init.2.3.5.12: a scoped block is the render, byte for byte, so
+            // §FS-init.2.3.5: a scoped block is the render, byte for byte, so
             // a difference no section names is still a stale one.
             if let Some(ScopedExpectation::Block(bytes)) = &entrypoint.scoped
                 && !stale
@@ -283,7 +283,7 @@ pub(crate) fn check_agent_block_path(
 }
 
 /// The section a known block revision other than the selected one turns on
-/// (§FS-init.2.3.7.3.2): `scoped guidance` across the pairs, alone where the
+/// (§FS-init.2.3.7): `scoped guidance` across the pairs, alone where the
 /// rule-kind member differs too, otherwise `chapter rules`.
 fn unselected_member_noun(version: u32, expected_version: u32) -> &'static str {
     let (found, selected) = (

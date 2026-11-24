@@ -14,14 +14,14 @@
 use crate::config::{Project, escape_toml_basic};
 use crate::grammar::id_shape;
 
-/// §FS-init.2.3.4.3, §FS-init.2.3.4.9: the shared read and rename-maintenance guidance.
+/// §FS-init.2.3.4: the shared read and rename-maintenance guidance.
 pub(super) const AGENTS_TEMPLATE: &str = include_str!("../../assets/templates/AGENTS.md");
-/// Workspace-only project-boundary guidance (§FS-init.2.3.4.16).
+/// Workspace-only project-boundary guidance (§FS-init.2.3.4).
 pub(super) const AGENTS_PROJECT_NAMESPACES_TEMPLATE: &str =
     include_str!("../../assets/templates/AGENTS-project-namespaces.md");
 /// The scaffold config carries one comment, its first line, saying where the
 /// rest of the settings are; it declares no citation rule, and `grund guide
-/// citations` prints the guide to them (§FS-init.2.4.5). The file lands verbatim
+/// citations` prints the guide to them (§FS-init.2.4.3). The file lands verbatim
 /// in the adopting repository, so it names no ID of this one: an ID would name a
 /// document that reader does not have — or an unrelated one of their own
 /// (§REQ-shipped-surfaces.1).
@@ -29,18 +29,18 @@ const GRUND_TOML_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/grund.toml");
 /// The `none` template's config: the default one with `kinds = []` for its
 /// kind tables, and nothing else (§FS-init.2.4.9). It keeps the same marker
-/// guidance (§FS-init.2.4.5).
+/// guidance (§FS-init.2.4.3).
 const NO_KINDS_GRUND_TOML_TEMPLATE: &str = include_str!("../../assets/templates/none/grund.toml");
 
 /// The templates built into the binary, which `grund init --template` names
-/// (§FS-init.1.6), in the order a refusal lists them (§FS-init.1.6.3).
+/// (§FS-init.1.6), in the order a refusal lists them (§FS-init.1.6).
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(crate) enum Template {
     /// The config with the canonical kinds, and its starter files
-    /// (§FS-init.1.6.1). What `init` lays when no template is named.
+    /// (§FS-init.1.6). What `init` lays when no template is named.
     #[default]
     SoftwareDevelopment,
-    /// A config that declares no kinds, and no starter files (§FS-init.1.6.2).
+    /// A config that declares no kinds, and no starter files (§FS-init.1.6).
     None,
 }
 
@@ -56,7 +56,7 @@ impl Template {
         }
     }
 
-    /// The built-in template `name` names, if any (§FS-init.1.6.3).
+    /// The built-in template `name` names, if any (§FS-init.1.6).
     pub(crate) fn from_name(name: &str) -> Option<Self> {
         Self::ALL
             .into_iter()
@@ -64,7 +64,7 @@ impl Template {
     }
 
     /// Whether the template has starter files for `--scaffold` to lay
-    /// (§FS-init.1.6.4).
+    /// (§FS-init.1.6).
     pub(crate) fn has_starter_files(self) -> bool {
         self == Template::SoftwareDevelopment
     }
@@ -87,7 +87,7 @@ pub(crate) const FS_FILE_TEMPLATE: &str =
 /// The `FS` folder's index starter, the template's own home (§FS-init.2.1.3).
 pub(crate) const FS_README_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/functional-spec-README.md");
-/// The `REQ` folder's index starter (§FS-init.2.1.3, §FS-init.2.4.10).
+/// The `REQ` folder's index starter (§FS-init.2.1.3, §FS-init.2.4.3).
 pub(crate) const REQ_README_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/requirements-README.md");
 pub(crate) const E2E_README_TEMPLATE: &str =
@@ -149,9 +149,9 @@ pub const AGENT_SETUP_SECTIONS: [(&str, &str); 10] = [
     // (§FS-check.1.3).
     setup_section!("languages"),
     setup_section!("members"),         // §FS-init.5.4
-    setup_section!("scoped-guidance"), // §FS-init.2.3.5.11
+    setup_section!("scoped-guidance"), // §FS-init.2.3.5
     setup_section!("schema"),          // §FS-schema.14
-    setup_section!("queries"),         // §FS-init.2.3.4.3.1
+    setup_section!("queries"),         // §FS-init.2.3.4
     setup_section!("editor"),          // §FS-lsp.2.3
     // The clickable integrations (§FS-integrations), the instruction files `--write`
     // synchronizes (§FS-integrations.4.3.8), and the committable opinion with its

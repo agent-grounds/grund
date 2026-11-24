@@ -74,7 +74,7 @@ pub(in crate::config) fn split_outside_strings(inner: &str) -> Vec<&str> {
 /// malformed list is read exactly as it was before that rule. Version 1 keeps that reading for
 /// good (§FS-config.5.2), a piece whose string closes early included, and meets the rule only
 /// when it is migrated (§FS-config-migrate.3.1.8); version 2 reads the same pieces, and refuses
-/// a value where one closes early (§FS-config-v2.reader.6.refusal).
+/// a value where one closes early (§FS-config-v2.reader.6).
 fn is_one_basic_string(piece: &str) -> bool {
     piece.starts_with('"') && string_close(piece.as_bytes(), 1) == Some(piece.len() - 1)
 }
@@ -166,7 +166,7 @@ pub(crate) fn parse_string_list(path: &Path, line: usize, value: &str) -> Result
 /// `None` when `value` is not bracketed: its text cut only at a comma outside a string, and a
 /// piece that is not one basic string cut at each of its commas, as [`parse_string_list`] reads
 /// them (§FS-config.3.11). Each is a slice of `value`, so version 2 can tell a `"""` string
-/// that a joined line break runs through (§FS-config-v2.reader.6.multi-line).
+/// that a joined line break runs through (§FS-config-v2.reader.6).
 pub(in crate::config) fn list_elements(value: &str) -> Option<Vec<&str>> {
     let inner = value.strip_prefix('[')?.strip_suffix(']')?.trim();
     if inner.is_empty() {

@@ -113,7 +113,7 @@ pub(crate) fn block_scope_roots<'a>(
 /// (§FS-check.4.10.5) — because a canonical root renders as nothing when it equals
 /// the render base and as an absolute path when it does not (§FS-errors.4).
 ///
-/// §FS-check.3.30.1: normalizing folds `.` and `..` lexically, on the spelling
+/// §FS-check.3.30: normalizing folds `.` and `..` lexically, on the spelling
 /// and never by reading the disk, so `docs/../src` is `src` and a root that folds
 /// to the block root itself is `.` (`docs/..`, or `../group` in a block at
 /// `group/`). Both sides are folded before the block root is taken off, because
@@ -133,7 +133,7 @@ pub(super) fn root_under_block(block_root: &Path, root: &Path) -> String {
     )
 }
 
-/// The sentence §FS-check.3.30.1 carries, built apart from the error that
+/// The sentence §FS-check.3.30 carries, built apart from the error that
 /// carries it so a test can read it: what was swallowed by what, what that costs
 /// the project, the two ways out, and the release the warning it once was became
 /// an error in. Named for the warning it was through 0.15.x.
@@ -151,7 +151,7 @@ pub(crate) fn absorbed_scan_warning(covered: &[String]) -> String {
 /// config error §FS-config.4.3 gives every bad `members` line — that line's
 /// `grund.toml:<line>:` breadcrumb ahead of the sentence, first problem only.
 /// Asked wherever a run populates a block's member boundary, so every command
-/// that loads the workspace refuses with it (§FS-check.3.30.2).
+/// that loads the workspace refuses with it (§FS-check.3.30).
 pub(crate) fn reject_absorbed_scan(config: &Config, members: &[WorkspaceMember]) -> Result<()> {
     let covered = absorbed_scan_roots(config, members);
     if covered.is_empty() {

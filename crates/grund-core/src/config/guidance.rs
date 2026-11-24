@@ -2,7 +2,7 @@
 
 use super::{Frame, Schema};
 
-/// §FS-check.1.3.7, §FS-check.3.14.6: the loaded model's ordinary source scope.
+/// §FS-check.1.3.7, §FS-check.3.14: the loaded model's ordinary source scope.
 pub(crate) fn source_scope_name(version: u32) -> &'static str {
     if version == 2 {
         "configured places and source scope"

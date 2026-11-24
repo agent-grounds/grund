@@ -37,7 +37,7 @@ named or relative heading after that nested body has ended.
   These verdicts get looser, so [§REQ-backwards-compatibility](../../requirements/REQ-backwards-compatibility.md#req-backwards-compatibility-an-upgrade-never-changes-a-verdict-quietly) owes them nothing.
 - The suggestion in an unmarked-heading error can name a different coordinate: the next
   sibling that is unused once the heading after the nested declaration counts. That is the
-  rule [§FS-declarations.checks.unmarked-heading.3](../../functional-spec/FS-declarations.md#checksunmarked-heading3-the-suggested-coordinate) already states ("it never fills a hole or
+  rule [§FS-declarations.checks.unmarked-heading](../../functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) already states ("it never fills a hole or
   reuses a coordinate"), applied to a heading it used to miss. The finding, its code and its
   phrasing do not change.
 - A tree that passes today can fail. The heading is now a claimant in its body, so it earns
@@ -56,7 +56,7 @@ The new findings come from rules that already applied to every section in the bo
 [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) does not fit, because a warning window would have to do one of two things.
 It could leave the heading out of the map, which keeps both faults above. Or it could put the heading in the map and hide the findings it earns, which gives `check` and `show` two section maps, which [§REQ-one-answer.sections.map](../../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map) forbids.
 [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) does not fit either, because no command can decide which of two claimants to renumber.
-[§FS-declarations.checks.duplicate-section](../../functional-spec/FS-declarations.md#checksduplicate-section-duplicate-section-path) has no ranking, and no command numbers a heading ([§FS-declarations.checks.unmarked-heading.6](../../functional-spec/FS-declarations.md#checksunmarked-heading6-no-command-numbers-the-heading)).
+[§FS-declarations.checks.duplicate-section](../../functional-spec/FS-declarations.md#checksduplicate-section-duplicate-section-path) has no ranking, and no command numbers a heading ([§FS-declarations.checks.unmarked-heading](../../functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)).
 Each new finding is located at the heading and names its repair.
 This is not a licence for any other change to how sections are recognised.
 

@@ -13,13 +13,13 @@ page explains the post-rename remedy and gives an example
 ([§FS-cli.2.3.3](../../functional-spec/FS-cli.md#233-fmt-teaches-declaration-maintenance)).
 Managed guidance connects refs-before-rename to authored declaration and citation-ID
 edits, root-scoped formatting, verification, and committing lock changes
-([§FS-init.2.3.4.9](../../functional-spec/FS-init.md#2349-declaration-blast-radius)).
+([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)).
 
 This teaches existing link and lock maintenance rather than changing their scope
 or approving protected section moves. Because this changes the managed block's
 fixed text, use the existing block-version migration mechanism
 ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)), with both
-current pairs advanced together ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)).
+current pairs advanced together ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)).
 
 ## release-note: Release note
 

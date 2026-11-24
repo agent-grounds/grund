@@ -178,8 +178,8 @@ pub(super) fn settings(
 
 /// §FS-config-migrate.3.1.8: each key whose value holds a string that closes early, at
 /// its line, naming the first such string as version 1 reads it, which version 2 refuses
-/// (§FS-config-v2.reader.6.refusal), with the repair its 0.21.x warning gave
-/// (§FS-config-v2.reader.6.window) made under version 1:
+/// (§FS-config-v2.reader.6), with the repair its 0.21.x warning gave
+/// (§DF-v2-string-closes-at-its-quote.2.3) made under version 1:
 /// the first half for a scalar, both halves for a list element. `path` names the file
 /// a value the string readers refuse would be refused in, which no refusal here shows.
 pub(super) fn strings_closing_early(keys: &Keys, path: &Path) -> Vec<MigrateRefusal> {

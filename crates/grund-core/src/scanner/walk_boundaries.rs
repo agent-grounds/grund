@@ -54,7 +54,7 @@ pub(super) struct PlacedRoot {
 ///
 /// A root the disk refused is placed as far as it answers, so the gate judges where it goes and
 /// not its spelling: a directory link out of the project gets the verdict it gets when its target
-/// opens (§FS-scan.scope.homes.lookup.outward). Of a root that opens, the gate asks
+/// opens (§FS-scan.scope.homes.lookup). Of a root that opens, the gate asks
 /// `outward_directory_link_root` (§FS-config.3.5.1); of one that does not, only the link's name
 /// can answer, which `outward_unlooked_link_root` asks.
 pub(super) fn place_root(
@@ -106,7 +106,7 @@ pub(super) fn outward_directory_link_root(
 }
 
 /// The same gate for a root whose lookup failed, so `is_directory_symlink` cannot answer
-/// (§FS-scan.scope.homes.lookup.outward): `resolved` is where the root goes as far as the
+/// (§FS-scan.scope.homes.lookup): `resolved` is where the root goes as far as the
 /// disk says, and only the link's name can tell a directory link from a file link.
 fn outward_unlooked_link_root(
     scan_root: &Path,

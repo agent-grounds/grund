@@ -16,7 +16,7 @@ Three things had to be settled before the finding could be written: how loudly i
 
 ### 2.1 A warning that names the release it becomes an error in
 
-The finding is a **warning**, and its message names the release in which it becomes an error: `0.15.0`, recorded now as the release it did become one in ([§FS-check.3.29.14](../../functional-spec/FS-check.md#32914-an-error-because-the-deadline-the-warning-named-has-arrived)).
+The finding is a **warning**, and its message names the release in which it becomes an error: `0.15.0`, recorded now as the release it did become one in ([§FS-check.3.29](../../functional-spec/FS-check.md#329-unlisted-workspace-block)).
 
 [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)'s licence to flip a verdict inside one release wants the fix to be "one documented command the tool ships". Neither remedy here is one. Listing the block as a member and excluding it from `[scan]` are opposite decisions about whether the subtree is one of ours, and no `grund` command can make that call — writing either would be `grund` deciding what a repository is. So the precondition is false and [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path is what is on offer, exactly as it was for the missing index entry ([§DF-index-compatibility-ramp.2.1](DF-index-compatibility-ramp.md#21-the-two-halves-ride-different-ramps)). This is the same ramp for the same reason, and copying it rather than inventing a third path is deliberate: two neighbouring deprecations that behave differently teach a reader that the behaviour is arbitrary.
 
@@ -24,7 +24,7 @@ A permanent warning was the cheaper option and is rejected. Every firing is clea
 
 The release goes **in the warning text**, not only in the changelog, and a unit test holds it ahead of `CARGO_PKG_VERSION` so the deadline fails the build rather than passing unnoticed — the forcing function [§DF-index-compatibility-ramp.2.3](DF-index-compatibility-ramp.md#23-both-findings-name-their-versions-and-a-test-keeps-the-names-honest) put behind the same promise.
 
-**Consequence — the ramp completed in `0.15.0`.** What this section decided was *which ramp applied*, and that stays true now that it has run its course: `check` reports the finding as an error, the clause in the message text reports the release in the past tense, and the test that held the date ahead of the running version is gone with the date it held ([§FS-check.3.29.14](../../functional-spec/FS-check.md#32914-an-error-because-the-deadline-the-warning-named-has-arrived)). The five walking surfaces that have no error channel keep the warning.
+**Consequence — the ramp completed in `0.15.0`.** What this section decided was *which ramp applied*, and that stays true now that it has run its course: `check` reports the finding as an error, the clause in the message text reports the release in the past tense, and the test that held the date ahead of the running version is gone with the date it held ([§FS-check.3.29](../../functional-spec/FS-check.md#329-unlisted-workspace-block)). The five walking surfaces that have no error channel keep the warning.
 
 ### 2.2 The scope is the walk the run already makes, and the residue stays recorded
 

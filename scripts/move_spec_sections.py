@@ -114,19 +114,19 @@ from spec_fold_pass import SCHEMA, FoldPass, read_text  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # The move this run performs: the absorbed-scan warning of `FS-check.4.7` became
-# the config error of `FS-check.3.30` in grund 0.16.0. Its
-# sub-points are renumbered, and two fold into a sibling. `4.7.9` stays where it
+# the config error of `FS-check.3.30` in grund 0.16.0, and the sub-points it moved
+# into have since folded into 3.30 itself. `4.7.9` stays where it
 # is, as the pointer released changelogs cite, so it maps to itself. Run with the
 # changelogs restored afterwards (`git checkout docs/changelog.md docs/changelog/`):
 # a released record keeps the coordinate it shipped with.
 CHECK_SECTIONS = {
     "4.7": "FS-check.3.30",
-    "4.7.1": "FS-check.3.30.1",
-    "4.7.2": "FS-check.3.30.2",
-    "4.7.3": "FS-check.3.30.3",
-    "4.7.4": "FS-check.3.30.2",
-    "4.7.5": "FS-check.3.30.4",
-    "4.7.6": "FS-check.3.30.5",
+    "4.7.1": "FS-check.3.30",
+    "4.7.2": "FS-check.3.30",
+    "4.7.3": "FS-check.3.30",
+    "4.7.4": "FS-check.3.30",
+    "4.7.5": "FS-check.3.30",
+    "4.7.6": "FS-check.3.30",
     "4.7.7": "FS-check.3.30",
     "4.7.8": "FS-check.3.30",
     "4.7.9": "FS-check.4.7.9",

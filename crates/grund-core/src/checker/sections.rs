@@ -63,7 +63,7 @@ pub(super) fn check_section_headings(
             .map(section_outside_declaration_diagnostic),
     );
 
-    // §FS-declarations.checks.unmarked-heading.5 / §AR-checker.2.20: scanner-owned Markdown
+    // §FS-declarations.checks.unmarked-heading / §AR-checker.2.20: scanner-owned Markdown
     // candidates are errors since 0.16.0, independent of the marked-section heading-level mode.
     report
         .errors
@@ -86,7 +86,7 @@ pub(super) fn check_section_headings(
                     heading.title.as_str()
                 }
             );
-            // §FS-declarations.checks.unmarked-heading.2.1: appended; the prefix reads as before.
+            // §FS-declarations.checks.unmarked-heading: appended; the prefix reads as before.
             let relative = heading
                 .relative_hint
                 .as_ref()
@@ -97,10 +97,10 @@ pub(super) fn check_section_headings(
                         hint.heading
                     )
                 });
-            // §FS-declarations.checks.unmarked-heading.2.2: append after the whole message.
+            // §FS-declarations.checks.unmarked-heading: append after the whole message.
             let field =
                 field_heading_hint(heading, findings, schema, frame.version).unwrap_or_default();
-            // §FS-declarations.checks.unmarked-heading.2.3: the path's own fault, appended last.
+            // §FS-declarations.checks.unmarked-heading: the path's own fault, appended last.
             let fault = heading.fault_hint.as_ref().map_or(String::new(), fault_clause);
             Diagnostic {
                 code: Code::UNMARKED_HEADING,
@@ -233,7 +233,7 @@ pub(super) fn check_section_headings(
     // ambiguity one level down, reported in its shape (§DF-duplicate-section-path.2.1).
     let spellings = PlaceNames::new(schema, frame);
     for (id, decls) in &findings.declarations {
-        // §FS-declarations.checks.duplicate-section.2: judged on the records the ID pairs with,
+        // §FS-declarations.checks.duplicate-section: judged on the records the ID pairs with,
         // at their lines; a scanned target is one record (§FS-declarations.stubs.target.5).
         for paired in paired_declarations(decls).iter() {
             let decl = paired.record;
@@ -309,7 +309,7 @@ fn section_outside_declaration_diagnostic(
     }
 }
 
-/// §FS-declarations.checks.unmarked-heading.2.2: exact direct field-title/name
+/// §FS-declarations.checks.unmarked-heading: exact direct field-title/name
 /// matches in v2 suggest the named field form, in configuration header order.
 /// The scanner's concrete owner site supplies the depth; another declaration
 /// of the same ID must not change the guidance.
@@ -345,7 +345,7 @@ fn field_heading_hint(
 }
 
 /// The clause naming what a complete path already in place lacks, and the heading
-/// that repairs it with the path kept (§FS-declarations.checks.unmarked-heading.2.3).
+/// that repairs it with the path kept (§FS-declarations.checks.unmarked-heading).
 fn fault_clause(hint: &PathFaultHint) -> String {
     // A numeric path carries no `_`, so at most one of the two reasons applies.
     let reason = if hint.underscore {
@@ -365,7 +365,7 @@ fn fault_clause(hint: &PathFaultHint) -> String {
 }
 
 const UNDERSCORE_FAULT: &str = "has a _, which a section name ([a-z][a-z0-9-]*) never takes";
-/// A `:` after a purely numeric path (§FS-declarations.checks.unmarked-heading.2.3).
+/// A `:` after a purely numeric path (§FS-declarations.checks.unmarked-heading).
 const COLON_FAULT: &str = "is numeric, so it takes . rather than :";
 
 /// `<ID>` for the declaration, `<ID><sep><path>` for a section of it.
@@ -391,7 +391,7 @@ pub(super) fn retain_heading_findings_in_scope(findings: &mut Catalog, scope: &S
         .retain(|heading| scope.contains(&heading.file));
 }
 
-/// §FS-declarations.checks.section-outside-declaration.3: unlike the reference tier, an outside-declaration heading
+/// §FS-declarations.checks.section-outside-declaration: unlike the reference tier, an outside-declaration heading
 /// keeps the same public code and message when `--full` discovers it beyond
 /// `[scan] include`.
 pub(crate) fn out_of_scope_section_headings(
