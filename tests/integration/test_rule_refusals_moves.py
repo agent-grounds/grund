@@ -61,9 +61,7 @@ MOVES = (
      ("Where no form is offered, the refusal is its reason alone.",)),
     ("3.5.4.5", "The rewrite each refusal makes", "sentences.rewrite.by-refusal",
      ("| a per-target count without `times` |",)),
-    ("3.5.4.6", "Exact rows where `FS` is the only kind", "sentences.rewrite.by-refusal",
-     ('`per-target counts must end in "times"; accepted form:'
-      ' FS-login must cite each FS exactly 2 times.`',)),
+    ("3.5.4.6", "Exact rows where `FS` is the only kind", "sentences.rewrite.by-refusal", ()),
     ("3.5.5", "Any clauses joined by `and` are refused as a conjunction",
      "sentences.conjunction",
      ("A sentence is a conjunction when it contains ` and ` immediately followed",)),
