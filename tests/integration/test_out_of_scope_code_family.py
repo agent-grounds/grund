@@ -1,6 +1,6 @@
 """§AR-goal-measurement.1 — the `out-of-scope-` family of §FS-check.3.14 is
 written down in three places that must agree: the match of `Code::out_of_scope`
-that mints the codes, rendered with the handles from the catalog (§AR-config.9.1), the sentence of §FS-check.3.14.5 that enumerates them, and
+that mints the codes, rendered with the handles from the catalog (§AR-config.9.1), the sentence of §FS-check.3.14 that enumerates them, and
 the rows of the §FS-errors.5.5 catalog that document them. This spans the
 implementation and two specification pages, which is why it is an integration
 test rather than a unit one.
@@ -26,7 +26,7 @@ PREFIX = "out-of-scope-"
 # `"dangling" => Some(Code::OUT_OF_SCOPE_DANGLING),` — the minted code, not the one matched.
 MATCH_ARM = re.compile(r"=>\s*Some\(Code::(OUT_OF_SCOPE_[A-Z0-9_]+)\)")
 TAG_FN = "pub fn out_of_scope("
-COMPOUND_CODE_HEADING = re.compile(r"^#### 3\.14\.5 ")
+COMPOUND_CODE_HEADING = re.compile(r"^### 3\.14 ")
 HEADING = re.compile(r"^#{1,6}\s")
 # A backticked code in the prose. The bare prefix `out-of-scope-` names the
 # scheme rather than a member, and has no code after the final hyphen to match.
@@ -41,7 +41,7 @@ def _minted_codes():
 
 
 def _prose_codes():
-    """Every tier code the sentence of §FS-check.3.14.5 names."""
+    """Every tier code the sentence of §FS-check.3.14 names."""
     lines = CHECK_PAGE.read_text(encoding="utf-8").splitlines()
     start = next(index for index, line in enumerate(lines) if COMPOUND_CODE_HEADING.match(line))
     body = []
@@ -64,7 +64,7 @@ class OutOfScopeCodeFamilyTests(unittest.TestCase):
         self.assertEqual(
             _minted_codes(),
             _prose_codes(),
-            "§FS-check.3.14.5's sentence and Code::out_of_scope's match arms disagree",
+            "§FS-check.3.14's sentence and Code::out_of_scope's match arms disagree",
         )
 
     def test_the_catalog_has_a_row_for_every_code_the_match_mints(self):
@@ -78,7 +78,7 @@ class OutOfScopeCodeFamilyTests(unittest.TestCase):
         self.assertEqual(
             _prose_codes(),
             _catalog_codes(),
-            "§FS-check.3.14.5's sentence and the §FS-errors.5.5 catalog disagree",
+            "§FS-check.3.14's sentence and the §FS-errors.5.5 catalog disagree",
         )
 
     def test_the_family_is_read_from_all_three_places(self):
@@ -86,7 +86,7 @@ class OutOfScopeCodeFamilyTests(unittest.TestCase):
         above agree on the empty set."""
         for name, codes in (
             ("Code::out_of_scope", _minted_codes()),
-            ("FS-check.3.14.5", _prose_codes()),
+            ("FS-check.3.14", _prose_codes()),
             ("the FS-errors.5.5 catalog", _catalog_codes()),
         ):
             self.assertNotEqual(set(), codes, f"read no {PREFIX}* code out of {name}")
