@@ -69,7 +69,7 @@ line or `#` comment.
 On `list` and `show` a glob selects catalog coordinates, a mixed section such as `1.goals`
 ([§FS-config.3.3.1](FS-config.md#331-named-components), [§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)) and a front-matter coordinate
 ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)) among them, and a healthy stub and its inline home are one
-coordinate, at the home ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)).
+coordinate, at the home ([§FS-list.2](FS-list.md#2-behaviour)).
 
 On `refs` and `cover` it selects citation sites instead, by their cited coordinate, from the
 sites the command already lists: ID mode's set on `refs` ([§FS-refs.2](FS-refs.md#2-behaviour)) and every citation of a
@@ -94,7 +94,7 @@ project the run would not load ([§FS-workspace.8](FS-workspace.md#8-other-comma
 is no current project, so an unqualified pattern matches nothing.
 
 On `list` the path and every other filter intersect with the glob
-([§FS-list.requirements.one-selection](FS-list.md#requirementsone-selection-every-filter-narrows-every-mode-alike--realized-directional-for-the-next-filter)), and `--unused` and `--kind` judge a section row by its
+([§FS-list.requirements.one-selection](FS-list.md#requirementsone-selection-every-filter-narrows-every-mode-alike)), and `--unused` and `--kind` judge a section row by its
 declaration ([§FS-list.3.4.5](FS-list.md#345-order-and---top)). `--project` never widens a pattern: an unqualified glob under
 `--project api` lists nothing when the current project is not `api`.
 
@@ -118,7 +118,7 @@ error: invalid coordinate glob "<pattern>" at column <N>: <reason>
 ```
 
 `<N>` is the one-based byte column in the pattern as typed. What the grammar alone refuses is
-refused before config discovery ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read--realized-directional-for-the-next-flag)). The component checks, of a
+refused before config discovery ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read)). The component checks, of a
 `**` that is not a whole component and of an empty component, need the separator: they are
 made there too when the body holds no unescaped literal outside a class, so every project
 splits it at its dots, and otherwise once the config is read. The marker and alias checks are
@@ -132,7 +132,7 @@ reads.
 
 An accepted input is the pattern as typed with only the failed part rewritten, parsed again
 through every check of the stage that refused it before it is offered, as
-[§FS-rule-refusals.requirements.typed](FS-rule-refusals.md#requirementstyped-an-offer-is-built-from-what-was-typed-and-what-is-configured-and-nothing-else--realized) has it for selectors. An offer made before discovery, where no
+[§FS-rule-refusals.requirements.typed](FS-rule-refusals.md#requirementstyped-an-offer-is-built-from-what-was-typed-and-what-is-configured-and-nothing-else) has it for selectors. An offer made before discovery, where no
 separator is known yet, is parsed again as the `.`-separated reading with the default marker.
 A run of three or more stars that is a whole component is offered as `**`, and any other run
 as `*`, with the `{,.**}` alternative offered beside it when the run ends the pattern. An
@@ -203,7 +203,7 @@ cannot be combined with on `refs` and `cover` is [§FS-refs.1.2](FS-refs.md#12-r
 Node's `list`, `listSizes`, `showBatch`, `refs` and `cover` take `globs: string[]`, and
 Python's `list_ids`, `list_sizes`, `show_batch`, `refs` and `cover` take `globs=()`, empty by
 default, selecting as repeated `--glob` flags do ([§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals),
-[§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory)). There is no `total` option: a host counts `entries` or `hits`
+[§FS-distribution.3.3.5](FS-distribution.md#335-complete-inventory)). There is no `total` option: a host counts `entries` or `hits`
 ([§DF-coordinate-globs.1](../decisions/functional/DF-coordinate-globs.md#1-context-and-decision)).
 
 `refs` also takes the source of [§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites), `from: string` in Node and `from_=None` in
@@ -217,7 +217,7 @@ no ID, no `globs` and no source is refused as a null ID is: `invalid-argument` i
 ### bindings.note: The `note` field
 
 ListResult, SizeResult, BatchResult and CoverResult carry `note: string | null`
-([§FS-distribution.3.2.2.2](FS-distribution.md#3222-result-fields)): the text of the notes of [§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note) after
+([§FS-distribution.3.2.2](FS-distribution.md#322-typed-readonly-host-records)): the text of the notes of [§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note) after
 `note: `, one per line, or `null` where the run printed none. RefsResult keeps the `note` it
 has: ID mode's note of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations), the glob notes under `globs`, and `null` under a source.
 Under `globs` or a source its `kindTitle` (`kind_title`) is `null` ([§FS-refs.3.2](FS-refs.md#32---format-json)).

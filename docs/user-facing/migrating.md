@@ -174,7 +174,7 @@ migration leaves them unchanged
 ([§FS-config-migrate.6.5](../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)),
 and until then `grund check` reports the block stale, naming each part the new
 config renders differently
-([§FS-check.3.5.4](../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)).
+([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)).
 The qualified reminder appears after every successful write, even when no
 `AGENTS.md` exists. Previews, refused or failed writes, and already-version-2
 runs omit it. A second migration run says the config is already version 2.
@@ -212,7 +212,7 @@ reader there. Migrate it like any other config, with
 `grund config migrate --to 2 <block> --write`. On such a block `[id]
 named_sections` is never refused, whatever its value, and an authored one is
 dropped with a notice
-([§FS-config-migrate.8.1.1](../functional-spec/FS-config-migrate.md#811-named-sections)).
+([§FS-config-migrate.8.1](../functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)).
 
 When the block also has nothing for a project to read, it migrates
 **compactly**: none of the roots of its version-1 default scope (`[scan] include`
@@ -220,11 +220,11 @@ and the kind homes) exists outside its members, and every key it writes is the
 envelope, `[workspace]`, `named_sections`, an `include` that is `[]` or exactly
 the default list `grund init` writes, `[output]`, or a key at version 1's
 default
-([§FS-config-migrate.8.1.2](../functional-spec/FS-config-migrate.md#812-when-the-block-migrates-compactly)).
+([§FS-config-migrate.8.1](../functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)).
 The candidate is then the version line and the `[workspace]` table, plus
 `[presentation] description` when the block wrote a `project_description`, and
 nothing else; one notice says the block takes version 2's defaults
-([§FS-config-migrate.8.1.3](../functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)):
+([§FS-config-migrate.8.1](../functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)):
 
 ```toml
 grund_config_version = 2
@@ -248,7 +248,7 @@ defaults written out. Its `include` refusal is the one a project gets: version
 Both gates still run on a compact block. The records gate compares what the
 candidate keeps, the workspace records, the project name and the description;
 the report gate is unchanged
-([§FS-config-migrate.8.1.4](../functional-spec/FS-config-migrate.md#814-both-gates-still-run)).
+([§FS-config-migrate.8.1](../functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)).
 So a block that holds a `README.md`, or the `AGENTS.md` that `grund init`
 writes there, is refused at the report gate: version 1's default scope never
 read that file, version 2's whole-root scope does, and the candidate's run warns
@@ -274,7 +274,7 @@ At the workspace root, `grund check` and `grund config validate` name every
 config the workspace reads that is still on version 1: the root's, each
 member's, and each `include_root = false` block's, which groups members without
 being a project itself
-([§FS-check.4.11.3](../functional-spec/FS-check.md#4113-once-per-config-not-once-per-scope)).
+([§FS-check.4.11](../functional-spec/FS-check.md#411-config-read-from-the-deprecated-agents-location)).
 The line is a caution and never becomes an error: the exit code does not move,
 no release is named in which version 1 stops loading, and the file keeps meaning
 what it means

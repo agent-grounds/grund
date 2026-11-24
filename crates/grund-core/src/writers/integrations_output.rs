@@ -1,7 +1,7 @@
-//! What `integrations` is asked and what it answers (§FS-integrations.1.3.1):
+//! What `integrations` is asked and what it answers (§FS-integrations.1.3):
 //! the options in the command's closed vocabularies, the output of facts a
 //! frontend renders, and the refusal that keeps what a run wrote before it
-//! failed (§FS-integrations.1.3.3). Nothing here is a line of output
+//! failed (§FS-integrations.1.3). Nothing here is a line of output
 //! (§DA-engine-renders-nothing): the CLI's text, its JSON plan and the hosts'
 //! JSON are three spellings of these records.
 
@@ -13,7 +13,7 @@ use super::integrations_clients::{InstallKind, IntegrationClient};
 use crate::model::Finding;
 
 /// `grund integrations`'s arguments in their closed vocabularies
-/// (§FS-integrations.1.3.1). Built from `Default` with its fields assigned
+/// (§FS-integrations.1.3). Built from `Default` with its fields assigned
 /// (§FS-distribution.3.1.2).
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 #[non_exhaustive]
@@ -27,7 +27,7 @@ pub struct IntegrationsOpts {
     pub conversation: Option<ConversationRendering>,
     /// `--conversation-target` (§FS-integrations.1.2).
     pub conversation_target: Option<ConversationTarget>,
-    /// `--agent`: scopes `conversation_target` to one agent (§FS-integrations.4.4.2).
+    /// `--agent`: scopes `conversation_target` to one agent (§FS-integrations.4.4).
     pub agent: Option<IntegrationAgent>,
 }
 
@@ -35,7 +35,7 @@ impl IntegrationsOpts {
     /// The combination §FS-integrations.6.2 refuses, checked in the order the
     /// CLI reports it, or `None`. `integrations` refuses with the same answer
     /// before it reads anything; a frontend with refusals of its own after these
-    /// asks first (§FS-integrations.1.3.1).
+    /// asks first (§FS-integrations.1.3).
     #[doc(hidden)]
     pub fn refusal(&self) -> Option<IntegrationsFailure> {
         if self.agent.is_some() && !self.write {
@@ -58,7 +58,7 @@ impl IntegrationsOpts {
     }
 }
 
-/// The answer (§FS-integrations.1.3.2): only facts, never a line of output.
+/// The answer (§FS-integrations.1.3): only facts, never a line of output.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct IntegrationsOutput {
@@ -71,14 +71,14 @@ pub struct IntegrationsOutput {
     pub artifact: Option<IntegrationArtifact>,
     /// One per target a `write` touched, in the order it touched them.
     pub events: Vec<IntegrationEvent>,
-    /// One per client the user must set up by hand (§FS-integrations.3.4.2).
+    /// One per client the user must set up by hand (§FS-integrations.3.4).
     pub manual_steps: Vec<IntegrationManualStep>,
     /// The user configuration's cautions (§FS-integrations.4.3.5).
     pub warnings: Vec<Finding>,
 }
 
 /// One client as detection reports it (§FS-integrations.5). It carries no
-/// install command: that is the CLI's own argv (§FS-integrations.1.3.2).
+/// install command: that is the CLI's own argv (§FS-integrations.1.3).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct IntegrationClientStatus {
@@ -110,7 +110,7 @@ pub struct IntegrationArtifact {
     pub extension_js: Option<&'static str>,
 }
 
-/// One target a `write` touched (§FS-integrations.1.3.2).
+/// One target a `write` touched (§FS-integrations.1.3).
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct IntegrationEvent {
@@ -144,14 +144,14 @@ impl IntegrationOutcome {
     }
 }
 
-/// What a report says beside one event (§FS-integrations.1.3.2).
+/// What a report says beside one event (§FS-integrations.1.3).
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum IntegrationNote {
     /// The WezTerm config does not make this call on the config it returns, so
-    /// the block registers nothing (§FS-integrations.4.1.3).
+    /// the block registers nothing (§FS-integrations.4.1).
     UnwiredWezterm { apply_call: &'static str },
-    /// The form an agent's block was written in (§FS-integrations.4.4.4):
+    /// The form an agent's block was written in (§FS-integrations.4.4):
     /// `target` is the one the gate let through, `requested` the one asked for,
     /// and `overridden` whether the agent's own override chose it.
     Guidance {
@@ -161,12 +161,12 @@ pub enum IntegrationNote {
         overridden: bool,
     },
     /// The agent's `~`-rooted home is absent, so it is not in use here
-    /// (§FS-integrations.4.3.9).
+    /// (§FS-integrations.4.3.8).
     AgentHomeMissing { home: &'static str },
 }
 
 /// A client the user must set up by hand, with the snippet to apply
-/// (§FS-integrations.3.4.2).
+/// (§FS-integrations.3.4).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct IntegrationManualStep {
@@ -174,7 +174,7 @@ pub struct IntegrationManualStep {
     pub snippet: &'static str,
 }
 
-/// Why `integrations` refused (§FS-integrations.1.3.3, §FS-integrations.6.2).
+/// Why `integrations` refused (§FS-integrations.1.3, §FS-integrations.6.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum IntegrationsFailure {
@@ -208,7 +208,7 @@ impl std::fmt::Display for IntegrationsFailure {
     }
 }
 
-/// A refusal with what the run had done before it (§FS-integrations.1.3.3):
+/// A refusal with what the run had done before it (§FS-integrations.1.3):
 /// `output` holds the events written, the manual steps reached and the
 /// cautions read, and the filesystem's own error is the `source`.
 #[derive(Clone, Debug)]

@@ -1,17 +1,17 @@
-//! Config-dependent checking inputs (§FS-check.6.1.1, §FS-check.6.1.3).
+//! Config-dependent checking inputs (§FS-check.6.1).
 
 use crate::sources::{check_input_observer, input_read_to_string, observe_input};
 use std::path::{Path, PathBuf};
 
 /// Subscribe to both discovery names even if absent or shadowed. The frontend
-/// supplies shallow, filtered parent anchors (§FS-check.6.1.3).
+/// supplies shallow, filtered parent anchors (§FS-check.6.1).
 pub(crate) fn observe_config_candidates(dir: &Path) {
     observe_input(&dir.join("grund.toml"), false);
     observe_input(&dir.join(".agents/grund.toml"), false);
 }
 
 /// Inventory from the actual resolved config, before expansion or checking.
-/// Source roots still come from the shared root selector (§FS-check.6.1.3).
+/// Source roots still come from the shared root selector (§FS-check.6.1).
 pub(crate) fn observe_config(config: &super::Config) {
     if check_input_observer().is_none() {
         return;
@@ -51,7 +51,7 @@ pub(crate) fn observe_config(config: &super::Config) {
 
 /// Cover global-excludes discovery inputs before asking the shared pathname
 /// resolver (§AR-scanner.1.1) for the effective path
-/// (§FS-check.6.1.1).
+/// (§FS-check.6.1).
 pub(crate) fn observe_ignore_inputs(root: &Path) -> bool {
     if check_input_observer().is_none() {
         return true;
@@ -66,7 +66,7 @@ pub(crate) fn observe_ignore_inputs(root: &Path) -> bool {
             return false;
         }
     }
-    // §FS-check.6.1.1: ignore can follow nested worktree indirections outside
+    // §FS-check.6.1: ignore can follow nested worktree indirections outside
     // the source tree. Subscribe before constructing its lazy reader; this
     // metadata-only pass never reads source content or follows directory links.
     let mut directories = vec![root.to_path_buf()];
@@ -114,7 +114,7 @@ pub(crate) fn observe_ignore_inputs(root: &Path) -> bool {
 }
 
 /// Observe paths named by ignore's worktree indirections without changing its
-/// matcher or precedence (§FS-check.6.1.3). Observe even absent commondir probes.
+/// matcher or precedence (§FS-check.6.1). Observe even absent commondir probes.
 fn observe_git_worktree(dir: &Path) -> bool {
     let dotgit = dir.join(".git");
     if !observe_input(&dotgit, false) {

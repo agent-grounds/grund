@@ -20,7 +20,7 @@ The config states three shapes:
   `warn`. `AR-store` is clean. `AR-session` has no placement: that is one
   `missing-field` error, and its `terms` is not also reported out of place,
   because an absent field is skipped and the next one takes its place
-  ([§FS-fields.order.absent](../../docs/functional-spec/FS-fields.md#orderabsent-an-absent-member-is-skipped)). `AR-audit` puts `1. Design` between the two,
+  ([§FS-fields.order.after](../../docs/functional-spec/FS-fields.md#orderafter-after-means-directly-after)). `AR-audit` puts `1. Design` between the two,
   which is a warning, because `terms` is `presence = "warn"`.
 - **DF** is `closed`, and its one field is a scalar: the `status` chapter's
   display name must be one of `Proposed`, `Accepted` or `Superseded`.

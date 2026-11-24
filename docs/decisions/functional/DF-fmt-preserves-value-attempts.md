@@ -8,7 +8,7 @@ Preserve each citation occurrence belonging to a split or malformed attempted va
 binding during the default formatter link pass, using the classification that
 already makes `check` refuse it ([§FS-values.8](../../functional-spec/FS-values.md#8-formatting-stability)).
 This restores the existing agree-or-fail guarantee
-([§FS-values.requirements.agree-or-fail](../../functional-spec/FS-values.md#requirementsagree-or-fail-a-binding-passes-only-by-agreeing--realized-one-case-deferred)):
+([§FS-values.requirements.agree-or-fail](../../functional-spec/FS-values.md#requirementsagree-or-fail-a-binding-passes-only-by-agreeing)):
 formatting must not turn a refused attempt with literal `9999` against declared
 `1200` into ordinary linked prose that passes unchecked. The accepted grammar,
 attempt boundary, authority rules and checker diagnostics do not change.
@@ -23,7 +23,7 @@ form is not reinterpreted as a binding by this correction.
 
 This is a recorded formatter correction under
 [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered),
-as with [§FS-values.9.1](../../functional-spec/FS-values.md#91-what-a-marked-root-changes-in-formatting).
+as with [§FS-values.8](../../functional-spec/FS-values.md#8-formatting-stability).
 No previously passing `check` tree acquires a finding, so the verdict-correction
 route in section 5 of [§REQ-backwards-compatibility](../../requirements/REQ-backwards-compatibility.md#req-backwards-compatibility-an-upgrade-never-changes-a-verdict-quietly)
 is not invoked. A deprecation period retaining the destructive link rewrite

@@ -118,7 +118,7 @@ pub(super) fn check_values(
 /// §FS-check.1.4.1: the family is on wherever value authority is (§FS-values) — a
 /// kind's values slot, whole declarations or a declared chapter, or a value tag
 /// the scan found, which needs no switch (§FS-values.2.4), a misplaced one
-/// included (§FS-values.2.4.4). A project with none has nothing a binding can
+/// included (§FS-values.2.4). A project with none has nothing a binding can
 /// agree with, so `--only` of a value code there judged nothing.
 fn value_authority(findings: &Catalog, schema: &Schema) -> bool {
     any_kind_holds_values(schema)
@@ -343,7 +343,7 @@ fn binding_aims_at_declared_chapter(
 /// components, or the kind's declared chapter heading. `check` refuses every
 /// one of these (§FS-values.3.1.1) and `fmt --cross-refs` leaves every one of
 /// their citation bytes alone, because a link would carry the refusal away
-/// (§FS-values.8, §FS-values.9.1). The single predicate behind both, so the
+/// (§FS-values.8). The single predicate behind both, so the
 /// refused set and the protected set cannot drift apart; it is also the part of
 /// the refusal that [`value_binding_section_shape_is_valid`] cannot see, a
 /// chapter root's path carrying names and a marked root's subtree reaching

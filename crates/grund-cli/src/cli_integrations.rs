@@ -6,14 +6,14 @@
 /// operation (§FS-distribution.3.1.3), and the `--write` report beside this file
 /// renders the same answer.
 ///
-/// The user-facing setup guide, named by detection (§FS-integrations.2.1). It
+/// The user-facing setup guide, named by detection (§FS-integrations.2). It
 /// carries what `--write` cannot do for the caller: the prerequisites that fail
 /// silently, and the per-client manual step.
 const SETUP_GUIDE_URL: &str =
     "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/clickable-citations.md";
 
 /// The LSP guide, named by detection and by the `-h` page after the setup guide
-/// (§FS-integrations.2.3): every editor's `grund-lsp` setup, the LSP4IJ import
+/// (§FS-integrations.2): every editor's `grund-lsp` setup, the LSP4IJ import
 /// among them, is written down there.
 const LSP_GUIDE_URL: &str =
     "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/lsp.md";
@@ -32,7 +32,7 @@ fn known_clients_line() -> String {
 }
 
 /// `grund integrations <client> --write`: a command line, so the CLI's own
-/// (§FS-integrations.1.3.2).
+/// (§FS-integrations.1.3).
 fn install_command(client: IntegrationClient) -> String {
     format!("grund integrations {} --write", client.name())
 }
@@ -236,7 +236,7 @@ fn command_integrations(args: &[String]) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-/// No-client detection print (§FS-integrations.2.2). Environment-dependent, so it
+/// No-client detection print (§FS-integrations.2). Environment-dependent, so it
 /// is byte-stable only for a fixed environment; exit is always `0`.
 fn print_detection(out: &IntegrationsOutput, json: bool) {
     if json {
@@ -257,9 +257,9 @@ fn print_detection(out: &IntegrationsOutput, json: bool) {
     println!();
     println!("Run `grund integrations <client>` to preview one before installing.");
     // The prerequisites and the per-client manual step live in the guide, and
-    // this is the command a user reaches first (§FS-integrations.2.1).
+    // this is the command a user reaches first (§FS-integrations.2).
     println!("Setup guide: {SETUP_GUIDE_URL}");
-    // Editor navigation is grund-lsp's, not these clients' (§FS-integrations.2.3).
+    // Editor navigation is grund-lsp's, not these clients' (§FS-integrations.2).
     println!(
         "Editors get go-to-definition and hover from grund-lsp (IntelliJ: `grund-lsp integrations lsp4ij`)."
     );
@@ -280,7 +280,7 @@ fn detection_plan_json(out: &IntegrationsOutput) -> String {
         .iter()
         .map(|status| {
             // `install_kind` is what lets a caller tell a manual client's
-            // "not knowable" from a real "not installed" (§FS-integrations.3.4.2).
+            // "not knowable" from a real "not installed" (§FS-integrations.3.4).
             format!(
                 "{{\"client\":\"{}\",\"detected\":{},\"installed\":{},\"install_kind\":\"{}\",\"install\":\"{}\"}}",
                 status.client.name(),

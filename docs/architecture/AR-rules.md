@@ -2,7 +2,7 @@
 
 Chapter rules need a sentence front end and a logic engine that can change
 independently. The boundary is the two representations fixed by
-[§FS-rules.11](../functional-spec/FS-rules.md#11-functional-architecture-constraint):
+[§AR-rules.1](AR-rules.md#1-owners-and-one-way-dependencies):
 the front end produces `ParsedRule`, fact producers produce `RuleFacts`, and
 the engine evaluates those values without recovering either producer's input.
 
@@ -70,7 +70,7 @@ engine. No callback crosses any of these boundaries.
 
 `ParsedRule` is immutable normalized data, not a syntax tree and not a wrapper
 around the authored sentence ([§FS-rules.3](../functional-spec/FS-rules.md#3-the-five-sentence-families),
-[§FS-rules.11](../functional-spec/FS-rules.md#11-functional-architecture-constraint)).
+[§AR-rules.1](AR-rules.md#1-owners-and-one-way-dependencies)).
 It has these fields:
 
 | Field | Contract |
@@ -134,9 +134,9 @@ declared nodes/sites in the same snapshot. A chapter of a stub's home outside th
 walk is a chapter of the stubbed declaration like any other, minted from the record
 the stub is paired with, cited or not, so it is a subject and is counted, and the
 declaration's node is anchored at that record's line, so a count it fails is
-located in the target ([§FS-declarations.stubs.pairing.4](../functional-spec/FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target),
+located in the target ([§FS-declarations.stubs.pairing](../functional-spec/FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at),
 [§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). What that home lends
-carries no mark: since [§FS-rules.7.11](../functional-spec/FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) closed it is judged as walked facts are.
+carries no mark: since [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity) closed it is judged as walked facts are.
 
 Every declaration and accepted chapter gets its own node facts even when no
 citation touches it, so citation edges never define a quantified universe.
@@ -196,7 +196,7 @@ column and the citation as written (`SiteMeta`'s label,
 [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). The engine cannot render them: naming a path takes the run's
 spellings and report base, which it never sees, so the checker writes the
 counted list and its `sites` from them where the base is known
-([§FS-rules.7.3.1](../functional-spec/FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)). `Site`, which holds only a path and a line, does not carry
+([§FS-rules.7.3](../functional-spec/FS-rules.md#73-outbound-citation-cardinality)). `Site`, which holds only a path and a line, does not carry
 them, and neither does `Diagnostic`, where a field for two codes would touch
 every finding built. It does not construct the published
 `Finding` or `Report`, render text/JSON, select suggestions, or map an exit code.
@@ -228,5 +228,5 @@ Forcing ignored tests to run is deliberately red today. The implementation
 replaces each sentinel with its named arrangement/assertions and removes its
 ignore before declaring `mod rules;`; the Python guard makes forgetting that
 step fail. These tests are the replacement proof required by
-[§FS-rules.11](../functional-spec/FS-rules.md#11-functional-architecture-constraint),
+[§AR-rules.1](AR-rules.md#1-owners-and-one-way-dependencies),
 not a promise left only in this page.

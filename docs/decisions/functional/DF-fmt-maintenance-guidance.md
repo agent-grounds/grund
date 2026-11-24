@@ -10,7 +10,7 @@ Issue #824 reports successful formatter maintenance that installed help and mana
 agent guidance do not teach. The top-level summary names links and section locks
 ([§FS-cli.2.2](../../functional-spec/FS-cli.md#22-the-top-level-help-page)); the full
 page explains the post-rename remedy and gives an example
-([§FS-cli.2.3.3](../../functional-spec/FS-cli.md#233-fmt-teaches-declaration-maintenance)).
+([§FS-cli.2.3](../../functional-spec/FS-cli.md#23-a-subcommands-help-page)).
 Managed guidance connects refs-before-rename to authored declaration and citation-ID
 edits, root-scoped formatting, verification, and committing lock changes
 ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)).

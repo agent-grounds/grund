@@ -35,7 +35,7 @@ verdict, and then the record names that requirement.
   [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) or [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms), with
   [§DF-stub-pairs-with-unscanned-target.5](DF-stub-pairs-with-unscanned-target.md#5-the-correction-route) as the precedent.
 - **D4** (V-A06). Plain `list` shows a healthy stub to an out-of-scan target at the target,
-  with its title, as `list --size` already does and [§FS-list.3.4.6](../../functional-spec/FS-list.md#346-a-home-outside-the-scan) says. Placement is a
+  with its title, as `list --size` already does and [§FS-list.3.4](../../functional-spec/FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements) says. Placement is a
   presentation choice no requirement governs. Route: the warning release,
   [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
 - **D8** (V-A10). A target read on behalf of a stub contributes every fact resolution uses

@@ -101,7 +101,7 @@ fn canonical_member_path(path: &Path) -> PathBuf {
 /// applied to those two keys, and nothing else — no other key, no shape rule
 /// (§FS-workspace.2.3), no grammar rebuild (§FS-workspace.6.1.7).
 ///
-/// §FS-workspace.2.2.9: both lists claim, by the same entry-text rule. An optional
+/// §FS-workspace.2.2: both lists claim, by the same entry-text rule. An optional
 /// entry claims the directory below it exactly as a `members` entry does, so a run
 /// started inside a *present* one reads its alias path out of that claim and
 /// spells itself the way the workspace root does; an absent entry claims a
@@ -118,7 +118,7 @@ fn canonical_member_path(path: &Path) -> PathBuf {
 /// cannot be read, or the value is not a list — and carries the reason the
 /// warning that says so has to name.
 ///
-/// A value is read as the config's own version reads it (§FS-workspace.6.1.7.5).
+/// A value is read as the config's own version reads it (§FS-workspace.6.1.7).
 /// A version-2 config's goes through its reader's own `joined_value`: one written
 /// across lines, or ending in the trailing comma TOML allows, is the list the
 /// config loads, and one still open at the end of the file, or at a line that ends
@@ -135,7 +135,7 @@ fn canonical_member_path(path: &Path) -> PathBuf {
 /// claim, and the v1 reader's load error then failed a run below a stray config
 /// that is not that run's problem.
 pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>, String> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
+    // §FS-check.6.1: cover this effective input before its shared read.
     let text = Sources::on_disk()
         .text(config_path)
         .map_err(|err| err.to_string())?;
@@ -170,7 +170,7 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
             _ => {
                 // Another key's array that closes is passed over whole, so no line in it
                 // reads as a header or a key; one that never closes, or has an open line,
-                // holds no claim, so the read goes on at the next line (§FS-workspace.6.1.7.5).
+                // holds no claim, so the read goes on at the next line (§FS-workspace.6.1.7).
                 if spans_lines {
                     let mut ahead = lines.clone();
                     if joined_value(value, idx + 1, &mut ahead).value.is_some() {

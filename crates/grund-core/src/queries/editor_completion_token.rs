@@ -1,5 +1,5 @@
 //! Active partial-token recognition uses the loaded target's grammar and the
-//! existing qualified citation prefix (§FS-lsp.1.6.1, §FS-lsp.1.6.3).
+//! existing qualified citation prefix (§FS-lsp.1.6).
 
 use super::{CompletionProject, LspCompletionContext};
 use crate::grammar::{QUALIFIED_CITATION_PREFIX, parse_longest_id_prefix};
@@ -15,7 +15,7 @@ pub(super) struct ActiveToken<'a> {
 
 /// An introducer inside a grammar-owned token cannot start another edit.
 /// Prefer its enclosing token and the longest complete introducer
-/// (§FS-lsp.1.6.1, §FS-lsp.1.6.3).
+/// (§FS-lsp.1.6).
 pub(super) fn active_token<'a>(
     context: &'a LspCompletionContext,
     owner: &'a CompletionProject,
@@ -60,7 +60,7 @@ fn token_at<'a>(
 ) -> Option<ActiveToken<'a>> {
     let id_start = start + introducer.len();
     let raw = &line[id_start..cursor];
-    // §FS-lsp.1.6.1: an escaped marker itself is also protected while
+    // §FS-lsp.1.6: an escaped marker itself is also protected while
     // the cursor is still between the marker and the closing angle.
     if line[..start].ends_with('<') && line[id_start..].starts_with('>') {
         return None;
@@ -81,7 +81,7 @@ fn token_at<'a>(
         (owner, "", raw)
     };
     let grammar = &target.config.grammar;
-    // §FS-lsp.1.6.3: recognize sections with the target grammar before
+    // §FS-lsp.1.6: recognize sections with the target grammar before
     // treating the request as a declared-ID prefix.
     if parse_longest_id_prefix(prefix, grammar).is_some_and(|parsed| parsed.section.is_some()) {
         return None;
@@ -109,7 +109,7 @@ fn token_at<'a>(
             break;
         }
     }
-    // §FS-lsp.1.6.3: compiled regexes also recognize component punctuation
+    // §FS-lsp.1.6: compiled regexes also recognize component punctuation
     // absent from format literals. Partial prefixes inherit the actual
     // catalog spellings; the old suffix uses the existing full-ID parser.
     if let Some(parsed) = parse_longest_id_prefix(tail, grammar) {
@@ -124,7 +124,7 @@ fn token_at<'a>(
             .sum::<usize>();
         end = end.max(tail_start + shared);
     }
-    // §FS-lsp.1.6.3: also remove a real section on a retained legacy ID,
+    // §FS-lsp.1.6: also remove a real section on a retained legacy ID,
     // while leaving punctuation followed by prose outside the edit.
     if let Some(section) = tail[end - tail_start..].strip_prefix(&target.config.section_separator) {
         let len = section
@@ -140,7 +140,7 @@ fn token_at<'a>(
             end += target.config.section_separator.len() + len;
         }
     }
-    // §FS-lsp.1.6.3: terminal sentence punctuation remains outside the
+    // §FS-lsp.1.6: terminal sentence punctuation remains outside the
     // token; a section separator continues it only with following text.
     while !target.config.section_separator.is_empty()
         && end > cursor
@@ -162,7 +162,7 @@ fn token_at<'a>(
 }
 
 /// Catalog spellings and the effective grammar own internal punctuation;
-/// a separate ID or qualified prefix still bounds adjacent edits (§FS-lsp.1.6.3).
+/// a separate ID or qualified prefix still bounds adjacent edits (§FS-lsp.1.6).
 fn grammar_owns_introducer(
     context: &LspCompletionContext,
     owner: &CompletionProject,
@@ -187,7 +187,7 @@ fn grammar_owns_introducer(
         return false;
     }
     let suffix = &tail[offset + introducer.len()..];
-    // §FS-lsp.1.6.1: an empty ambiguous suffix stays with the existing ID.
+    // §FS-lsp.1.6: an empty ambiguous suffix stays with the existing ID.
     if suffix.is_empty() {
         return true;
     }

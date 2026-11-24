@@ -88,7 +88,7 @@ the run before one is made.
 
 The repository's `scripts/check_links.py` wrapper and `lychee.toml` serve both
 local pre-commit and Ubuntu CI, realizing
-[§FS-non-goals.1.1](../functional-spec/FS-non-goals.md#11-this-repositorys-external-link-gate).
+[§FS-non-goals.1](../functional-spec/FS-non-goals.md#1-markdown-link-validation).
 Every network pass, the gate's changed-line pass and the sweep alike, uses lychee 0.23.0 with explicit `timeout = 30`
 (seconds for the whole request), `max_retries = 4` (after the initial attempt),
 and `retry_wait_time = 1` (seconds for the exponential-backoff base).
@@ -138,7 +138,7 @@ them exists: the blob pages of a very large repository answer 503 for hours, and
 pull request and issue pages answer scattered 500s under load. Lychee's retries
 cannot outlast that, so the wrapper asks GitHub's API instead, which is the
 "successful answer about the same resource" of
-[§FS-non-goals.1.1](../functional-spec/FS-non-goals.md#11-this-repositorys-external-link-gate).
+[§FS-non-goals.1](../functional-spec/FS-non-goals.md#1-markdown-link-validation).
 
 The network pass writes lychee's JSON report (`--format json`, to a file through
 `--output`). In lychee 0.23.0 the report's `error_map` lists, per input file,
@@ -197,7 +197,7 @@ request that is answered with a rejected status, a 5xx or a 403 among them,
 exactly once, and so it does with a network error such as an HTTP/2 protocol
 error or a malformed response. A host that answers one such failure and then
 200 fails the network pass, and
-[§FS-non-goals.1.1](../functional-spec/FS-non-goals.md#11-this-repositorys-external-link-gate) already counts a later
+[§FS-non-goals.1](../functional-spec/FS-non-goals.md#1-markdown-link-validation) already counts a later
 successful attempt as passing. So after the network pass, and after the API
 re-check of [§AR-ci.3.1.2](AR-ci.md#312-a-github-5xx-is-settled-through-the-api), the wrapper checks each remaining failure of a
 **transient** shape once more:
@@ -347,7 +347,7 @@ against this section.
 
 ### 3.2 The managed block's text
 
-Last of the `grund` hooks, and immediately after `grund fmt --write` because that hook rewrites the Markdown this one measures, comes `grund init --check` ([§FS-init.4](../functional-spec/FS-init.md#4-exit-codes)). Stale text anywhere in a managed block already fails the `grund check --full` hook that runs before it, because `check` compares the whole block ([§FS-check.3.5.4](../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). What this hook still catches is a file `init` would create that `check` does not require, such as an agent-directory companion ([§FS-check.3.5.1](../functional-spec/FS-check.md#351-which-entrypoints-are-verified)), and the workspace sections in a tree where `check` leaves them out ([§FS-check.3.5.5](../functional-spec/FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout)). The hook writes nothing and fails only on a path `init` would have written; the fix is the same `init` run without the flag. This repository runs on its own users' behalf here — [§REQ-agents-md.2](../requirements/REQ-agents-md.md#2-the-managed-block-stays-current) requires its own managed block to stay current, which `grund check` enforces by its version and its text.
+Last of the `grund` hooks, and immediately after `grund fmt --write` because that hook rewrites the Markdown this one measures, comes `grund init --check` ([§FS-init.4](../functional-spec/FS-init.md#4-exit-codes)). Stale text anywhere in a managed block already fails the `grund check --full` hook that runs before it, because `check` compares the whole block ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). What this hook still catches is a file `init` would create that `check` does not require, such as an agent-directory companion ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)), and the workspace sections in a tree where `check` leaves them out ([§FS-check.3.5.5](../functional-spec/FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout)). The hook writes nothing and fails only on a path `init` would have written; the fix is the same `init` run without the flag. This repository runs on its own users' behalf here — [§REQ-agents-md.2](../requirements/REQ-agents-md.md#2-the-managed-block-stays-current) requires its own managed block to stay current, which `grund check` enforces by its version and its text.
 
 ### 3.3 Test-only observers
 
@@ -436,7 +436,7 @@ paths every run anyway.
 Sharing a target changes what is cached, not what is proven. The builds keep
 `--locked`, the bundled-sources closure, and the fallback
 rebuild after the native artifacts are removed from the installed tarball, so
-[§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership) holds as written: the tarball's own workspace crates
+[§FS-distribution.3.2.3](../functional-spec/FS-distribution.md#323-workers-loading-and-source-builds) holds as written: the tarball's own workspace crates
 still compile from its own sources, at their own paths, and generated files
 still stay outside the checkout. What a warm target no longer repeats is the
 third-party dependency tree, which that point already lets a source build take
@@ -458,7 +458,7 @@ and link of the tarball's own cdylib about 48 s of a 50 s build on a
 developer's machine, and two to four times that on a runner, with or without a
 warm target. So the acceptance pays for that profile once. Exactly one build of
 the binding uses `--profile release`: the documented native builder command of
-[§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership), in `tests/e2e/test_node_binding.py`, which is the
+[§FS-distribution.3.2.3](../functional-spec/FS-distribution.md#323-workers-loading-and-source-builds), in `tests/e2e/test_node_binding.py`, which is the
 acceptance's proof that release is ordinary LTO. Every other build of the
 binding passes `--profile dev`: the test-seams build, the source package's
 `npm run build:source`, and the bundled-fallback rebuild in an unpacked
@@ -467,7 +467,7 @@ What each of those proves does not depend on the optimiser: the test-seams build
 proves the runtime seams, worker panics, the writer lease and teardown, and the
 source package and its fallback prove the bundled `--locked` source closure, its
 ESM, CJS and TypeScript surface, and that the fallback compiles from the
-tarball's own sources without reaching the checkout. [§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership)
+tarball's own sources without reaching the checkout. [§FS-distribution.3.2.3](../functional-spec/FS-distribution.md#323-workers-loading-and-source-builds)
 names a profile for the native builder only, so it holds as written. A build
 that only refuses before Cargo runs, or reaches a probe that stands in for it,
 compiles nothing and is not counted.
@@ -539,8 +539,7 @@ helper derives that directory once, in `checkout_target(root)` of
 and CI still prepare, cache and restore only the root.
 
 The helper also owns target lifetime, implementing
-[§FS-repository-maintenance.2.1](../functional-spec/FS-repository-maintenance.md#21-ownership-and-reuse), [§FS-repository-maintenance.2.2](../functional-spec/FS-repository-maintenance.md#22-automatic-reclamation),
-[§FS-repository-maintenance.2.3](../functional-spec/FS-repository-maintenance.md#23-conservative-deletion-boundary-and-legacy-entries) and [§FS-repository-maintenance.2.4](../functional-spec/FS-repository-maintenance.md#24-concurrent-callers-and-source-lifetime). Each target
+[§FS-repository-maintenance.2](../functional-spec/FS-repository-maintenance.md#2-external-node-acceptance-target-lifetime). Each target
 records its resolved source root in `checkout.json`, a UTF-8 JSON object with
 a `checkout` string. The directory key remains the first 16 hexadecimal
 characters of SHA-256 over `os.fsencode(resolved_checkout_root)`. The helper
@@ -561,7 +560,7 @@ other tree's `grund-core` with no concurrency at all. And each uplifted artifact
 tree's build overwrites between this run's build and its copy or execution of
 it. Either way the acceptance compares an addon or an oracle built from sources
 other than the commit under test, which is what the same-source parity of
-[§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity) and the independent oracle of [§FS-distribution.3.2.3.1](../functional-spec/FS-distribution.md#3231-execution)
+[§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity) and the independent oracle of [§FS-distribution.3.2.3](../functional-spec/FS-distribution.md#323-workers-loading-and-source-builds)
 rule out. A lock held from build through copy would cure the second and not the
 first, so the remedy is the separate target.
 
@@ -793,7 +792,7 @@ directory per checkout and the step that path. It is saved on a push to main alo
 Sharing a root changes what is cached, not what is proven. Every build stays at
 the dev profile, from a local source, and the clean checkout and the unpacked sdist
 still compile the package's own crates from their own sources at their own paths,
-so what [§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-gate) and [§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-local-source-and-typing-handoff) prove of the install
+so what [§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-gate) and [§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-interpreters-source-installs-and-typing) prove of the install
 holds as written; a warm target no longer repeats the third-party dependency tree.
 Because those paths are fresh on every run, each would leave another copy of the
 workspace crates in a kept target, so the module removes them from its target when
@@ -1549,7 +1548,7 @@ The average is measured, not assumed. `scripts/ci_duration.py` reads the last *w
 
 ### requirements.4: The threshold and the window are configuration — realized
 
-The threshold and the window live in `.github/ci-duration.json`, which the tracker reads on every run and in which it finds no literal it would otherwise fall back to: `threshold_minutes`, the average a gate may not exceed (`15`), and `window`, how many runs it averages over (`8`), a whole number from 1 to 100 because the forge lists at most 100 runs a page. A missing file or a missing key is an error naming it, never a silent default. They are repository CI configuration and not a `grund.toml` key: `grund` never reads them, and a key it never reads would cross [§FS-config.requirements.8](../functional-spec/FS-config.md#requirements8-a-projects-meaning-is-self-contained--realized). The maximum of requirements.2 is not here, because the forge reads it from `ci.yml` and from nowhere else.
+The threshold and the window live in `.github/ci-duration.json`, which the tracker reads on every run and in which it finds no literal it would otherwise fall back to: `threshold_minutes`, the average a gate may not exceed (`15`), and `window`, how many runs it averages over (`8`), a whole number from 1 to 100 because the forge lists at most 100 runs a page. A missing file or a missing key is an error naming it, never a silent default. They are repository CI configuration and not a `grund.toml` key: `grund` never reads them, and a key it never reads would cross [§FS-config.requirements.8](../functional-spec/FS-config.md#requirements8-a-projects-meaning-is-self-contained). The maximum of requirements.2 is not here, because the forge reads it from `ci.yml` and from nowhere else.
 
 ### requirements.5: A green step prints a screenful, a red one its failures — realized
 
@@ -1585,7 +1584,7 @@ Nothing else: no line per passing test, no `unittest` dot stream, no other outpu
 
 `scripts/run_cargo_suite.py` takes `cargo test`'s arguments, runs `cargo test` with them over libtest's stable output, and prints what requirements.5.1 asks. Both kinds of `ci.yml` step that run a cargo suite, `native watch contract` and each shard's `cargo test`, call it, and so does the `cargo-test` hook, so the hook and the workflow still spell one command, the workflow's with `--shard <k>/<n>` before it ([§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards), [§AR-ci.1.2](AR-ci.md#12-the-parity-test)). It needs Python's standard library and the toolchain the repository already uses and nothing else: no test runner a contributor must install. It builds the tests before it runs them, as quietly as requirements.5.4 asks, so a compile error is printed in full and a green build prints only its `gate time: build` line. Every cargo run it starts gets its environment less what [§AR-ci-suite-environment](AR-ci-suite-environment.md#ar-ci-suite-environment-a-suite-wrapper-hands-its-tests-no-repository-location) takes off.
 
-The focused Windows ownership verification of [§FS-examples.5.6.1](../functional-spec/FS-examples.md#561-one-owner-lasts-through-every-use-of-the-copy) runs the exact
+The focused Windows ownership verification of [§FS-examples.5.6](../functional-spec/FS-examples.md#56-mutable-fixtures-belong-to-one-invocation) runs the exact
 regression directly through cargo/libtest with `--nocapture`. Its raw output and
 tested commit remain in the job log so an internal unsupported-symlink skip
 cannot be mistaken for executed ownership assertions.

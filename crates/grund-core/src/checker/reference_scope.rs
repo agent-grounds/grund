@@ -48,7 +48,7 @@ impl ScanScope {
     /// §AR-scanner.1.8: a file a query reports is at or under the path when
     /// any of its names is, so which name sorts first decides nothing about a narrow `list` or
     /// `refs`, nor about a `check` whose finding stands at the name the plain run reaches
-    /// (§FS-check.1.3.6.2).
+    /// (§FS-check.1.3.6).
     pub(crate) fn contains_any_name(&self, path: &Path) -> bool {
         self.contains(path)
             || self
@@ -73,7 +73,7 @@ impl ScanScope {
     }
 
     /// The one answer to whether a scan failure is inside this scope, as the name to report it
-    /// under where it is (§FS-check.1.3.6.3, §AR-scanner.1.entry). Its names are the ones the walk
+    /// under where it is (§FS-check.1.3.6, §AR-scanner.1.entry). Its names are the ones the walk
     /// kept for a directory entry's failure and, for a file it could not read, the file's names in
     /// the run's `Spellings`. It is inside when any of them is, and is then named by the first
     /// under the path as given, else the first the scope holds (§FS-check.2.4.2). Names and never
@@ -122,7 +122,7 @@ pub(super) fn every_failure_name(
         .collect()
 }
 
-/// §FS-check.1.3.6.3: a run's failures, split into those inside the report scope, each under the
+/// §FS-check.1.3.6: a run's failures, split into those inside the report scope, each under the
 /// name [`ScanScope::holds_failure`] gives it, and those outside, under the whole run's. A run
 /// over the config root narrows nothing. The report sorts what this hands it (§FS-errors.4.1).
 pub(crate) fn partition_scan_failures(
@@ -185,7 +185,7 @@ pub(crate) fn configured_scope(
     }))
 }
 
-/// §FS-check.1.3.6.1: the **report** scope of this run — the set of files a finding
+/// §FS-check.1.3.6: the **report** scope of this run — the set of files a finding
 /// may be about. It is exactly the explicit path, and `None` for a run over the
 /// config root, which narrows nothing and whose report is the whole walk.
 ///
@@ -196,7 +196,7 @@ pub(crate) fn configured_scope(
 /// path alone. Both spellings of each root are kept for the reason they are there,
 /// and `unwalked` is empty on purpose: the report scope is the path the caller
 /// typed, even where that path is a kind home the ordinary walk prunes
-/// (§FS-config.3.4.7.3).
+/// (§FS-config.3.4.7).
 pub(crate) fn path_report_scope(
     schema: &Schema,
     frame: Frame<'_>,
@@ -226,14 +226,14 @@ pub(crate) fn path_report_scope(
     }))
 }
 
-/// §FS-check.1.3.6.1: narrow a channel of the report to the report scope, after
+/// §FS-check.1.3.6: narrow a channel of the report to the report scope, after
 /// every rule has run over the wider resolution scope. A no-op for a run over the
 /// config root.
 ///
 /// Three things survive the narrowing. A run-level finding carries no path — the
 /// config findings, the scope cautions, the workspace run warnings — and the
 /// filter never sees one. A finding that spans several sites is in scope at any of
-/// them (§FS-check.1.3.6.2), which is what reports a duplicate declaration from
+/// them (§FS-check.1.3.6), which is what reports a duplicate declaration from
 /// either twin and a value mismatch from the declaring side; the diagnostic is
 /// kept whole rather than re-anchored, because re-anchoring would print a line
 /// `grund check .` never prints. And the agent-entrypoint probe of §FS-check.3.5
@@ -261,20 +261,20 @@ pub(crate) fn retain_diagnostics_in_report_scope(
                 Some(Side::Place) => scope.contains_place(path),
                 // §AR-scanner.1.8: it stands at the name the plain run reaches.
                 Some(Side::Content) => scope.contains_any_name(path),
-                // §FS-check.1.3.6.3: an `io` finding stands at the name `holds_failure` gave it.
+                // §FS-check.1.3.6: an `io` finding stands at the name `holds_failure` gave it.
                 _ => scope.contains(path),
             };
             in_scope
-                // §FS-check.1.3.6.2: the anchor may be the site the caller did not type.
+                // §FS-check.1.3.6: the anchor may be the site the caller did not type.
                 || diagnostic.sites.iter().any(|site| scope.contains_any_name(&site.path))
-                // §FS-rules.9.1.1: a stale block, chapter rules included, reaches a narrowed run.
+                // §FS-rules.9.1: a stale block, chapter rules included, reaches a narrowed run.
                 || (diagnostic.code == Code::AGENTS_INIT
                     && entrypoints.iter().any(|entrypoint| entrypoint == path))
         }
     });
 }
 
-/// §FS-check.1.3.6.1: whether the walk read any file the report scope owns — what
+/// §FS-check.1.3.6: whether the walk read any file the report scope owns — what
 /// the §FS-check.2.2 empty-scan caution asks, since the cautions are computed
 /// against the report scope and not the resolution scope. A path holding no
 /// scannable file still earns its caution however much the wider walk read.
@@ -303,7 +303,7 @@ fn agent_entrypoint_paths(frame: Frame<'_>) -> Vec<PathBuf> {
         .collect()
 }
 
-/// §FS-check.1.3.4: drop everything the wider `--full` walk read from outside the
+/// §FS-check.1.3: drop everything the wider `--full` walk read from outside the
 /// configured scope, so every rule but the out-of-scope tier sees exactly the
 /// tree a run without the flag sees and reports exactly what it reports. A no-op
 /// without `--full`. Nothing is cloned — the walk's findings are narrowed in
@@ -346,7 +346,7 @@ pub(crate) fn retain_findings_in_scope(
         .invalid_value_bindings
         .retain(|site| scope.contains(&site.file));
     // Home JSON is catalog input under every scope; Markdown value errors obey
-    // the ordinary configured scope (§FS-values.2.2, §FS-check.1.3.3).
+    // the ordinary configured scope (§FS-values.2.2, §FS-check.1.3).
     findings.invalid_value_declarations.retain(|site| {
         matches!(site.source, DeclarationSource::Json { .. }) || scope.contains(&site.file)
     });
@@ -431,7 +431,7 @@ pub(crate) fn out_of_scope_references(
         .collect()
 }
 
-/// §FS-check.1.3.8: the out-of-scope tier for a workspace run — one pass per
+/// §FS-check.1.3: the out-of-scope tier for a workspace run — one pass per
 /// project, tiered against that project's own `[scan] include`, and resolved
 /// against every project's *whole* walk, which is why it runs before the
 /// findings are narrowed. `include` is a per-project statement, so a member

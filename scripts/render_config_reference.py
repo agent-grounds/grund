@@ -41,7 +41,7 @@ takes the default shown. `grund config validate` checks a file against these key
 `grund config show` prints the configuration in effect, defaults included, in the
 file's own version; for version 2 its tables keyed by a kind follow the order the
 file writes its `[schema.kinds]` rows
-([§FS-config.4.2.4](../functional-spec/FS-config.md#424-the-order-show-prints-in)).
+([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)).
 `grund config explain '[TABLE] key'` gives one key's entry from the grund you run,
 in your file's version, with no page needed ([config explain](explain.md)).
 

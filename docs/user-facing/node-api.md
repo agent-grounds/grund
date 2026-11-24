@@ -26,7 +26,7 @@ Install the resulting tarball into a consumer with
 Rebuild an unpacked installed package explicitly with `npm run build:source`.
 That uses its bundled, locked source closure; it does not require checkout
 access. Import/install never compiles or downloads a native addon
-([§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership)).
+([§FS-distribution.3.2.3](../functional-spec/FS-distribution.md#323-workers-loading-and-source-builds)).
 
 ```js
 import { check, show } from 'grund-cli';
@@ -124,7 +124,7 @@ at the first block, one site per block, every block's finding in
 written ([§FS-declarations.checks.conflict-marker](../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)).
 Values/configuration keys remain schema spelling;
 source value numbers remain exact strings. Numeric overflow rejects rather
-than truncating ([§FS-distribution.3.2.2.1](../functional-spec/FS-distribution.md#3221-common-records)).
+than truncating ([§FS-distribution.3.2.2](../functional-spec/FS-distribution.md#322-typed-readonly-host-records)).
 
 ## Workers and writers
 
@@ -134,7 +134,7 @@ fetchers. Core still governs owned bytes, whole-set preflight, home/VCS
 guards, protected configuration and integration writes. Concurrent writers
 across roots reject busy before side effects and release their lease on
 return/error/unwind. No cancellation, rollback or external-writer snapshot
-is promised ([§FS-distribution.3.2.3.1](../functional-spec/FS-distribution.md#3231-execution)).
+is promised ([§FS-distribution.3.2.3](../functional-spec/FS-distribution.md#323-workers-loading-and-source-builds)).
 
 ## Handoff and evidence
 
@@ -146,4 +146,4 @@ package, silence, lifecycle and parity evidence is covered under
 `tests/bindings/node/` and `tests/integration/rehearsal/`, not by compilation.
 
 The initial API is pre-1.0; existing compatibility rules govern removals and
-renames ([§FS-distribution.3.2.4](../functional-spec/FS-distribution.md#324-acceptance-evidence)).
+renames ([§FS-distribution.3.2](../functional-spec/FS-distribution.md#32-node-grund-cli-npm-package)).

@@ -29,7 +29,7 @@ pub(in crate::config) struct ValueLines {
 /// Every relationship `values` and `value_chapter` need of their own row
 /// (§FS-config.3.4.9, §FS-config.3.4.13, §FS-fields.forms). Located at the
 /// key's own line, so the message opens the line that has to change and the
-/// editor marks that same line (§FS-lsp.2.2.4.1). `homes` are every home of the
+/// editor marks that same line (§FS-lsp.2.2.4). `homes` are every home of the
 /// row, each judged (§AR-config.1.6), and the refusal a later one earns is
 /// returned with its own line, for the reader to give once every older question
 /// has its answer (§FS-config-v2.reader.4.order).

@@ -5,7 +5,7 @@ compiles only the frontends its package installs, from sources the package carri
 The closure is this workspace narrowed to those crates and the engine, with the
 workspace `Cargo.lock` pruned to them, so every build from it is `--locked`
 (§FS-distribution-candidate.4.3). It is the layout the Node binding's own staging uses
-(§FS-distribution.3.2.3.3), widened by the frontend it adds.
+(§FS-distribution.3.2.3), widened by the frontend it adds.
 """
 
 import json

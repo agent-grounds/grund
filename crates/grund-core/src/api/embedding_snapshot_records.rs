@@ -1,4 +1,4 @@
-//! Source fields retained by the owned scanner snapshot (§FS-distribution.3.2.2.3).
+//! Source fields retained by the owned scanner snapshot (§FS-distribution.3.2.2).
 use super::embedding_data::Data;
 use crate::config::{Config, display_path};
 use crate::*;
@@ -8,7 +8,7 @@ impl Data for DeclarationSource {
     fn data(&self) -> Value {
         match self {
             Self::Text => json!({"kind":"text"}),
-            // §FS-distribution.3.2.2.3: `kind` stays `json` for a member of either
+            // §FS-distribution.3.2.2: `kind` stays `json` for a member of either
             // format, and `format` says which.
             Self::Json {
                 member_slice,
@@ -46,7 +46,7 @@ impl Data for InlineCitationSite {
 }
 /// An E2E case's published fields. Not a `Data` impl because `dir` needs the run's
 /// report base: it reads as the same record's `path` does, `.` at the base
-/// (§FS-distribution.3.2.2.3).
+/// (§FS-distribution.3.2.2).
 pub(super) fn e2e_case_data(config: &Config, case: &E2eCase) -> Value {
     // §AR-scanner.6.2: the parsed words, `[]` with no `command.args`.
     json!({"dir":display_path(config,&case.dir),"args":case.args,"expected_exit":case.expected_exit,

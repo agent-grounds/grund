@@ -33,7 +33,7 @@ check staged paths, and an agent working inside one module could not check its o
 ## 2. Decision
 
 A run given an explicit path **reads what its project's ordinary run reads, and reports only the path**
-([§FS-check.1.3.6.1](../../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)).
+([§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows)).
 
 ### 2.1 Two scopes, named, and the whole change is telling them apart
 
@@ -84,12 +84,12 @@ second meaning.
 
 ### 2.5 The unused-declaration warning is counted here, and `--full`'s is still not
 
-[§FS-check.1.3.5](../../functional-spec/FS-check.md#135-the-unused-declaration-warning-is-unchanged-out-there) leaves the warning standing for a declaration cited only from outside `include` under
+[§FS-check.1.3](../../functional-spec/FS-check.md#13-the-full-tree-scope---full) leaves the warning standing for a declaration cited only from outside `include` under
 `--full`, and that stays true. The two cases differ by a contract. `--full` owes additivity
-([§FS-check.1.3.4](../../functional-spec/FS-check.md#134-purely-additive)): it must report a superset of the plain run, so counting the wider walk's citations would
+([§FS-check.1.3](../../functional-spec/FS-check.md#13-the-full-tree-scope---full)): it must report a superset of the plain run, so counting the wider walk's citations would
 *retire* an in-scope finding, the one direction that flag may never move. A path scope owes nothing of the
 kind — it is a subset run by construction, and it counts an edge **exactly where `grund check .` counts
-it**, never anywhere else, so it cannot disagree with the run additivity protects ([§FS-check.4.1.4](../../functional-spec/FS-check.md#414-a-citation-anywhere-in-the-resolution-scope-counts)).
+it**, never anywhere else, so it cannot disagree with the run additivity protects ([§FS-check.4.1](../../functional-spec/FS-check.md#41-unused-declaration)).
 
 ### 2.6 [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids) is the route, and all five conditions hold
 
@@ -145,4 +145,4 @@ A shipped verdict flips here, which only [§REQ-backwards-compatibility.5](../..
 | Harvest only the declaration side outside the path | 11% of the cost for half the fix; the walk is the cost, and the unused-declaration half needs the citations, not the declarations ([§DF-path-scope-resolves-project-wide.3](DF-path-scope-resolves-project-wide.md#3-consequences)). |
 | Let `--full` widen the resolution scope further under a path | Would give a path scope an out-of-scope tier, which [§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows) says it has not got, and a new tier means a new code ([§DF-path-scope-resolves-project-wide.2.4](DF-path-scope-resolves-project-wide.md#24-no-new-finding-message-and-no-new-code)). |
 | A flag to opt out of the widening and keep the 4 ms | Two knobs describing one scope, which is how two correctly-configured installs come to disagree ([§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)) — and the fast answer it preserves is the wrong one. |
-| Split the `declared but never cited` half into its own change | Declined in the plan: a path scope counts a citation edge exactly where `grund check .` counts it, so it has no additivity contract to break and nothing to stage ([§FS-check.4.1.4](../../functional-spec/FS-check.md#414-a-citation-anywhere-in-the-resolution-scope-counts)). |
+| Split the `declared but never cited` half into its own change | Declined in the plan: a path scope counts a citation edge exactly where `grund check .` counts it, so it has no additivity contract to break and nothing to stage ([§FS-check.4.1](../../functional-spec/FS-check.md#41-unused-declaration)). |

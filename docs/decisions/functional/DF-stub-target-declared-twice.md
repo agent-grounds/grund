@@ -51,7 +51,7 @@ The verdict moves in three ways, and no message template changes.
   declares the stub's ID twice now reports the `duplicate declaration` the scanned control
   reports, at the target's two lines. The editor's diagnostics report it from the target's unsaved
   text where it is open in one ([§FS-declarations.checks.broken-stub.1](../../functional-spec/FS-declarations.md#checksbroken-stub1-the-target-is-read-as-a-save-would-write-it)), and `list` tags the stub's
-  row as a duplicate ([§FS-list.3.1.1](../../functional-spec/FS-list.md#311-row-notes)).
+  row as a duplicate ([§FS-list.3.1](../../functional-spec/FS-list.md#31---format-text-default)).
 
   ```console
   $ grund check     # docs/a.md stubs FS-a to ../notes/a.md, outside the scan; notes/a.md declares FS-a at lines 1 and 5
@@ -66,7 +66,7 @@ The verdict moves in three ways, and no message template changes.
   `docs/b.md:1: error: duplicate declaration of FS-a (also declared at notes/a.md:1, notes/a.md:5)`.
 - **Both ways, for a selected run.** A run that leaves the new duplicate out of its report while it
   reads a citation of such an ID: a path that holds the citation and none of the duplicate's sites
-  ([§FS-check.1.3.6.1](../../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution), [§FS-check.1.3.6.2](../../functional-spec/FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)), `--ignore duplicate`, `--only` with a code a rule produces
+  ([§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows)), `--ignore duplicate`, `--only` with a code a rule produces
   such as `citation-cardinality`, or a trial `--rule "<sentence>" --only-rule`. The citation now
   reads as ambiguous, as it does on the scanned control and to `show`, and a rule counts no edge to
   an ambiguous declaration ([§FS-rules.5.1](../../functional-spec/FS-rules.md#51-facts-and-identity)). So an `at least` count can newly fail, and a
@@ -76,7 +76,7 @@ Five things do not move. A target that declares the ID once is one home, as befo
 inside a fence of a Markdown target, and a stub-shaped line in the target, declare nothing there,
 as they declare nothing to the broken-stub rule ([§FS-declarations.checks.broken-stub.2](../../functional-spec/FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)). A broken
 stub, and a stub that links to its own file, stay homes of their own. A section citation of such
-an ID reads as it did: a target that declares the ID twice lends no section ([§FS-check.3.2.1](../../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)), so
+an ID reads as it did: a target that declares the ID twice lends no section ([§FS-check.3.2](../../functional-spec/FS-check.md#32-missing-section)), so
 its `missing section` stays, beside the new duplicate. And how `fmt` links a citation of such an
 ID is not this record's to decide.
 

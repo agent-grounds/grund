@@ -7,7 +7,7 @@ use crate::resolver::{
 };
 
 /// The per-target-alias citation counts `grund list` needs, built in one
-/// pass (§FS-list.3.2.1, §DF-index-not-an-inbound-citation): each ID's, the
+/// pass (§FS-list.3.2, §DF-index-not-an-inbound-citation): each ID's, the
 /// same minus index entries, and each exact section's.
 ///
 /// §FS-workspace.8.3: each citation belongs to exactly one target project — its
@@ -23,7 +23,7 @@ use crate::resolver::{
 /// by construction, and is the number `--unused` selects on. One count would
 /// have to be wrong for one of the two questions; two counts printed by two
 /// commands that disagreed would be worse than one that needs a sentence of
-/// explanation, so `refs` stays the total and the sentence lives in §FS-list.3.2.1.
+/// explanation, so `refs` stays the total and the sentence lives in §FS-list.3.2.
 ///
 /// §FS-imports.graph.diamond: a tree two alias paths reach is counted once, under
 /// its canonical alias path, and each of its alias paths reads that one count.
@@ -70,7 +70,7 @@ impl<'a> ListCitationCounts<'a> {
                     .or_default()
                     .entry(&citation.id)
                     .or_insert(0) += 1;
-                // §FS-list.3.2.1: a section row counts its exact section, as `refs` does.
+                // §FS-list.3.2: a section row counts its exact section, as `refs` does.
                 if let Some(section) = citation.section.as_deref() {
                     *counts
                         .sections
@@ -113,7 +113,7 @@ impl<'a> ListCitationCounts<'a> {
     }
 
     /// How many citations name `section` of `alias`'s `id` exactly, without its
-    /// descendants: a section row's `refs` (§FS-list.3.2.1).
+    /// descendants: a section row's `refs` (§FS-list.3.2).
     pub(crate) fn section_refs(&self, alias: &str, id: &Id, section: &str) -> usize {
         self.sections
             .get(self.tree(alias))
@@ -150,7 +150,7 @@ pub(crate) fn kind_index_entries(source: &WorkspaceProject) -> KindIndexEntries 
 }
 
 /// The kind-index entries among citations of `ids`, the sites text refs labels
-/// (§FS-refs.3.1.1), by check's defining classifier (§FS-check.4.1.2) restricted
+/// (§FS-refs.3.1), by check's defining classifier (§FS-check.4.1) restricted
 /// to those IDs, so a refs run links no other declaration (§GOAL-fast-feedback).
 pub(crate) fn kind_index_entries_for(
     source: &WorkspaceProject,

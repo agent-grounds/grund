@@ -67,7 +67,7 @@ pub(super) fn kinds(path: &Path, project: &Project) -> Result<()> {
 /// kind set, judged after the grammar compiles, as v1 always judged them. A
 /// pinned or `*/` target is not judged here: it names other projects' kinds,
 /// which the run judges once it knows whether it holds a workspace
-/// ([`reject_unaccepted_citation_targets`], §FS-config.3.9.5.2).
+/// ([`reject_unaccepted_citation_targets`], §FS-config.3.9.5).
 pub(super) fn lists(path: &Path, project: &Project) -> Result<()> {
     // §AR-workspace.5.2: post-parse invariants run on every load, not gated on which
     // section appeared. Free-form `project_name` is slug-checked later
@@ -88,9 +88,9 @@ pub(super) fn lists(path: &Path, project: &Project) -> Result<()> {
     )
 }
 
-/// §FS-config.3.9.5.2: refuse the load on the first pinned or `*/` target of
+/// §FS-config.3.9.5: refuse the load on the first pinned or `*/` target of
 /// `config`'s `[citations]` that `kinds` cannot accept, as a config load error
-/// that names the file, as every load error does (§FS-lsp.2.2.4.1,
+/// that names the file, as every load error does (§FS-lsp.2.2.4,
 /// §DF-one-grammar-lands-in-0-19). `kinds` is the table built over the run's
 /// workspace ([`super::install_kind_table`]), or the config's own where the run
 /// holds none, which no other project's target can pass.
@@ -127,7 +127,7 @@ pub(crate) fn citations_table(version: u32) -> &'static str {
     }
 }
 
-/// Every rule the two row keys have to satisfy (§FS-config.3.4.8.5), each closing a
+/// Every rule the two row keys have to satisfy (§FS-config.3.4.8), each closing a
 /// state they cannot describe. Run over the lowered rows once the reader has
 /// refused every malformed entry, so a row that is already malformed is
 /// reported as that rather than as a grounding error.
@@ -141,7 +141,7 @@ fn validate_kind_grounding(path: &Path, project: &Project, kinds: &[KindConfig])
         let Some(grounding) = project.rules.grounding.kinds.get(&kind.kind) else {
             continue;
         };
-        // §FS-config.3.4.7.4: nothing in an unwalked home is read, so the rule
+        // §FS-config.3.4.7: nothing in an unwalked home is read, so the rule
         // could never fire — the reasoning that already refuses a
         // `[citations.<kind>]` rule on an unwalked citing kind.
         if kind.require_grounding == Some(true)
@@ -157,8 +157,8 @@ fn validate_kind_grounding(path: &Path, project: &Project, kinds: &[KindConfig])
                 ),
             )?;
         }
-        // §FS-config.3.4.8.5: a citable single-file kind is one declaration document,
-        // which §FS-check.3.6.1.1 leaves alone — as `index` means nothing on a file kind.
+        // §FS-config.3.4.8: a citable single-file kind is one declaration document,
+        // which §FS-check.3.6.1 leaves alone — as `index` means nothing on a file kind.
         // A non-citable `file` home is governed like any other, so there they mean.
         if kind.file.is_some()
             && kind.folder.is_none()
@@ -174,7 +174,7 @@ fn validate_kind_grounding(path: &Path, project: &Project, kinds: &[KindConfig])
                 ),
             )?;
         }
-        // §FS-config.3.4.8.5: a level on a row whose *effective* `require_grounding` is
+        // §FS-config.3.4.8: a level on a row whose *effective* `require_grounding` is
         // off is a unit for a rule that never runs there — the row spelling of the
         // `[reference]` rejection below, and what keeps §AR-scanner.2.7 off such a tree.
         if let Some(source) = &grounding.level_source
@@ -214,9 +214,9 @@ fn grounding_key_site(grounding: &KindGrounding) -> Option<(&'static str, usize)
 }
 
 /// The rules over the whole kind table (§FS-config.3.4): one complement, unique
-/// names, and distinguishable citable tokens (§FS-config.3.4.5.1).
+/// names, and distinguishable citable tokens (§FS-config.3.4.5).
 fn validate_kind_table(path: &Path, kinds: &[KindConfig], default_format: &str) -> Result<()> {
-    // §FS-config.3.9.2.1: the homeless kind is the complement of every configured home,
+    // §FS-config.3.9.2: the homeless kind is the complement of every configured home,
     // and a complement is one place. Two rows claiming it would leave the fallback
     // with no single answer, so the second is refused rather than resolved by order.
     let homeless: Vec<&KindConfig> = kinds
@@ -243,7 +243,7 @@ fn validate_kind_table(path: &Path, kinds: &[KindConfig], default_format: &str) 
             ));
         }
     }
-    // §FS-config.3.4.5.1: proper-prefix names need an ASCII alphanumeric boundary
+    // §FS-config.3.4.5: proper-prefix names need an ASCII alphanumeric boundary
     // first, then known, non-overlapping effective heads. Non-citable rows are exempt.
     for a in kinds {
         for b in kinds {
@@ -282,7 +282,7 @@ fn validate_kind_table(path: &Path, kinds: &[KindConfig], default_format: &str) 
     Ok(())
 }
 
-/// §FS-config.3.4.8.5: `[reference] grounding_level` with the global boolean off
+/// §FS-config.3.4.8: `[reference] grounding_level` with the global boolean off
 /// and no row turning grounding on is a unit for a rule nothing switched on —
 /// the row-scoped rejection above, one scope up. Asked of the final table,
 /// because "no row turns it on" is a question about the resolved rows.

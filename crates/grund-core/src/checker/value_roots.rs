@@ -1,6 +1,6 @@
 //! A binding aimed at a whole value root: the component run it is compared
 //! against, the space rule that keeps the join one-to-one, and what a
-//! disagreement reports (§FS-values.3.1.2, §FS-values.5.2.2).
+//! disagreement reports (§FS-values.3.1.2, §FS-values.5.2).
 
 use super::spellings_report::PlaceNames;
 use super::value_mismatch::{
@@ -20,7 +20,7 @@ type RunComponent<'a> = (String, usize, &'a ValueComponent);
 /// (§FS-values.3.1.2). The space refusal precedes comparison, so a root it
 /// refuses is never also a mismatch (§FS-values.5.1). A mismatch names the root
 /// as cited and the literal whole, with the first unequal component beside them
-/// when the part count matches (§FS-values.5.2.2).
+/// when the part count matches (§FS-values.5.2).
 pub(super) fn root_binding_finding(
     binding: &ValueBinding,
     schema: &Schema,
@@ -56,7 +56,7 @@ pub(super) fn root_binding_finding(
     let parts = root_literal_parts(&binding.authored);
     let joined = joined_value_components(&declared);
     if parts.len() != declared.len() {
-        // §FS-values.5.2.2: no component is at fault, so the finding names the
+        // §FS-values.5.2: no component is at fault, so the finding names the
         // root, at component 1's site, which every valid root has.
         return Some(value_mismatch_text(
             binding,
@@ -68,7 +68,7 @@ pub(super) fn root_binding_finding(
             frame.display,
         ));
     }
-    // §FS-values.5.2.2: the first unequal component, named by its section path
+    // §FS-values.5.2: the first unequal component, named by its section path
     // beside the root as cited and the literal whole.
     let index = first_unequal_component(&parts, &declared)?;
     let (section_path, line, component) = &run[index];

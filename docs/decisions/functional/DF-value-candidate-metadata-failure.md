@@ -15,7 +15,7 @@ without reporting why the declaration was missing
 
 ## 2. Decision and compatibility
 
-[§FS-values.5.3.1](../../functional-spec/FS-values.md#531-a-listed-candidate-whose-file-status-cannot-be-read)
+[§FS-values.5.3](../../functional-spec/FS-values.md#53-incomplete-input-and-deterministic-output)
 makes failed classification incomplete input through the existing scan-failure
 channel, retaining the source or home path, shared contextual I/O reason, and
 repair. Confirmed non-files remain silent; readable sources and findings remain

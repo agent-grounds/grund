@@ -1,5 +1,5 @@
 //! The heading lines a `fmt` run leaves on disk where they differ from the lines
-//! it read (§FS-fmt.6.3.3): a run that expands a citation inside a section heading
+//! it read (§FS-fmt.6.3): a run that expands a citation inside a section heading
 //! moves that heading's anchor, so every link the same run writes to it is
 //! derived from the line it writes, not from the scan's record of the line it
 //! read. The rewriting is the writer's; this is only the record the anchor

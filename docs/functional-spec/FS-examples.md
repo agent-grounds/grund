@@ -76,8 +76,8 @@ own:
   [§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites).
 - **`examples/downstream-citers/`** is a multi-run example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) for a project
   whose citers live in a repository its own run cannot read: the downstream's
-  `cover --format json` keeps each cross-project alias it cannot resolve ([§FS-cover.2.1](FS-cover.md#21-a-cross-project-citation-counts)); the
-  upstream with the committed page of those citations counts each as a use ([§FS-check.4.1.4](FS-check.md#414-a-citation-anywhere-in-the-resolution-scope-counts)); and
+  `cover --format json` keeps each cross-project alias it cannot resolve ([§FS-cover.2](FS-cover.md#2-behaviour)); the
+  upstream with the committed page of those citations counts each as a use ([§FS-check.4.1](FS-check.md#41-unused-declaration)); and
   the same upstream after a listed point is deleted is refused at the page. The repository options guide
   teaches the recipe and its limits where it covers workspaces.
 - **`examples/cochange/`**, the opt-in Git co-change workflow, is specified by

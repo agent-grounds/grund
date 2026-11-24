@@ -35,7 +35,7 @@ fn command_message(detail: String, owner: Option<&str>) -> String {
 const STALE_BEFORE_NOUN: &str = "stale grund init block: the ";
 const STALE_AFTER_NOUN: &str = " section differs from ";
 
-/// The section noun a stale finding's `message` names (§FS-check.3.5.3), or
+/// The section noun a stale finding's `message` names (§FS-check.3.5), or
 /// `None` for any other `agents-init` variant.
 pub(crate) fn stale_section_noun(message: &str) -> Option<&str> {
     let rest = message
@@ -60,13 +60,13 @@ pub(crate) fn stale_section_noun(message: &str) -> Option<&str> {
 /// entrypoint, since `grund init` refuses to write while it stands; its own
 /// located error, from `check_chapter_rules`, is the finding to act on, and the
 /// run records the withheld comparison so `--only agents-init` keeps that
-/// error (§FS-check.3.5.4).
+/// error (§FS-check.3.5).
 pub(super) fn check_agents_block_version(
     expected: &Expected,
     frame: Frame<'_>,
     report: &mut CheckReport,
 ) {
-    // §FS-check.3.5.3: another project's block names the directory it belongs to.
+    // §FS-check.3.5: another project's block names the directory it belongs to.
     let owner = (frame.run.root != frame.display.root).then(|| frame.display_path(&frame.run.root));
     let held = Held {
         version: expected.block_version,
@@ -94,7 +94,7 @@ pub(super) fn check_agents_block_version(
 
 /// What every block of one project is held to: the version, whether the two
 /// workspace sections are compared (§FS-check.3.5.5), and the directory a
-/// finding about another project's block names (§FS-check.3.5.3).
+/// finding about another project's block names (§FS-check.3.5).
 #[derive(Clone, Copy)]
 pub(crate) struct Held<'a> {
     pub(crate) version: u32,
@@ -109,7 +109,7 @@ pub(crate) struct Held<'a> {
 /// Why the generated sections are compared rather than re-derived: rendering is
 /// deterministic, so a fresh render is the hash — and the writers render it
 /// through the renderers `init` writes with (§AR-system.2.11, §AR-checker.2.7).
-/// Workspace findings retain the compared bytes for §FS-check.3.5.3.1's detail.
+/// Workspace findings retain the compared bytes for §FS-check.3.5's detail.
 /// `\r` is stripped from the block first, because the managed `AGENTS.md` is not
 /// pinned to LF in `.gitattributes`, so a Windows checkout has CRLF and would
 /// read as drift against the LF render.
@@ -122,9 +122,9 @@ pub(crate) fn check_agent_block_path(
     let (expected_version, owner) = (held.version, held.owner);
     let path = entrypoint.path.as_path();
     let require_block = entrypoint.require_block;
-    // §FS-check.6.1.3: retain this probe when the entrypoint is absent.
+    // §FS-check.6.1: retain this probe when the entrypoint is absent.
     crate::config::observe_input(path, false);
-    // §FS-check.6.1.1: observed before its read, as a save would write it
+    // §FS-check.6.1: observed before its read, as a save would write it
     // (§AR-system.2.13).
     if !sources.exists(path) {
         // §FS-init.2.3.5: a destination of the live render with no file is a
@@ -154,7 +154,7 @@ pub(crate) fn check_agent_block_path(
     };
     let block = match find_agents_block(&text) {
         AgentsBlockLookup::Malformed { message, at } => {
-            // §FS-check.3.5.2 / §FS-init.2.3.11: broken delimiters are diagnosed at
+            // §FS-check.3.5 / §FS-init.2.3.11: broken delimiters are diagnosed at
             // the offending line and never rewritten — `grund init` refuses
             // them too.
             report.errors.push(Diagnostic {
@@ -172,7 +172,7 @@ pub(crate) fn check_agent_block_path(
         AgentsBlockLookup::Absent => None,
     };
     if let Some(block) = block {
-        // §FS-check.4.9.1: the absent-member warning says what such a run left out.
+        // §FS-check.4.9: the absent-member warning says what such a run left out.
         report.verified_blocks = true;
         let line = line_for_byte_index(&text, block.start);
         let block_text = text[block.start..block.end].replace('\r', "");
@@ -215,7 +215,7 @@ pub(crate) fn check_agent_block_path(
                 authority: Vec::new(),
             });
         } else {
-            // §FS-check.3.5.4: the version marker alone misses a config edit, so
+            // §FS-check.3.5: the version marker alone misses a config edit, so
             // compare every section against `Expected`; the scoped file's own
             // sections are held as before, then its whole block.
             let mut stale = false;
@@ -297,7 +297,7 @@ fn unselected_member_noun(version: u32, expected_version: u32) -> &'static str {
     }
 }
 
-/// §FS-check.3.5.3: a block that should be there and is not.
+/// §FS-check.3.5: a block that should be there and is not.
 fn missing_block(path: &Path, expected_version: u32, owner: Option<&str>) -> Diagnostic {
     Diagnostic {
         code: Code::AGENTS_INIT,
@@ -316,11 +316,11 @@ fn missing_block(path: &Path, expected_version: u32, owner: Option<&str>) -> Dia
     }
 }
 
-/// §FS-check.3.5.3: a block whose `noun` differs from the render. A workspace
+/// §FS-check.3.5: a block whose `noun` differs from the render. A workspace
 /// section differs from the workspace and names its directory inside the
 /// template; every other section differs from `grund.toml`, and the held-stable
 /// template grows at its end (§FS-errors.3.6).
-/// Workspace sections explain their first unequal body entry (§FS-check.3.5.3.1).
+/// Workspace sections explain their first unequal body entry (§FS-check.3.5).
 pub(super) fn stale_block(
     path: &Path,
     line: usize,

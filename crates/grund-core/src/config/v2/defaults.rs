@@ -1,4 +1,4 @@
-//! The v2 epoch (§FS-config-v2.defaults.1): what a v2 project means before its
+//! The v2 epoch (§FS-config-v2.defaults): what a v2 project means before its
 //! file says anything, applied here and nowhere else. No later binary changes
 //! these; a different default is a different version (§FS-config.5.2). Where
 //! v2 keeps a v1 value — the marker, `section_separator`, `number_pattern`, the
@@ -14,7 +14,7 @@ use crate::config::project::{
 use crate::config::record::ShorthandPolicy;
 use crate::config::rows::Nesting;
 
-/// The project a v2 file means before any key (§FS-config-v2.defaults.1). It
+/// The project a v2 file means before any key (§FS-config-v2.defaults). It
 /// has no rows: v1's built-in kind list belongs to v1. The scan follows from
 /// the rows, in `finish.rs`, and what it reads from `[schema.sources]`, in
 /// `sources.rs` (§FS-config-v2.schema.sources).
@@ -29,7 +29,7 @@ pub(super) fn default_project() -> Project {
         },
         schema: Schema {
             value_form_repairs: Default::default(),
-            // §FS-config-v2.defaults.1: citations are marked, with no opt-out.
+            // §FS-config-v2.defaults: citations are marked, with no opt-out.
             citation: CitationSyntax {
                 marker: "§".to_string(),
                 strict: true,
@@ -40,14 +40,14 @@ pub(super) fn default_project() -> Project {
                 section_separator: ".".into(),
                 number_pattern: r"\d+".into(),
                 slug_pattern: "[a-z][a-z0-9-]*".into(),
-                // §FS-config-v2.defaults.1: always enabled, with no switch.
+                // §FS-config-v2.defaults: always enabled, with no switch.
                 named_sections: true,
                 section_heading_levels: "strict".into(),
             },
             sources: Sources {
                 include: None,
                 include_source: None,
-                // §FS-config-v2.defaults.1: `exclude = []`; v1's names are not v2's.
+                // §FS-config-v2.defaults: `exclude = []`; v1's names are not v2's.
                 exclude: Vec::new(),
                 extensions: Vec::new(),
                 reads_no_extension: false,

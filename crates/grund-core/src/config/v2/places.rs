@@ -37,7 +37,7 @@ pub(super) fn judge(
                 )
             };
             let target = canonical_path(root.join(place.path())).ok();
-            // The same place, or one target, twice (§FS-config-v2.schema.places.boundaries.3).
+            // The same place, or one target, twice (§FS-config-v2.schema.places.boundaries).
             let earlier = seen.iter().find(|(_, other, other_target)| {
                 other.path() == place.path()
                     || target.is_some() && target.as_ref() == other_target.as_ref()
@@ -53,13 +53,13 @@ pub(super) fn judge(
                     .is_some_and(|reach| !reach.starts_with(&canonical_root))
             {
                 // Refused, not pruned, judged as far as the disk answers when the lookup
-                // fails (§FS-config-v2.schema.places.boundaries.3.1).
+                // fails (§FS-config-v2.schema.places.boundaries).
                 late.push(at("links out of the project root".to_string()));
             } else if let Some(member) = members
                 .iter()
                 .find_map(|member| member_holding(member, place.path()))
             {
-                // §FS-config-v2.schema.places.boundaries.5, §FS-workspace.6.
+                // §FS-config-v2.schema.places.boundaries, §FS-workspace.6.
                 let what =
                     format!("is inside workspace member `{member}`, which the root never reads");
                 late.push(at(what));
@@ -70,10 +70,10 @@ pub(super) fn judge(
 }
 
 /// Where a folder place goes, for its outward refusal
-/// (§FS-config-v2.schema.places.boundaries.3.1): its canonical target, or, where the lookup
+/// (§FS-config-v2.schema.places.boundaries): its canonical target, or, where the lookup
 /// fails for a reason other than absence, where it goes as far as the disk answers. `None` for
 /// a place that does not exist, a dangling link included
-/// (§FS-config-v2.schema.places.boundaries.4).
+/// (§FS-config-v2.schema.places.boundaries).
 fn reach(root: &Path, place: &PlaceDraft, target: Option<&PathBuf>) -> Option<PathBuf> {
     if let Some(target) = target {
         return Some(target.clone());

@@ -57,20 +57,20 @@ fn unclosed_class(pattern: &str) -> bool {
 }
 
 /// The path `pattern` spells: no trailing spaces, and no `/` at either end
-/// (§FS-config-migrate.3.1.4.1).
+/// (§FS-config-migrate.3.1.4).
 pub(super) fn spelled_path(pattern: &str) -> &str {
     pattern.trim_end().trim_matches('/')
 }
 
 /// Whether `pattern` can match only the path it spells: a leading or inner `/` anchors
-/// it, and it holds no glob syntax (§FS-config-migrate.3.1.4.1).
+/// it, and it holds no glob syntax (§FS-config-migrate.3.1.4).
 pub(super) fn matches_only_its_path(pattern: &str) -> bool {
     let line = pattern.trim_end().trim_end_matches('/');
     line.contains('/') && !line.contains(['*', '?', '[', '{', '\\'])
 }
 
 /// A file name no pattern is written for: it starts and ends in a control character, so what
-/// matches it is a pattern that matches every name (§FS-config-v2.schema.sources.exclude.roots).
+/// matches it is a pattern that matches every name (§FS-config-v2.schema.sources.exclude).
 const UNNAMED: &str = "\u{1}grund\u{2}";
 
 /// The compiled `exclude` list of a v2 project, matched over config-root paths.
@@ -90,7 +90,7 @@ impl ExcludeGlobs {
 
     /// `pattern` read alone (§AR-config.8.1); `None` for one that so stops nothing: a
     /// comment, a negation with no earlier line to rescue from, and a pattern the reader
-    /// refuses, which migration's tolerant read let through (§FS-config-migrate.3.1.4.1).
+    /// refuses, which migration's tolerant read let through (§FS-config-migrate.3.1.4).
     pub(super) fn alone(pattern: &str) -> Option<Self> {
         Self::compile(std::slice::from_ref(&pattern))
             .filter(|globs| globs.num_ignores() > 0)
@@ -109,7 +109,7 @@ impl ExcludeGlobs {
     /// `config_root` is matched by its config-relative spelling; one outside it by
     /// its own name alone, so an anchored pattern never reaches outside the root
     /// while an unanchored one still applies below it
-    /// (§FS-config-v2.schema.sources.exclude.roots).
+    /// (§FS-config-v2.schema.sources.exclude).
     pub(crate) fn excluding(&self, config_root: &Path, path: &Path, is_dir: bool) -> Option<&str> {
         let relative = match path.strip_prefix(config_root) {
             Ok(relative) => relative,
@@ -123,7 +123,7 @@ impl ExcludeGlobs {
 
     /// The first pattern met on the way down from `root` to `file`, a directory
     /// before what lies under it and the file last, as the walk meets them; `root`
-    /// itself is read whatever names it (§FS-config-v2.schema.sources.exclude.roots).
+    /// itself is read whatever names it (§FS-config-v2.schema.sources.exclude).
     pub(crate) fn excluding_below(
         &self,
         config_root: &Path,
@@ -143,7 +143,7 @@ impl ExcludeGlobs {
     }
 
     /// Whether these patterns keep out whatever `dir` holds, met on the way down from `root`
-    /// (§FS-config-v2.schema.sources.exclude.roots). A pattern that names only some of it,
+    /// (§FS-config-v2.schema.sources.exclude). A pattern that names only some of it,
     /// `.ignore` or `*.md`, does not, and a negation may rescue any name, so a list holding one
     /// does not either.
     pub(crate) fn excludes_all_of(&self, config_root: &Path, root: &Path, dir: &Path) -> bool {

@@ -123,7 +123,7 @@ pub(super) fn read_e2e_case(
 /// One file of a case as a save would write it (§AR-system.2.13), its failure recorded at that
 /// file (§FS-declarations.e2e-case.failure).
 fn read_case_file(frame: Frame<'_>, path: &Path, failed: &mut Vec<CaseFailure>) -> Option<String> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
+    // §FS-check.6.1: cover this effective input before its shared read.
     match frame.sources().text(path) {
         Ok(text) => Some(text.into_owned()),
         Err(err) => {
@@ -191,7 +191,7 @@ fn collect_relative_fixture_files(
     files: &mut Vec<PathBuf>,
     failed: &mut Vec<CaseFailure>,
 ) {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
+    // §FS-check.6.1: cover this effective input before its shared read.
     let mut listing = Sources::on_disk().list_dir(dir);
     if let Some(err) = listing.failure {
         failed.push(CaseFailure::Unlisted(dir.to_path_buf(), err));

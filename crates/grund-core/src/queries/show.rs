@@ -161,7 +161,7 @@ pub(crate) fn show_declaration_with_home<'a>(
 /// only home (§FS-show.2.3.4): the first line for a missing target, the second for
 /// every other broken verdict. `refs` names a stub it set aside beside a real home
 /// with the same line where the ambiguity refusal carries no clause for it
-/// (§FS-refs.4.1.1). `None` for a declaration that is not a broken stub.
+/// (§FS-refs.4.1). `None` for a declaration that is not a broken stub.
 pub(super) fn broken_stub_message(
     config: &Config,
     path_config: &Config,
@@ -241,7 +241,7 @@ fn show_json_value(
 /// that `render_id` needs. `path_config` is the workspace render config, i.e. the
 /// same base `grund list` renders against, so an `<alias>/<ID>` resolved from a
 /// workspace root reports a path relative to that root rather than to the member
-/// (§FS-config.3.6: paths are relative to *the config root*, and §FS-integrations.3.1.5
+/// (§FS-config.3.6: paths are relative to *the config root*, and §FS-integrations.3.1
 /// joins this path against the root `grund-open` discovered).
 ///
 /// `home` is the record `show_declaration_with_home` read the body out of.

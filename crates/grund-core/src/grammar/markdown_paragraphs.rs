@@ -3,7 +3,7 @@
 //! paragraph, and a definition only starts one. `markdown_links.rs` asks it of
 //! every line in order; the fences are the caller's (§FS-check.1.1.5).
 //!
-//! Not a Markdown parser (§FS-citations.wrap.enclosing.scope): a paragraph ends
+//! Not a Markdown parser (§FS-citations.wrap.enclosing.shape): a paragraph ends
 //! at the lines that point names and continues on every other line, a quoted line
 //! of its own quote and a lazy one included.
 

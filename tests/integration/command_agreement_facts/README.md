@@ -172,7 +172,7 @@ carries `point` and `authoredFrom`, and then:
   optional `file` selects its physical owner when `of` names duplicate homes;
   ambiguous ownership is rejected. Size rows interleave those homes by
   coordinate, then site, keeping every measurement local to its body
-  ([§FS-list.2.7](../../../docs/functional-spec/FS-list.md#27-duplicate-sections)).
+  ([§FS-list.3.4](../../../docs/functional-spec/FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements)).
 - `findings` and `refusals`: each finding as `check` publishes it, and each
   refused query with its code, message and the questions it refuses.
 - `fmt`: the changes a dry run lists and a write makes, and the written lines.

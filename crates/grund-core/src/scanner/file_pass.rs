@@ -70,7 +70,7 @@ use crate::workspace::WorkspaceCitationTarget;
 /// whether the `<namespace>` capture fired (§AR-workspace.3.1). The alias
 /// prefix is only honoured when the marker precedes it — an unmarked
 /// `<alias>/<ID>` in prose is text, never a qualified citation
-/// (§FS-workspace.1.3, §AR-workspace.3.1).
+/// (§FS-workspace.5.2, §AR-workspace.3.1).
 ///
 /// In workspace mode the caller passes a non-empty `workspace_targets` so a
 /// `§<alias>/<ID>` token parses with the target project's grammar inline —
@@ -131,7 +131,7 @@ pub(super) fn scan_file_text(
     // §FS-declarations.stubs.shape: a stub is a link-titled heading in a kind's home only.
     let stub_home = is_md && in_some_home(path, schema, frame);
     // §FS-check.1.1.5.2: a Markdown file's front matter, found once and kept on the
-    // record, where the owner lookup reads it (§FS-check.1.1.5.2.1).
+    // record, where the owner lookup reads it (§FS-check.1.1.5.2).
     let mut markdown_blocks = if is_md {
         MarkdownBlocks::file(text).selecting(schema.sources.fenced())
     } else {
@@ -167,7 +167,7 @@ pub(super) fn scan_file_text(
     let mut held_headings = HeldHeadings::default();
     let mut held_sections = HeldSections::default();
     let mut total_lines = 0usize;
-    // §FS-values.3.1.1.1: a literal that closed the line before, held for one line.
+    // §FS-values.3.1.1: a literal that closed the line before, held for one line.
     let mut split = None;
     // §AR-scanner.2.9: conflict marker lines, read off every raw line.
     let mut markers = MarkerLines::default();
@@ -216,7 +216,7 @@ pub(super) fn scan_file_text(
         // §FS-declarations.line.block-comment: a bare line of a closed `/* … */` block is in
         // declaration position, read as a docstring line is, where the comment reading finds none.
         let bare_block = !is_md && !scan.in_py_docstring && bare_block_line(&record, lineno);
-        // §FS-config-v2.schema.sources.declarations.gate: one answer, before every recognizer.
+        // §FS-config-v2.schema.sources.declarations: one answer, before every recognizer.
         let eligible = declaration_eligible(&record, &reading, lineno);
         let in_block = !is_md && !scan.in_py_docstring && record.in_block_comment(lineno);
         let mut declared = false;
@@ -234,7 +234,7 @@ pub(super) fn scan_file_text(
             && let Some(id) = parse_id(&caps, grammar)
         {
             close_declaration(&mut current, findings);
-            // §FS-declarations.line.configured-slug: the matched delimiter belongs to the tail.
+            // §FS-declarations.line: the matched delimiter belongs to the tail.
             let tail = &scan_line[caps.name("id").unwrap().end()..];
             let stub = stub_and_title(tail, stub_home, in_block);
             let heading_level =
@@ -475,7 +475,7 @@ pub(super) fn scan_file_text(
             if workspace_mode && namespace.is_some() {
                 continue;
             }
-            // §FS-workspace.1.3, §AR-workspace.3.1: an unmarked `alias/ID` is text,
+            // §FS-workspace.5.2, §AR-workspace.3.1: an unmarked `alias/ID` is text,
             // not a citation. The slash is part of the visual token; we do not
             // fall back to recognising the trailing ID as a bare citation.
             if namespace.is_some() && !has_marker {
@@ -558,7 +558,7 @@ pub(super) fn scan_file_text(
         // for whole or marked authority, keeping unmarked prose inert across
         // workspaces (§FS-values.3.1, §FS-values.7, §FS-values.9).
         scan_value_bindings(&citation_line, workspace_targets, citation_start, findings);
-        // §FS-values.3.1.1.1: a split binding needs both a backtick and the marker.
+        // §FS-values.3.1.1: a split binding needs both a backtick and the marker.
         if has_binding_candidate {
             scan_split_binding(&citation_line, workspace_targets, &mut split, findings);
         }
@@ -592,7 +592,7 @@ pub(super) fn scan_file_text(
     {
         assign_declaration_bodies(findings, &record);
     }
-    // §FS-declarations.body.conflict.where, §FS-declarations.body.conflict.owners.
+    // §FS-declarations.body.conflict.block.
     markers.record(path, &record, grammar, findings);
     due.settle_sections(findings, schema, text, is_md, record.front_matter);
     if has_unmarked_headings {
@@ -614,7 +614,7 @@ pub(super) fn scan_file_text(
     resolve_citation_owners(findings, schema, frame, path, &record, classify);
     // §AR-scanner.2.7.1: the headings and doc-comment blocks a grounding unit finer
     // than the file is cut out of — recorded only where the file's own row asks
-    // for one, so a level-1 tree pays nothing (§FS-config.3.4.8.2).
+    // for one, so a level-1 tree pays nothing (§FS-config.3.4.8).
     record_file_structure(path, &record, schema, frame, findings);
     findings.files.insert(path.to_path_buf(), Arc::new(record));
     Ok(())

@@ -9,7 +9,7 @@
 [§DF-glob-citation](DF-glob-citation.md#df-glob-citation-a-glob-operator-ends-no-citation-and-the-prefix-it-left-behind-is-removed) made a marked citation written as a pattern stop shortening to the prefix
 before its operator, and reported it as the `glob-citation` warning, ending `this warning
 becomes an error in grund 0.19.0`, so a repository had one release to cite the point or escape
-the illustration ([§FS-check.checks.glob-citation.1](../../functional-spec/FS-check.md#checksglob-citation1-a-warning-before-0190-an-error-in-it)). That record's notice shipped with 0.18.0,
+the illustration ([§FS-check.checks.glob-citation](../../functional-spec/FS-check.md#checksglob-citation-glob-citation)). That record's notice shipped with 0.18.0,
 and a notice already released is not published again ([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)), so the release
 that makes the finding an error needs a notice of its own, and this record carries it.
 

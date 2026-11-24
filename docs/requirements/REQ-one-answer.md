@@ -37,11 +37,11 @@ Each keeps the domain stated where it is promised.
 
 Configured literals such as `:` remain part of a conforming ID when it is discovered and
 read, so the complete ID printed by `list` is the same ID `show` accepts
-([§FS-declarations.line.configured-literals](../functional-spec/FS-declarations.md#lineconfigured-literals-configured-literals-belong-to-the-canonical-id), [§FS-show.1.1](../functional-spec/FS-show.md#11-id)).
+([§FS-declarations.line](../functional-spec/FS-declarations.md#line-what-a-line-in-declaration-position-declares), [§FS-show.1.1](../functional-spec/FS-show.md#11-id)).
 
 Where `check` reports an ID a duplicate, `show` and `refs` refuse it as ambiguous at the
 same sites, in the same order ([§FS-errors.4.1.1](../functional-spec/FS-errors.md#411-the-order-of-a-duplicates-sites), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id), [§FS-refs.4.1](../functional-spec/FS-refs.md#41-a-stubs-homes-are-found-in-its-target)), `list` and `list --size` mark its rows
-duplicate, and `fmt` wraps none of its citations ([§FS-fmt.6.4.2](../functional-spec/FS-fmt.md#642-a-citation-of-a-broken-stub-or-of-an-ambiguous-id-is-not-wrapped)).
+duplicate, and `fmt` wraps none of its citations ([§FS-fmt.6.4](../functional-spec/FS-fmt.md#64-what-is-never-wrapped)).
 
 ### identity.kinds: Every command reads one kind verdict
 
@@ -91,19 +91,19 @@ each stub's verdict, and the count of the ID's declarations it gives
 ([§FS-declarations.stubs.verdict](../functional-spec/FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)); none reaches an answer of its own. So on one tree they
 cannot disagree: where `check` reports a stub broken, `show` refuses it as a broken stub
 ([§FS-show.2.3.4](../functional-spec/FS-show.md#234-broken-stub)), `list --size` labels its row `broken stub` ([§FS-list.3.4.3](../functional-spec/FS-list.md#343-text-rows)), and `fmt`
-wraps no citation through it ([§FS-fmt.6.4.2](../functional-spec/FS-fmt.md#642-a-citation-of-a-broken-stub-or-of-an-ambiguous-id-is-not-wrapped)).
+wraps no citation through it ([§FS-fmt.6.4](../functional-spec/FS-fmt.md#64-what-is-never-wrapped)).
 
 ### stubs.outside-include: A target outside the include answers as if scanned
 
 A target outside `[scan] include` is counted, measured and linked exactly as it is with
-the target scanned, a target that declares the ID twice included ([§FS-list.3.4.6](../functional-spec/FS-list.md#346-a-home-outside-the-scan)).
+the target scanned, a target that declares the ID twice included ([§FS-list.3.4](../functional-spec/FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements)).
 
 ## text: Which text a file has
 
 ### text.targets: A stub's target answers as its saved text would
 
 The verdict on a stub and the body `show` slices out of its target never come from two
-versions of the target ([§FS-declarations.stubs.target.1](../functional-spec/FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it), [§FS-show.2.3](../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)). An unsaved
+versions of the target ([§FS-declarations.stubs.target](../functional-spec/FS-declarations.md#stubstarget-what-a-stubs-target-gives-it), [§FS-show.2.3](../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)). An unsaved
 edit to the target moves every answer at once, the editor's diagnostics and its navigation
 included, exactly as saving it would: every answer is the one the same text gives once it
 is saved.
@@ -120,7 +120,7 @@ same definition target in the editor as on the command line, byte for byte
 
 `grund check <path>` and `grund check .` never disagree about a citation they both read:
 an ID declared anywhere in the project resolves under either, and [§FS-check.3.1](../functional-spec/FS-check.md#31-dangling-citation) fires
-under neither ([§FS-check.1.3.6.1](../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)).
+under neither ([§FS-check.1.3.6](../functional-spec/FS-check.md#136-an-explicit-path-still-narrows)).
 
 ## writes: What a write derives
 
@@ -167,7 +167,7 @@ No stub difference is listed. U01 and U05 closed with [§DF-stub-target-section-
 [§DF-stub-target-citations-and-chapters](../decisions/functional/DF-stub-target-citations-and-chapters.md#df-stub-target-citations-and-chapters-a-stubs-target-lends-the-stubbed-declaration-its-citations-and-chapters-and-what-that-newly-raises-warns-until-0190), and Placement, U03a to U03d and U06 in 0.19.0, when
 [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) moved plain `list`, every reader of an outside target's
 sections, and every finding about a stubbed declaration itself to the target
-([§FS-declarations.stubs.pairing.4](../functional-spec/FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target), [§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
+([§FS-declarations.stubs.pairing](../functional-spec/FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at), [§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
 
 ### differences.text: Text
 
@@ -334,8 +334,8 @@ and assert published diagnostics, URI/path and range/line conversion, diagnostic
 code, severity and message, both workspace-warning shapes and actual hover usage
 wording for plural, singular and zero counts. Core snapshot equality proves none of
 those wire behaviors
-([§FS-lsp.1.1.3](../functional-spec/FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel),
-[§FS-lsp.1.2.5](../functional-spec/FS-lsp.md#125-what-a-whole-id-title-counts),
+([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics),
+[§FS-lsp.1.2.3](../functional-spec/FS-lsp.md#123-title-hover),
 [§FS-lsp.4](../functional-spec/FS-lsp.md#4-determinism-and-parity-with-the-cli)).
 That wire proof is what is left of `lsp_cli_parity.rs` once every family is covered.
 Until then it keeps its engine sweep over the corpus; a tranche may narrow that sweep

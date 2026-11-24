@@ -169,7 +169,7 @@ fn write_kinds(project: &mut Project, kinds: &[KindConfig]) {
 }
 
 /// One v1 row as a schema row: its home, or the complement for the declared
-/// homeless kind (§FS-config.3.9.2.1), and its kind when it is citable.
+/// homeless kind (§FS-config.3.9.2), and its kind when it is citable.
 fn row_of(kind: &KindConfig) -> Row {
     let extent = match (&kind.folder, &kind.file) {
         (Some(folder), _) => Some(Extent::Folder(folder.clone())),

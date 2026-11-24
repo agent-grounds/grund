@@ -124,7 +124,7 @@ grund does to a repository's text: what is marked is checked, and the rest is le
   the check.
 - The levels are not errors and lints. `must` and `must-not` are errors; `should` and
   `should-not` are suggestions that never appear in `grund check`'s standing output and
-  surface only under `--suggestions`. The mapping is fixed ([§FS-config.3.9.1.3](../functional-spec/FS-config.md#3913-the-levelsurface-mapping-is-fixed),
+  surface only under `--suggestions`. The mapping is fixed ([§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels),
   [§FS-non-goals.9](../functional-spec/FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)).
 - Every work above checks the program itself: gradual and migratory typing type its terms,
   the Checker Framework and refinement types check its qualifiers and values, Dafny and

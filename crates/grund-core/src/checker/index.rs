@@ -5,7 +5,7 @@
 //! canonical source link, as full Markdown links. §FS-check.3.18 is the coverage
 //! half and §FS-check.3.17 the link half; this module owns both, plus
 //! the set of citations they make navigational rather than referential
-//! (§FS-check.4.1.2, §DF-index-not-an-inbound-citation).
+//! (§FS-check.4.1, §DF-index-not-an-inbound-citation).
 
 use crate::model::remedies;
 use std::collections::{BTreeMap, BTreeSet};
@@ -69,7 +69,7 @@ pub(super) fn kind_index_targets<'a>(
         .collect()
 }
 
-/// §FS-check.3.12.2: actual marked links owed by an index, rather than every
+/// §FS-check.3.12: actual marked links owed by an index, rather than every
 /// citation on that page. Membership is §AR-checker.2.16's shared derivation;
 /// unlike unused accounting, a linked section can satisfy the entry rule too.
 /// Form is read from the scan's file records, without another text read.
@@ -85,7 +85,7 @@ pub(super) fn marked_index_entries<'a>(
     findings
         .edges()
         .filter(|cite| {
-            // §FS-check.4.1.2.1: a citation on a declaration heading is the entry of no ID,
+            // §FS-check.4.1: a citation on a declaration heading is the entry of no ID,
             // a linked section included, by the one answer (§AR-checker.2.16).
             if !cite.has_marker
                 || cite.namespace.is_some()
@@ -132,7 +132,7 @@ pub(super) fn marked_index_entries<'a>(
 /// and the unused warning pick, so a collapsed stub-and-inline pair is named at
 /// the body rather than twice (§AR-scanner.4.6, §DF-index-entry-form.2.5), and a
 /// stubbed declaration at its target whether or not the target is scanned
-/// (§FS-declarations.stubs.pairing.4).
+/// (§FS-declarations.stubs.pairing).
 fn index_home_declaration(decls: &[Declaration]) -> Option<&Declaration> {
     paired_declarations(decls).records().next()
 }
@@ -305,7 +305,7 @@ pub(super) fn check_kind_indexes(
         let index_display = frame.display_path(&target.index_file);
         // §FS-check.3.18: an absent index is reported once per declaration;
         // distinguish missing files, directories and unreadable files.
-        // §FS-check.6.1.1: cover this effective input before its shared read.
+        // §FS-check.6.1: cover this effective input before its shared read.
         let text = sources.text(&target.index_file).ok();
         let absent = match &text {
             Some(_) => "",
@@ -340,7 +340,7 @@ pub(super) fn check_kind_indexes(
                 continue;
             };
             // §FS-fmt.6.4: `fmt` leaves a declaration heading alone, and a citation on one
-            // is the entry of no ID (§FS-check.4.1.2.1), by the answer the unused carve-out
+            // is the entry of no ID (§FS-check.4.1), by the answer the unused carve-out
             // reads too (§AR-checker.2.16). A fence records no citation.
             if index_entries.on_declaration_heading(&citation.file, citation.line) {
                 continue;
@@ -360,13 +360,13 @@ pub(super) fn check_kind_indexes(
                 &citation.text,
                 &schema.citation.marker,
             );
-            // §FS-check.3.2.1: §FS-check.3.2's own test, so a stub's section in a
+            // §FS-check.3.2: §FS-check.3.2's own test, so a stub's section in a
             // target outside the walk admits the entry.
             let section_known = citation
                 .section
                 .as_deref()
                 .is_none_or(|section| section_resolves(findings, &citation.id, section));
-            // §FS-fmt.6.4.1: `fmt` skips a section citation with no link target and
+            // §FS-fmt.6.4: `fmt` skips a section citation with no link target and
             // reports `rewrote 0 lines`. The physical-root predicate above is the
             // other §FS-check.3.17 gate; only the bare form is gated.
             let unlinkable = front_matter.is_some_and(|last| citation.line <= last)

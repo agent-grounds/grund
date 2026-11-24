@@ -8,7 +8,7 @@ use crate::model::Id;
 
 /// One comment block, classified: what opens it, where a docstring closes it,
 /// whether it declares an ID, and whether the language it is written in calls it
-/// documentation (§AR-scanner.4.3, §FS-inline-citation-style.1.1.1).
+/// documentation (§AR-scanner.4.3, §FS-inline-citation-style.1.1.2).
 ///
 /// These are the block-level classifiers the scanner's single pass used to carry
 /// (§AR-scanner.2): pure functions over a line or over one block's lines, holding
@@ -397,7 +397,7 @@ fn shell_identifier_len(line: &str) -> usize {
 /// the file's very first line). A comment block opening at or before it is the
 /// file's *leading comment* — a position language's spelling of a module doc,
 /// the thing `//!` and a module docstring are in the marker languages
-/// (§FS-inline-citation-style.1.1.1).
+/// (§FS-inline-citation-style.1.1.2).
 ///
 /// One scan of the file, taken only where a position language will ask
 /// (§GOAL-fast-feedback), rather than a walk back over every earlier line once

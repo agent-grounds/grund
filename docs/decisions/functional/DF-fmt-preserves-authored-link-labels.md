@@ -50,7 +50,7 @@ and `check` asked for the command that does it.
 
 A citation inside a link its author wrote, the **enclosing link** of
 [§FS-citations.wrap.enclosing](../../functional-spec/FS-citations.md#wrapenclosing-a-citation-inside-a-link-its-author-wrote-is-left-to-the-author), is neither wrapped nor re-derived, and the link keeps every byte.
-That holds in a kind's index too, where the carve-out of [§FS-fmt.6.1.1](../../functional-spec/FS-fmt.md#611-a-kinds-index-entries-are-always-linkified) would otherwise
+That holds in a kind's index too, where the carve-out of [§FS-fmt.6.1](../../functional-spec/FS-fmt.md#61-scope) would otherwise
 wrap the citation under `enabled = false` or in a suppressed scope: the carve-out exists so that
 `check` never asks for an entry `fmt` will not write, and the author's link is already one
 ([§FS-fmt.6.4](../../functional-spec/FS-fmt.md#64-what-is-never-wrapped)). The citation is still a citation: the earlier passes still rewrite its token, and
@@ -76,7 +76,7 @@ already a link — and the author's link is one.
 ### 2.3 On a line an older `fmt` nested, the wrap wins
 
 `- [[§<ID>](…): Use Postgres for all data](use-postgres.md)` is read as CommonMark
-reads it ([§FS-citations.wrap.enclosing.wrap-wins](../../functional-spec/FS-citations.md#wrapenclosingwrap-wins-a-wrap-inside-a-longer-text-is-a-wrap)): the inner `[§<ID>](…)` is a wrap, so `fmt`
+reads it ([§FS-citations.wrap.recognized](../../functional-spec/FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets)): the inner `[§<ID>](…)` is a wrap, so `fmt`
 re-derives its destination and `check` takes it as the entry, and the outer brackets are text.
 The line is a fixed point of `fmt --write` and passes `fmt --check`, exactly as today. Unwrapping
 it is a hand edit, and the release note says how to find the lines.
@@ -91,7 +91,7 @@ still reads it as bare, and an image is never an index entry.
 
 Reference links, collapsed `[…][]` and definition labels, autolinks, raw HTML `<a>`, link text
 that spans lines, the citation-only image, and the editor's hover are read as before
-([§FS-citations.wrap.enclosing.scope](../../functional-spec/FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in)). Each is a separate reading with its own verdicts, and a
+([§FS-citations.wrap.enclosing.shape](../../functional-spec/FS-citations.md#wrapenclosingshape-which-links-enclose)). Each is a separate reading with its own verdicts, and a
 later change owes them.
 
 ## 3. Rejected alternative: report the row as a missing entry
@@ -150,7 +150,7 @@ on its own.
    The [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) mechanical migration has no command to point at: the move is from fail to pass, so there is nothing for the user to run, and no command could tell which bytes of an already-nested line were the author's.
 3. *Named release.* The release note below names the verdict move and the lines it reaches.
 4. *Actionable findings.* No finding replaces the old verdict: `fmt --check` passes where it failed, and there is nothing to act on.
-5. *No new licence.* This is not a licence for anything else: it reaches only a citation inside a same-line inline link its author wrote. Unwrapping the lines an older `fmt` nested, and the readings [§FS-citations.wrap.enclosing.scope](../../functional-spec/FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in) leaves to a later change, each owe their own route.
+5. *No new licence.* This is not a licence for anything else: it reaches only a citation inside a same-line inline link its author wrote. Unwrapping the lines an older `fmt` nested, and the readings [§FS-citations.wrap.enclosing.shape](../../functional-spec/FS-citations.md#wrapenclosingshape-which-links-enclose) leaves to a later change, each owe their own route.
 
 ### 6.2 The `check` half
 

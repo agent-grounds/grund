@@ -107,7 +107,7 @@ pub(crate) const GITKEEP_TEMPLATE: &str =
 ///
 /// Every file of the skill is printed byte-for-byte into whatever repository the agent
 /// is standing in (§FS-init.5.3). That is why `skills/` is an unwalked home
-/// (§FS-config.3.4.7.1) and why nothing in the skill cites an ID of this repository: it
+/// (§FS-config.3.4.7) and why nothing in the skill cites an ID of this repository: it
 /// would name a document the reader does not have (§REQ-shipped-surfaces.1), so its
 /// links are the public URLs of the pages they used to cite. What it teaches is
 /// grounded here instead, on the core and on each of [`AGENT_SETUP_SECTIONS`].

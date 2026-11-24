@@ -26,7 +26,7 @@ Wherever an external URL is checked, it passes only on a successful response. It
 
 ## 4. Cross-workspace ID renaming
 
-`grund` does not provide a "rename ID" refactoring, and neither the optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) nor any first-party editor wrapper ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)) adds one. A rename is the author's edit of the declaration and of the citations that name it, the steps [§FS-init.2.3.4.9](FS-init.md#2349-declaration-blast-radius) teaches.
+`grund` does not provide a "rename ID" refactoring, and neither the optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) nor any first-party editor wrapper ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)) adds one. A rename is the author's edit of the declaration and of the citations that name it, the steps [§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections) teaches.
 
 ## 5. Documentation generation
 

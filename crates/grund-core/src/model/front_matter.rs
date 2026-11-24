@@ -24,7 +24,7 @@ pub(crate) struct FrontMatterField {
     pub(crate) headings: Vec<(String, usize)>,
 }
 
-/// §FS-fields.front-matter.reading, §FS-fields.front-matter.placement.
+/// §FS-fields.front-matter.reading.
 #[derive(Clone, Debug)]
 pub(crate) enum FrontMatterBlock {
     /// The declaration has no front matter, and why.
@@ -35,7 +35,7 @@ pub(crate) enum FrontMatterBlock {
     Read(Vec<FrontMatterKeySite>),
 }
 
-/// §FS-fields.front-matter.findings: why a declaration has no front matter,
+/// §FS-fields.checks.missing-field: why a declaration has no front matter,
 /// each with the remedy its `missing-field` gives.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum FrontMatterAbsence {

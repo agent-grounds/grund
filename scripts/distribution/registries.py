@@ -56,7 +56,7 @@ def call(method, url, body=None, headers=None):
 
 
 def ask(registry, about, url):
-    """§FS-distribution-candidate.8.5.1: (status, body) of a question about what a registry
+    """§FS-distribution-candidate.8.5: (status, body) of a question about what a registry
     holds, asked again a moment apart while it gets no HTTP answer, up to ASKS times in all.
     An HTTP answer of any status is taken as given; one never answered is refused, naming
     the last transport error, and never read as empty."""

@@ -84,7 +84,7 @@ pub(super) fn invalid_value_binding_site(
 /// The record a binding split by a line break leaves: an attempt like every
 /// other, located at the literal on the line before its citation rather than on
 /// the line being scanned, and asking for the two to be joined instead of
-/// quoting the grammar (§FS-values.3.1.1.1).
+/// quoting the grammar (§FS-values.3.1.1).
 pub(super) fn split_value_binding_site(
     path: &Path,
     (line, column): (usize, usize),

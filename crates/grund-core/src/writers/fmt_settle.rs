@@ -1,4 +1,4 @@
-//! The heading lines a `fmt` run leaves (§FS-fmt.6.3.3), settled before any line
+//! The heading lines a `fmt` run leaves (§FS-fmt.6.3), settled before any line
 //! is written: a run that expands a citation inside a section heading moves the
 //! heading's anchor, and a link the same run writes to it — from another file,
 //! its own, or another rewritten heading — must carry the anchor of the line the

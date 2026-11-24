@@ -75,7 +75,7 @@ pub fn refs_sites_with_run_warnings(opts: RefsSitesOpts) -> (Vec<Finding>, Resul
     (cautions, result)
 }
 
-/// §FS-refs.3.1.1 / §FS-refs.3.3.1: the CLI's text-only classification, beside
+/// §FS-refs.3.1 / §FS-refs.3.3: the CLI's text-only classification, beside
 /// the unchanged site-mode records and run warnings, without a second scan. A
 /// `--from` source refused as `grund <ID>` refuses it brings that read's `hint:`
 /// lines and the format to print them in, both from this run's context
@@ -199,7 +199,7 @@ fn refs_sites_run(
 }
 
 /// Every edge of every loaded project whose cited coordinate a pattern selects,
-/// dangling or not (§FS-refs.globs.unresolved, §FS-coordinate-globs.matching.citations).
+/// dangling or not (§FS-refs.globs.unresolved, §FS-coordinate-globs.matching).
 fn glob_sites<'c>(context: &'c WorkspaceContext, selection: &GlobSelection) -> Vec<Site<'c>> {
     context
         .projects
@@ -222,7 +222,7 @@ fn glob_sites<'c>(context: &'c WorkspaceContext, selection: &GlobSelection) -> V
 /// The sites the source's own body holds: resolved and refused as `grund <ID>`
 /// resolves it in the project catalog (§AR-resolver.3.3), then the edges the
 /// scan gives to what it owns (§FS-refs.from.owned), lent ones included
-/// (§FS-refs.from.stubs). The site's file must lie within the path's scope,
+/// (§FS-refs.from.owned). The site's file must lie within the path's scope,
 /// even when a stub outside that path lends it (§FS-refs.from).
 fn from_sites<'c>(
     context: &'c WorkspaceContext,

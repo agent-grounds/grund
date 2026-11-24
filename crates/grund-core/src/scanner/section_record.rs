@@ -66,7 +66,7 @@ pub(super) fn read_section_heading(
 
 /// Record `heading` on `decl`, and say whether the line's embedded marker was
 /// consumed here — an unattached marker is the caller's finding to report
-/// (§FS-values.2.4.4) — with the finding a duplicated marked root earns
+/// (§FS-values.2.4) — with the finding a duplicated marked root earns
 /// (§FS-values.2.4.3), for the caller to push. A heading no deeper than `decl`
 /// is refused and consumes nothing.
 fn record_section_heading(
@@ -117,7 +117,7 @@ fn record_section_heading(
 
 /// The section headings of a Markdown file, held until every declaration and
 /// heading of the file is known, each with the misplaced-marker finding it earns
-/// if no declaration takes its marker (§FS-values.2.4.4).
+/// if no declaration takes its marker (§FS-values.2.4).
 #[derive(Default)]
 pub(super) struct HeldSections(Vec<(SectionHeading, Option<InvalidValueSite>)>);
 

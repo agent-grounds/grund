@@ -6,9 +6,9 @@
 //! Every one is a `Diagnostic` and none of them prints, which is why they left
 //! the deprecated path's `output` category with the run that folds them in: the
 //! LSP snapshot builds the same two from the same function, so an editor and a
-//! terminal over one tree say the same thing (§FS-lsp.4.1, §AR-system.4).
+//! terminal over one tree say the same thing (§FS-lsp.4, §AR-system.4).
 
-/// §FS-check.4.5.3: whether a walk that read files matched nothing in them. It asks
+/// §FS-check.4.5: whether a walk that read files matched nothing in them. It asks
 /// *recognized*, not *declared* — a project that only cites another project's
 /// specs (§FS-workspace.1) declares nothing and is working as intended, so one
 /// citation anywhere answers the question and the caution stays quiet.
@@ -42,7 +42,7 @@ fn nothing_recognized(findings: &Catalog) -> bool {
 /// had nothing to recognize.
 ///
 /// One decision for every surface that runs the engine: `grund check`, the
-/// workspace loop beside it, and the LSP snapshot (§FS-lsp.4.1, `check_workspace_context`).
+/// workspace loop beside it, and the LSP snapshot (§FS-lsp.4, `check_workspace_context`).
 /// Spelled once per surface it was already wrong once — the LSP kept the empty
 /// scan and never grew the second caution, so an editor and a terminal disagreed
 /// about one tree.
@@ -52,13 +52,13 @@ fn nothing_recognized(findings: &Catalog) -> bool {
 /// The out-of-scope tier (§FS-check.3.14) is deliberately not part of it: those
 /// are findings about the tree *outside* the scope, and a run that finds the
 /// citations out there is exactly the one where saying the configured scope is
-/// empty helps most. The §FS-check.1.3.6.3 unread-source caution is out for the
+/// empty helps most. The §FS-check.1.3.6 unread-source caution is out for the
 /// same reason and is appended after this call (§FS-check.2.2.3): it names a
 /// file the *resolution* scope could not read, so letting it answer the question
 /// would delete the caution of the run that needs it most — a mistyped path in a
 /// tree that happens to hold one unreadable file elsewhere.
 ///
-/// §FS-check.1.3.6.1: `report_scope` is why the emptiness question is asked of it
+/// §FS-check.1.3.6: `report_scope` is why the emptiness question is asked of it
 /// rather than of the walk. A path-scoped run reads the whole project, so a path
 /// holding no scannable file would otherwise stop earning its caution because the
 /// wider walk read plenty — the caution is about what the caller asked about.
@@ -80,14 +80,14 @@ pub(super) fn scan_scope_caution(
     if !scope_read_any_file(findings, report_scope) {
         return Some(empty_scan_warning(config, path, path_provided, display));
     }
-    // §FS-check.4.5.4: only a run over the whole project makes the claim. A narrowed
+    // §FS-check.4.5: only a run over the whole project makes the claim. A narrowed
     // `grund check <dir>` is a slice the caller chose, and a slice with no
     // declarations and no citations is an answer, not a misconfiguration.
     (nothing_recognized(findings) && scope_is_config_root(&config.root, path, path_provided))
         .then(|| nothing_recognized_warning(config, findings.scanned_files.len()))
 }
 
-/// §FS-check.2.2, §FS-check.1.3.6.1: the scope caution of a workspace run narrowed to
+/// §FS-check.2.2, §FS-check.1.3.6: the scope caution of a workspace run narrowed to
 /// a path below its root, asked once of the path rather than per project, since one
 /// member reading nothing under it says nothing about another. `grund check`'s
 /// workspace arm and the editor's (§AR-lsp.5.1.1) both ask it here, with `root` the
@@ -305,12 +305,12 @@ pub(super) fn quoted_list(dirs: &[String]) -> String {
 /// yet produce the identical fact, and naming only the first would send a fresh
 /// adopter to look for a bug in a config that is fine.
 fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnostic {
-    // §FS-check.4.5.2: no selected kind, so describe the loaded global grammar.
+    // §FS-check.4.5: no selected kind, so describe the loaded global grammar.
     let guidance = format_guidance(config.schema(), config.frame(), None);
     let shape = id_shape(guidance.template);
     let files = if scanned_files == 1 { "file" } else { "files" };
     let kinds = kind_prefixes(&config.kinds);
-    // §FS-check.4.5.2: with no kind, no token is a citation; say so, not `{}`.
+    // §FS-check.4.5: with no kind, no token is a citation; say so, not `{}`.
     let message = if kinds.is_empty() {
         let target = if config.frame().version == 2 {
             "[schema.kinds.<NAME>]"
@@ -349,7 +349,7 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
 
 /// §FS-check.1.3.7: the caution a `--full` run earns when the caller also typed a
 /// path that is not the config root. The flag has nothing left to cancel because
-/// of the two-scope rule of §FS-check.1.3.6.1 — the path already resolves against
+/// of the two-scope rule of §FS-check.1.3.6 — the path already resolves against
 /// the configured scope, so widening it subtracts nothing from what the run
 /// reads, and the report is the path with the flag or without it. A warning rather
 /// than a rejection:

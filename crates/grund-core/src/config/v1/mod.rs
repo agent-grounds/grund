@@ -93,7 +93,7 @@ impl Read {
 }
 
 /// The project a v1 file means when it writes `kinds = []` and nothing else:
-/// the defaults with the empty kind set (§FS-config.3.4.4.5) — what the `none`
+/// the defaults with the empty kind set (§FS-config.3.4.4) — what the `none`
 /// template's config means (§FS-init.2.4.9).
 #[cfg(test)]
 pub(super) fn default_project_without_kinds() -> Project {

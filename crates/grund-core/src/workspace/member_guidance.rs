@@ -29,7 +29,7 @@ impl MemberRootGuidance {
 /// derivation without expanding or scanning the enclosing project's declarations.
 /// An undecidable claim withholds the hint rather than changing the check's verdict:
 /// one named and not answered, and one above the root whose `members` text cannot
-/// be obtained (§FS-workspace.6.1.7.5), which may list that root under another.
+/// be obtained (§FS-workspace.6.1.7), which may list that root under another.
 pub(crate) fn member_root_guidance(run: &Run) -> Option<MemberRootGuidance> {
     let mut ancestors = AncestorWorkspaces::quiet_for_run_at(&run.root);
     let mut child = run.root.clone();

@@ -18,7 +18,7 @@ bindings take the same patterns as `globs`. The owner's review step is the shipp
 
 Rejected: extending the selector, which would have changed what a rule subject admits;
 matching through the `exclude` matcher with coordinates spelled as `/` paths, which would
-import a dialect whose departures ([§FS-coordinate-globs.grammar.departures](../../functional-spec/FS-coordinate-globs.md#grammardepartures-where-it-departs-from-the-exclude-dialect)) are each wrong
+import a dialect whose departures ([§FS-coordinate-globs.grammar](../../functional-spec/FS-coordinate-globs.md#grammar-grammar)) are each wrong
 for coordinates; a `total` keyword on the bindings, where a host already counts `entries`;
 and `refs --total`'s sentence for `list --total`, which is a hover's words for a site and file
 pair that `list` has neither of, where a bare count compares with `wc -l` ([§FS-list.total](../../functional-spec/FS-list.md#total---total-a-count-rung)).
@@ -31,9 +31,9 @@ disputes, with these changes:
 - **V-D03, amended.** The first ruling read every pattern with one dotted grammar. It was
   reversed because a project's separator is its own: inside one project the first unescaped
   occurrence of its outer separator ends the ID atom, and with none the first unescaped `.`
-  does ([§FS-coordinate-globs.grammar.components](../../functional-spec/FS-coordinate-globs.md#grammarcomponents-where-the-id-atom-ends)). A pasted `#` citation is therefore a valid
+  does ([§FS-coordinate-globs.grammar](../../functional-spec/FS-coordinate-globs.md#grammar-grammar)). A pasted `#` citation is therefore a valid
   pattern in its project, and the escaped dotted spelling keeps working
-  ([§FS-coordinate-globs.workspace.escapes](../../functional-spec/FS-coordinate-globs.md#workspaceescapes-two-spellings-of-one-coordinate)).
+  ([§FS-coordinate-globs.workspace](../../functional-spec/FS-coordinate-globs.md#workspace-separators-and-workspaces)).
 - **V-A09, dropped.** The issue refused a named literal after a numbered one, as in
   `FS-00x.1.**.requirements`. A mixed path such as `1.goals` is a legal coordinate on `main`
   ([§FS-config.3.3.1](../../functional-spec/FS-config.md#331-named-components)), so the pattern is valid, matches like any other, and exits `0`.

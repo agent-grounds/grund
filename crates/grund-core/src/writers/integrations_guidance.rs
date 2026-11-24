@@ -57,7 +57,7 @@ pub(super) fn load() -> Result<Guidance, Fault> {
 
 /// Persist the conversation preference and synchronize it into every agent's
 /// global instructions (§FS-integrations.4.3.8). An override moves the request,
-/// never the gate's verdict (§FS-integrations.4.4.1).
+/// never the gate's verdict (§FS-integrations.4.4).
 pub(super) fn install(
     g: Guidance,
     opts: &IntegrationsOpts,
@@ -75,7 +75,7 @@ pub(super) fn install(
         .conversation
         .or(scan.preference)
         .unwrap_or(ConversationRendering::Plain);
-    // A scoped write leaves the base exactly as it was (§FS-integrations.4.4.2).
+    // A scoped write leaves the base exactly as it was (§FS-integrations.4.4).
     let machine_target = if scoped_agent.is_some() {
         scan.target.unwrap_or_default()
     } else {

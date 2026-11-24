@@ -118,7 +118,7 @@ pub(crate) fn record_slices(
                 && own(heading.line)
         })
         .collect();
-    // §FS-values.2.4.2: a marked root's title drops its tag; its raw heading keeps it.
+    // §FS-values.6.1: a marked root's title drops its tag; its raw heading keeps it.
     let marked = |heading: &RecordedHeading, path: &str| {
         decl.sections
             .get(path)
@@ -130,7 +130,7 @@ pub(crate) fn record_slices(
             sink.lines.push(body_line(record, decl_heading.line));
         }
         // §FS-show.2.1.1: a selected section always opens on its own heading, outside the map,
-        // at its canonical path in every view (§FS-declarations.section.relative.shown.selected).
+        // at its canonical path in every view (§FS-declarations.section.relative.shown).
         if section.is_some() && sink.view != ShowRenderMode::Outline {
             let line = canonical_heading_line(body_line(record, top.line), top);
             sink.lines.push(line);
@@ -221,7 +221,7 @@ pub(crate) fn section_row_title(
 /// A map entry's title: the heading's rendered text, which has no closing `#` run
 /// (§FS-declarations.heading), after its path (§FS-show.2.1.2), the canonical one
 /// for a relative heading (§FS-declarations.section.relative.shown), without the tag
-/// of a `marked` value root (§FS-values.2.4.2).
+/// of a `marked` value root (§FS-values.6.1).
 fn section_title(
     record: &FileRecord,
     heading: &RecordedHeading,

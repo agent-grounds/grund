@@ -190,7 +190,7 @@ docs/adr/queue.md:1: error: ADR-queue has no front-matter field; kind ADR declar
 
 Only a Markdown file's first declaration has front matter. A later
 declaration in the same file, or one in a doc-comment, gets `missing-field`
-with that reason ([§FS-fields.front-matter.placement](../functional-spec/FS-fields.md#front-matterplacement-which-declaration-has-it)). A block that does not
+with that reason ([§FS-fields.front-matter.reading](../functional-spec/FS-fields.md#front-matterreading-reading-the-block)). A block that does not
 parse, as YAML between `---` lines or as TOML between `+++` lines, is
 `unreadable-front-matter`, and none of its keys is judged. A
 `## front-matter:` heading in such a kind is `front-matter-heading`: the block
@@ -262,7 +262,7 @@ content = "values"
 A `content = "values"` field makes every named child of that chapter a value
 root ([§FS-fields.content.values](../functional-spec/FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)). A fetched kind
 [takes no field](#rule-and-value-kinds), so its `value_chapter` has no such
-spelling ([§FS-config-migrate.3.1.7.1](../functional-spec/FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)). What the field adds is optional: a
+spelling ([§FS-config-migrate.3.1.7](../functional-spec/FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet)). What the field adds is optional: a
 `presence`, a `position` or a `title`. A kind has at most one values field. The
 [values guide](values.md) covers writing the values themselves.
 
@@ -288,7 +288,7 @@ A rule kind takes fields like any prose kind, including a values field.
 ## Strengths and channels
 
 The first four codes take the field's `presence`; `undeclared-chapter` takes the
-kind's `closed` ([§FS-fields.strengths.table](../functional-spec/FS-fields.md#strengthstable-which-strength-each-finding-takes)).
+kind's `closed` ([§FS-fields.strengths](../functional-spec/FS-fields.md#strengths-strengths-and-channels)).
 
 | What is wrong | Code | `must` | `warn` | `should` | `may` |
 |---|---|---|---|---|---|

@@ -24,7 +24,7 @@ The engine decides the note once and returns it as the existing `note` of the re
 - **Put it on stdout.** That would break every parser of the result and the `--total` sentence, and stdout is the answer, not advice about it ([§FS-refs.2](../../functional-spec/FS-refs.md#2-behaviour)).
 - **Give it on every empty answer.** Under a section, a path, a pattern or a source, `list --unused` answers a different question, and a hint that names it there would be wrong.
 - **Withhold it under `--descendants`.** With no section, `--descendants` changes nothing ([§FS-refs.4](../../functional-spec/FS-refs.md#4-exit-codes)), and the query asks about the whole ID, which is what `--unused` answers.
-- **Give it to an ID cited only by its index entry.** `refs` lists that entry, so the answer is not empty. Teaching the citation query the index rule ([§FS-list.3.2.1](../../functional-spec/FS-list.md#321-refs-counts-citations)) to close the gap would cost more than the hint is worth. A missed hint gives no wrong answer.
+- **Give it to an ID cited only by its index entry.** `refs` lists that entry, so the answer is not empty. Teaching the citation query the index rule ([§FS-list.3.2](../../functional-spec/FS-list.md#32---format-json)) to close the gap would cost more than the hint is worth. A missed hint gives no wrong answer.
 
 ## 4. Consequences
 

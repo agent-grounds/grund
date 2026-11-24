@@ -26,7 +26,7 @@ A line is rewritten only when the section map records it as a heading of a neste
 
 - **Forbid complete-path headings under a locked section.** It closes the gap by refusing the form [issue #662](https://github.com/agent-grounds/grund/issues/662) asks for, `#### 1.goals.latency:` under `### 1.goals:`.
 - **Normalize citation text as well.** A section that cites its own subsections changes when a move updates those citations, and normalizing the citations would also hide a self-citation that genuinely changed its target. It stays an instance of the edit-and-move limit ([§FS-section-lock.limits.edit-and-move](../../functional-spec/FS-section-lock.md#limitsedit-and-move-a-section-moved-and-edited-in-one-change)).
-- **A second key beside the fingerprint, such as the title.** [§FS-section-lock.limits.edit-and-move](../../functional-spec/FS-section-lock.md#limitsedit-and-move-a-section-moved-and-edited-in-one-change) already gives the reason: it reports a section retitled and edited in place whenever another section carries its old title.
+- **A second key beside the fingerprint, such as the title.** [§DF-relative-section-headings.lock](DF-relative-section-headings.md#lock-a-cited-relative-address-is-locked-to-its-text) already gives the reason: it reports a section retitled and edited in place whenever another section carries its old title.
 
 ## release-note: Release note
 

@@ -33,7 +33,7 @@ use std::cell::OnceCell;
 use std::collections::BTreeMap;
 
 /// Which of a `--full` run's two scopes a citation site is being judged on
-/// (§FS-check.1.3.3). It changes exactly one thing: outside the configured scope,
+/// (§FS-check.1.3). It changes exactly one thing: outside the configured scope,
 /// `grund fmt --write` will not rewrite the site either, so the mechanical
 /// shorthand form is withheld there (§FS-check.3.14).
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -79,9 +79,9 @@ fn full_citation_or_escape(schema: &Schema, written: &str) -> String {
 /// what it looks at (§FS-check.3.14); the ordinary run passes `None` and judges
 /// every site the walk found.
 ///
-/// §FS-workspace.4.3: an alias path into an absent optional member is neither
+/// §FS-workspace.4: an alias path into an absent optional member is neither
 /// resolved nor unknown — it is *unverified*, and the run says so once at the entry
-/// that made the skip legal rather than at every site (§FS-check.4.9.1). Every other
+/// that made the skip legal rather than at every site (§FS-check.4.9). Every other
 /// unknown alias still errors here.
 ///
 /// `resolve` answers a target kind's `resolve` policy by the citation's namespace
@@ -202,7 +202,7 @@ pub(super) fn check_citation_resolution(
                 .namespace
                 .as_deref()
                 .expect("resolver only returns None for qualified citations");
-            // §FS-workspace.4.3: unverified, not unknown — see this function's docs.
+            // §FS-workspace.4: unverified, not unknown — see this function's docs.
             if namespace_is_unverified(frame.run, namespace) {
                 continue;
             }
@@ -221,7 +221,7 @@ pub(super) fn check_citation_resolution(
                     .as_ref()
                     .and_then(|guidance| guidance.message(namespace))
                     .unwrap_or_else(|| {
-                        // §FS-check.3.8.5: a bare miss at the root may name an unlisted project.
+                        // §FS-check.3.8: a bare miss at the root may name an unlisted project.
                         let message = unknown_project_message(
                             namespace,
                             workspace.keys().map(String::as_str),
@@ -234,7 +234,7 @@ pub(super) fn check_citation_resolution(
             });
             continue;
         };
-        // §FS-check.3.13.3 / §AR-checker.2.12: the shorthand pass, one of two rules that end
+        // §FS-check.3.13 / §AR-checker.2.12: the shorthand pass, one of two rules that end
         // a citation early — an unresolved shorthand skips the dangling check below rather
         // than adding `unknown reference FS-042`; the other is §FS-imports.findings.
         if report_mounted_duplicate(cite, &target, report)
@@ -251,10 +251,10 @@ pub(super) fn check_citation_resolution(
         {
             continue;
         }
-        // §FS-check.3.1 / §FS-workspace.4.1: a citation whose ID is declared
+        // §FS-check.3.1 / §FS-workspace.4: a citation whose ID is declared
         // nowhere in its target namespace is dangling, mixed too (§FS-citations.checks.mixed-path).
         if !target.catalog.declarations.contains_key(&cite.id) {
-            // §FS-check.3.1.3: a fetch-enabled target kind keeps snapshots.
+            // §FS-check.3.1: a fetch-enabled target kind keeps snapshots.
             let snapshot_row = target.schema.fetching_row(&cite.id.kind);
             // §FS-check.2.4: no conclusion about an ID absent from a home this run could not read.
             if unread.withholds_absent(&target, &cite.id.kind) {
@@ -303,7 +303,7 @@ pub(super) fn check_citation_resolution(
             } else {
                 (
                     Code::DANGLING,
-                    // §FS-check.3.1.4: the target's places, spelled as the report spells paths.
+                    // §FS-check.3.1: the target's places, spelled as the report spells paths.
                     dangling_message_spelled(
                         target.schema,
                         target.frame().displayed_by(frame.display),
@@ -335,7 +335,7 @@ pub(super) fn check_citation_resolution(
         }
         // §FS-check.3.2: the ID resolves but no declaration has a heading at the
         // cited section path — the lookup §FS-fmt.2.4.6 declines a local rewrite on,
-        // which reads a stub's sections from its target, scanned or not (§FS-check.3.2.1).
+        // which reads a stub's sections from its target, scanned or not (§FS-check.3.2).
         if let Some(sec) = &cite.section {
             if !section_resolves(target.catalog, &cite.id, sec) {
                 let cited_id = qualify(
@@ -401,15 +401,15 @@ pub(super) fn check_citation_resolution(
 /// project above or beside the subtree. A written path that strictly extends
 /// the scope segment by segment is the exception, because every candidate the
 /// run loaded for that path is inside the subtree it can judge
-/// (§FS-check.3.8.1). Ineligible paths keep the scope-only message
-/// (§FS-check.3.8.3, §FS-workspace.6.1.5).
+/// (§FS-check.3.8). Ineligible paths keep the scope-only message
+/// (§FS-check.3.8, §FS-workspace.6.1.5).
 pub(crate) fn unknown_project_message<'a>(
     namespace: &str,
     known: impl Iterator<Item = &'a str>,
     scope_path: &str,
 ) -> String {
     if !scope_path.is_empty() && !alias_strictly_extends_scope(namespace, scope_path) {
-        // §FS-check.3.8.4: the final wording §FS-check.3.8.4's migration reached in 0.16.0.
+        // §FS-check.3.8: the final wording §FS-check.3.8's migration reached in 0.16.0.
         return format!(
             "unknown project alias {namespace}; the {scope_path} project and its descendants are in scope here — {}",
             remedies::unknown_project_subtree()
@@ -425,7 +425,7 @@ pub(crate) fn unknown_project_message<'a>(
     )
 }
 
-/// §FS-check.3.8.1: eligibility is a strict segment-prefix relation, not a
+/// §FS-check.3.8: eligibility is a strict segment-prefix relation, not a
 /// lexical prefix (`grouped/alpha` is outside scope `group`).
 fn alias_strictly_extends_scope(namespace: &str, scope_path: &str) -> bool {
     let mut namespace_segments = namespace.split('/');
@@ -439,7 +439,7 @@ fn alias_strictly_extends_scope(namespace: &str, scope_path: &str) -> bool {
 /// not mix: a proper-prefix continuation or suffix match is near-certain, and
 /// diluting either with edit-distance noise would make the good hint harder to
 /// act on. The outermost root always asks; a narrowed run asks only for a
-/// strict extension of its scope (§FS-check.3.8.1), so no tier here is
+/// strict extension of its scope (§FS-check.3.8), so no tier here is
 /// conditional on scope.
 pub(crate) fn nearest_project_aliases<'a>(
     namespace: &str,

@@ -21,7 +21,7 @@ pub use super::size_output::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, L
 /// [`list`](crate::list), adds scanner-recorded section sites, and measures show-identical
 /// lead/full bodies out of the file record each scan kept (§FS-list.2, §FS-list.3.4.1,
 /// §FS-workspace.8.3.3). A healthy stub whose target the walk did not reach is measured
-/// at the home `show` reads there, with that home's sections (§FS-list.3.4.6).
+/// at the home `show` reads there, with that home's sections (§FS-list.3.4).
 pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
     list_sizes_with_run_warnings(opts).1
 }
@@ -91,11 +91,11 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             if opts.unused_only && used_counts.get(id).copied().unwrap_or(0) > 0 {
                 continue;
             }
-            // §FS-list.1.3.1: a configured `E2E` kind is left out unless `--kind` selects it.
+            // §FS-list.1.3: a configured `E2E` kind is left out unless `--kind` selects it.
             if opts.unused_only && unused_leaves_out(&id.kind, &opts.kind_filter) {
                 continue;
             }
-            // §FS-list.3.4.6: one row per declaration, at its record, so a healthy stub
+            // §FS-list.3.4: one row per declaration, at its record, so a healthy stub
             // whose target is outside the walk is measured there, and a target declaring
             // the ID twice is two rows (§AR-scanner.4.6).
             let paired = paired_declarations(declarations);
@@ -189,7 +189,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         }
         pending.retain(selected);
     }
-    // §FS-coordinate-globs.scope.filters: the glob intersects, as `list` reads it.
+    // §FS-coordinate-globs.scope: the glob intersects, as `list` reads it.
     if let Some(globs) = &globs {
         pending.retain(|row| {
             let label = render_declaration_id(&row.project_config.grammar, row.declaration);

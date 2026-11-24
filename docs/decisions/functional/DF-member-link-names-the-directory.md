@@ -25,7 +25,7 @@ Agents lose the in-block hint that a project has no entrypoint yet; the director
 - One `grund init` in each project of a fresh workspace, in any order, leaves the outermost root's `grund check` green.
 - Only a change to the workspace itself makes another project's block stale: a member joining or leaving, or a member's description. Those findings still name each directory to run `grund init` in.
 - `grund init --check` no longer reports `would-update` in a project whose sibling has just been initialized.
-- Nothing moves for [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections), [§FS-check.3.5.4](../../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison) or [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections): `init` still writes only the project it was invoked in, `check` still compares every byte, and a kept member list keeps the bytes it had.
+- Nothing moves for [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections), [§FS-check.3.5](../../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block) or [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections): `init` still writes only the project it was invoked in, `check` still compares every byte, and a kept member list keeps the bytes it had.
 
 ## 4. Alternatives considered
 

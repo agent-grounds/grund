@@ -103,7 +103,7 @@ pub(super) fn init_pending_effective_config(
 /// The project `grund init --scaffold` would leave at `root`, where no config
 /// file is: the default template's `grund.toml`, read as init reads it before
 /// writing it (§FS-init.2.4.3). The no-config schema note is derived from it
-/// (§FS-schema.8.2), so the note follows the template and names nothing of its own.
+/// (§FS-schema.8), so the note follows the template and names nothing of its own.
 pub(crate) fn scaffold_project(root: &Path, name: &str) -> Result<Project> {
     let text = render_grund_toml(Template::default(), name, None);
     let invocation = Invocation::new(root, true, Selection::Discovery);

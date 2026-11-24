@@ -24,7 +24,7 @@ A file listed in a row's `files` belongs to that row; otherwise to the row whose
 
 ### 3.1 A key marks the complement
 
-`complement = true` on any row would keep v1's freedom to rename the complement. It is rejected because the one thing renaming bought, a truer label, already has its v2 home in `[presentation.kinds.code] title`; the name `code` is already reserved ([§FS-config.3.4.5.2](../../functional-spec/FS-config.md#3452-code-is-reserved-to-the-homeless-kind)); and a key needs an "exactly one row" rule that a name gives for free.
+`complement = true` on any row would keep v1's freedom to rename the complement. It is rejected because the one thing renaming bought, a truer label, already has its v2 home in `[presentation.kinds.code] title`; the name `code` is already reserved ([§FS-config.3.4.5](../../functional-spec/FS-config.md#345-name-rules)); and a key needs an "exactly one row" rule that a name gives for free.
 
 ### 3.2 Keep v1's nesting rule
 

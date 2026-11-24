@@ -1,6 +1,6 @@
 //! §FS-scan.path: the files a narrowed `list`, `show --batch --all`, `refs` or ID
 //! completion reports entries or sites from (§FS-scan.path.show,
-//! §FS-scan.path.refs, §FS-completions.2.1). The run has resolved by then: `list`
+//! §FS-scan.path.refs, §FS-completions.2). The run has resolved by then: `list`
 //! and `show` against the whole owning project, as does `refs` (§FS-scan.path.refs).
 //! Completion resolves against what its walk read, the path in one project and
 //! each project whole in a workspace (§AR-resolver.3.3). The path bounds which
@@ -21,7 +21,7 @@ use crate::sources::paths_same_location;
 /// renders from the workspace root's, so a path below it and outside every member
 /// bounds the members' entries there as it bounds one project's, which is what
 /// `check <path>` narrows its report by (§FS-scan.path.list,
-/// §FS-check.1.3.6.1).
+/// §FS-check.1.3.6).
 pub(crate) fn reported_scope(
     context: &WorkspaceContext,
     path: &Path,
@@ -34,7 +34,7 @@ pub(crate) fn reported_scope(
 /// Whether the run reports `record`, one of the records `decls` pair to: it is
 /// declared at or under the path, or a stub there stands in for it, since a
 /// stubbed declaration is named at its record (§FS-scan.path.list,
-/// §FS-declarations.stubs.pairing.4).
+/// §FS-declarations.stubs.pairing).
 pub(crate) fn reports(
     scope: Option<&ScanScope>,
     decls: &[Declaration],
@@ -74,7 +74,7 @@ pub(crate) fn reports_site(
 }
 
 /// Whether a stub of `decls` at or under the path declares a target record that
-/// `stood_for` picks (§FS-declarations.stubs.pairing.4).
+/// `stood_for` picks (§FS-declarations.stubs.pairing).
 fn stub_in_scope_declares(
     scope: &ScanScope,
     decls: &[Declaration],

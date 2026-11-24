@@ -14,15 +14,15 @@ use crate::resolver::{SettledHeadings, WorkspaceContext};
 /// before any earlier project can be changed. If any project refuses, scan
 /// errors from both strict and ordinary project walks become one strict abort
 /// in the root-then-members order established by `WorkspaceContext`
-/// (§FS-fmt.3.3). A conflict block refuses the same way, every project's blocks
+/// (§FS-fmt.3.2). A conflict block refuses the same way, every project's blocks
 /// in that order, and an unreadable path anywhere in the run wins over it,
 /// because a scan that could not read a path cannot say what the path holds
-/// (§FS-fmt.3.3).
+/// (§FS-fmt.3.2).
 ///
 /// Every project is walked before any project's locks are judged, and every
 /// lock judged before anything is written: a citation into another project is
 /// judged against that project as this run leaves it, and the root's walk comes
-/// before its members' (§FS-section-lock.write.same-run, §FS-fmt.7.4.3).
+/// before its members' (§FS-section-lock.write.rules, §FS-fmt.7.4).
 pub(crate) fn fmt_workspace_projects(
     context: &WorkspaceContext,
     render: &Config,
@@ -36,7 +36,7 @@ pub(crate) fn fmt_workspace_projects(
         refused_writes: Vec::new(),
         refused_readings: Vec::new(),
     };
-    // §FS-fmt.6.3.3: a qualified link names a heading in another project as this
+    // §FS-fmt.6.3: a qualified link names a heading in another project as this
     // run leaves it, so every project's headings are settled before any is walked.
     let mut settled = SettledHeadings::default();
     for project in &context.projects {
@@ -50,7 +50,7 @@ pub(crate) fn fmt_workspace_projects(
         }
     }
 
-    // One slot per project: its plan, or the refusal it met (§FS-fmt.3.3).
+    // One slot per project: its plan, or the refusal it met (§FS-fmt.3.2).
     let mut plans = Vec::new();
     let mut refusals: Vec<Option<anyhow::Error>> = Vec::new();
     for project in &context.projects {
@@ -69,7 +69,7 @@ pub(crate) fn fmt_workspace_projects(
             render,
             workspace: Some(context),
             precomputed_findings: project.complete_findings(),
-            // §FS-fmt.6.1.3: check previews the same index carve-out write applies.
+            // §FS-fmt.6.1: check previews the same index carve-out write applies.
             index_cross_refs: true,
             settled: Some(&settled),
         };
@@ -84,7 +84,7 @@ pub(crate) fn fmt_workspace_projects(
             }
         }
     }
-    // §FS-section-lock.write.same-run: each project's locks against every tree the walks leave.
+    // §FS-section-lock.write.rules: each project's locks against every tree the walks leave.
     let locks = {
         let mut judged = Vec::new();
         for ((project, plan), refused) in context.projects.iter().zip(&plans).zip(&mut refusals) {
@@ -127,7 +127,7 @@ pub(crate) fn fmt_workspace_projects(
         }
     }
     if strict_abort || !conflicts.is_empty() && !preflight_scan_errors.is_empty() {
-        // §FS-fmt.3.3: one project's refusal can name another's path (§FS-fmt.7.4.4).
+        // §FS-fmt.3.2: one project's refusal can name another's path (§FS-fmt.7.4).
         return Err(FmtScanAbort {
             scan_errors: preflight_scan_errors,
         }
@@ -151,8 +151,8 @@ pub(crate) fn fmt_workspace_projects(
                     .append(&mut walked.refused_readings);
             }
             Err(mut error) => {
-                // §FS-distribution.3.2.2.1: retain prior projects in a late writer failure;
-                // the preflight wrote none of theirs (§FS-fmt.7.4.3).
+                // §FS-distribution.3.2.2: retain prior projects in a late writer failure;
+                // the preflight wrote none of theirs (§FS-fmt.7.4).
                 if perform_writes
                     && let Some(diagnostic) = error.downcast_mut::<crate::OperationDiagnostic>()
                 {
@@ -180,7 +180,7 @@ pub(crate) fn fmt_workspace_projects(
 }
 
 /// A refusal one project met, kept for the run's one refusal where it is a scan
-/// or a conflict abort (§FS-fmt.3.3); anything else ends the run at once.
+/// or a conflict abort (§FS-fmt.3.2); anything else ends the run at once.
 fn refusal(error: anyhow::Error) -> Result<anyhow::Error> {
     if error.downcast_ref::<FmtScanAbort>().is_some()
         || error.downcast_ref::<FmtConflictAbort>().is_some()

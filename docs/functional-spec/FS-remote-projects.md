@@ -61,7 +61,7 @@ A directory is a remote because a table registers it, never because it sits unde
 `.grund/remotes/`: a walk never descends into `.grund/` ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), and each
 `[workspace.remotes]` key claims `.grund/remotes/<key>/` below the config root that declares
 it, in member expansion and the ancestor-claim read, at every depth and inside a projection
-too ([§FS-workspace.6.1.7.4](FS-workspace.md#6174-the-claim-is-read-from-members-entries-alone)).
+too ([§FS-workspace.6.1.7](FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run)).
 
 A config that declares no `[workspace.remotes]` table never reads `grund.lock` or
 `.grund/remotes/`, so an existing file of either name changes no catalog, finding, verdict
@@ -130,9 +130,9 @@ only to learn that it is in a mounted root and under which alias, then resolves 
 block. Each entry names a local directory read as a mounted root, so a local twin of a
 remote's bytes stays comparable with it ([§REQ-remote-equivalence.4](../requirements/REQ-remote-equivalence.md#4-the-proof-is-two-comparisons-over-an-audited-inventory)), and a monorepo can mount a
 checkout of another project and keep that project's own names inside it. A mounted member's alias is
-its entry's last path segment, as for an optional member ([§FS-workspace.2.2.2](FS-workspace.md#222-the-alias-of-an-optional-member)), because its
+its entry's last path segment, as for an optional member ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)), because its
 `project_name` names it only inside its mount, and one entry belongs to one list
-([§FS-workspace.2.2.7](FS-workspace.md#227-one-entry-belongs-to-one-list)).
+([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)).
 
 ## ignore: Ignore isolation
 

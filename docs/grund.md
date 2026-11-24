@@ -37,7 +37,7 @@ Which other edges a project needs is its own call: here a spec should cite a goa
 
 ## 1. Declaring the rules
 
-`grund` makes the rules data. Citation directions say which kind must, should, should not, or must not cite which ([§DF-citation-directions](decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels), [§FS-config.3.9](functional-spec/FS-config.md#39-citations--citation-direction-rules)), and `require_grounding` on the source tree makes the edge from code to text an obligation rather than a habit: every source file, or every unit in it, must carry a citation that resolves ([§FS-config.3.9.2.3](functional-spec/FS-config.md#3923-grounding-the-source-tree-and-nothing-else)).
+`grund` makes the rules data. Citation directions say which kind must, should, should not, or must not cite which ([§DF-citation-directions](decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels), [§FS-config.3.9](functional-spec/FS-config.md#39-citations--citation-direction-rules)), and `require_grounding` on the source tree makes the edge from code to text an obligation rather than a habit: every source file, or every unit in it, must carry a citation that resolves ([§FS-config.3.4.8](functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
 
 ## 2. Holding every edit to them
 

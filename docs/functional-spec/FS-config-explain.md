@@ -41,7 +41,7 @@ Every rung but `--all` ends in one `Next:` line naming the call for the rung bel
 
 - The answer goes to stdout, exit `0`.
 - A target the version does not know is exit `1` ([§FS-config-explain.5](FS-config-explain.md#5-a-target-the-version-does-not-know)).
-- A usage error, or a config the command cannot read a version from ([§FS-config-explain.2](FS-config-explain.md#2-which-version-answers)), is exit `2` with one `error:` line on stderr and nothing on stdout. A second target, a target beside `--codes` or `--all`, both flags at once, and `--format` are usage errors, answered before anything is loaded ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read--realized-directional-for-the-next-flag)); `--format` gets `` error: unknown flag `--format` ``, as from every `config` command ([§FS-errors.5](FS-errors.md#5-json-format), [§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)).
+- A usage error, or a config the command cannot read a version from ([§FS-config-explain.2](FS-config-explain.md#2-which-version-answers)), is exit `2` with one `error:` line on stderr and nothing on stdout. A second target, a target beside `--codes` or `--all`, both flags at once, and `--format` are usage errors, answered before anything is loaded ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read)); `--format` gets `` error: unknown flag `--format` ``, as from every `config` command ([§FS-errors.5](FS-errors.md#5-json-format), [§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)).
 
 ## 2. Which version answers
 

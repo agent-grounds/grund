@@ -109,7 +109,7 @@ fn import_root(block: &Config, import: &Import, path: &str) -> Result<Option<Pat
         );
         return Err(at_path(message));
     }
-    // §FS-check.6.1.1: the target's directory is one of the run's inputs.
+    // §FS-check.6.1: the target's directory is one of the run's inputs.
     if let Err(err) = Sources::on_disk().read_dir(&root) {
         return Err(at_table(format!(
             "import `{alias}`: cannot read `{path}`: {err}"

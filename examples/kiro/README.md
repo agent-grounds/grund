@@ -155,7 +155,7 @@ Read it as Kiro:
   `grund check` refuses it. No direction names RULE, hence its `—`.
 - **test must REQ · h3** holds every doc comment in a test file to cite a
   criterion, nested ones included, because the obligation's unit follows the
-  grounding unit ([§FS-check.3.11.3](../../docs/functional-spec/FS-check.md#3113-the-unit-follows-grounding_level)). **code must REQ|DESIGN · h2** holds every
+  grounding unit ([§FS-check.3.11](../../docs/functional-spec/FS-check.md#311-missing-required-citation)). **code must REQ|DESIGN · h2** holds every
   top-level doc comment in `src/` to cite a criterion or a design point.
 
 ## Step 2: the specs hold

@@ -105,10 +105,10 @@ unruled rather than lost.
 A kind's fields follow its node, in header order, one line each: `field <name>`,
 then the field's **shape line**, which shows what an author writes and says what
 `grund check` then holds it to. It is rendered from the record the checks read
-([§FS-fields.record](FS-fields.md#record-the-record), [§FS-fields.requirements.record](FS-fields.md#requirementsrecord-the-agent-and-a-schema-view-read-the-shape-the-checks-read--realized)), in check's own words ([§DF-shape-line-shows-the-heading](../decisions/functional/DF-shape-line-shows-the-heading.md#df-shape-line-shows-the-heading-a-fields-line-shows-the-heading-to-write-with-its-placement-and-content-in-checks-words)), and the
+([§FS-fields.record](FS-fields.md#record-the-record), [§FS-fields.requirements.record](FS-fields.md#requirementsrecord-the-agent-and-a-schema-view-read-the-shape-the-checks-read)), in check's own words ([§DF-shape-line-shows-the-heading](../decisions/functional/DF-shape-line-shows-the-heading.md#df-shape-line-shows-the-heading-a-fields-line-shows-the-heading-to-write-with-its-placement-and-content-in-checks-words)), and the
 managed block's `### Declaration shapes` prints the same shape lines, without the
 `field <name>`, `key <name>` or `closed` the view prints before each
-([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)). A named field's shape line has three parts:
+([§FS-init.2.3.5](FS-init.md#235-citation-directions)). A named field's shape line has three parts:
 
 1. the heading to write, as a code span: `## <name>: <title>`, with the field's
    `title` where it sets one, `<title>` where it sets none, and
@@ -218,7 +218,7 @@ tells them apart.
 
 ## 6. Grounding is a badge
 
-A row's effective grounding ladder ([§FS-config-v2.rules.grounding](FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole), [§FS-config.3.4.8.3](FS-config.md#3483-precedence-is-row-over-global)) is
+A row's effective grounding ladder ([§FS-config-v2.rules.grounding](FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole), [§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) is
 printed on its own node: its rungs, each `<strength> · <unit>`, joined by `, `. In
 the graph formats that is the label line `grounded: ` followed by the rungs
 (`grounded: must · file`); in the table it is the rungs alone, in the `grounded`
@@ -261,7 +261,7 @@ must/warn/should skip an uncited file of a place or the complement · [rules.cit
 The fourth line is printed where some scanned place or the complement carries a
 `must`, `warn` or `should` obligation and no `grounded` badge: such an obligation
 judges only its files that cite something ([§FS-config-v2.rules.citations.uncited](FS-config-v2.md#rulescitationsuncited-an-obligation-never-judges-a-file-that-cites-nothing),
-[§FS-config.3.9.1.4](FS-config.md#3914-a-file-that-cites-nothing-is-not-judged)). Under version 1 it ends `· require_grounding makes it a finding`
+[§FS-config.3.9.1](FS-config.md#391-levels)). Under version 1 it ends `· require_grounding makes it a finding`
 instead. The fifth is printed where some kind prints a field line, and places the
 headings its shape lines show ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)).
 
@@ -365,7 +365,7 @@ A usage error is an unknown flag, an unknown `--format` value
 (``error: unsupported schema format `json` ``), `--format` with no value
 (`error: --format requires a value`), or a second path
 (`error: schema takes at most one path argument`, [§FS-cli.3.2](FS-cli.md#32-at-most-one-path)), and it is answered
-before any configuration is read ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read--realized-directional-for-the-next-flag)). There is no
+before any configuration is read ([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read)). There is no
 exit `1`: the command makes no query that can fail ([§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)).
 
 ## 13. What is absent

@@ -229,7 +229,7 @@ fn command_list(args: &[String]) -> ExitCode {
         return exit_after_scan_errors(&output.scan_errors);
     }
 
-    // §FS-check.4.10.7, §FS-workspace.6.1.7: the run's warnings come
+    // §FS-check.4.10, §FS-workspace.6.1.7: the run's warnings come
     // back beside the catalog, so a refused `--project` or `--kind` still prints
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
     let mut opts = ListOpts::default();

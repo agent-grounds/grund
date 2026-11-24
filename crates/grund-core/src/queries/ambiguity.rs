@@ -21,7 +21,7 @@ use crate::model::{
 ///
 /// A broken stub is no home here: beside a real home it is set aside rather than
 /// counted, and what is returned is the text of one warning per stub set aside,
-/// in `path:line` order (§FS-refs.4.1.1). A broken stub that is the only home
+/// in `path:line` order (§FS-refs.4.1). A broken stub that is the only home
 /// sets nothing aside. `show` decides on every declaration, and so does the
 /// refusal this returns: it names every claimant, as `show`'s does.
 pub(crate) fn declaration_ambiguity_refusal(
@@ -35,7 +35,7 @@ pub(crate) fn declaration_ambiguity_refusal(
         return Ok(Vec::new());
     };
     let paired = paired_declarations(decls);
-    // §FS-refs.4.1.1: refuse among the homes that remain once broken stubs are set aside.
+    // §FS-refs.4.1: refuse among the homes that remain once broken stubs are set aside.
     let homes: Vec<Paired<'_>> = paired
         .iter()
         .filter(|home| !home.is_broken_stub())
@@ -61,7 +61,7 @@ pub(crate) fn declaration_ambiguity_refusal(
     Ok(set_aside_warnings(config, path_config, &paired))
 }
 
-/// §FS-refs.4.1.1: the warning each broken stub set aside beside a real home earns,
+/// §FS-refs.4.1: the warning each broken stub set aside beside a real home earns,
 /// in `path:line` order — the `broken stub:` clause the ambiguity refusal carries
 /// for it (§FS-declarations.stubs.repair), or, for a verdict that clause does not
 /// cover, the line `show` refuses the stub alone with (§FS-show.2.3.4).
@@ -103,7 +103,7 @@ pub(super) fn ambiguous_id_refusal(
     if paired.len() <= 1 {
         return None;
     }
-    // §FS-declarations.stubs.pairing.3: a declaration a stub stands for is at its
+    // §FS-declarations.stubs.pairing: a declaration a stub stands for is at its
     // target, at each line there that declares the ID (§AR-scanner.4.6).
     // §FS-errors.3, §FS-cli.3.4, §FS-errors.5.2: spelled from the report root, `.` at it.
     let sites: Vec<FindingSite> = paired

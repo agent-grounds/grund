@@ -70,7 +70,7 @@ requirement forbade. Here nothing `check` reported was wrong; what it left out w
 requirement named a verdict to correct.
 
 The finding names the releases it moved between, `— unchecked in grund 0.20.0, an error in
-0.21.0`, as the local-section citation's does (§FS-check.3.24), and §FS-check.checks.off-format-citation.1 records
+0.21.0`, as the local-section citation's does (§FS-check.3.24), and §FS-check.checks.off-format-citation records
 the flip. No single command fixes it. Only the author can tell whether a token meant a missing
 ID, a mistyped one, or an illustration, so `grund fmt` rewrites nothing. grund's own tree is
 rewritten in the change that lands this rule. In a Rust string the marker is spelled `\u{a7}`, in

@@ -154,7 +154,7 @@ fn first_declaration_bytes(comment_prefixes: &[String]) -> Vec<u8> {
 /// (§FS-declarations.line.section-suffix). This reading's token ends at the first `:`,
 /// so it makes the same check on what follows that token (§AR-scanner.2.1.1): where
 /// that `:` is the configured separator, `FS-042-user-login:2 …` is no near miss
-/// (§FS-declarations.line.section-suffix.3). A hit is a heading that came close and
+/// (§FS-declarations.line.section-suffix). A hit is a heading that came close and
 /// missed.
 pub(crate) fn near_miss_heading<'line, 'grammar>(
     grammar: &'grammar Grammar,
@@ -163,7 +163,7 @@ pub(crate) fn near_miss_heading<'line, 'grammar>(
     is_md: bool,
 ) -> Option<(&'line str, &'grammar str, &'grammar str)> {
     let (token, format, kind) = off_grammar_heading(grammar, line, in_py_docstring, is_md)?;
-    // §FS-declarations.line.configured-literals: a canonical ID containing `:` is no near miss.
+    // §FS-declarations.line: a canonical ID containing `:` is no near miss.
     // §FS-config.3.2.5: a capture that fails ID parsing still needs compatibility retention.
     if declaration_captures(grammar, line, in_py_docstring, is_md)
         .and_then(|caps| parse_id(&caps, grammar))
@@ -219,10 +219,10 @@ impl Grammar {
     }
 }
 
-/// §FS-declarations.line.configured-literals: configured literals stay in the
+/// §FS-declarations.line: configured literals stay in the
 /// canonical capture. The legacy pattern stops at the first colon, so a shorter
 /// legacy token cannot disqualify a canonical capture that reaches its boundary.
-/// §FS-declarations.line.configured-slug: the patterns match a token delimiter
+/// §FS-declarations.line: the patterns match a token delimiter
 /// instead of a word boundary; the `id` capture ends before that delimiter.
 pub(crate) fn declaration_captures<'a>(
     grammar: &Grammar,
@@ -289,7 +289,7 @@ fn legacy_declaration_captures<'a>(
 /// (§FS-config.3.2.5). Re-read consumers use this instead of inventing their own
 /// compatibility fallback.
 /// The canonical ID's end excludes its matched delimiter
-/// (§FS-declarations.line.configured-slug), preserving the title on rereads.
+/// (§FS-declarations.line), preserving the title on rereads.
 pub(crate) fn declaration_id_on_line(
     grammar: &Grammar,
     line: &str,

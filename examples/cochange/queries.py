@@ -25,7 +25,7 @@ def unscanned(path, keys):
 
 
 def unscanned_move(path):
-    """Name the remedies a source move's destination can take (§FS-cochange-recipe.snapshots.scope.move)."""
+    """Name the remedies a source move's destination can take (§FS-cochange-recipe.snapshots.scope)."""
     remedy = 'move it to a path grund scans, whose own name does not begin with "."'
     remedy += scan_config_remedy(path)
     return f'{path}: source move has no cover row; grund does not scan this destination; {remedy}.'

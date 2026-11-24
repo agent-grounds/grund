@@ -169,7 +169,7 @@ fn list_size_coordinate(entry: &ListSizeEntry) -> String {
     }
 }
 
-/// §FS-list.3.4.4 / §FS-output-shapes.5.2: size-mode NDJSON has its own fixed
+/// §FS-list.3.4 / §FS-output-shapes.5.2: size-mode NDJSON has its own fixed
 /// metadata prefix and appends only selected lead/full pairs in caller order.
 fn render_list_size_entry_json(entry: &ListSizeEntry) -> String {
     let project_field = entry

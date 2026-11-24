@@ -204,7 +204,7 @@ pub(crate) struct Cardinality {
 }
 
 /// Immutable normalized rule; authored sentence text does not cross this
-/// boundary (§FS-rules.11, §AR-rules.2).
+/// boundary (§AR-rules.1, §AR-rules.2).
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) struct ParsedRule {
     pub(crate) origin: String,
@@ -285,7 +285,7 @@ impl std::error::Error for RuleParseError {}
 /// namespace alone. It rides with a parsed rule rather than replacing one, so
 /// every other part of the sentence is judged exactly as it is when the object
 /// is local, and a caller that learns to ask a new question asks it of both
-/// (§FS-rules.4.1.1).
+/// (§FS-rules.4.1).
 pub(crate) fn parse_rule(
     title: &str,
     origin: String,
@@ -301,7 +301,7 @@ pub(crate) fn parse_rule(
             };
             read(form, String::new(), anchor, vocabulary).err()
         });
-        // §FS-rule-refusals.sentences.rewrite.no-form.place: supplement only the
+        // §FS-rule-refusals.sentences.rewrite.no-form: supplement only the
         // original place refusal, after all earlier stages and shared reasons.
         if let Some(guidance) = vocabulary.non_citable.guidance(title, vocabulary) {
             error.message.push_str(&guidance);

@@ -98,7 +98,7 @@ static void test_over_temperature_opens_switch(void)
 | the parent link, "derived from" | a required `trace` field holding the citation, and a `must` citation direction up the V | `### trace: Traces to` |
 | a limit the requirements, code and tests share | a value kind, and a binding at each use ([§FS-values](../../docs/functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)) | `PAR-001` is `45 °C` |
 | a design constant | a marked value inside the design element ([§FS-values.2.4](../../docs/functional-spec/FS-values.md#24-embedded-section-value-roots)) | `DES-001.1`, the valid ADC range |
-| source code | a place: it cites and declares nothing, and every doc comment must cite ([§FS-check.3.6.2.2](../../docs/functional-spec/FS-check.md#3622-in-a-source-file)) | `src/` |
+| source code | a place: it cites and declares nothing, and every doc comment must cite ([§FS-check.3.6.2](../../docs/functional-spec/FS-check.md#362-the-unit)) | `src/` |
 | a test case and its identifier | a kind declared in the test function's doc comment ([§FS-declarations.line.block-comment](../../docs/functional-spec/FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment)) | `TC-001` |
 | verification by analysis, and its verdict | a kind with a `Pass`/`Fail` scalar | `ANA-001` |
 | a test record | a place whose files must cite the test cases they ran | `verification/results/` |

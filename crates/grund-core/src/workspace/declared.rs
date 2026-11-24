@@ -20,7 +20,7 @@ use crate::config::{Config, Invocation, Schema, install_kind_table};
 /// fails costs only the members it could not reach, and a config that declares
 /// `[workspace]` keeps at least its own namespace — the entry an empty `members`
 /// yields, recovered by expanding the same tree with the member list emptied
-/// (§FS-rules.4.1.1).
+/// (§FS-rules.4.1).
 pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema, u32)> {
     declared_projects(config)
         .0
@@ -37,7 +37,7 @@ pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema, u
 /// place a narrowed scan of a config that declares `[workspace]` is set up, so
 /// each of them judges the pinned and `*/` `[citations]` targets its whole run
 /// judges and fails the load on the same first one
-/// (§AR-config.1.5, §REQ-one-answer.scope.narrowed, §FS-config.3.9.5.2). A
+/// (§AR-config.1.5, §REQ-one-answer.scope.narrowed, §FS-config.3.9.5). A
 /// scope that is the config root is the whole run, and its expansion builds
 /// the table.
 pub(crate) fn open_narrowable(invocation: &Invocation) -> Result<Config> {
@@ -52,7 +52,7 @@ pub(crate) fn open_narrowable(invocation: &Invocation) -> Result<Config> {
 /// `[workspace]` loads no member's files and still reads the kinds its declared
 /// workspace configures, so it judges the pinned and `*/` `[citations]`
 /// targets a full run judges, with the same one call — unless the declared
-/// read fell back, whose table is no ground for a refusal (§FS-config.3.9.5.2).
+/// read fell back, whose table is no ground for a refusal (§FS-config.3.9.5).
 /// Nothing else of the declared read reaches the run: a rule object here stays
 /// §FS-rules.4.1's.
 fn install_declared_kind_table(config: &mut Config) -> Result<()> {

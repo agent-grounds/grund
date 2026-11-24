@@ -21,7 +21,7 @@ pub struct UnmarkedHeading {
     pub file: PathBuf,
     pub line: usize,
     /// One-based byte column of the first `#`, for the complete-heading LSP
-    /// range required by §FS-lsp.1.1.1.
+    /// range required by §FS-lsp.1.1.
     pub column: usize,
     pub heading: String,
     pub heading_level: usize,

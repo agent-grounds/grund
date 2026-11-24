@@ -69,7 +69,7 @@ pub(in crate::config) const LEAD_SIZE_MEMBERS: &[&str] = &["max", "unit"];
 /// Parse the one inline table in grund's line-oriented config surface
 /// (§FS-config.3.1.2). Keeping this parser specific makes duplicate, missing, and
 /// extra fields loud without silently widening the rest of the TOML subset.
-/// Contextual refusals preserve their named line for the editor (§FS-lsp.2.2.4.1).
+/// Contextual refusals preserve their named line for the editor (§FS-lsp.2.2.4).
 pub(super) fn parse_lead_size_warning(
     path: &Path,
     line: usize,

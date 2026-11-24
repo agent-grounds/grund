@@ -64,7 +64,7 @@ impl WorkspaceProject {
     }
 
     /// Whether this project's scan met no error: the half of the proof of §FS-fmt.7.4
-    /// a rewrite into this project needs from another's walk (§FS-fmt.7.4.4), since a
+    /// a rewrite into this project needs from another's walk (§FS-fmt.7.4), since a
     /// set short of a declaration can make a token look unique when it is not.
     pub(crate) fn read_in_full(&self) -> bool {
         self.scan_errors.is_empty()
@@ -107,10 +107,10 @@ pub(crate) struct WorkspaceContext {
     /// learned about the tree as well as how to spell it — `workspace_absent_optional`
     /// in particular, which is where `check_workspace_context` reads the
     /// §FS-check.4.9 announcement from and which no loaded project can supply when
-    /// every project in the block was the absent one (§FS-lsp.4.1).
+    /// every project in the block was the absent one (§FS-lsp.4).
     pub(crate) render_config: ProjectRecords,
     /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
-    /// cautions of §FS-check.3.29, §FS-check.4.10.11 and
+    /// cautions of §FS-check.3.29, §FS-check.4.10 and
     /// §FS-workspace.6.1.7, settled and in the order the run earned them, for
     /// whichever frontend asked to render. Every command that walks passes
     /// through this loader, which is what puts all three on `list`, `refs`,
@@ -154,7 +154,7 @@ impl WorkspaceContext {
 
     /// The index of the project a citation in the project at `citing` targets: the
     /// loaded project its alias names, or else the one it sits in; `None` for an alias
-    /// that names no loaded project (§FS-coordinate-globs.scope.targets,
+    /// that names no loaded project (§FS-coordinate-globs.scope,
     /// §FS-workspace.8.2.4). `refs` in both modes and `cover` all read it.
     pub(crate) fn citation_target(&self, citing: usize, citation: &Citation) -> Option<usize> {
         match citation.namespace.as_deref() {
@@ -534,7 +534,7 @@ pub(super) fn load_projects_with(
             .map(|entry| (entry.alias, ProjectRecords::of(entry.config)))
             .collect::<Vec<_>>();
 
-    // §AR-scanner.2.4.2, §FS-check.1.3.8: each member's run was built carrying the
+    // §AR-scanner.2.4.2, §FS-check.1.3: each member's run was built carrying the
     // root's classification and `--full` (`Run::members`), so nothing is set here.
 
     // §FS-remote-projects.mount.rule: every mount this tree declares, loaded natively.
@@ -572,7 +572,7 @@ pub(super) fn load_projects_with(
     // grammars are validated; sort by the original entry index before returning
     // so root/member ordering stays byte-deterministic.
 
-    // §FS-check.6.1.1, §AR-bindings.3: project workers inherit scoped coverage
+    // §FS-check.6.1, §AR-bindings.3: project workers inherit scoped coverage
     // before tree discovery, then restore their previous observer on return.
     let observer = crate::config::check_input_observer();
     let scan = mounts.scans();

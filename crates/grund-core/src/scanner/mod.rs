@@ -42,7 +42,7 @@
 //! entrypoint files a repository *has* is a probe over the tree — it resolves
 //! symlinks and reads a file for a managed block — and `grund check`'s companion
 //! scan was reading it upward out of a component above the checker
-//! (§FS-check.3.5.1, §AR-checker.2.7).
+//! (§FS-check.3.5, §AR-checker.2.7).
 //!
 //! What came the other way with that move is `scan_error.rs`: the published form
 //! of a scan failure (§FS-check.2.4), which sat in the api's contract while the

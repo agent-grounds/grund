@@ -11,7 +11,7 @@ takes the default shown. `grund config validate` checks a file against these key
 `grund config show` prints the configuration in effect, defaults included, in the
 file's own version; for version 2 its tables keyed by a kind follow the order the
 file writes its `[schema.kinds]` rows
-([§FS-config.4.2.4](../functional-spec/FS-config.md#424-the-order-show-prints-in)).
+([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)).
 `grund config explain '[TABLE] key'` gives one key's entry from the grund you run,
 in your file's version, with no page needed ([config explain](explain.md)).
 
@@ -99,7 +99,7 @@ One row per kind: where its declarations live and how they are read. `kinds = []
 | Key | Type | Default | What it sets |
 |---|---|---|---|
 | `kind` | string | — | The kind's name: the ID prefix of a citable kind, its `[citations.<kind>]` key and its `--kind` selector. [§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds) |
-| `prefix` | refused | — | Removed in grund 0.13.0 and refused: rename it to `kind`. [§FS-config.3.4.6](../functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130) |
+| `prefix` | refused | — | Removed in grund 0.13.0 and refused: rename it to `kind`. [§FS-config.3.4.6](../functional-spec/FS-config.md#346-prefix--refused-in-favor-of-kind) |
 | `folder` | string | — | A folder home: each declaration is the H1 of its own file under this directory. [§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds) |
 | `file` | string | — | A single-file home: every declaration is a heading in this document. It is read only if its extension is in `[scan] extensions`, or, on a `values = true` row, as its value source by the value pass when it ends in `.json`, `.yaml` or `.yml`; otherwise `grund check` warns at this line. [§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds) |
 | `title` | string | — | The kind's title in the Project map, `grund list --summary` and editor hovers. [§FS-config.3.4.3](../functional-spec/FS-config.md#343-title) |
@@ -111,9 +111,9 @@ One row per kind: where its declarations live and how they are read. `kinds = []
 | `values` | boolean | `false` | Make every declaration of this kind a first-class value. [§FS-config.3.4.9](../functional-spec/FS-config.md#349-values--first-class-value-declarations) |
 | `value_chapter` | string | — | The chapter whose named children are values, in every declaration of this kind. [§FS-config.3.4.13](../functional-spec/FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values) |
 | `rules` | boolean | `false` | Make every declaration title of this kind an executable rule sentence. [§FS-config.3.4.12](../functional-spec/FS-config.md#3412-rules--rule-declaration-kinds) |
-| `format` | string | inherits `[id] format` | This kind's ID template, overriding `[id] format`. [§FS-config.3.4.10.1](../functional-spec/FS-config.md#34101-format) |
-| `resolve` | `"must"` \| `"should"` | must when fetch is set, else absent | How a missing external snapshot is reported: `must` as a dangling citation, `should` as a warning. [§FS-config.3.4.10.2](../functional-spec/FS-config.md#34102-fetch-and-resolve) |
-| `fetch` | string | — | The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line. [§FS-config.3.4.10.2](../functional-spec/FS-config.md#34102-fetch-and-resolve) |
+| `format` | string | inherits `[id] format` | This kind's ID template, overriding `[id] format`. [§FS-config.3.4.10](../functional-spec/FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds) |
+| `resolve` | `"must"` \| `"should"` | must when fetch is set, else absent | How a missing external snapshot is reported: `must` as a dangling citation, `should` as a warning. [§FS-config.3.4.10](../functional-spec/FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds) |
+| `fetch` | string | — | The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line. [§FS-config.3.4.10](../functional-spec/FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds) |
 
 In either config version, citable names may prefix each other when their tokens
 remain distinguishable: `GR` with `{kind}-{number}` can sit beside `GRUND` with
@@ -124,7 +124,7 @@ plus the literal immediately after `{kind}`. Thus `GR` beside `GR-X` needs a
 rename even with different separators; separator-free `{kind}{number}` on `GR`
 beside `GRUND` needs unambiguous formats. Duplicate names remain invalid,
 including non-citable rows; non-citable kinds are exempt from the prefix rule
-([§FS-config.3.4.5.1](../functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens),
+([§FS-config.3.4.5](../functional-spec/FS-config.md#345-name-rules),
 [§FS-config.3.2.9](../functional-spec/FS-config.md#329-kind-head)).
 
 ### `[scan]`
@@ -156,7 +156,7 @@ What `grund fmt` leaves alone. [§FS-config.3.10](../functional-spec/FS-config.m
 
 | Key | Type | Default | What it sets |
 |---|---|---|---|
-| `exclude` | array of strings | `[]` | Files `grund fmt` never rewrites: gitignore-style globs from the config root. [§FS-config.3.10.1](../functional-spec/FS-config.md#3101-entries-are-gitignore-style-globs) |
+| `exclude` | array of strings | `[]` | Files `grund fmt` never rewrites: gitignore-style globs from the config root. [§FS-config.3.10](../functional-spec/FS-config.md#310-fmt--suppressing-the-rewrite) |
 
 ### `[fmt.cross_refs]`
 
@@ -392,7 +392,7 @@ What a citing kind (or place) must, warn, should, may, should not, warn not and 
 For a negative default that forbids a kind's own marked index entry, see
 [index-entry repair advice](citation-directions.md) for the `may` edit and how
 explicit prohibitions and independent rule sentences differ
-([§FS-check.3.12.2](../functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).
+([§FS-check.3.12](../functional-spec/FS-check.md#312-forbidden-citation)).
 
 ### `[rules.citations.<KIND>.grounding]`
 

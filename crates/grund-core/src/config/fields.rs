@@ -14,7 +14,7 @@ pub struct Field {
     /// The display name its chapter must show, byte for byte
     /// (§FS-fields.identity.match); `None` admits any.
     pub title: Option<String>,
-    /// How strongly a declaration is held to it (§FS-fields.strengths.table).
+    /// How strongly a declaration is held to it (§FS-fields.strengths).
     pub presence: Strength,
     pub placement: Option<Placement>,
     pub content: FieldContent,
@@ -60,7 +60,7 @@ pub struct FrontMatterShape {
 pub struct FrontMatterKey {
     /// The top-level key it declares, a section name (§FS-fields.front-matter.keys).
     pub name: String,
-    /// Whether the block must have the key (§FS-fields.front-matter.findings).
+    /// Whether the block must have the key (§FS-fields.front-matter.config).
     pub presence: Strength,
     /// The values its one-line value may take, `None` for any value
     /// (§FS-fields.front-matter.values).

@@ -109,7 +109,7 @@ pub(crate) fn without_closing_sequence(text: &str) -> &str {
 /// The rendered text of an ATX heading line whose leading whitespace is gone
 /// (§FS-declarations.heading.rendered-text): the opening run of `level` `#`, the
 /// closing sequence, and the whitespace around the text left out, as a slice of
-/// the line. What a grounding finding quotes (§FS-check.3.6.3) and what a
+/// the line. What a grounding finding quotes (§FS-check.3.6) and what a
 /// heading's anchor is slugged from are this one reading.
 pub(crate) fn atx_heading_text(trimmed: &str, level: usize) -> &str {
     let after_run = trimmed.get(level..).unwrap_or("");

@@ -5,7 +5,7 @@
 //!
 //! This is a *description* of a file, not a list of units: the level that turns
 //! headings and doc-comment blocks into units belongs to the `[[kinds]]` row that
-//! governs the file (§FS-config.3.4.8.2), and the cut is made in
+//! governs the file (§FS-config.3.4.8), and the cut is made in
 //! `checker/grounding.rs` so the level rule is written once. The record it views
 //! is filled on every run (§AR-scanner.2.7.2); the view is taken only where the
 //! file's own row asks for a unit finer than the file, so a project at level `1`
@@ -83,7 +83,7 @@ fn markdown_structure(record: &FileRecord) -> FileStructure {
 
 /// Every doc-comment block in a source file, with its indentation
 /// (§AR-scanner.2.7): the record's blocks its language calls documentation
-/// (§FS-inline-citation-style.1.1.1), the same flag the inline-site pass reads, so
+/// (§FS-inline-citation-style.1.1.2), the same flag the inline-site pass reads, so
 /// a block cannot be a doc comment for one rule and a note for the other.
 fn source_structure(record: &FileRecord) -> FileStructure {
     FileStructure {

@@ -162,7 +162,7 @@ grund config migrate --to 2 --write group
 echo $?    # 0
 ```
 
-Neither the `named_sections` refusal nor the default-`include` refusal of step 1 applies here: nothing reads the block, and none of the default include entries or kind homes exist outside its member ([§FS-config-migrate.8.1.2](../../docs/functional-spec/FS-config-migrate.md#812-when-the-block-migrates-compactly)). The written file is the version line and the `[workspace]` table, and the report says the block takes version 2's defaults rather than writing version 1's out ([§FS-config-migrate.8.1.3](../../docs/functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)):
+Neither the `named_sections` refusal nor the default-`include` refusal of step 1 applies here: nothing reads the block, and none of the default include entries or kind homes exist outside its member ([§FS-config-migrate.8.1](../../docs/functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)). The written file is the version line and the `[workspace]` table, and the report says the block takes version 2's defaults rather than writing version 1's out ([§FS-config-migrate.8.1](../../docs/functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)):
 
 ```text
 wrote grund.toml: version 1 (3 lines) replaced by version 2
@@ -179,7 +179,7 @@ members = ["a"]
 include_root = false
 ```
 
-Both gates still ran. Put a `README.md` or an `AGENTS.md` beside the block's config and the same command exits `1` at the report gate, because version 2 would read that file and warn that nobody scans the block; the block stays on version 1 until the file moves into a member ([§FS-config-migrate.8.1.4](../../docs/functional-spec/FS-config-migrate.md#814-both-gates-still-run)). The report names the file `grund.toml`, from the block's own directory, as every migration report does by default; pass `--path-base=invocation` to see `group/grund.toml`. The undo and the re-preview it closes with already name the block from the workspace root, because they are commands to run there: `git restore group/grund.toml` and `grund config migrate --to 2 group` ([§FS-config-migrate.6.5.1](../../docs/functional-spec/FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)).
+Both gates still ran. Put a `README.md` or an `AGENTS.md` beside the block's config and the same command exits `1` at the report gate, because version 2 would read that file and warn that nobody scans the block; the block stays on version 1 until the file moves into a member ([§FS-config-migrate.8.1](../../docs/functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)). The report names the file `grund.toml`, from the block's own directory, as every migration report does by default; pass `--path-base=invocation` to see `group/grund.toml`. The undo and the re-preview it closes with already name the block from the workspace root, because they are commands to run there: `git restore group/grund.toml` and `grund config migrate --to 2 group` ([§FS-config-migrate.6.5.1](../../docs/functional-spec/FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)).
 
 ## Trade-offs
 

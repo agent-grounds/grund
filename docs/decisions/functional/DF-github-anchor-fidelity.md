@@ -23,7 +23,7 @@ The `github` profile reproduces `github-slugger`: lowercase; keep letters, digit
 
 All profiles slugify the heading's **rendered text**, not its source. The only case where those differ for grund's headings is an inline link `[text](url)` in the heading — which a renderer shows as `text` — and the case bites because `grund fmt --cross-refs` itself wraps a citation that lives in a section heading (`### 2.2 … supersede §FS-fmt.6.3` becomes `### 2.2 … supersede [§FS-fmt.6.3](…)`). So heading text is reduced — `[text](url)` → `text` — before it reaches the slugger. Two consequences fall out: a citation pointing at such a section gets the same anchor it would have had if the heading's own citation were unwrapped, and `grund fmt --cross-refs` is idempotent over a heading-borne citation (the alternative — slugifying the raw source — made the second `fmt` pass mangle the anchor with the destination URL it had just inserted, e.g. `#22-re-derive-…-fs-fmt63functional-specfs-fmtmd63-idempotency-and-re-derive`).
 
-Fidelity is held by two checks: the curated-heading e2e fixture [§FS-fmt.6.8](../../functional-spec/FS-fmt.md#68-measurable) demands for each profile (the `github` case now includes headings whose punctuation closes up into runs), and — repo-locally — `lychee --include-fragments` over `docs/` in the pre-commit hook ([§FS-fmt.4](../../functional-spec/FS-fmt.md#4-why-this-exists)), which resolves every emitted `#fragment` against the heading it points at the way GitHub would.
+Fidelity is held by two checks: the curated-heading e2e fixture [§FS-fmt.6.2.2](../../functional-spec/FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text) demands for each profile (the `github` case now includes headings whose punctuation closes up into runs), and — repo-locally — `lychee --include-fragments` over `docs/` in the pre-commit hook ([§FS-fmt.4](../../functional-spec/FS-fmt.md#4-why-this-exists)), which resolves every emitted `#fragment` against the heading it points at the way GitHub would.
 
 ## 3. Why this fits grund's goals
 
@@ -35,6 +35,6 @@ Fidelity is held by two checks: the curated-heading e2e fixture [§FS-fmt.6.8](.
 
 - `anchor_slug_github` in `crates/grund-core/src/grammar/anchors.rs` is rewritten to the algorithm above; its doc-comment cites this record.
 - [§DF-md-link-anchor-strategy.2.3](DF-md-link-anchor-strategy.md#23-renderer-profiles)'s `github`/`gitlab` bullet is annotated to point here; its "collapse consecutive `-`" wording is corrected by this record rather than rewritten in place (decisions are append-only).
-- [§FS-fmt.6.2](../../functional-spec/FS-fmt.md#62-form)'s anchor bullet states the no-collapse rule and cites this record; [§FS-fmt.6.8](../../functional-spec/FS-fmt.md#68-measurable)'s curated-heading note calls out the punctuation-closes-up cases.
+- [§FS-fmt.6.2](../../functional-spec/FS-fmt.md#62-form)'s anchor bullet states the no-collapse rule and cites this record; [§FS-fmt.6.2.2](../../functional-spec/FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)'s curated-heading note calls out the punctuation-closes-up cases.
 - New e2e case `fmt-cross-refs-profile-github` covers the curated `github` heading set.
 - This repo's pre-commit hook gains `grund fmt --cross-refs --write` and switches `lychee` to `--include-fragments`, so anchor drift in `docs/` is caught at commit time.

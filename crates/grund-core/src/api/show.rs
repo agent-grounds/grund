@@ -55,7 +55,7 @@ pub struct ShowHints {
 /// The run's `[workspace]` warnings come back beside the answer rather than on it,
 /// because a refusal settled *after* the workspace pass — an unknown alias, an
 /// unresolvable ID — leaves an `Err` with nowhere to carry a caution the reader is
-/// already owed (§FS-check.4.10.7, §FS-workspace.6.1.7). A refused query's `hint:`
+/// already owed (§FS-check.4.10, §FS-workspace.6.1.7). A refused query's `hint:`
 /// lines come back beside it too, built from the context the read loaded, as a
 /// batch builds them (§FS-show.3.5, §AR-resolver.3.1.1). `bare` says the read is
 /// the bare `grund <arg>` form, the one form whose refusal may be the
@@ -82,7 +82,7 @@ pub fn show_with_scope(
     (run_warnings, output, hints)
 }
 
-/// Query metadata from the same loaded context (§FS-distribution.3.2.2.2).
+/// Query metadata from the same loaded context (§FS-distribution.3.2.2).
 pub(super) fn show_data(
     id: &str,
     opts: ShowOpts,
@@ -246,7 +246,7 @@ impl<'c, 'a> ShowSource<'c, 'a> {
         let config = &project.config;
         let (id, inline_section) =
             resolve_id_arg(raw_id, config.schema(), config.frame(), &project.findings)
-                // §FS-workspace.8.1.1.4: a rejected grammar must still ask members.
+                // §FS-workspace.8.1.1: a rejected grammar must still ask members.
                 .map_err(|error| {
                     with_member_id_candidates(
                         error.diagnostic().into(),

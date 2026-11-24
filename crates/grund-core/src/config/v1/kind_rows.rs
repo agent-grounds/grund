@@ -49,7 +49,7 @@ fn one_home(k: &KindConfig, line: usize) -> Vec<Home<'_>> {
 ///
 /// The entries then lower into `project`, in `lower_rows` below
 /// (§AR-config.3.1). A refusal naming a line also carries that line for editor
-/// publication (§FS-lsp.2.2.4.1); unlocated refusals stay unlocated.
+/// publication (§FS-lsp.2.2.4); unlocated refusals stay unlocated.
 pub(super) fn lower_parsed_kinds(
     path: &Path,
     root: &Path,
@@ -63,7 +63,7 @@ pub(super) fn lower_parsed_kinds(
             "every [[kinds]] entry must declare a `kind`".to_string(),
         );
     }
-    // §FS-config.3.4.4.5: no entries at all is `kinds = []`, the empty kind set,
+    // §FS-config.3.4.4: no entries at all is `kinds = []`, the empty kind set,
     // and lowers to no rows below — the reader yields it for nothing else.
     for entry in &parsed {
         let k = &entry.config;
@@ -141,7 +141,7 @@ pub(super) fn lower_parsed_kinds(
                 k.kind
             ));
         }
-        // §FS-config.3.9.2.2: `code` is the *default* name of the homeless kind, and a
+        // §FS-config.3.9.2: `code` is the *default* name of the homeless kind, and a
         // name a project may take only by declaring that kind — the complement of
         // every home. Any other row wearing it would collide with that fallback.
         if k.kind == CODE_SOURCE_KIND && !(!k.citable && k.folder.is_none() && k.file.is_none()) {
@@ -165,7 +165,7 @@ pub(super) fn lower_parsed_kinds(
             &project.schema.sources,
         )?;
     }
-    // §FS-config.3.4.7.6: an unwalked kind is a place and nothing more. A citable one
+    // §FS-config.3.4.7: an unwalked kind is a place and nothing more. A citable one
     // would have declarations nobody reads — the trap §FS-config.3.5.10 closes — and the
     // homeless kind has no home to leave unwalked (`[scan] include` says what is read).
     for entry in &parsed {
@@ -255,7 +255,7 @@ fn lower_rows(path: &Path, parsed: &[ParsedKind], project: &mut Project) {
 
 /// One validated entry as a row of §AR-config.1.3: its one place, and its kind
 /// when it declares IDs. The complement is the non-citable entry with no home
-/// (§FS-config.3.9.2.1); a citable entry with no home is a kind with no place.
+/// (§FS-config.3.9.2); a citable entry with no home is a kind with no place.
 fn lower_row(
     k: &KindConfig,
     source: Option<ConfigLocation>,

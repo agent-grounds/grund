@@ -36,10 +36,10 @@ pub struct SchemaView {
     pub edges: Vec<SchemaEdge>,
     /// The project-wide `default` where it is not `may` (§FS-schema.5).
     pub default: Option<CitationLevel>,
-    /// The root's `[workspace] members`, as written (§FS-schema.2.1).
+    /// The root's `[workspace] members`, as written (§FS-schema.2).
     pub members: Vec<String>,
     /// What `grund init --scaffold` would write, where no config file was read
-    /// (§FS-schema.8.2). Beside the header and not part of the view: no node,
+    /// (§FS-schema.8). Beside the header and not part of the view: no node,
     /// row or edge comes from it (§FS-schema.3).
     pub scaffold: Option<ScaffoldNote>,
 }
@@ -70,14 +70,14 @@ pub struct SchemaNode {
     pub grounding: Vec<BadgeRung>,
     /// The subject's own `default` where it is not `may` (§FS-schema.5).
     pub default: Option<CitationLevel>,
-    /// Whether any direction rule names the node, as subject or target (§FS-schema.4.2).
+    /// Whether any direction rule names the node, as subject or target (§FS-schema.4).
     pub ruled: bool,
 }
 
 impl SchemaNode {
     /// §FS-schema.4.1: the lines `grund schema` prints under this node — each
     /// slot's shape lines, a front-matter field's nested one level deeper
-    /// (§FS-schema.4.1.3), then one for a `closed` that is not `may` — which the
+    /// (§FS-schema.4.1), then one for a `closed` that is not `may` — which the
     /// managed block's declaration shape prints as bullets (§FS-init.2.3.5).
     pub fn shape_lines(&self) -> Vec<ShapeLine> {
         let slots = self.slots.iter().flat_map(SchemaSlot::shape_lines);
@@ -125,7 +125,7 @@ pub struct SchemaEdge {
 }
 
 impl SchemaEdge {
-    /// §FS-schema.5.3: a single-target entry whose target is its own subject.
+    /// §FS-schema.5: a single-target entry whose target is its own subject.
     pub fn is_self(&self) -> bool {
         self.junction.is_none() && self.targets.first().and_then(|t| t.node) == Some(self.subject)
     }
@@ -254,7 +254,7 @@ impl SchemaView {
 }
 
 /// §FS-schema.8: the file the run read, never one beside a fallback root; `None`
-/// where no config file was found and the defaults govern (§FS-schema.8.2).
+/// where no config file was found and the defaults govern (§FS-schema.8).
 pub(crate) fn config_file_read(config: &Config) -> Option<std::path::PathBuf> {
     config
         .run()

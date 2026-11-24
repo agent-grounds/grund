@@ -22,7 +22,7 @@ pub(crate) struct RootGuidance {
 }
 
 /// One config's root guidance as the guidance gate compares it
-/// (§FS-config-migrate.5.3.1): the generated sections with the grounding
+/// (§FS-config-migrate.5.3): the generated sections with the grounding
 /// setting spelled in the grammar asked for, beside the config's own version and
 /// the citation directions it renders in that version, as `init` writes them.
 #[derive(Clone, Debug)]
@@ -37,7 +37,7 @@ pub(crate) struct ComparedGuidance {
 /// chapter rules read from the tree as `init` reads them, or none where the
 /// scan or a rule fails, which `check` reports on its own. `grammar` spells the
 /// citation directions' grounding setting, the config's own version where it is
-/// `None` (§FS-config-migrate.5.3.1); one scan serves both spellings.
+/// `None` (§FS-config-migrate.5.3); one scan serves both spellings.
 pub(crate) fn root_guidance(mut config: Config, grammar: Option<u32>) -> ComparedGuidance {
     let _ = populate_workspace_boundary(&mut config);
     let config = &config;

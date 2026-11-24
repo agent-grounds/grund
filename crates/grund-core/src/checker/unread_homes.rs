@@ -45,7 +45,7 @@ impl UnreadNames {
         unread
     }
 
-    /// §FS-check.2.4, §FS-check.1.3.6.3: records `frame`'s failures that are inside the report
+    /// §FS-check.2.4, §FS-check.1.3.6: records `frame`'s failures that are inside the report
     /// scope, which [`ScanScope::holds_failure`] decides and is what earns the `error:` line. It
     /// reads them before `partition_scan_failures` renames them, because a failure's other names
     /// are found under the name the walk kept. The reason is only the key those names sit under.
@@ -81,7 +81,7 @@ impl UnreadNames {
     }
 
     /// §FS-check.2.4: whether a citation of `kind` that `target`'s catalog declares nowhere earns no
-    /// finding, asked alike of a full ID and of a shorthand matching nothing (§FS-check.3.13.3).
+    /// finding, asked alike of a full ID and of a shorthand matching nothing (§FS-check.3.13).
     pub(super) fn withholds_absent(&self, target: &WorkspaceCheckTarget<'_>, kind: &str) -> bool {
         target
             .schema

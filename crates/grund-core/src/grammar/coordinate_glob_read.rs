@@ -1,10 +1,10 @@
 //! A coordinate glob read under one project's outer separator
-//! (§FS-coordinate-globs.grammar.components): the component checks that need the
-//! separator (§FS-coordinate-globs.errors.reasons), and the reading the matcher in
+//! (§FS-coordinate-globs.grammar): the component checks that need the
+//! separator (§FS-coordinate-globs.errors.shape), and the reading the matcher in
 //! `coordinate_glob_match.rs` steps through (§FS-coordinate-globs.matching). Both
 //! walk the token list as an automaton whose states are positions, never as the
 //! product of the brace groups, so a pattern is answered in time bounded by its length
-//! and the coordinate's (§FS-coordinate-globs.matching.bounded).
+//! and the coordinate's (§FS-coordinate-globs.matching).
 //!
 //! Where the ID atom ends is a fact of each alternative: it ends at the first
 //! unescaped separator when the alternative holds one, else at its first unescaped
@@ -156,8 +156,8 @@ enum Problem {
 }
 
 impl CoordinateGlob {
-    /// The component checks under `separator` (§FS-coordinate-globs.grammar.globstar,
-    /// §FS-coordinate-globs.errors.reasons): no alternative may hold an empty component or
+    /// The component checks under `separator` (§FS-coordinate-globs.grammar,
+    /// §FS-coordinate-globs.errors.shape): no alternative may hold an empty component or
     /// a star run that is not a whole `**`. Of several, the leftmost is reported, with
     /// each rewrite `offer` accepts.
     pub(super) fn check_components(

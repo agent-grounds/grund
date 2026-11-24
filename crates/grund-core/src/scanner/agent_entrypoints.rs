@@ -12,7 +12,7 @@
 //!
 //! It is here rather than up there because both `grund init` and `grund check`
 //! ask it, and the checker sits below the writers: while this file was the
-//! writers', the companion scan of §FS-check.3.5.1 read it upward through the
+//! writers', the companion scan of §FS-check.3.5 read it upward through the
 //! crate root (§AR-system.4). Down here both read it downward, and there is
 //! still only one walk — `companion_agent_entrypoints` is *derived from*
 //! `existing_init_companion_agent_entrypoints` rather than restating it, so
@@ -222,7 +222,7 @@ impl InitCompanionAgentEntrypoint {
 /// is derived from it rather than restated: the two answer the same question —
 /// which companion files does this repository have — and a second copy of that
 /// walk is a place for `check` and `init` to disagree about what an entrypoint
-/// is (§FS-check.3.5.1, §AR-checker.2.7).
+/// is (§FS-check.3.5, §AR-checker.2.7).
 pub(crate) fn companion_agent_entrypoints(
     root: &Path,
     sources: Sources<'_>,
@@ -291,7 +291,7 @@ pub(crate) fn existing_init_companion_agent_entrypoints(
 /// that no `.zed/` and no managed block claims for Zed is somebody else's file,
 /// and answering *does this agent have an entrypoint* with a looser definition
 /// than `check` and the update set use is how the two come to disagree about
-/// what an entrypoint is (§FS-check.3.5.1).
+/// what an entrypoint is (§FS-check.3.5).
 pub(crate) fn agents_with_own_entrypoint(
     root: &Path,
     reach: CanonicalSurfaceReach,
@@ -328,7 +328,7 @@ pub(crate) fn companion_workspace_exists(
     root: &Path,
     entrypoint: &CompanionAgentEntrypoint,
 ) -> bool {
-    // §FS-check.6.1.3: absent ownership evidence is also a checking input.
+    // §FS-check.6.1: absent ownership evidence is also a checking input.
     if let Some(workspace) = entrypoint.workspace {
         crate::config::observe_input(&root.join(workspace), false);
     }
@@ -361,7 +361,7 @@ fn companion_has_managed_block(path: &Path, sources: Sources<'_>) -> bool {
     // Malformed delimiters still prove grund ownership — selecting the file
     // lets `check` surface the defect instead of silently skipping it.
 
-    // §FS-check.6.1.1: cover this effective input before its shared read, as a
+    // §FS-check.6.1: cover this effective input before its shared read, as a
     // save would write it (§AR-system.2.13).
     sources
         .text(path)
@@ -369,7 +369,7 @@ fn companion_has_managed_block(path: &Path, sources: Sources<'_>) -> bool {
 }
 
 pub(crate) fn is_file_or_symlink(path: &Path) -> bool {
-    // §FS-check.6.1.1: observe registry probes before deciding absence.
+    // §FS-check.6.1: observe registry probes before deciding absence.
     if !crate::config::observe_input(path, false) {
         return false;
     }
@@ -379,7 +379,7 @@ pub(crate) fn is_file_or_symlink(path: &Path) -> bool {
 }
 
 pub(crate) fn path_missing_without_following_symlinks(path: &Path) -> bool {
-    // §FS-check.6.1.3: creation of a missing entrypoint changes the verdict.
+    // §FS-check.6.1: creation of a missing entrypoint changes the verdict.
     crate::config::observe_input(path, false);
     match link_metadata(path) {
         Ok(_) => false,

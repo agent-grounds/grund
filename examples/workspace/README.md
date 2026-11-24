@@ -49,13 +49,13 @@ From this example's `repo/` directory, try `grund FS-session --brief`. The
 root has no such declaration, so the refusal suggests `api/FS-session` and
 `web/FS-session`; `grund api/FS-session --brief` reads the selected member's
 declaration. The same suggestion rule applies when the root config does not
-even declare the member's kind ([§FS-workspace.8.1.1.4](../../docs/functional-spec/FS-workspace.md#8114-each-project-is-asked-in-its-own-grammar)).
+even declare the member's kind ([§FS-workspace.8.1.1](../../docs/functional-spec/FS-workspace.md#811-an-unqualified-id-another-project-declares)).
 
 Refs keeps its root-local meaning: here `grund refs FS-session` succeeds with
 an empty answer because `FS` is valid at the root. If a kind exists only in a
 member, an unqualified refs query instead keeps `invalid ID` and offers the
 qualified `grund refs <alias>/<ID>` command as its text hint; JSON stays
-`invalid-id` ([§FS-workspace.8.2.2.1](../../docs/functional-spec/FS-workspace.md#8221-a-member-only-kind-replaces-the-text-format-hint)).
+`invalid-id` ([§FS-workspace.8.2.2](../../docs/functional-spec/FS-workspace.md#822-an-unqualified-query-at-the-workspace-root)).
 
 ```bash
 grund examples/workspace/repo
@@ -162,7 +162,7 @@ AGENTS.md:3: error: repo maintenance: stale grund init block: the workspace memb
 `expected` comes from the current render; `found` is the stale body line on
 disk. Both workspace sections report the first unequal pair in their existing
 order, with `<missing>` for an absent side
-([§FS-check.3.5.3.1](../../docs/functional-spec/FS-check.md#3531-first-differing-workspace-entry)).
+([§FS-check.3.5](../../docs/functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)).
 The script runs `grund init` at the root, as this finding requests, and checks
 again successfully. A finding in a member's block instead includes that
 member's directory in its refresh command. The copied fixture is removed when

@@ -16,7 +16,7 @@ use crate::model::BlockForm;
 ///
 /// One comment line, reduced: where its citation tokens sit, and what it still
 /// says once those tokens and its comment punctuation are taken out
-/// (§FS-inline-citation-style.1.4, §FS-inline-citation-style.2.3.3).
+/// (§FS-inline-citation-style.1.4).
 ///
 /// These are the pure per-line functions the scanner's walk used to carry
 /// (§AR-scanner.2.3): they hold no state, read no block, and are coupled to their
@@ -206,7 +206,7 @@ pub(crate) fn comment_content_range(line: &str, prefixes: &[PrefixForms<'_>]) ->
     // §FS-languages.prefixes.forms: the marker is the longest form, so `;;` and
     // `-- |` go whole rather than leaving a `;` or a `|` that reads as note text.
     if let Some(len) = longest_form_at(rest, prefixes) {
-        // §FS-inline-citation-style.3.3.8: whatever indents the content past the
+        // §FS-inline-citation-style.3.3: whatever indents the content past the
         // prefix goes with it: a wrapped Rustdoc continuation, an aligned ` * `
         // filler, a tab after `#`. Content starts at the first byte that says something.
         let after = rest[len..].trim_start_matches([' ', '\t']);
@@ -216,7 +216,7 @@ pub(crate) fn comment_content_range(line: &str, prefixes: &[PrefixForms<'_>]) ->
     let trimmed_end = rest.trim_end();
     // Trimmed again after the closer: `/* §<ID>: */` must leave `§<ID>:`, so a
     // colon that ends the content is the grammar's empty tail rather than a space
-    // the closer happened to sit behind (§FS-inline-citation-style.3.3.8).
+    // the closer happened to sit behind (§FS-inline-citation-style.3.3).
     let rest = trimmed_end
         .strip_suffix("*/")
         .or_else(|| trimmed_end.strip_suffix("\"\"\""))

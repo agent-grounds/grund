@@ -34,7 +34,7 @@ pub(crate) fn fetch_runs_nothing(value: &str, integration: &Path) -> bool {
 
 /// §FS-fetch.2.1: whether a reader about to name `grund fetch` for the project at `root` would
 /// name a command with nothing to run. The one file asked of is observed first, so `--watch`
-/// reruns when it appears or goes (§FS-check.6.1.3).
+/// reruns when it appears or goes (§FS-check.6.1).
 pub(crate) fn fetch_key_runs_nothing(root: &Path, value: &str) -> bool {
     let integration = fetch_integration_path(root, value);
     if names_no_executable(value) {

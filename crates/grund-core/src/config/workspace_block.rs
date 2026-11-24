@@ -49,7 +49,7 @@ pub(super) fn validate_workspace_lists(members: &Members) -> Result<()> {
 /// relative path inside the block, or that path with a trailing `/*` glob. Every
 /// refusal is a property of the entry text, so it is taken here rather than
 /// where the directory is looked for. Its named line is preserved as structured
-/// metadata for editor publication (§FS-lsp.2.2.4.1).
+/// metadata for editor publication (§FS-lsp.2.2.4).
 fn validate_workspace_member(path: &Path, line: usize, member: &str) -> Result<()> {
     let member_path = Path::new(member);
     if member.is_empty()
@@ -134,7 +134,7 @@ pub(crate) fn invalid_project_alias_message(alias: &str) -> String {
     format!("invalid workspace project alias `{alias}` (expected [a-z][a-z0-9-]*)")
 }
 
-/// §FS-workspace.2.2.2: the alias of an optional member is the entry's last path
+/// §FS-workspace.2.2: the alias of an optional member is the entry's last path
 /// segment. An absent member has no config to read `project_name` from and no
 /// directory to take a basename from, so the entry text is the only name the
 /// block that lists it can recover — and taking it in both checkouts is what makes
@@ -143,7 +143,7 @@ pub(crate) fn optional_member_alias_segment(member: &str) -> &str {
     member.rsplit('/').next().unwrap_or(member)
 }
 
-/// §FS-workspace.2.2.7 "one entry belongs to one list": one sentence for the two
+/// §FS-workspace.2.2 "one entry belongs to one list": one sentence for the two
 /// places that can catch the contradiction — the entry text here and the
 /// canonical roots at expansion — because it is one rule, and which of the two saw
 /// it is not something the author has to know.
@@ -151,7 +151,7 @@ pub(crate) fn both_member_lists_message(entry: &str) -> String {
     format!("`{entry}` is listed in both [workspace] members and optional_members")
 }
 
-/// §FS-workspace.2.2 / §FS-workspace.2.2.2: the four refusals `optional_members`
+/// §FS-workspace.2.2: the four refusals `optional_members`
 /// adds to the shape rules `members` already carries. All four are properties of
 /// the entry text alone, which is why they are taken at config load — before any
 /// directory is looked for, so the same config is rejected in the checkout that
@@ -166,7 +166,7 @@ pub(crate) fn both_member_lists_message(entry: &str) -> String {
 /// `expand_optional_members` stays for the collisions no entry text shows: a
 /// `members` glob that expands onto this entry, or two paths that resolve to one
 /// directory. Every refusal carries its named line through to the editor
-/// (§FS-lsp.2.2.4.1).
+/// (§FS-lsp.2.2.4).
 fn validate_optional_workspace_member(
     path: &Path,
     line: usize,
@@ -174,7 +174,7 @@ fn validate_optional_workspace_member(
     plain: &[String],
 ) -> Result<()> {
     validate_workspace_member(path, line, member)?;
-    // §FS-workspace.2.2.7 "one entry belongs to one list": compared as paths, so a
+    // §FS-workspace.2.2 "one entry belongs to one list": compared as paths, so a
     // trailing slash is the same entry rather than a second one.
     if plain
         .iter()
@@ -182,7 +182,7 @@ fn validate_optional_workspace_member(
     {
         return bail_config(path, line, both_member_lists_message(member));
     }
-    // §FS-workspace.2.2.6: an absent parent directory names no namespaces, so a
+    // §FS-workspace.2.2: an absent parent directory names no namespaces, so a
     // glob here would appear to work and do nothing. The message names the shape
     // that works, because a user who has just been refused needs the form to write.
     if member.contains('*') {

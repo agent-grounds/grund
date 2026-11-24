@@ -1,5 +1,5 @@
 //! Node's deliberate record projection over the shared embedding engine
-//! (§FS-distribution.3.2.1, §FS-distribution.3.2.2.2).
+//! (§FS-distribution.3.2.1, §FS-distribution.3.2.2).
 
 use super::embedding::{EmbeddingRequest, run};
 use super::embedding_data::Data;
@@ -60,7 +60,7 @@ pub fn node_request(operation: &str, args: Vec<Value>, cwd: &Path) -> EmbeddingR
 }
 
 /// Same-source native envelope. No host-specific scanner or rendered-message
-/// classification is needed (§FS-distribution.3.2.2.1).
+/// classification is needed (§FS-distribution.3.2.2).
 pub fn node_embedding_call(mut r: EmbeddingRequest) -> Value {
     let operation = r.operation.clone();
     crate::config::with_embedding_base(&r.root.clone(), || {
@@ -115,7 +115,7 @@ pub fn node_embedding_call(mut r: EmbeddingRequest) -> Value {
         }
         let operand = r.args.first().cloned().unwrap_or(Value::Null);
         let write = r.flag("write");
-        // §FS-distribution.3.2.2.2: Node's delegate adds show metadata; the rest is shared.
+        // §FS-distribution.3.2.2: Node's delegate adds show metadata; the rest is shared.
         let mut value = envelope(run(&r, super::embedding_node_show::query));
         if operation == "integrations" {
             let output = if value["failure"].is_null() {
@@ -125,7 +125,7 @@ pub fn node_embedding_call(mut r: EmbeddingRequest) -> Value {
                     .get_mut("failure")
                     .and_then(|f| f.get_mut("partial_output"))
             };
-            // §FS-distribution.3.2.2.1: completed writes use the same typed partial record.
+            // §FS-distribution.3.2.2: completed writes use the same typed partial record.
             if let Some(output) = output.filter(|v| v.is_object()) {
                 super::embedding_integrations::project(
                     output,
@@ -243,12 +243,12 @@ pub(super) fn normalize_failure(f: &mut Value, operation: &str) {
     } else {
         json!({"operation":operation,"result":partial})
     };
-    // §FS-distribution.3.2.2.1: inspecting an absent partial must preserve null.
+    // §FS-distribution.3.2.2: inspecting an absent partial must preserve null.
     if let Some(result) = f.get_mut("partial").and_then(|p| p.get_mut("result")) {
         if operation == "init" {
             rename(result, "has_pending_changes", "pending_changes");
         }
-        // §FS-distribution.3.2.2.2: a refused refs keeps the folds its result would carry.
+        // §FS-distribution.3.2.2: a refused refs keeps the folds its result would carry.
         if operation == "refs" && result.is_object() {
             refs_totals(result);
         }

@@ -17,8 +17,8 @@ use crate::sources::canonical_snapshot_path;
 #[path = "editor_completion_token.rs"]
 mod token;
 
-/// An ordinary single-line byte edit plus candidate metadata (§FS-lsp.1.6.2,
-/// §FS-lsp.1.6.3). Protocol offsets and completion item objects belong to LSP.
+/// An ordinary single-line byte edit plus candidate metadata
+/// (§FS-lsp.1.6). Protocol offsets and completion item objects belong to LSP.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct CitationCompletion {
     pub id: String,
@@ -32,7 +32,7 @@ pub struct CitationCompletion {
 }
 
 /// Opaque additive context; existing snapshot record constructors are unchanged
-/// (§AR-lsp.2). Rebuilt together with notified overlays (§FS-lsp.1.6.4).
+/// (§AR-lsp.2). Rebuilt together with notified overlays (§FS-lsp.1.6).
 pub struct LspCompletionContext {
     projects: Vec<CompletionProject>,
     /// Each alias of the run's alias list that an import reached, the import's own
@@ -60,7 +60,7 @@ struct Candidate {
 
 impl LspCompletionContext {
     /// Cache uniquely resolving declared spellings and formatter file scopes in
-    /// the snapshot's existing scan (§FS-lsp.1.6.2, §FS-lsp.1.6.4). An ID resolves
+    /// the snapshot's existing scan (§FS-lsp.1.6). An ID resolves
     /// uniquely where it has one declaration once its stubs are paired by their
     /// verdicts (§AR-scanner.4.6).
     pub(crate) fn from_workspace(context: &WorkspaceContext) -> Self {
@@ -87,13 +87,13 @@ impl LspCompletionContext {
                         continue;
                     };
                     let home = paired.stand_in;
-                    // §FS-lsp.1.6.2: a stub without its scanned inline home
+                    // §FS-lsp.1.6: a stub without its scanned inline home
                     // cannot supply a resolving authoring candidate.
                     if home.is_stub {
                         continue;
                     }
                     let spelling = render_declaration_id(&config.grammar, paired.record);
-                    // §FS-lsp.1.6.2: a displayed spelling must resolve through the
+                    // §FS-lsp.1.6: a displayed spelling must resolve through the
                     // existing parser, including its retained legacy grammar.
                     if id.legacy_spelling() != Some(spelling.as_str())
                         && !parse_id_arg(&spelling, &config.grammar)
@@ -165,7 +165,7 @@ impl LspCompletionContext {
         })
     }
 
-    /// Initial, deduplicated final introducer characters (§FS-lsp.1.6.1).
+    /// Initial, deduplicated final introducer characters (§FS-lsp.1.6).
     pub fn trigger_characters(&self) -> Vec<String> {
         self.projects
             .iter()
@@ -181,7 +181,7 @@ impl LspCompletionContext {
 
     /// Complete the owner-effective active token using this cached catalog.
     /// Invalid cursor boundaries and protected files produce no edits
-    /// (§FS-lsp.1.6.1); right-hand suffixes are consumed (§FS-lsp.1.6.3).
+    /// (§FS-lsp.1.6); right-hand suffixes are consumed (§FS-lsp.1.6).
     pub fn complete(
         &self,
         path: &Path,
@@ -210,7 +210,7 @@ impl LspCompletionContext {
         let Some(owner) = owner else {
             return Vec::new();
         };
-        // §FS-lsp.1.6.1: a file symlink escaping its owner is a read target,
+        // §FS-lsp.1.6: a file symlink escaping its owner is a read target,
         // never an authoring edit target, even if the scanner followed it.
         if !owner.editable.contains(&canonical)
             || (path.starts_with(&owner.config.root) && !canonical.starts_with(&owner.config.root))
@@ -272,7 +272,7 @@ impl LspCompletionContext {
             let id = format!("{}{}", token.qualification, candidate.id);
             completion(id, &candidate.title, &candidate.path, sort_text)
         });
-        // §FS-lsp.1.6.2: each alias an import reached that continues past the typed token,
+        // §FS-lsp.1.6: each alias an import reached that continues past the typed token,
         // by the rule `complete ids` reads (§FS-workspace.8.4.1), after the declared IDs.
         let typed = format!("{}{}", token.qualification, token.prefix);
         let imports = self.imports.iter().filter_map(|(alias, root)| {

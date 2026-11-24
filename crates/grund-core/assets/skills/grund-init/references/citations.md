@@ -30,7 +30,7 @@ or AR`.
 `grund schema` draws a repository's directions, each `|` entry as one
 obligation.
 
-From grund 0.19.0, a prohibited citation of a name under a number produces the ordinary `forbidden-citation` error and makes the check fail. The mixed-only warning window from 0.18.0 has ended. Recommended directions remain opt-in suggestions, and explicit `warn`/`warn-not` strengths remain warnings ([the citation-direction rules](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)).
+From grund 0.19.0, a prohibited citation of a name under a number produces the ordinary `forbidden-citation` error and makes the check fail. The mixed-only warning window from 0.18.0 has ended. Recommended directions remain opt-in suggestions, and explicit `warn`/`warn-not` strengths remain warnings ([the citation-direction rules](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#51-facts-and-identity)).
 
 The citing side may be any configured kind, including a non-citable kind, or
 the complement `code` kind. In version 2, the complement may list places of its
@@ -63,7 +63,7 @@ the matching `must-not` or `warn-not` list; an independent rule sentence
 requires changing the named rule. Adding `may` does not override either.
 The finding names the applicable repair; ordinary citations keep their
 plain-link advice, and suggestions keep their existing wording
-([the index-entry repair specification](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).
+([the index-entry repair specification](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#312-forbidden-citation)).
 
 The generated entrypoint states the directions a config declares and no
 others ([the citation-direction rule of `grund init`](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#235-citation-directions)).

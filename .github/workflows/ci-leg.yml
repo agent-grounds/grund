@@ -35,7 +35,7 @@ jobs:
         shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v6
-        # §FS-examples.5.6.1: native evidence names the actual candidate commit.
+        # §AR-ci.requirements.5.2: native evidence names the actual candidate commit.
         with:
           ref: ${{ inputs.os == 'windows-latest' && (github.event.pull_request.head.sha || github.sha) || '' }}
 
@@ -68,7 +68,7 @@ jobs:
         if: matrix.shard == 1
         run: cargo fmt --all -- --check
 
-      # §FS-check.6.1.1, §AR-bindings.3: exercise actual native backends and
+      # §FS-check.6.1, §AR-bindings.3: exercise actual native backends and
       # private lifecycle boundaries on Linux, macOS and Windows.
       - name: native watch contract
         if: matrix.shard == 1
@@ -94,7 +94,7 @@ jobs:
       - name: cargo test
         run: python scripts/run_cargo_suite.py --shard ${{ matrix.shard }}/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
 
-      # §FS-examples.5.6.1: retain raw native ownership evidence, including skips.
+      # §AR-ci.requirements.5.2: retain raw native ownership evidence, including skips.
       - name: native mutable fixture ownership
         if: matrix.shard == 1 && inputs.os == 'windows-latest'
         shell: bash
@@ -136,13 +136,13 @@ jobs:
         with:
           python-version: "3.x"
 
-      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      # §FS-distribution.3.2.3: acceptance uses a supported Node major.
       - name: Install Node
         uses: actions/setup-node@v6
         with:
           node-version: "22.x"
 
-      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      # §FS-distribution.3.2.3: source builders require this pinned toolchain.
       - name: Install binding Rust toolchain
         run: rustup toolchain install 1.95.0 --profile minimal
 
@@ -208,13 +208,13 @@ jobs:
         with:
           python-version: "3.x"
 
-      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      # §FS-distribution.3.2.3: acceptance uses a supported Node major.
       - name: Install Node
         uses: actions/setup-node@v6
         with:
           node-version: "22.x"
 
-      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      # §FS-distribution.3.2.3: source builders require this pinned toolchain.
       - name: Install binding Rust toolchain
         run: rustup toolchain install 1.95.0 --profile minimal
 
@@ -315,7 +315,7 @@ jobs:
         with:
           python-version: "3.x"
 
-      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      # §FS-distribution.3.2.3: source builders require this pinned toolchain.
       - name: Install binding Rust toolchain
         run: rustup toolchain install 1.95.0 --profile minimal
 

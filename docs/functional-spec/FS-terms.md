@@ -108,7 +108,7 @@ is shown, and certifies no other unchanged prose.
 ### terms.5: Findings
 
 - **finding** — One item of a report, or the single item a failed ID query emits on stderr: a `code`, a `message`, and nullable `path`, `line` and `sites` (its JSON shape and channels are [§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)), where `sites` names every location only when one item has several. Displaces *diagnostic* in prose except where FS-lsp names the protocol object.
-- **severity** — The `error`-or-`warning` classification a finding carries on the errors or warnings channel; a suggestion carries none, and the set stays those two ([§FS-config.6.1](FS-config.md#61-suggestions-are-not-a-third-severity)). Displaces *level* for this sense.
+- **severity** — The `error`-or-`warning` classification a finding carries on the errors or warnings channel; a suggestion carries none, and the set stays those two ([§FS-config.6](FS-config.md#6-what-is-not-configured-here)). Displaces *level* for this sense.
 - **suggestion** — A finding on the suggestions channel, carrying `"channel":"suggestion"` in place of a severity: a channel, not a third severity ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). It never changes exit status ([§FS-check.2](FS-check.md#2-outputs)) or replaces the `success` line.
 - **caution** — A run-level message with no location. Displaces *CLI-level warning* and *announcement*.
 - **verdict** — Whether a run passes.

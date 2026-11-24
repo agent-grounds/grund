@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.4: captured real package consumer, using the json-report fixture.
+// §FS-distribution.3.2: captured real package consumer, using the json-report fixture.
 import {check,show} from 'grund-cli';
 import {deepEqual} from 'node:assert/strict';
 import {resolve} from 'node:path';

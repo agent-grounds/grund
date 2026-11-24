@@ -21,7 +21,7 @@ requires operational refusal at exit 2, naming the ID and source, with no stdout
 and no tree changes. A Markdown match cannot hide a matching value source. The
 existing catalog decides which sources declare IDs, so the correction applies to a
 recognized source of either format
-([§FS-values.2.2.4](../../functional-spec/FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings)),
+([§FS-values.2.2.3](../../functional-spec/FS-values.md#223-how-a-yaml-source-is-read)),
 and it adds no data writer. A table containing only other IDs still permits snapshot
 creation.
 

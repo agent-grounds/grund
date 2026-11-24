@@ -188,7 +188,7 @@ pub(crate) enum KindVerdict<'a> {
 pub(crate) struct KindTable {
     pub(crate) projects: Vec<KindProject>,
     /// Whether the run holds a workspace, so an alias can be judged at all
-    /// (§FS-rules.4.1.1): its absence is what makes a namespaced object kind
+    /// (§FS-rules.4.1): its absence is what makes a namespaced object kind
     /// unverifiable here rather than invalid.
     pub(crate) workspace: bool,
 }
@@ -259,7 +259,7 @@ impl KindTable {
     }
 
     /// Adds the projects a rule's run loaded, by alias, to the table of the
-    /// project whose config reads the rule (§FS-rules.4.1.1): holding any is what
+    /// project whose config reads the rule (§FS-rules.4.1): holding any is what
     /// lets a pinned or `*/` object be judged rather than found unverifiable.
     pub(crate) fn add_projects<'a>(
         &mut self,
@@ -442,7 +442,7 @@ impl KindTable {
 /// table from `projects`, each by alias, judges every project's pinned and `*/`
 /// `[citations]` targets against it once, in load order, and has `root` and
 /// every project hold it. The first target the run cannot accept fails the load
-/// (§FS-config.3.9.5.2, §DF-one-grammar-lands-in-0-19). Expansion makes it for a
+/// (§FS-config.3.9.5, §DF-one-grammar-lands-in-0-19). Expansion makes it for a
 /// full run, and a narrowed `cover` run makes it over the workspace its config
 /// declares (§FS-scan.projects.kinds). `whole` says `projects` is every project
 /// of the workspace: a reading that lost one it could not load is held but never
@@ -473,9 +473,9 @@ pub(crate) fn install_kind_table<'a>(
 /// `--selector` refusal that recovers no kind (§FS-rule-refusals.selectors), and a
 /// `check --rule` refusal that offers no form where a kind is missing
 /// (§FS-rule-refusals.sentences.rewrite.no-form): every citable kind named in
-/// `citable`, once, in configuration order — and `grund id`'s too (§FS-id.1.1).
+/// `citable`, once, in configuration order — and `grund id`'s too (§FS-id.1).
 /// A scope with no citable kind at all says so and how to start, rather than
-/// ending on an empty list (§FS-list.1.1.1).
+/// ending on an empty list (§FS-list.1.1).
 pub(crate) fn known_kinds_line<'a>(citable: impl IntoIterator<Item = &'a str>) -> String {
     let mut seen = BTreeSet::new();
     let known = citable
@@ -490,7 +490,7 @@ pub(crate) fn known_kinds_line<'a>(citable: impl IntoIterator<Item = &'a str>) -
 
 /// §FS-errors.3.7: why a target or object naming other projects cannot be
 /// judged in a run that holds no workspace — the reason names what the scope
-/// cannot reach, never a candidate it cannot have (§FS-check.3.8.3).
+/// cannot reach, never a candidate it cannot have (§FS-check.3.8).
 pub(crate) fn unverifiable_reason(alias: Option<&str>, kind: &str) -> String {
     let reason = match alias {
         Some(alias) => format!(

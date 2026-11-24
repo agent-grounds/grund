@@ -56,7 +56,7 @@ impl Installed {
     /// or whose scan errors out, is noted on stderr and keeps whatever snapshot it last had — so a
     /// half-typed `grund.toml` in one editor folder cannot freeze diagnostics across the whole
     /// session (§FS-lsp.2.2.4, §REQ-never-crashes). A config that will not load, at discovery or in
-    /// the scan, is also recorded to be published on that config (§FS-lsp.2.2.4.1). The worker
+    /// the scan, is also recorded to be published on that config (§FS-lsp.2.2.4). The worker
     /// runs it, off the event loop (§AR-lsp.2.1.1); only the session's first snapshot is built
     /// on the calling thread, by `refresh`.
     fn rebuild(&mut self, folders: &BTreeMap<Url, PathBuf>, scope: &Scope) {
@@ -140,7 +140,7 @@ impl Installed {
                 }
                 Err(err) => {
                     eprintln!("grund-lsp: scan of `{}` failed: {err:#}", root.display());
-                    // §FS-lsp.2.2.4.1: a member's config, say, that fails in the scan.
+                    // §FS-lsp.2.2.4: a member's config, say, that fails in the scan.
                     let retained = existing.as_ref().map(|project| project.root.clone());
                     match ConfigFailure::of(&err, retained) {
                         Some(failure) => self.scan_config_failures.insert(root, failure),

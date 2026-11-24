@@ -1,4 +1,4 @@
-//! Node integration records over core install policy (§FS-distribution.3.2.2.2).
+//! Node integration records over core install policy (§FS-distribution.3.2.2).
 use crate::writers::{
     ConversationRendering, GRUND_OPEN_RESOLVER, InstallKind, IntegrationClient, RESOLVER_TARGET,
     VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON, read_optional_text, scan_user_config,

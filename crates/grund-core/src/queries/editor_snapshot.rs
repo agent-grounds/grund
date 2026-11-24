@@ -54,8 +54,8 @@ pub struct LspSnapshot {
     pub trigger: String,
     pub workspace: bool,
     pub report: Report,
-    /// The run's warning channel (§FS-distribution.3.1, §FS-lsp.1.1.3): the two
-    /// `[workspace]` cautions of §FS-check.4.10.11 and §FS-workspace.6.1.7, each anchored at the `grund.toml` it names — at that
+    /// The run's warning channel (§FS-distribution.3.1, §FS-lsp.1.1): the two
+    /// `[workspace]` cautions of §FS-check.4.10 and §FS-workspace.6.1.7, each anchored at the `grund.toml` it names — at that
     /// file's anchored line, or at its first line for the undecidable claim,
     /// which names no line because the line is what it could not read. Not
     /// report findings: they are settled before a report exists, and the server
@@ -71,7 +71,7 @@ pub struct LspSnapshot {
     /// whole-ID home set stays the bare-ID declarations.
     pub sections: Vec<LspDeclaration>,
     /// Exact spans for located findings that must not become editor navigation
-    /// targets (§FS-lsp.1.1, §FS-lsp.1.1.1, §FS-declarations.checks.section-outside-declaration).
+    /// targets (§FS-lsp.1.1, §FS-declarations.checks.section-outside-declaration).
     pub finding_ranges: Vec<LspFindingRange>,
     pub stubs: Vec<LspStub>,
     pub citations: Vec<LspCitation>,
@@ -119,11 +119,11 @@ pub struct LspDeclaration {
     pub query_id: String,
     pub section_separator: String,
     /// The hover's title token where it is not `text`: a relative heading's
-    /// canonical path with its title kept (§FS-lsp.1.2.4).
+    /// canonical path with its title kept (§FS-lsp.1.2.3).
     pub hover_text: Option<String>,
 }
 
-/// The exact span of a title a finding is anchored on (§FS-lsp.1.1.1).
+/// The exact span of a title a finding is anchored on (§FS-lsp.1.1).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LspFindingRange {
     pub code: &'static str,
@@ -175,7 +175,7 @@ pub struct LspSnapshotWithMetadata {
 }
 
 /// Additive authoring context built in the snapshot's one scan (§AR-lsp.2,
-/// §FS-lsp.1.6.4). Original snapshot/metadata constructors remain available.
+/// §FS-lsp.1.6). Original snapshot/metadata constructors remain available.
 pub struct LspSnapshotWithCompletion {
     pub metadata: LspSnapshotWithMetadata,
     pub completion: super::LspCompletionContext,
@@ -188,7 +188,7 @@ pub struct LspSnapshotWithCompletion {
 /// text its scan read kept, so `show_from_snapshot` answers a citation hover
 /// without loading or reading again (§FS-lsp.responsiveness.3, §AR-lsp.5.2).
 /// Opaque: it is exactly as fresh as the snapshot it was built beside
-/// (§FS-lsp.1.6.4).
+/// (§FS-lsp.1.6).
 pub struct LspShowContext {
     pub(crate) context: WorkspaceContext,
     /// The buffers the context's run read through, recording.

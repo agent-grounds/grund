@@ -39,7 +39,7 @@ deliberately does not generalize ([§GRUND-grund.2](../grund.md#2-who-it-is-for)
 Every entry is cited from outside this folder by a point it bears on. Its line in this
 index does not count, because an index names every declaration in its folder by
 construction
-([§FS-check.4.1.2](../functional-spec/FS-check.md#412-an-index-entry-does-not-count)).
+([§FS-check.4.1](../functional-spec/FS-check.md#41-unused-declaration)).
 A roadmap point does not count on its own either, because the roadmap deletes a point
 once it ships.
 

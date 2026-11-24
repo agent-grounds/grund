@@ -16,9 +16,9 @@ Each run uses ordinary checking, finding selection, order, output defaults/overr
 
 ### 2.2 React to all effective local inputs
 
-Native notification backends on Linux/macOS/Windows observe the complete effective local-input inventory, including discovery candidates, global ignores and replacement anchors ([§FS-check.6.1.3](../../functional-spec/FS-check.md#613-effective-input-inventory)). Subscribe before reading; add and re-resolve before retiring coverage ([§FS-check.6.1.1](../../functional-spec/FS-check.md#611-subscribe-before-reading)). Narrow paths still need resolution-wide inputs. Unsupported notification-silent mounts receive no polling fallback.
+Native notification backends on Linux/macOS/Windows observe the complete effective local-input inventory, including discovery candidates, global ignores and replacement anchors ([§FS-check.6.1](../../functional-spec/FS-check.md#61-change-detection)). Subscribe before reading; add and re-resolve before retiring coverage ([§FS-check.6.1](../../functional-spec/FS-check.md#61-change-detection)). Narrow paths still need resolution-wide inputs. Unsupported notification-silent mounts receive no polling fallback.
 
-Idle debounce is 100 ms quiet / 500 ms maximum. During scans retain one pending rerun; serialize scans/publication ([§FS-check.6.1.2](../../functional-spec/FS-check.md#612-bounded-debounce-and-serialized-work)). Full rediscovery/rescan handles uncertain/lost events; incremental graph work is unnecessary. Failed watcher setup/runtime subscriptions or recovery exit explicitly rather than leaving stale results ([§FS-check.6.1.4](../../functional-spec/FS-check.md#614-uncertain-notifications-and-recovery)).
+Idle debounce is 100 ms quiet / 500 ms maximum. During scans retain one pending rerun; serialize scans/publication ([§FS-check.6.1](../../functional-spec/FS-check.md#61-change-detection)). Full rediscovery/rescan handles uncertain/lost events; incremental graph work is unnecessary. Failed watcher setup/runtime subscriptions or recovery exit explicitly rather than leaving stale results ([§FS-check.6.1](../../functional-spec/FS-check.md#61-change-detection)).
 
 ### 2.3 Keep repairable failures resident and interruption precise
 

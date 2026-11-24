@@ -43,7 +43,7 @@ pub(crate) use crate::config::scope_is_config_root;
 /// It is also where a run learns it holds no workspace, so it is where such a
 /// run judges its pinned and `*/` `[citations]` targets, against its own kinds;
 /// a run that holds one has them judged where its workspace is expanded
-/// (§FS-config.3.9.5.2, [`crate::config::install_kind_table`]).
+/// (§FS-config.3.9.5, [`crate::config::install_kind_table`]).
 ///
 /// It is also the one place a scanning run refuses a path that names nothing when the caller
 /// did not mark the path as given, so a library caller that sets only `path` cannot be
@@ -131,7 +131,7 @@ pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
 /// roots. The boundary is the same list that `run_workspace_check`
 /// computes; setting it on the Config makes the scanner skip those subtrees.
 ///
-/// §FS-check.3.29, §FS-check.3.30, §FS-check.4.10.7: it is also where the block a
+/// §FS-check.3.29, §FS-check.3.30, §FS-check.4.10: it is also where the block a
 /// run is rooted at is asked what that boundary leaves it — anything to read, and
 /// anything it reads that nobody else will. Every command that walks resolves its
 /// config through here, so asking at this one point is what puts the absorbed scan's
@@ -143,7 +143,7 @@ pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
 /// (`config_for_member_scope` rewrites first), so it stays silent about a block it
 /// is not reading through.
 ///
-/// §FS-check.4.10.2 is posed with no project roots *here*, unlike the blocks below,
+/// §FS-check.4.10 is posed with no project roots *here*, unlike the blocks below,
 /// which are held until the expansion knows where the run's projects are. It can
 /// be, and the reason is what makes this block different: it is the run's root and
 /// it is no project, so every project the run goes on to load lies inside one of
@@ -156,7 +156,7 @@ pub(crate) fn apply_workspace_boundary(config: &mut Config) -> Result<()> {
     let Some(members) = populate_workspace_boundary(config)? else {
         return Ok(());
     };
-    // §FS-check.4.9.2: the absent optional entries are dropped here on purpose. This
+    // §FS-check.4.9: the absent optional entries are dropped here on purpose. This
     // is the boundary pass; the announcement needs the alias path each namespace is
     // spelled with, which only the expansion walk composes (`expand_workspace_tree`).
     reject_absorbed_scan(config, &members)?;
@@ -217,7 +217,7 @@ pub(super) fn project_name_error(config: &Config, message: String) -> anyhow::Er
 /// The config load error about a key of `config`'s own file, located at `source`.
 /// It names that file on disk too, as the error a load raises does, so an editor
 /// marks a `[workspace]` or `project_name` refusal where it marks a parse error
-/// (§FS-lsp.2.2.4.1).
+/// (§FS-lsp.2.2.4).
 pub(crate) fn config_location_error(
     config: &Config,
     source: Option<&ConfigLocation>,

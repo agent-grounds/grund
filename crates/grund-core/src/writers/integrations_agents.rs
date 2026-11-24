@@ -7,7 +7,7 @@
 //!
 //! The instruction texts are here rather than in a template: they are
 //! user-global and written once, before grund knows which repositories will be
-//! opened, so they name no marker (§FS-integrations.3.1.4). The repository
+//! opened, so they name no marker (§FS-integrations.3.1). The repository
 //! entrypoint carries the syntax; this block carries the policy.
 
 /// How much of the linked conversation form one agent's renderer is *verified*
@@ -113,7 +113,7 @@ pub(crate) fn known_agents_list() -> String {
         .join(", ")
 }
 
-/// The canonical spelling of a known agent name, or `None` (§FS-integrations.4.4.2).
+/// The canonical spelling of a known agent name, or `None` (§FS-integrations.4.4).
 pub(crate) fn known_agent(name: &str) -> Option<&'static str> {
     GLOBAL_AGENT_INSTRUCTION_TARGETS
         .iter()
@@ -188,7 +188,7 @@ impl ConversationRendering {
         }
     }
 
-    /// §FS-integrations.4.3.10: self-scoping — the texts apply only inside grund
+    /// §FS-integrations.requirements.any-repository: self-scoping — the texts apply only inside grund
     /// repositories, so in any other repo their footprint is one inert sentence.
     /// The precedence sentence appears only in `plain`: repository `link` against
     /// user `plain` is the only possible conflict, and the machine wins it
@@ -196,7 +196,7 @@ impl ConversationRendering {
     /// `--write` that installed a rendering layer, knowledge no repository has.
     ///
     /// These texts name no marker, for the same reason the matchers and the
-    /// resolver do not hardcode one (§FS-integrations.3.1.4): they are user-global
+    /// resolver do not hardcode one (§FS-integrations.3.1): they are user-global
     /// and written once, before grund knows which repositories will be opened,
     /// and `[reference] marker` is per-repo. There is nothing to interpolate at
     /// install time, so these carry the policy and the repository entrypoint —

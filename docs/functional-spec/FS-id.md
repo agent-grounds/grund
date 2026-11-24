@@ -1,6 +1,6 @@
 # FS-id: grund proposes IDs for new declarations
 
-The `id` subcommand prints one conflict-free ID for a new declaration in the kind's effective format ([§FS-id.2.1](FS-id.md#21---format-text-default)): `<KIND>-<NNN>-<slug>` under version 1's default, `<KIND>-<slug>` under version 2's ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) and [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration).
+The `id` subcommand prints one conflict-free ID for a new declaration in the kind's effective format ([§FS-id.2.1](FS-id.md#21---format-text-default)): `<KIND>-<NNN>-<slug>` under version 1's default, `<KIND>-<slug>` under version 2's ([§FS-config-v2.defaults](FS-config-v2.md#defaults-the-v2-epoch)). Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) and [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration).
 
 ## terms: Terms
 
@@ -29,7 +29,7 @@ grund id <KIND> "<title>" [<path>] [--width <N>] [--explain] [--format text|json
 - `--explain` — also print a `next:` hint on stderr ([§FS-id.2.3](FS-id.md#23---explain-text-only)).
 - `--format text|json` — output shape ([§FS-id.2](FS-id.md#2-outputs)). Default `text`.
 
-An unknown or non-citable `<KIND>` is a CLI-level error, exit `2`, in the shape `grund list --kind` refuses with ([§FS-list.1.1](FS-list.md#11---kind)): an `error:` line naming the kind as unknown, or with [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s reason where it is configured and declares no IDs, then a `known kinds:` line naming the citable kinds, or [§FS-list.1.1.1](FS-list.md#111-a-scope-with-no-citable-kind)'s line where there are none, both on stderr.
+An unknown or non-citable `<KIND>` is a CLI-level error, exit `2`, in the shape `grund list --kind` refuses with ([§FS-list.1.1](FS-list.md#11---kind)): an `error:` line naming the kind as unknown, or with [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s reason where it is configured and declares no IDs, then a `known kinds:` line naming the citable kinds, or [§FS-list.1.1](FS-list.md#11---kind)'s line where there are none, both on stderr.
 
 ```
 error: unknown kind `NOPE`
@@ -78,7 +78,7 @@ next: add the declaration to requirements.md  (H2: `## FS-002-password-reset: <o
 Where the line points follows the kind's home:
 
 - A configured file: the first one its row lists, with an H1 where the kind's first declaration in that file is an H1, or, with none there, where the file's H1 title is followed by headings of its own; otherwise an H2.
-- A configured `folder`: the new declaration file under it, with an H1. `E2E` names instead the case directory to create under its folder, with `expected.exit` and fixtures, because its declaration is a case directory ([§FS-config.3.4.4.3](FS-config.md#3443-e2e-is-configured-not-a-default)).
+- A configured `folder`: the new declaration file under it, with an H1. `E2E` names instead the case directory to create under its folder, with `expected.exit` and fixtures, because its declaration is a case directory ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)).
 - Neither: the H1 and the citation, with no path.
 
 Under `--format json` the flag has no effect.

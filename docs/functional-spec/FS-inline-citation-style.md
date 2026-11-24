@@ -10,7 +10,7 @@ doc-comment, note), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project
 severity), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction).
 
 - **comment block** — The contiguous run of comment lines a site is measured over, as
-  [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) delimits it.
+  [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block) delimits it.
 - **definition-starter** — The language keyword on the line below a block that makes the block a
   doc-comment rather than an inline comment.
 - **leading comment** — A block with only blank lines or a shebang above it — how a language
@@ -34,7 +34,7 @@ The copy in the managed block is rendered from the keys `check` reads ([§FS-inl
 
 ## 1. Scope
 
-A **note** is an inline comment block — a maximal run of adjacent comment or docstring lines, as [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) bounds a comment block — that holds at least one citation token recognized by [§FS-citations.recognized](FS-citations.md#recognized-recognized-citations). A doc-comment block is never a note, whatever it carries.
+A **note** is an inline comment block — a maximal run of adjacent comment or docstring lines, as [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block) bounds a comment block — that holds at least one citation token recognized by [§FS-citations.recognized](FS-citations.md#recognized-recognized-citations). A doc-comment block is never a note, whatever it carries.
 
 ### 1.1 Doc-comments are not sites
 
@@ -87,7 +87,7 @@ The starter sets may widen for measurement without a profile changing ([§FS-inl
 
 ### 1.2 Comment blocks
 
-The block forms say where a block begins and ends, and are [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks). They are the scanner's existing normalization, not a verdict on which blocks are sites.
+The block forms say where a block begins and ends, and are [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block). They are the scanner's existing normalization, not a verdict on which blocks are sites.
 
 ### 1.3 What is not a site
 
@@ -111,7 +111,7 @@ Under v2 the budgets are measure tables, `[schema.notes.lines]`, `[schema.notes.
 
 ### 2.3 Counting lines and columns
 
-A note is measured over its comment block ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)), by its physical lines and by the characters on its longest line.
+A note is measured over its comment block ([§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block)), by its physical lines and by the characters on its longest line.
 
 #### 2.3.1 Lines
 
@@ -190,7 +190,7 @@ src/auth.rs:1: error: inline note is 5 lines, over the 3-line maximum: lines 1-5
 src/lib.rs:7: error: inline note is 47 columns, over the 40-column maximum: line 7 cites §FS-001-alpha; over-limit lines: line 7: 47 columns; shorten or rewrap its widest line
 ```
 
-The line and column findings put the measured size, physical lines ([§FS-inline-citation-style.2.3.1](FS-inline-citation-style.md#231-lines)) or the characters of the note's longest line ([§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns)), beside the cap; the size pluralises by its own value (`1 line`, `2 lines`, `1 column`, `2 columns`), and the cap, `3-line` or `40-column`, never does. Each names the note by the span of its whole block, `lines <first>-<last>`, or `line <first>` alone when the two coincide (only possible for the column cap), and by every citation token of the block as written — marker, qualifier, section — in source order, deduplicated after the first occurrence, joined by `, ` as [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit) joins a citation run. The line-count finding then adds the block rule of [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks), the boundary a split has to cross.
+The line and column findings put the measured size, physical lines ([§FS-inline-citation-style.2.3.1](FS-inline-citation-style.md#231-lines)) or the characters of the note's longest line ([§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns)), beside the cap; the size pluralises by its own value (`1 line`, `2 lines`, `1 column`, `2 columns`), and the cap, `3-line` or `40-column`, never does. Each names the note by the span of its whole block, `lines <first>-<last>`, or `line <first>` alone when the two coincide (only possible for the column cap), and by every citation token of the block as written — marker, qualifier, section — in source order, deduplicated after the first occurrence, joined by `, ` as [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit) joins a citation run. The line-count finding then adds the block rule of [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block), the boundary a split has to cross.
 
 The column finding adds `; over-limit lines: <line widths>` after its site clause and before its fix. `<line widths>` lists every line of the block strictly wider than that finding's threshold, in ascending source order, separated by `, `, each as `line L: W columns`, where `L` is the 1-based physical line and `W` its width as [§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns) measures it, with `column` only when `W = 1`. A line exactly at the threshold is left out, and the label is `over-limit lines` even for one entry. A v2 column threshold of any strength carries the same suffix, measured against its own threshold ([§FS-config-v2.schema.measures](FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys)), and a hard column finding suppresses the softer column findings of the same note. The fix closes every message, as its catalog row words it ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)).
 
@@ -240,7 +240,7 @@ When the soft and the hard cap are the same number, only the number is said.
 
 ### 5.2 The block sentence
 
-Under `citation-with-note` only, one further sentence follows the budgets line and precedes the layout and doc-comment sentences ([§FS-inline-citation-style.5.3](FS-inline-citation-style.md#53-the-layout-sentence), [§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence)): `A note is one comment block: a blank line splits it, an empty comment line does not.`, the block rule of [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) where the agent needs it to act on a cap finding.
+Under `citation-with-note` only, one further sentence follows the budgets line and precedes the layout and doc-comment sentences ([§FS-inline-citation-style.5.3](FS-inline-citation-style.md#53-the-layout-sentence), [§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence)): `A note is one comment block: a blank line splits it, an empty comment line does not.`, the block rule of [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block) where the agent needs it to act on a cap finding.
 
 ### 5.3 The layout sentence
 
@@ -256,7 +256,7 @@ One last sentence closes the rendered copy at **every** `inline_style`, after wh
 
 ### 5.5 Rendered, not live
 
-The sentences of [§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)–[§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence) are *rendered*, not live: `grund init` writes them into the managed block, and `check` compares them with the active config as it compares the rest of the block ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). A project that adopts `inline_note_layout`, changes its value, drops back to `any`, or edits `[schema.notes]` therefore sees `check` report the block's `rules` section stale ([§FS-check.3.5.3](FS-check.md#353-code-and-message)) until it re-runs `grund init`.
+The sentences of [§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)–[§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence) are *rendered*, not live: `grund init` writes them into the managed block, and `check` compares them with the active config as it compares the rest of the block ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). A project that adopts `inline_note_layout`, changes its value, drops back to `any`, or edits `[schema.notes]` therefore sees `check` report the block's `rules` section stale ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) until it re-runs `grund init`.
 
 ### 5.6 No managed-block version
 
@@ -264,7 +264,7 @@ Retired: these sentences once moved no managed-block version, because `check` di
 
 ### 5.7 `grund config show` is the machine-readable form
 
-`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) prints each inline-style setting in effect, in the config file's own version, at its value with no collapse ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)). In a version-2 file a setting that is off, such as `[schema.notes.layout]` while no layout is required, prints nothing, and `grund config explain` answers for it ([§FS-config.4.2.3.1](FS-config.md#4231-what-sends-a-reader-to-show-names-explain)).
+`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) prints each inline-style setting in effect, in the config file's own version, at its value with no collapse ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)). In a version-2 file a setting that is off, such as `[schema.notes.layout]` while no layout is required, prints nothing, and `grund config explain` answers for it ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)).
 
 ## 6. Non-goals
 

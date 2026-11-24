@@ -6,9 +6,9 @@ grouping block that lists it: a `[workspace]` with `include_root = false`, which
 is no project but is a config the run reads. `grund check` at the root passes,
 and says once per config still on version 1 which file it is and the command
 that moves it ([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)), the grouping block's included
-([§FS-check.4.11.3](../../docs/functional-spec/FS-check.md#4113-once-per-config-not-once-per-scope)). `grund config validate` at the same root says the same lines,
+([§FS-check.4.11](../../docs/functional-spec/FS-check.md#411-config-read-from-the-deprecated-agents-location)). `grund config validate` at the same root says the same lines,
 because it names the config findings of every config the workspace reads, as
-`check` does ([§FS-config.4.1.1](../../docs/functional-spec/FS-config.md#411-at-a-workspace-root)). The example pins the two runs, `1-check` and
+`check` does ([§FS-config.4.1](../../docs/functional-spec/FS-config.md#41-grund-config-validate-path)). The example pins the two runs, `1-check` and
 `2-config-validate`, each over its own copy of the same `repo/`.
 
 ```toml
@@ -40,7 +40,7 @@ include = ["docs"]
 - **One line per config still on version 1, and none for version 2.** The
   root is on version 2 and earns nothing; the member and the grouping block
   each earn exactly one line, however many scopes the run walks
-  ([§FS-check.checks.config-version-1.1](../../docs/functional-spec/FS-check.md#checksconfig-version-11-order-beside-the-other-config-findings)).
+  ([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)).
 - **The line ends with the directory to pass.** `packages/beta` and `packages`
   are not the report's base, so the command names each; a single project's line
   ends at `--to 2`.

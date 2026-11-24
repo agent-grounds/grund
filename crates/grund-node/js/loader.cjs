@@ -1,4 +1,4 @@
-// §FS-distribution.3.2.3.2: lazy, local-first exact native payload selection.
+// §FS-distribution.3.2.3: lazy, local-first exact native payload selection.
 'use strict';
 const fs=require('node:fs');
 const path=require('node:path');

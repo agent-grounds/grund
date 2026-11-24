@@ -1,7 +1,7 @@
-//! The list a count row names (§FS-rules.7.3.1): the engine hands over the citations a count read
+//! The list a count row names (§FS-rules.7.3): the engine hands over the citations a count read
 //! (§AR-rules.5), and the checker, which holds the run's spellings and report base, writes
 //! `; counted at <path>:<line> (<citation>), …` after the whole message and fills `sites` with
-//! each distinct line, so a run narrowed to any of them reports the row (§FS-check.1.3.6.2).
+//! each distinct line, so a run narrowed to any of them reports the row (§FS-check.1.3.6).
 
 use std::path::{Path, PathBuf};
 
@@ -52,7 +52,7 @@ fn with_counted_list(
 
 /// The clause and the `sites` of `entries`, each a settled site beside the citation written there:
 /// entries by path, then line, then column, with no cap, and each distinct line once
-/// (§FS-rules.7.3.1). `display` names a path as the report names every path (§FS-errors.3), and
+/// (§FS-rules.7.3). `display` names a path as the report names every path (§FS-errors.3), and
 /// the citation is the one written there, without its `§`.
 fn counted_clause(
     mut entries: Vec<(Site, SiteMeta)>,

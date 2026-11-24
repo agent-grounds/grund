@@ -22,7 +22,7 @@ release of [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-co
 verdict, and then the record names that requirement.
 
 - **D1** (V-A02). A path argument to `check`, `list`, `show` or `id` narrows what is
-  reported; resolution always covers the owning project. [§FS-check.1.3.6.1](../../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution) is the defining
+  reported; resolution always covers the owning project. [§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows) is the defining
   point, already decided by [§DF-path-scope-resolves-project-wide](DF-path-scope-resolves-project-wide.md#df-path-scope-resolves-project-wide-a-path-scoped-check-resolves-against-the-whole-project-and-reports-only-the-path), and [§FS-show.1.4](../../functional-spec/FS-show.md#14-path-and---path) and
   [§FS-list.1](../../functional-spec/FS-list.md#1-inputs) are the copies to correct. Route: the warning release,
   [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path). A query operand is not a citation, so no existing
@@ -31,7 +31,7 @@ verdict, and then the record names that requirement.
   directory would see, as `list <dir>` does today and as [§FS-workspace.8.8](../../functional-spec/FS-workspace.md#88-discovery-follows-grund-checks-walk-up) says, then
   resolves each of them completely; a member directory still means a member run. Read that
   way D14 and D1 compose. Route: the warning release, [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), since
-  [§FS-check.1.3.6.3](../../functional-spec/FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud) classifies today's `unknown project alias` as a knowingly scoped finding.
+  [§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows) classifies today's `unknown project alias` as a knowingly scoped finding.
 - **D5** (V-A07). A stub's target must pass the walk's own filters, exclude and ignore
   files, with only the `include` gate removed; a stub to an excluded or ignored target turns
   broken under [§FS-declarations.checks.broken-stub](../../functional-spec/FS-declarations.md#checksbroken-stub-broken-inline-spec-stub). Route: the warning release,

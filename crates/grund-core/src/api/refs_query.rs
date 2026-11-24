@@ -100,9 +100,9 @@ pub(super) fn refs_impl_with_details(
     refs_impl_with_annotations(opts, details, cautions, hint, None, &mut Vec::new())
 }
 
-/// §FS-refs.3.1.1: frontend annotations from this scan, outside result records.
+/// §FS-refs.3.1: frontend annotations from this scan, outside result records.
 /// `set_aside` receives the text of each warning a broken stub set aside beside a
-/// real home earns, which a text frontend alone prints (§FS-refs.4.1.1).
+/// real home earns, which a text frontend alone prints (§FS-refs.4.1).
 pub(super) fn refs_impl_with_annotations(
     opts: RefsOpts,
     details: &mut serde_json::Value,
@@ -150,7 +150,7 @@ pub(super) fn refs_impl_with_annotations(
     ) {
         Ok(resolved) => resolved,
         Err(error) => {
-            // §FS-workspace.8.2.2.1: candidate commands replace only text format advice.
+            // §FS-workspace.8.2.2: candidate commands replace only text format advice.
             *hint = error.wants_format_hint().then(|| {
                 member_id_refs_hint(&context, alias.as_deref(), raw_id)
                     .unwrap_or_else(|| invalid_id_hint(render_config, &opts.id, Some(raw_id)))
@@ -194,7 +194,7 @@ pub(super) fn refs_impl_with_annotations(
         &id,
         section.as_deref(),
     ) {
-        // §FS-refs.4.1.1: a broken stub beside a real home is set aside and named.
+        // §FS-refs.4.1: a broken stub beside a real home is set aside and named.
         Ok(warnings) => *set_aside = warnings,
         Err(refusal) => {
             // §FS-refs.4: keep format, warnings and partial-scan precedence beside

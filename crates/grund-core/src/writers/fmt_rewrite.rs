@@ -5,13 +5,13 @@
 //! decisions inside it. The link construction §FS-fmt.6 needs is
 //! `fmt_links.rs`, the two suppressed scopes of §FS-fmt.2.5 are
 //! `grammar/fmt_suppress.rs` — recognizing them is lexical, and the editor's
-//! on-type rule reads the same two records (§FS-lsp.1.4.3). The command surface
+//! on-type rule reads the same two records (§FS-lsp.1.4). The command surface
 //! lives in `grund-cli`; this engine file only returns edits
 //! (§AR-system.2.9.1).
 //!
 //! Named for the rewrite rather than for the category, because the category is
 //! the `writers/` directory now (§AR-core-module-layout.1). Tree and scope
-//! orchestration, including §FS-fmt.6.6's auto-enable pair, lives in the
+//! orchestration, including §FS-fmt.6.7.2's auto-enable pair, lives in the
 //! cohesive `fmt_tree.rs` sibling (§AR-core-module-layout.1.5).
 
 use std::collections::BTreeSet;
@@ -36,8 +36,8 @@ use crate::scanner::DeclarationLines;
 
 /// One file's rewritten lines plus what the walk needs to decide afterwards:
 /// whether anything changed, and whether a shorthand expansion was wanted but
-/// could not be performed for lack of the declaration set (§FS-fmt.2.4.5), and which
-/// aliased projects a rewrite was withheld from for lack of their proof (§FS-fmt.7.4.4).
+/// could not be performed for lack of the declaration set (§FS-fmt.2.4), and which
+/// aliased projects a rewrite was withheld from for lack of their proof (§FS-fmt.7.4).
 pub(super) struct RewrittenFile {
     pub(super) lines: Vec<String>,
     pub(super) changed: bool,
@@ -66,16 +66,16 @@ pub(super) fn rewrite_file(
     let mut changed = false;
     let mut saw_shorthand_candidate = false;
     let mut unproven_aliases = BTreeSet::new();
-    // §FS-fmt.2.5.2.1: every file starts with the rewrite on — a region never
+    // §FS-fmt.2.5.2: every file starts with the rewrite on — a region never
     // carries across files.
     let mut directives = FmtDirectives::new(reading.lexical, is_md);
     // §FS-languages.multi-line-string: the literal each line begins inside.
     let literals = reading.literals(original);
-    // §FS-fmt.2.3.1.1: `fmt` judges a docstring line on its content, so it carries
+    // §FS-fmt.2.3.1: `fmt` judges a docstring line on its content, so it carries
     // the scanner's docstring state — advanced on *every* line, including the ones
     // passed through untouched, or one unvisited `"""` desynchronizes the file.
     let mut docstrings = DocstringCursor::new(is_py, reading.lexical.docstring_python, &literals);
-    // §FS-config-v2.schema.sources.declarations.gate: the lines the scan declares on.
+    // §FS-config-v2.schema.sources.declarations: the lines the scan declares on.
     let declarations = DeclarationLines::of(original, reading);
     // §FS-citations.wrap: the file every pass reads a reference or a multi-line link
     // in, read only when a citation asks.
@@ -137,7 +137,7 @@ pub(super) fn rewrite_file(
             &mut saw_shorthand_candidate,
             &mut unproven_aliases,
         );
-        // §FS-fmt.3.6.1: one row per changed line, however many rewrites it holds.
+        // §FS-fmt.3.6: one row per changed line, however many rewrites it holds.
         if new_line != line {
             changes.push(FmtRow {
                 path: path.to_path_buf(),
@@ -168,21 +168,21 @@ pub(crate) struct FmtLineOpts<'a> {
     /// is suppressed. The per-region directives (§FS-fmt.2.5.2) are the other half
     /// of the same verdict and are read line by line in `rewrite_file`.
     pub(crate) excluded: bool,
-    /// §FS-fmt.6.1.2: when this file is a kind's index the always-linkify carve-out
+    /// §FS-fmt.6.1: when this file is a kind's index the always-linkify carve-out
     /// may have to reach, the IDs that index owes an entry for and which citation
     /// is each one's entry — the only citations the pass wraps where the ordinary
     /// one is off: under `[fmt.cross_refs] enabled = false`, or inside a suppressed
-    /// scope (§FS-fmt.2.5.3). `None` for every other file. Where the ordinary pass
+    /// scope (§FS-fmt.6.1). `None` for every other file. Where the ordinary pass
     /// runs, the carve-out only notes the links it leaves.
     pub(crate) index_entry_ids: Option<&'a IndexCarveOut<'a>>,
     pub(crate) findings: Option<&'a Catalog>,
     pub(crate) workspace: Option<&'a WorkspaceContext>,
     /// The declaration indexes the shorthand rewrite resolves against, built once
-    /// per walk (§FS-fmt.2.4.5). Separate from `findings` because a qualified
+    /// per walk (§FS-fmt.2.4). Separate from `findings` because a qualified
     /// shorthand reads another project's declarations entirely.
     pub(crate) shorthand_targets: &'a ShorthandTargets<'a>,
     /// The heading lines this run leaves rewritten, which every anchor the link
-    /// pass writes is derived from (§FS-fmt.6.3.3).
+    /// pass writes is derived from (§FS-fmt.6.3).
     pub(crate) settled: &'a SettledHeadings,
 }
 
@@ -190,12 +190,12 @@ pub(crate) struct FmtLineOpts<'a> {
 /// then optionally bare→marker (§FS-fmt.2.2), then shorthand→canonical
 /// (§FS-fmt.2.4), then optionally Markdown-link wrapping (§FS-fmt.6) —
 /// returning the new line plus the account of what each pass did to it, which
-/// its row and its share of the `--write` totals are read from (§FS-fmt.3.5.1,
+/// its row and its share of the `--write` totals are read from (§FS-fmt.3.5,
 /// §FS-fmt.3.7).
 ///
 /// The shorthand pass runs after the trigger pass and reads its output, so a
 /// typed `$$FS-042` is marked and then expanded within the one call — which is
-/// how §FS-fmt.2.4.3's "in one step" holds without the trigger pass needing to
+/// how §FS-fmt.2.4's "in one step" holds without the trigger pass needing to
 /// know about declarations.
 ///
 /// Why each stage takes ownership of the previous stage's line:
@@ -208,10 +208,10 @@ pub(crate) struct FmtLineOpts<'a> {
 /// expansion writes the slug *into* the token, and a wrong one is a well-formed
 /// citation of the wrong declaration; a link writes a destination and an anchor
 /// `check` never reads (§FS-non-goals.1). The preview is the only review either
-/// gets before it lands (§FS-fmt.3.6.2).
+/// gets before it lands (§FS-fmt.3.6).
 ///
 /// Why the declaration-local and shorthand details can be merged by offset
-/// (§FS-fmt.3.6.1): both are recorded as offsets into one line, the local pass's
+/// (§FS-fmt.3.6): both are recorded as offsets into one line, the local pass's
 /// output, which is the shorthand pass's input. No pass reorders tokens, so order
 /// in that line is order in the source line.
 #[allow(clippy::too_many_arguments)]
@@ -280,7 +280,7 @@ fn fmt_line_at(
     );
     rewrite.counts.shorthands_expanded = expansions.len() - rewrite.counts.local_sections_expanded;
     let mut final_line = expansion.unwrap_or(marked);
-    // §FS-fmt.6.1.2: the carve-out narrows the pass to the index's own entries only
+    // §FS-fmt.6.1: the carve-out narrows the pass to the index's own entries only
     // where the ordinary pass is off; where it runs, it already wraps the page.
     let carve_out = opts.index_entry_ids.map(|carve_out| match opts.cross_refs {
         true => CarveOutPass::Watch(carve_out),
@@ -301,13 +301,13 @@ fn fmt_line_at(
             opts.shorthand_targets,
             opts.settled,
         );
-        // §FS-fmt.3.6.2: the count, the note and the items, from the one record.
+        // §FS-fmt.3.6: the count, the note and the items, from the one record.
         wrapped.account(&final_line, &mut rewrite);
         unproven_aliases.extend(wrapped.unproven_aliases);
         final_line = wrapped.line;
     }
     // §FS-fmt.3.6: whichever label leads, an expansion names the text it writes
-    // (§DF-shorthand-numeric-run.2.7); local and shorthand share it (§FS-fmt.3.6.1).
+    // (§DF-shorthand-numeric-run.2.7); local and shorthand share it (§FS-fmt.3.6).
     expansions.sort_by_key(|(start, _, _)| *start);
     rewrite.expansions = expansions
         .iter()
@@ -353,7 +353,7 @@ pub(crate) fn fmt_line(
 struct TriggerReplacement {
     line: String,
     /// Byte offsets in `line` where §FS-fmt.2.1 produced a marker. Keeping
-    /// these offsets is what lets §FS-fmt.2.4.3 distinguish authoring sugar from
+    /// these offsets is what lets §FS-fmt.2.4 distinguish authoring sugar from
     /// persisted marker shorthand candidate by candidate.
     marker_starts: Vec<usize>,
 }
@@ -416,7 +416,7 @@ pub(super) fn add_markers(
     {
         let Some(token) = caps.get(0) else { continue };
         let found = (offset + token.start())..(offset + token.end());
-        // §FS-workspace.1.3: a `path/ID` token without a marker is text, not a
+        // §FS-workspace.5.2: a `path/ID` token without a marker is text, not a
         // citation — `fmt --marker` must not auto-promote it to `§path/ID`.
         if caps.name("namespace").is_some() {
             continue;
@@ -451,7 +451,7 @@ pub(super) fn add_markers(
         cursor = found.end;
     }
     output.push_str(&line[cursor..]);
-    // §FS-fmt.2.4.3: the shorthand pass reads the rewritten line, so carry each
+    // §FS-fmt.2.4: the shorthand pass reads the rewritten line, so carry each
     // trigger-origin marker past any earlier bare-citation marker insertions.
     for start in trigger_marker_starts {
         *start += inserted_at

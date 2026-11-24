@@ -138,7 +138,7 @@ pub(super) fn dangling_message_spelled(
                 remedies::dangling_escape(escape)
             )
         }
-        // §FS-check.3.1.4: the last resort, when no other hint applies.
+        // §FS-check.3.1: the last resort, when no other hint applies.
         (None, None) => match missing_places(schema, frame, &missing.kind) {
             Some(places) => format!("unknown reference {unknown}; {places}"),
             None => format!("unknown reference {unknown}"),
@@ -146,7 +146,7 @@ pub(super) fn dangling_message_spelled(
     }
 }
 
-/// §FS-check.3.1.4: when the v2 row of `kind` has places and none of them
+/// §FS-check.3.1: when the v2 row of `kind` has places and none of them
 /// exists, every one of them in row order, each at its config line, and the
 /// pattern remedy when one is written as a glob. The places and their lines are
 /// the schema load's (§FS-config-v2.schema.places); a partly missing row, a row
@@ -185,14 +185,14 @@ fn missing_places(schema: &Schema, frame: Frame<'_>, kind: &str) -> Option<Strin
 }
 
 /// `check`'s tail at a home `fetch` refuses because the scan does not read it, the same for
-/// `dangling` and `missing-snapshot` and in either config version (§FS-check.3.1.3.1).
+/// `dangling` and `missing-snapshot` and in either config version (§FS-check.3.1).
 const UNREAD_HOME_TAIL: &str = "give the file a name the scan reads as Markdown";
 
-/// §FS-check.3.1.3 / §FS-check.4.12.1: a missing declaration in a fetch-enabled
+/// §FS-check.3.1 / §FS-check.4.12: a missing declaration in a fetch-enabled
 /// home. Existing typo/illustration hints replace the fetch action while the
 /// snapshot-specific base and fixed finding class remain. `schema` and `frame` are
 /// the target's, spelling paths as the report does, so a home `fetch` refuses
-/// (§FS-check.3.1.3.1) is asked of it and the tail names where the fetch runs
+/// (§FS-check.3.1) is asked of it and the tail names where the fetch runs
 /// (§FS-imports.writes.answer).
 /// §FS-check.3.1.5: the selected hints replace the action, keeping this base.
 pub(super) fn missing_snapshot_message(
@@ -224,9 +224,9 @@ pub(super) fn missing_snapshot_message(
             // §FS-fetch.4.2.1: the missing ID's own `<ID>.md`, since no file declares it.
             let refused = fetch_refused_home(schema, frame, &missing.kind, Some(spelling));
             let tail = match (refused, must) {
-                // §FS-check.3.1.3.1: the scan reads no file there, so the repair is a name.
+                // §FS-check.3.1: the scan reads no file there, so the repair is a name.
                 (Some((_, RefusedHome::Unread(_))), _) => UNREAD_HOME_TAIL.to_string(),
-                // §FS-check.3.1.3.1: the walk skips the `<ID>.md`, so the repair is the rule.
+                // §FS-check.3.1: the walk skips the `<ID>.md`, so the repair is the rule.
                 (Some((snapshot, RefusedHome::Excluded(rule))), _) => {
                     let spell = |path: &std::path::Path| frame.display.path(path);
                     format!(
@@ -251,7 +251,7 @@ pub(super) fn missing_snapshot_message(
                     remedies::missing_snapshot_source_file_value()
                 }
                 (None, must) => {
-                    // §FS-check.3.1.3.2: only a key `grund fetch` could run earns the command.
+                    // §FS-check.3.1: only a key `grund fetch` could run earns the command.
                     if let Some(repair) = fetch_key_tail(schema, frame, &missing.kind, must) {
                         return format!("{base} — {repair}");
                     }
@@ -270,7 +270,7 @@ pub(super) fn missing_snapshot_message(
     format!("{base}; {remedy}")
 }
 
-/// §FS-check.3.1.3.2: the key's name and the repair where `grund fetch` has nothing to run for
+/// §FS-check.3.1: the key's name and the repair where `grund fetch` has nothing to run for
 /// `kind`, asked as that command asks it of the project the ID is in: `schema` and `frame` are
 /// the target's. `None` where the command could run.
 fn fetch_key_tail(schema: &Schema, frame: Frame<'_>, kind: &str, must: bool) -> Option<String> {
@@ -290,7 +290,7 @@ fn fetch_key_tail(schema: &Schema, frame: Frame<'_>, kind: &str, must: bool) -> 
     ))
 }
 
-/// §FS-check.3.1.2: whether a citation site sits inside a Markdown inline-code
+/// §FS-check.3.1: whether a citation site sits inside a Markdown inline-code
 /// span, the signal that a dangling `§`-citation may be an illustration. Only
 /// the rare dangling path asks, so this reads the one line out of the file record
 /// the scan kept (§AR-scanner.2.8) rather than widening every `Citation`; source
@@ -310,7 +310,7 @@ pub(super) fn citation_in_markdown_inline_code(
     // buffer's included; a file without one is read as the run reads it.
     let line = match findings.files.get(&cite.file) {
         Some(record) => record.line(cite.line).map(str::to_string),
-        // §FS-check.6.1.1: cover this effective input before its shared read.
+        // §FS-check.6.1: cover this effective input before its shared read.
         None => frame.sources().text(&cite.file).ok().and_then(|text| {
             let line = text.lines().nth(cite.line.saturating_sub(1))?;
             Some(line.to_string())

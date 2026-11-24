@@ -13,10 +13,10 @@ use crate::model::FileRecord;
 /// `base`, the slug of the heading on `line` of `record`, numbered as the
 /// renderer numbers it: unchanged for the first heading of that slug in the
 /// file, `<base>-1`, `<base>-2`, … under `github`, `gitlab` and `pandoc`, and
-/// `<base>_1`, `<base>_2`, … under `mkdocs` (§FS-fmt.6.2.3,
+/// `<base>_1`, `<base>_2`, … under `mkdocs` (§FS-fmt.6.2.2,
 /// §DF-repeated-heading-anchor.decision.count). Without a record, or where the
 /// record has no heading on `line`, `base` comes back as it is. Each heading is
-/// counted with the text the run leaves it (`settled`, §FS-fmt.6.3.3).
+/// counted with the text the run leaves it (`settled`, §FS-fmt.6.3).
 pub(crate) fn numbered_anchor(
     record: Option<&FileRecord>,
     settled: Option<&SettledLines>,

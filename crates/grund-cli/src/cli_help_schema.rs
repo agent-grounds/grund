@@ -1,6 +1,6 @@
 /// The `grund schema --help` page (§FS-cli.2.3, §FS-schema.1): the formats, the run
 /// flag, discovery and the workspace footer, and one example per flag
-/// (§FS-cli.2.3.1).
+/// (§FS-cli.2.3).
 fn print_schema_help() {
     println!("grund schema — the kinds, places, shapes and citation rules a repository is held to.");
     println!();

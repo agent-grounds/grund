@@ -33,7 +33,7 @@ operation may add a sixth without amending this requirement:
 5. integrity is verified offline and recursively.
 
 Suppression may never let a consumer citation pass that a local twin would fail
-([§FS-remote-projects.differences.consumer-site](../functional-spec/FS-remote-projects.md#differencesconsumer-site-suppression-never-lets-a-consumer-citation-pass)).
+([§FS-remote-projects.differences](../functional-spec/FS-remote-projects.md#differences-the-closed-list-of-differences)).
 
 ## 3. Writes are inside the contract
 

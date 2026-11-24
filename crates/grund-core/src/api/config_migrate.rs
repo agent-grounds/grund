@@ -152,9 +152,9 @@ fn write(located: &Located, v1_text: &str, report: &MigrateReport) -> Result<(),
     })
 }
 
-/// §FS-config-migrate.8.1.2 item 1: whether a root of the block's version-1
+/// §FS-config-migrate.8.1 item 1: whether a root of the block's version-1
 /// default scope exists outside its expanded member roots, asked through the
-/// unread-block probe's own scope and boundary (§FS-check.4.10.2,
+/// unread-block probe's own scope and boundary (§FS-check.4.10,
 /// §AR-config.8.4). A block that does not load or expand keeps the conservative
 /// path, where the translation names what is wrong.
 fn default_scope_on_disk(located: &Located) -> bool {
@@ -169,7 +169,7 @@ fn default_scope_on_disk(located: &Located) -> bool {
     !crate::workspace::uncovered_block_scope_roots(&config).is_empty()
 }
 
-/// §FS-config-migrate.3.1.4.1, §FS-config-migrate.3.1.5.1: the files the version 1
+/// §FS-config-migrate.3.1.4, §FS-config-migrate.3.1.5: the files the version 1
 /// scan of `v1` reads, by the scan's own walk (§AR-scanner.1), kept
 /// out of the member roots as `grund list` keeps the root's scan (§FS-workspace.6.2).
 /// A path the walk cannot read is not read, so it is not named, and raising its
@@ -363,7 +363,7 @@ pub(super) fn describes_config(finding: &Finding) -> bool {
 /// §FS-config-migrate.5.2: a stale finding on the citation directions section of
 /// the root block, in `AGENTS.md` or a companion that carries it
 /// (§FS-check.3.5): the section the guidance gate compares in one grammar
-/// (§FS-config-migrate.5.3.1). A scoped or member block is spelled under its
+/// (§FS-config-migrate.5.3). A scoped or member block is spelled under its
 /// directory, so it is never one.
 pub(super) fn root_directions(finding: &Finding) -> bool {
     finding.code == Code::AGENTS_INIT.as_str()
@@ -379,7 +379,7 @@ pub(super) fn root_directions(finding: &Finding) -> bool {
 /// One candidate config line as the comparison prints it: the version-1 line its
 /// key came from, or, where the key map holds none, the candidate's own line
 /// marked as the candidate's, so it compares equal to no version-1 line
-/// (§FS-config-migrate.5.2.1).
+/// (§FS-config-migrate.5.2).
 fn config_line(config: &str, line: usize, v1: Option<usize>) -> String {
     match v1 {
         Some(v1) => format!("{config}:{v1}"),
@@ -389,7 +389,7 @@ fn config_line(config: &str, line: usize, v1: Option<usize>) -> String {
 
 /// Each `<config>:<line>` a message names, its line moved by `v1_line`: a
 /// message that points into the config points at the key's v1 line, and one the
-/// key map does not hold names the candidate's own (§FS-config-migrate.5.2.1).
+/// key map does not hold names the candidate's own (§FS-config-migrate.5.2).
 /// `config` is the spelling matched, `shown` the one printed (§FS-config-migrate.2.2).
 pub(super) fn config_lines(
     message: &str,

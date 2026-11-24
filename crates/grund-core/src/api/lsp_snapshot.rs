@@ -45,7 +45,7 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
 }
 
 /// Load completion configuration and candidates with the editor snapshot
-/// (§FS-lsp.1.6.2, §FS-lsp.1.6.4), never separately per request.
+/// (§FS-lsp.1.6), never separately per request.
 pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshotWithCompletion> {
     // §FS-lsp.responsiveness.3: the run keeps what it reads, for the hover.
     let overlays = normalized_overlays(opts.open_documents).recording();
@@ -237,7 +237,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 };
                 for (section, info) in &home.sections {
                     let (column, text) = section_range_parts(files, home, info, section);
-                    // §FS-lsp.1.2.4: `.1: Username` hovers as `format.1: Username`.
+                    // §FS-lsp.1.2.3: `.1: Username` hovers as `format.1: Username`.
                     let hover_text = info
                         .relative
                         .then(|| expand_relative_heading(&text, section));
@@ -290,7 +290,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
             };
             let rendered_id = target_project
                 .map(|target| {
-                    // §FS-config.3.2.8 / §FS-lsp.1.2.5: editor joins use the
+                    // §FS-config.3.2.8 / §FS-lsp.1.2.3: editor joins use the
                     // selected declaration; text and ranges keep source digits.
                     if target.findings.declarations.contains_key(&citation.id) {
                         render_catalog_id(
@@ -381,9 +381,9 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
         ))
     });
 
-    // §FS-lsp.1.1.3: the run-level `[workspace]` warnings, published on the `grund.toml`
+    // §FS-lsp.1.1: the run-level `[workspace]` warnings, published on the `grund.toml`
     // each one anchors at — the same channel the CLI renders, from the same place
-    // (§FS-lsp.4.1).
+    // (§FS-lsp.4).
     let run_warnings = public_lsp_run_warnings(&render_config, editor_run_warnings(&context));
     let snapshot = LspSnapshotWithCompletion {
         completion,

@@ -1,4 +1,4 @@
-//! Transport metadata sourced before rendering (§FS-distribution.3.2.2.2).
+//! Transport metadata sourced before rendering (§FS-distribution.3.2.2).
 use crate::config::Config;
 use crate::grammar::render_catalog_id;
 use crate::model::{Catalog, Id};

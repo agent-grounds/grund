@@ -1,5 +1,5 @@
 /// The complete `grund check --help` discovery surface: all inputs, selected
-/// report semantics, the public code catalog, and recovery examples (§FS-cli.3.3).
+/// report semantics, the public code catalog, and recovery examples (§FS-cli.2.3).
 /// Scope advice stays independent of config discovery (§FS-cli.2.3).
 fn print_check_help() {
     println!("grund check — validate every ID citation across the repo.");
@@ -26,7 +26,7 @@ fn print_check_help() {
     println!("Path validation is explicit; `grund PATH` is parsed as an ID query.");
     println!();
     println!("Options:");
-    // §FS-cli.3.3: the resident flag's discovery and lifecycle contract.
+    // §FS-cli.2.3: the resident flag's discovery and lifecycle contract.
     println!("  --watch              check immediately, then re-check on native filesystem notifications.");
     println!("                       Ctrl-C returns the last completed status (2 before completion).");
     println!("                       Text may use an alternate screen; clean JSON runs emit no record.");
@@ -57,7 +57,7 @@ fn print_check_help() {
     println!(
         "  --ignore <code>      remove one exact finding code; repeat for a union; ignore wins over only (`--ignore=<code>` also works)."
     );
-    // §FS-cli.3.3: the third selector on the same footing as the code axis —
+    // §FS-cli.2.3: the third selector on the same footing as the code axis —
     // what it narrows by, and that it refuses to stand alone (§FS-rules.8).
     println!(
         "  --only-rule          retain only what the --rule sentence found; requires --rule."
@@ -82,7 +82,7 @@ fn print_check_help() {
     println!("A selected code the run leaves off earns one selected-check-off warning naming what");
     println!("turns it on; only --ignore selected-check-off removes it, and the exit is unchanged.");
     println!();
-    // §FS-cli.3.3, §FS-rules.8: a trial sentence emits the codes the declared
+    // §FS-cli.2.3, §FS-rules.8: a trial sentence emits the codes the declared
     // rules emit, so only the authority axis answers what it found — and its
     // `should`-level empty report is the one most likely to be misread.
     println!("--only-rule narrows that same report by rule authority instead of by code: only what");
@@ -96,7 +96,7 @@ fn print_check_help() {
     for code in Code::ALL {
         println!("  {}", code.as_str());
     }
-    // §FS-cli.3.3: where to ask what a code means.
+    // §FS-cli.2.3: where to ask what a code means.
     println!("grund config explain CODE says what a code means, its severity and what turns it on.");
     println!();
     println!(

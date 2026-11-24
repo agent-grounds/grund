@@ -17,7 +17,7 @@ pub struct FmtScanAbort {
 }
 
 impl FmtScanAbort {
-    /// The same refusal with each path named once (§FS-fmt.3.3), the first mention
+    /// The same refusal with each path named once (§FS-fmt.3.2), the first mention
     /// keeping its place, for a refusal assembled from more than one walk.
     pub(super) fn named_once(mut self) -> Self {
         let mut seen = std::collections::BTreeSet::new();
@@ -49,7 +49,7 @@ impl std::error::Error for FmtScanAbort {}
 /// block (§FS-fmt.7.4, §AR-scanner.2.9): `conflicts` is each
 /// block's `conflict-marker` finding, the one `check` reports
 /// (§FS-declarations.checks.conflict-marker), in root-then-members order in a
-/// workspace, files then lines within a project (§FS-fmt.3.3). Its own type
+/// workspace, files then lines within a project (§FS-fmt.3.2). Its own type
 /// beside [`FmtScanAbort`], which stays as it is, because a block is a finding
 /// with a line and sites where an unreadable path is not.
 #[derive(Clone, Debug, Eq, PartialEq)]

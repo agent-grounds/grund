@@ -14,7 +14,7 @@
 //! `disk.rs` the reads, out of `config/inputs.rs`;
 //! and `buffers.rs` the buffers and the view every reader asks. `native_watch.rs`
 //! is the disk's change notification: the debounce its events are coalesced by
-//! (§FS-check.6.1.2), and behind the `native-watch` feature its backend, which only
+//! (§FS-check.6.1), and behind the `native-watch` feature its backend, which only
 //! the frontends that wait on the disk turn on (§AR-lsp.2.1).
 
 mod buffers;

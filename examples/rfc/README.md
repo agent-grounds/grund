@@ -135,7 +135,7 @@ Read it as RFC style:
 - **impl must cite draft**, grounded at `h3`: every docstring in `src/`
   cites what it implements. A Python function's docstring is indented under
   its `def`, and `h2` grounds only unindented doc comments, so `h2` would
-  hold the module docstring alone ([§FS-check.3.6.2.2](../../docs/functional-spec/FS-check.md#3622-in-a-source-file)).
+  hold the module docstring alone ([§FS-check.3.6.2](../../docs/functional-spec/FS-check.md#362-the-unit)).
 - **test must cite draft**: a test file cites the sections it tests. The
   row has no grounding, so, as the legend's last line says, a test file
   that cites nothing is skipped, not refused. `impl`'s grounding is what

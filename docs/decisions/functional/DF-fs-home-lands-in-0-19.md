@@ -19,12 +19,12 @@ In 0.19.0 (agent-grounds/grund#723):
 
 - the built-in `FS` row is `folder = "docs/functional-spec"` ([§FS-config.3.4.4](../../functional-spec/FS-config.md#344-the-default-kinds)), so a project with
   no config and a `grund.toml` that omits `[[kinds]]` get the same rows, and the special case of
-  [§FS-config.3.4.4.4](../../functional-spec/FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home) is retired;
+  [§FS-config.3.4.4](../../functional-spec/FS-config.md#344-the-default-kinds) is retired;
 - the `software-development` template's `FS` row is `folders = ["docs/functional-spec"]`, and
   `--scaffold` writes `docs/functional-spec/README.md` and no `requirements.md`
   ([§FS-init.2.4.3](../../functional-spec/FS-init.md#243-every-written-key-differs-from-its-default), [§FS-init.2.1.3](../../functional-spec/FS-init.md#213-the-software-development-starter-files));
 - `fs-home-moves` is no longer a code, so `--only fs-home-moves` and `--ignore fs-home-moves` are
-  refused as any unknown code is ([§FS-check.checks.fs-home-moves](../../functional-spec/FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190));
+  refused as any unknown code is ([§FS-check.checks.fs-home-moves](../../functional-spec/FS-check.md#checksfs-home-moves-fs-home-moves-a-removed-check));
 - the version-1 `[scan] include` default keeps `requirements.md` ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-scanned)), because
   dropping it would stop reading a file in a project that changed nothing, which no release
   announced.

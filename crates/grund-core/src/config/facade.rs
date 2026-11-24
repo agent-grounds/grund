@@ -277,7 +277,7 @@ impl Config {
     }
 
     /// The workspace's config findings, the root's, each expanded project's and
-    /// each `include_root = false` block's (§FS-config.4.1.1, §FS-check.4.11.3),
+    /// each `include_root = false` block's (§FS-config.4.1, §FS-check.4.11),
     /// which `validate_config` records once it holds the expanded tree, so every
     /// reader of the config it returns names the same set.
     pub(crate) fn set_workspace_config_findings(&mut self, findings: Vec<Diagnostic>) {
@@ -290,7 +290,7 @@ impl Config {
     }
 
     /// The `include_root = false` blocks expansion reached below the run's root
-    /// (§AR-config.1.5, §FS-check.4.11.3).
+    /// (§AR-config.1.5, §FS-check.4.11).
     pub(crate) fn set_workspace_opted_out_blocks(&mut self, blocks: Vec<Config>) {
         self.records.run.workspace.opted_out_blocks = blocks;
     }
@@ -353,7 +353,7 @@ impl Config {
 
     /// This façade under a run whose readers see `buffers` in front of the disk
     /// (§AR-system.2.13): how `fmt`'s lock pass reads the tree as its walk
-    /// leaves it, before a byte of it is written (§FS-section-lock.write.same-run).
+    /// leaves it, before a byte of it is written (§FS-section-lock.write.rules).
     pub(crate) fn with_buffers(&self, buffers: Buffers) -> Self {
         let mut run = self.run().clone();
         run.buffers = buffers;

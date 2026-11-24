@@ -17,7 +17,7 @@ pub(super) struct SourceValueLineContext {
     pub(super) range: (usize, usize),
     pub(super) block_comment: bool,
     /// The first line of the comment block this line belongs to, so two lines
-    /// can be asked whether they are one block (§FS-values.3.1.1.1).
+    /// can be asked whether they are one block (§FS-values.3.1.1).
     pub(super) block: usize,
 }
 

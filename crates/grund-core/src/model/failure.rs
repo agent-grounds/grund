@@ -14,7 +14,7 @@ pub struct OperationDiagnostic {
     pub column: Option<usize>,
     /// The file on disk `path` and `line` are in, absolute, for a frontend that
     /// points at the file rather than printing its rendered path: the config a
-    /// load failed on, which an editor marks (§FS-lsp.2.2.4.1).
+    /// load failed on, which an editor marks (§FS-lsp.2.2.4).
     pub file: Option<std::path::PathBuf>,
     /// For a refusal inside an imported tree, the config and line of the outermost
     /// import that reached it, absolute: the line an editor marks, since the

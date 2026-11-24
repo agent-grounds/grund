@@ -39,7 +39,7 @@ use crate::model::{Catalog, Citation, Declaration, Id};
 /// (§GOAL-fast-feedback).
 pub(crate) struct ShorthandTargets<'a> {
     local_declarations: Option<&'a BTreeMap<Id, Vec<Declaration>>>,
-    /// `None` until the walk has a declaration set — §FS-fmt.2.4.5 defers that scan
+    /// `None` until the walk has a declaration set — §FS-fmt.2.4 defers that scan
     /// until a shorthand is actually met, so a repo without one never pays for it.
     pub(crate) local: Option<ShorthandIndex<'a>>,
     pub(crate) by_alias: BTreeMap<&'a str, ShorthandAliasTarget<'a>>,
@@ -51,7 +51,7 @@ pub(crate) struct ShorthandTargets<'a> {
 ///
 /// `declarations` is what a canonical ID renders from, and it is only ever there for
 /// a project whose scan met no error, so no rewrite into a failed project can be
-/// rendered (§FS-fmt.7.4.4). `index` keeps the partial set: it is what says a rewrite
+/// rendered (§FS-fmt.7.4). `index` keeps the partial set: it is what says a rewrite
 /// was about to be made, which is what the run has to refuse.
 pub(crate) struct ShorthandAliasTarget<'a> {
     declarations: Option<&'a BTreeMap<Id, Vec<Declaration>>>,
@@ -98,7 +98,7 @@ impl<'a> ShorthandTargets<'a> {
     }
 
     /// Whether a rewrite resolved against the project `alias` names may be made, its
-    /// scan having met no error (§FS-fmt.7.4.4). The alias of no project answers
+    /// scan having met no error (§FS-fmt.7.4). The alias of no project answers
     /// `true`: there is nothing to resolve against, so nothing to prove.
     pub(crate) fn alias_is_proven(&self, alias: &str) -> bool {
         self.by_alias
@@ -174,14 +174,14 @@ pub(crate) fn expand_shorthand_citations(
     expanded
 }
 
-/// The formatter entry point for §FS-fmt.2.4.3, carrying the byte offsets of
+/// The formatter entry point for §FS-fmt.2.4, carrying the byte offsets of
 /// markers produced from triggers so accepted persisted forms and authoring
 /// sugar remain distinct even when they share one line. Each expansion carries
 /// its marker's byte offset in `line`, so a caller can merge it with the details
-/// of another rewrite on the same line in source order (§FS-fmt.3.6.1). A token this
+/// of another rewrite on the same line in source order (§FS-fmt.3.6). A token this
 /// would have expanded against an aliased project whose scan met an error stays as
 /// written and adds the alias to `unproven_aliases`, for the walk to refuse the run
-/// on (§FS-fmt.7.4.4).
+/// on (§FS-fmt.7.4).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn expand_shorthand_citations_with_origins(
     line: &str,
@@ -269,7 +269,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         ) {
             continue;
         }
-        // §FS-fmt.2.4.1.1: `§SPEC-001→SPEC-003` is a renumbering table, not a citation.
+        // §FS-fmt.2.4.1: `§SPEC-001→SPEC-003` is a renumbering table, not a citation.
         // The marker is the *citing* project's — what the author typed — while the
         // number shape is the target's, the same split the rewrite below uses.
         if target_grammar.shorthand_sits_in_numeric_run(marker, tail, match_end) {
@@ -277,14 +277,14 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         }
         // §FS-fmt.2.3: the zones every rewrite honours, a reference key included, by how
         // the file is read and not its name (§FS-fmt.2.3.1), asked of a docstring's content
-        // on a docstring line as the scanner asks it (§FS-fmt.2.3.1.1).
+        // on a docstring line as the scanner asks it (§FS-fmt.2.3.1).
         if never_rewrite_context_in(docstring, links, line, is_md, marker_start) {
             continue;
         }
         let Some(id) = parse_id(&caps, target_grammar) else {
             continue;
         };
-        // §FS-fmt.2.4.5: only *now* are declarations needed — every gate above rejects
+        // §FS-fmt.2.4: only *now* are declarations needed — every gate above rejects
         // on the line text alone, and reaching for them earlier was a measured 79%
         // regression on the benchmark fixture (§GOAL-fast-feedback, §AR-ci.5).
         let index = match target {
@@ -306,7 +306,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         if unique.legacy_spelling().is_some() {
             continue;
         }
-        // §FS-fmt.2.4.3 / §FS-workspace.4.2: an accepted project preserves only
+        // §FS-fmt.2.4 / §FS-workspace.4: an accepted project preserves only
         // marker-origin shorthand. A marker created from this line's trigger is
         // still authoring input and always expands to the canonical full ID.
         if target_schema.citation.shorthand == ShorthandPolicy::Accepted
@@ -316,7 +316,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         }
         let namespace = alias.map(|(alias, _)| alias);
         // The ID renders under the *target* project's `[id] format`, which is what
-        // makes the rewrite correct in a mixed-format workspace. §FS-fmt.7.4.4: only
+        // makes the rewrite correct in a mixed-format workspace. §FS-fmt.7.4: only
         // a project read in full has declarations to render it from.
         let declarations = match target {
             Some(target) => target.declarations,

@@ -24,9 +24,9 @@ use crate::sources::physical_path_key;
 /// so another citation of the same external ID on the page remains real use
 /// (§DF-index-not-an-inbound-citation.2.2). `binding_sites` holds the citation
 /// sites of the recognized value bindings on each index, which are use rather
-/// than the entry even for a folder-owned ID (§FS-check.4.1.2.1). `headings`
+/// than the entry even for a folder-owned ID (§FS-check.4.1). `headings`
 /// holds each index's declaration heading lines, whose citations are the entry
-/// of no ID (§FS-check.4.1.2.1).
+/// of no ID (§FS-check.4.1).
 pub(crate) struct KindIndexEntries {
     configured_root: PathBuf,
     physical_root: PathBuf,
@@ -178,8 +178,8 @@ impl KindIndexEntries {
     }
 
     /// The IDs this index owes an entry for, or `None` when `path` is not a
-    /// configured index (§FS-fmt.6.1.2). The always-linkify carve-out writes one
-    /// entry for each (§FS-fmt.2.5.3): declarations under the folder plus an
+    /// configured index (§FS-fmt.6.1). The always-linkify carve-out writes one
+    /// entry for each (§FS-fmt.6.1): declarations under the folder plus an
     /// external inline ID only after its canonical enrollment link exists
     /// (§FS-check.3.18).
     pub(crate) fn entries_in(&self, path: &Path) -> Option<&BTreeSet<Id>> {
@@ -199,15 +199,15 @@ impl KindIndexEntries {
         self.owed.get(key)
     }
 
-    /// §FS-check.4.1.2 / §DF-index-not-an-inbound-citation.2.2: folder-owned IDs
+    /// §FS-check.4.1 / §DF-index-not-an-inbound-citation.2.2: folder-owned IDs
     /// keep PR #134's accounting. For an external ID only the canonical link site
     /// is navigation; a second same-ID citation in the index is ordinary use.
-    /// §FS-check.4.1.2.1: a folder-owned ID's entry is a citation of the
+    /// §FS-check.4.1: a folder-owned ID's entry is a citation of the
     /// declaration itself, so a section citation, or the citation inside a
     /// recognized value binding (a root-aimed one with no section included), is use.
     /// So is a citation on a declaration heading, for either branch: it is a
     /// citation from the declaration that heading declares, the entry of no
-    /// folder-owned ID (§FS-check.4.1.2.1) and the enrollment of no external one
+    /// folder-owned ID (§FS-check.4.1) and the enrollment of no external one
     /// (§FS-check.3.18).
     pub(crate) fn is_index_entry(&self, citation: &Citation) -> bool {
         if citation.namespace.is_some() || self.owed.is_empty() {
@@ -240,7 +240,7 @@ impl KindIndexEntries {
     /// Whether line `line` of the kind index at `path` is a declaration heading:
     /// the one answer the entry rule, its mention look, the unused carve-out, `list
     /// --unused` and the `refs` label all read (§AR-checker.2.16). A citation on one
-    /// is the entry of no ID (§FS-check.4.1.2.1), and the line declares an ID rather
+    /// is the entry of no ID (§FS-check.4.1), and the line declares an ID rather
     /// than mentioning one (§FS-check.3.18).
     pub(super) fn on_declaration_heading(&self, path: &Path, line: usize) -> bool {
         scanned_decl_relative_path(path, &self.configured_root, &self.physical_root).is_some_and(
@@ -304,7 +304,7 @@ impl IndexHeadings {
 }
 
 /// The citation sites of the scanner's recognized value bindings, and of the
-/// attempts at one `check` refuses, on each kind index (§FS-check.4.1.2.1,
+/// attempts at one `check` refuses, on each kind index (§FS-check.4.1,
 /// §FS-values.3.2), read off the catalog's records rather than re-parsed.
 fn index_value_binding_sites(
     findings: &Catalog,

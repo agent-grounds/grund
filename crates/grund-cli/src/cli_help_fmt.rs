@@ -1,5 +1,5 @@
-/// The `grund fmt --help` page (§FS-cli.2.3.3, §FS-fmt): the rewrite modes, their report
-/// (§FS-fmt.3.5.1, §FS-fmt.3.7, §FS-section-lock.write.report),
+/// The `grund fmt --help` page (§FS-cli.2.3, §FS-fmt): the rewrite modes, their report
+/// (§FS-fmt.3.5, §FS-fmt.3.7, §FS-section-lock.write.report),
 /// the exit codes, and examples of each mode.
 fn print_fmt_help() {
     println!(
@@ -43,7 +43,7 @@ fn print_fmt_help() {
     println!(
         "With neither --check nor --write, fmt previews every change --write would apply and exits 1 if any."
     );
-    // §FS-fmt.3.6.2: a link row names each link before and after.
+    // §FS-fmt.3.6: a link row names each link before and after.
     println!(
         "Each preview row names every kind of rewrite its line gets, and the text an expansion or a link writes:"
     );

@@ -115,7 +115,7 @@ fn fence_tag_grammar(tag: &str) -> bool {
 }
 
 /// The glob characters a suffix may not hold (§FS-config-v2.schema.sources.extensions),
-/// which also mark a place written as a pattern (§FS-check.3.1.4).
+/// which also mark a place written as a pattern (§FS-check.3.1).
 pub(crate) fn holds_glob(text: &str) -> bool {
     text.contains(['*', '?', '[', ']', '{', '}', '!'])
 }

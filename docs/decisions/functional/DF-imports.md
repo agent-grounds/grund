@@ -18,7 +18,7 @@ the build already placed, under a second revision mechanism (agent-grounds/grund
 The bright line is [§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree): two installs given the same input never
 disagree. It never meant that a verdict depends on nothing outside the checkout:
 [§REQ-deterministic-output.2](../../requirements/REQ-deterministic-output.md#2-input-is-the-tree-the-config-and-the-invocation) already names inputs that reach past it, and
-[§FS-config.requirements.8](../../functional-spec/FS-config.md#requirements8-a-projects-meaning-is-self-contained--realized) lists them.
+[§FS-config.requirements.8](../../functional-spec/FS-config.md#requirements8-a-projects-meaning-is-self-contained) lists them.
 
 ## 2. Decision
 
@@ -29,13 +29,13 @@ expects there ([§FS-imports.declaration.table](../../functional-spec/FS-imports
 read-only and offline, as a mounted root under the alias
 ([§FS-imports.mount](../../functional-spec/FS-imports.md#mount-an-import-is-a-mounted-root-read-live-and-read-only)). It is named as input where inputs are named, and only for a config
 that declares one: the tree of [§REQ-deterministic-output.2](../../requirements/REQ-deterministic-output.md#2-input-is-the-tree-the-config-and-the-invocation) includes it, and so does
-the list of [§FS-config.requirements.8](../../functional-spec/FS-config.md#requirements8-a-projects-meaning-is-self-contained--realized). Two installs given the same composition still
+the list of [§FS-config.requirements.8](../../functional-spec/FS-config.md#requirements8-a-projects-meaning-is-self-contained). Two installs given the same composition still
 agree, so [§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree) holds word for word and gets no exception.
 
 ### 2.2 An import is not a remote
 
 An import claims no pin. It can neither replace nor shadow a declared remote: an import alias
-that names a remote is an alias collision ([§FS-imports.declaration.alias](../../functional-spec/FS-imports.md#declarationalias-the-alias-is-the-table-key)). Compared with a
+that names a remote is an alias collision ([§FS-workspace.3](../../functional-spec/FS-workspace.md#3-aliases)). Compared with a
 pinned remote, an import does not carry:
 
 - reproduction from the consumer commit alone: the consumer commit no longer decides the
@@ -62,7 +62,7 @@ pass.
   live is a property of the import edge, not of the layer.
 - `members` keeps its containment, `mounted_members` and `[workspace.remotes]` keep their
   refusals, and a config with no imports reads nothing new
-  ([§FS-imports.declaration.none](../../functional-spec/FS-imports.md#declarationnone-a-config-with-no-imports-reads-nothing-new)).
+  ([§FS-imports.graph.reverse](../../functional-spec/FS-imports.md#graphreverse-a-dependency-never-learns-its-consumer)).
 - An adopter never sees `success`, CI must place every imported tree or the run exits `1`,
   and a link `fmt` writes into an import leaves the repository.
 

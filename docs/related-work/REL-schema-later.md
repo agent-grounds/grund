@@ -30,4 +30,4 @@ queries "may return best-effort or approximate answers".
   its own scheme ([§FS-non-goals.8](../functional-spec/FS-non-goals.md#8-generalization-beyond-the-id-scheme)).
 - A dataspace may answer best-effort. grund's answer never is: what a run reads it checks
   in full, and two installs agree on every byte of it ([§FS-non-goals.13](../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree),
-  [§FS-non-goals.14.1](../functional-spec/FS-non-goals.md#141-token-saving-inside-check)).
+  [§FS-non-goals.14](../functional-spec/FS-non-goals.md#14-generated-summaries-token-saving-inside-check)).

@@ -141,7 +141,7 @@ Removing a values field stops comparing what is bound to it, so a wrong literal
 passes `grund check`. Keep the field while those bindings must remain checked.
 
 A kind that also sets `fetch` has no such field, because a fetched kind takes no
-fields, so that rewrite is its way through ([§FS-config-migrate.3.1.7.1](../functional-spec/FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)).
+fields, so that rewrite is its way through ([§FS-config-migrate.3.1.7](../functional-spec/FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet)).
 
 Four things decide what the key does and do not bend:
 
@@ -232,7 +232,7 @@ Anchors, aliases, tags, merge keys, block scalars, multi-line scalars, nested
 collections and a second document are refused, each at its own line.
 
 A finding at a YAML source is reported as one at a JSON source is
-([§FS-values.2.2.4](../functional-spec/FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings)). A refused construct, a wrong shape or an invalid component
+([§FS-values.2.2.3](../functional-spec/FS-values.md#223-how-a-yaml-source-is-read)). A refused construct, a wrong shape or an invalid component
 is an `invalid-value-declaration` error at its own line, and the source's other
 members stay declared. A repeated key, or an ID another source also declares, is
 a `duplicate` error naming both sites. A source that cannot be read or parsed is
@@ -328,7 +328,7 @@ produces `invalid-value-binding`:
 
 A binding stays on one line. A literal that ends its line, with its citation
 opening the next line of the same paragraph or comment block, is refused rather
-than compared, and the message asks you to join the two lines ([§FS-values.3.1.1.1](../functional-spec/FS-values.md#3111-a-literal-that-closes-its-line-onto-the-citation)):
+than compared, and the message asks you to join the two lines ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts)):
 
 ```text
 `1200`
@@ -351,7 +351,7 @@ separators, convert units, or coerce JSON strings to numbers. Consequently
 
 A number and a string are never equal, and the two can print the same bytes, so
 a mismatch of different kinds names each side's kind after its canonical text
-([§FS-values.5.2.1](../functional-spec/FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind)):
+([§FS-values.5.2](../functional-spec/FS-values.md#52-fixed-value-errors)):
 
 ```text
 docs/record.md:5: error: value mismatch for QTY-mach-001-year.1: bound `2022`, declared `2022` at values/machines.json:2 — bound is a number, declared is a string; a number and a string are never equal; change the literal to the declared value, or the declaration to the bound one
@@ -361,7 +361,7 @@ A binding aimed at a root is compared part by part in declared order. A
 disagreement names what the site wrote — the root it cites and the literal
 whole, against the components joined by one ASCII space — and, in parentheses,
 the first unequal component by its section path, at that component's one
-declaration site ([§FS-values.5.2.2](../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)):
+declaration site ([§FS-values.5.2](../functional-spec/FS-values.md#52-fixed-value-errors)):
 
 ```text
 docs/offer.md:3: error: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3; change the literal to the declared value, or the declaration to the bound one
@@ -373,13 +373,13 @@ keep the root citation: re-citing the site to `CONST-field-price.2` would bind
 `1200 USD` to `USD` alone, which never agrees. When that one pair differs in
 kind, the kind clause names the component it is about, as
 ` — component 2: bound is a number, declared is a string; a number and a string are never equal`
-([§FS-values.5.2.1](../functional-spec/FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind)).
+([§FS-values.5.2](../functional-spec/FS-values.md#52-fixed-value-errors)).
 
 That line is the whole message
-([§FS-values.5.2.2](../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). grund 0.21.0 printed the message earlier releases
+([§FS-values.5.2](../functional-spec/FS-values.md#52-fixed-value-errors)). grund 0.21.0 printed the message earlier releases
 printed, which names the first unequal component by its own coordinate and
 quotes only its part, whole in front of it, followed by ` — whole binding: `,
-and grund 0.22.0 dropped it ([§FS-values.5.2.2](../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). A script that matches a root-aimed
+and grund 0.22.0 dropped it ([§FS-values.5.2](../functional-spec/FS-values.md#52-fixed-value-errors)). A script that matches a root-aimed
 line should match `code == "value-mismatch"`, which does not move. A binding
 aimed at one component keeps the shorter message.
 
@@ -423,13 +423,13 @@ The LSP uses the same report, hover slice, and definition spans as the CLI.
 Go-to-definition lands on the Markdown component heading or exact JSON or YAML key or
 element; from a binding aimed at a root it lands on the root itself — the whole
 declaration's heading or key, or the marked or chapter root's own heading
-([§FS-lsp.1.3.5](../functional-spec/FS-lsp.md#135-values-and-named-sections)). `fmt --cross-refs` leaves the citation bytes inside a
+([§FS-lsp.1.3](../functional-spec/FS-lsp.md#13-go-to-definition)). `fmt --cross-refs` leaves the citation bytes inside a
 recognized binding unchanged so it cannot destroy the authored form. It also
 preserves a split or malformed attempt that `check` refuses, so formatting
 cannot erase that refusal: correct the binding's form and literal, then recheck
 ([§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). That now
 includes a whole-value ID with no coordinate, which earlier releases rewrote
-into a Markdown link ([§FS-values.9.2](../functional-spec/FS-values.md#92-what-values--true-changes-in-formatting)).
+into a Markdown link ([§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)).
 
 ## Deliberate scope boundary
 

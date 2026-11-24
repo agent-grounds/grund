@@ -60,7 +60,7 @@ Which entries `<path>` reports, and what they resolve against, is [§FS-scan.pat
 `--selector <selector>` keeps the declaration and named-chapter units a rule subject selects
 ([§FS-rules.8](FS-rules.md#8-command-surfaces)), and `--glob <pattern>`, repeatable, the catalog coordinates its patterns match
 ([§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern)). Both are flags, so the positional stays the scan path
-([§FS-coordinate-globs.errors.hint](FS-coordinate-globs.md#errorshint-a-glob-typed-as-path-gets-a-hint)), and they compose as [§FS-coordinate-globs.scope.filters](FS-coordinate-globs.md#scopefilters-filters-intersect-and-never-widen) says.
+([§FS-coordinate-globs.errors.hint](FS-coordinate-globs.md#errorshint-a-glob-typed-as-path-gets-a-hint)), and they compose as [§FS-coordinate-globs.scope](FS-coordinate-globs.md#scope-scope) says.
 
 ### 1.1 `--kind`
 
@@ -74,8 +74,8 @@ reads as an empty or short catalog. A configured non-citable kind ([§FS-config.
 with [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s reason in place of `unknown kind`. Each refusal ends in a
 `known kinds:` line naming the citable kinds of the selected projects ([§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)).
 Where that scope has no citable kind, as under a config that declares none
-([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), the line names none rather than ending empty, in every refusal that
-prints it: `--kind`, `--selector` ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)) and `grund id` ([§FS-id.1.1](FS-id.md#11-unknown-and-non-citable-kinds)). There
+([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), the line names none rather than ending empty, in every refusal that
+prints it: `--kind`, `--selector` ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)) and `grund id` ([§FS-id.1](FS-id.md#1-inputs)). There
 `grund list --kind FS` prints:
 
 ```text
@@ -95,9 +95,9 @@ specified in [§FS-workspace.8.3](FS-workspace.md#83-grund-list).
 ### 1.3 `--unused`
 
 `--unused` lists only the declarations no recognized citation points at, as `check` warns
-([§FS-check.4.1](FS-check.md#41-unused-declaration)), a kind's own index entry counting as no use, within the bounds `check` draws ([§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count), [§FS-check.4.1.2.1](FS-check.md#4121-a-section-citation-or-a-value-binding-in-the-index-is-not-the-entry)). It leaves out the cases of a
-configured `E2E` kind ([§FS-config.3.4.4.3](FS-config.md#3443-e2e-is-configured-not-a-default)) unless `--kind` selects `E2E` explicitly, since a
-case is exercised by being run, not cited ([§FS-check.4.1.3](FS-check.md#413-e2e-declarations-are-exempt)). The default kinds declare no
+([§FS-check.4.1](FS-check.md#41-unused-declaration)), a kind's own index entry counting as no use, within the bounds `check` draws ([§FS-check.4.1](FS-check.md#41-unused-declaration)). It leaves out the cases of a
+configured `E2E` kind ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)) unless `--kind` selects `E2E` explicitly, since a
+case is exercised by being run, not cited ([§FS-check.4.1](FS-check.md#41-unused-declaration)). The default kinds declare no
 `E2E` kind ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), so `grund list --help` ([§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)) states that rule for a
 configured `E2E` kind, and its example of `--unused` with `--kind` selects a default kind,
 such as `grund list --unused --kind FS`, never `--kind E2E`.
@@ -133,7 +133,7 @@ or scanning. Each is one raw `error:` line on stderr, exit `2` ([§FS-list.4](FS
 `list` prints one row for every declaration the scan finds, the entries of an opted-in kind's
 value sources ([§FS-values.6.2](FS-values.md#62-value-source-declarations-in-the-catalog)) and the cases of a configured
 `E2E` kind included, and one for every citable section in size mode ([§FS-list.3.4](FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements)) and
-wherever `--glob` or `--selector` selects one ([§FS-coordinate-globs.matching.catalog](FS-coordinate-globs.md#matchingcatalog-a-glob-selects-catalog-coordinates),
+wherever `--glob` or `--selector` selects one ([§FS-coordinate-globs.matching](FS-coordinate-globs.md#matching-matching),
 [§FS-rules.8](FS-rules.md#8-command-surfaces)). A
 value root stays metadata on its declaration's row, never a row of its own ([§FS-values.6.1](FS-values.md#61-marked-roots-in-the-catalog)).
 A fetched kind is listed from its committed snapshot, never by running its fetcher, so a
@@ -141,7 +141,7 @@ missing snapshot is no row ([§FS-config.3.4.10](FS-config.md#3410-format-resolv
 but declared nowhere has no row either; `refs` and `check` report it.
 
 A stub that pairs with its target is no row of its own: its ID is listed at the target's
-declarations, scanned or not ([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target)). A broken stub is a row at its own site, noted
+declarations, scanned or not ([§FS-declarations.stubs.pairing](FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at)). A broken stub is a row at its own site, noted
 with its target ([§FS-list.3.1](FS-list.md#31---format-text-default)). An ID declared in several independent homes
 ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)) is one flagged line per home, and an off-grammar
 declaration retained under [§FS-config.3.2](FS-config.md#32-id--id-grammar) a normal row, rendered as written: `list` picks no
@@ -164,7 +164,7 @@ FS-002-session  docs/functional-spec/FS-002-session.md:1  A session is created o
 ```
 
 The columns are the ID, in the repository's `[id] format` or in its kind's own `format`
-([§FS-config.3.4.10.1](FS-config.md#34101-format)) and qualified as `<alias>/<ID>` in a workspace ([§FS-workspace.8.3.1](FS-workspace.md#831-the-id-column-is-always-qualified)), left-padded so the column aligns, up to a capped width; then the `<path>:<line>` of the home declaration; then the title. A
+([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)) and qualified as `<alias>/<ID>` in a workspace ([§FS-workspace.8.3.1](FS-workspace.md#831-the-id-column-is-always-qualified)), left-padded so the column aligns, up to a capped width; then the `<path>:<line>` of the home declaration; then the title. A
 title, on a declaration row and a section row alike, is the heading's text after its
 coordinate, as written with its links kept, without a closing `#` run
 ([§FS-declarations.heading.rendered-text](FS-declarations.md#headingrendered-text-a-headings-rendered-text)). It is empty where the heading has nothing after its
@@ -217,13 +217,13 @@ Size mode prints one row for each declaration site and each citable section site
 lead and full body measured in the selected units. A stub that pairs with its target has no
 row of its own: its rows are the ones the same tree prints with the target scanned, wherever
 the target's file sits, each measured as `show` reads it and in JSON with `stub` `false` and
-`defines` `null` ([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target),
+`defines` `null` ([§FS-declarations.stubs.pairing](FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at),
 [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)), so a target that declares the ID twice gives two measured rows marked
 duplicate, never one unmeasured row at the stub. The unmeasured `(broken stub → <target>)` row
 of [§FS-list.3.4.3](FS-list.md#343-text-rows), at the stub's own site, is exactly a stub `check` reports broken
 ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)). Measuring a home outside the scan does not bring its file into
 the scan, so `check`'s lead warning judges no site there
-([§FS-declarations.checks.oversized-lead.4](FS-declarations.md#checksoversized-lead4-which-sites-it-judges)). Duplicate declaration homes and the sites that
+([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)). Duplicate declaration homes and the sites that
 claim one duplicated section coordinate stay separate rows, each marked duplicate and measured
 from its own site only, never merged and none taken as the winner, and `show` still refuses
 the ambiguous coordinate ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)). JSON rows are NDJSON, each the record
@@ -235,7 +235,7 @@ The measured strings are exactly the text bodies `show` returns for that site in
 and `--full` modes ([§FS-show.2.1](FS-show.md#21-whole-declaration-default), [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments), [§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)): a declaration's without its
 declaration heading, and a section's with its own heading as `show` prints it, so a selected
 relative heading is measured with its canonical path
-([§FS-declarations.section.relative.shown.selected](FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)). A value-source declaration or section
+([§FS-declarations.section.relative.shown](FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown)). A value-source declaration or section
 row measures its exact available source slice, so its lead equals its full body.
 
 #### 3.4.2 Units

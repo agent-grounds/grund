@@ -31,8 +31,8 @@ impl MarkerLines {
         !self.0.is_empty()
     }
 
-    /// Cut the blocks, keep those §FS-declarations.body.conflict.where looks at
-    /// and give each its owners (§FS-declarations.body.conflict.owners). Runs once
+    /// Cut the blocks, keep those §FS-declarations.body.conflict.block looks at
+    /// and give each its owners (§FS-declarations.body.conflict.block). Runs once
     /// the body spans are fixed, and before the file's record goes into `findings`.
     pub(super) fn record(
         self,
@@ -45,7 +45,7 @@ impl MarkerLines {
             return;
         }
         let spans = owner_spans(record, findings);
-        // §FS-declarations.body.conflict.where: in Markdown, every line of a file that
+        // §FS-declarations.body.conflict.block: in Markdown, every line of a file that
         // declares, decided on the raw lines, fences ignored.
         let markdown_declares = record.markdown
             && (!spans.is_empty()
@@ -69,7 +69,7 @@ impl MarkerLines {
 }
 
 /// Whether a raw Markdown line would declare an ID by §FS-declarations.line, were
-/// no fence open (§FS-declarations.body.conflict.where).
+/// no fence open (§FS-declarations.body.conflict.block).
 fn declares(grammar: &Grammar, line: &str) -> bool {
     markdown_line_declares(grammar, line).is_some()
 }
@@ -112,7 +112,7 @@ pub(super) fn blocks(markers: &[(usize, u8)]) -> Vec<(usize, usize)> {
 
 /// One declaration of the file as a block's owner sees it: its line, the last
 /// line of its body, and the line right after the line-style run that body
-/// ends with, when a marker line cut it there (§FS-declarations.body.conflict.where).
+/// ends with, when a marker line cut it there (§FS-declarations.body.conflict.block).
 struct OwnerSpan<'a> {
     id: &'a Id,
     line: usize,
@@ -143,7 +143,7 @@ fn owner_spans<'a>(record: &FileRecord, findings: &'a Catalog) -> Vec<OwnerSpan<
 
 /// Every declaration whose line or body the block overlaps, and the one whose
 /// line-style run it opens right after, each ID once, in the order they open
-/// (§FS-declarations.body.conflict.owners).
+/// (§FS-declarations.body.conflict.block).
 fn owners_of(spans: &[OwnerSpan<'_>], first: usize, last: usize) -> Vec<Id> {
     let mut owners: Vec<Id> = Vec::new();
     for span in spans {

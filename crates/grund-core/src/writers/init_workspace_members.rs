@@ -95,7 +95,7 @@ fn collect_init_workspace_projects(
     // a root above the run, so it is the only one that has to be told where the
     // run is — every other command re-roots onto it first (§AR-workspace.5.1).
     let expanded = expand_workspace_tree_with_report_base(&mut root_config, run_root);
-    // §FS-check.4.10.7: `init` is a walking command like any other, so
+    // §FS-check.4.10: `init` is a walking command like any other, so
     // the cautions the expansion settled reach the reader whether or not the
     // members section itself can be rendered (§FS-distribution.3.1).
     run_warnings.extend(run_warning_findings(
@@ -190,7 +190,7 @@ fn find_init_workspace_root(
             Err(_) => break false,
         }
     };
-    // §FS-workspace.6.1.7.5: the climb that spells this run's alias path owes the
+    // §FS-workspace.6.1.7: the climb that spells this run's alias path owes the
     // reader an ancestor it could not read, whether or not the climb then
     // succeeded — the warning is about the chain, not about the section.
     run_warnings.extend(run_warning_findings(&config, ancestors.take_warnings()));
@@ -229,7 +229,7 @@ pub(crate) fn render_workspace_members_section(
 }
 
 /// [`render_workspace_members_section`] with the run's `[workspace]` warnings the
-/// walk-up settled (§FS-check.4.10.7, §FS-workspace.6.1.7.6). `init`
+/// walk-up settled (§FS-check.4.10, §FS-workspace.6.1.7). `init`
 /// resolves a block's member boundary like every other walking command, and the
 /// section it renders is not where a caution belongs — it is one of the run's,
 /// carried out to `InitOutput` (§FS-distribution.3.1). Discovery is carried

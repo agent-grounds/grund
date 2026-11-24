@@ -1,4 +1,4 @@
-//! Text-only index-entry explanations (§FS-refs.3.1.1, §FS-refs.3.3.1), carried
+//! Text-only index-entry explanations (§FS-refs.3.1, §FS-refs.3.3), carried
 //! beside the published records so JSON and library record shapes stay stable.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -11,7 +11,7 @@ use crate::resolver::{WorkspaceContext, WorkspaceProject};
 
 /// The exact excluded sites among `hits`, spelled as refs spells its hits.
 /// Classification comes from the same semantic source as check and list
-/// (§FS-check.4.1.2), including canonical enrollment and value-binding
+/// (§FS-check.4.1), including canonical enrollment and value-binding
 /// exceptions. Every entry sits in a configured kind index, so only a hit in
 /// one is classified, by a classifier restricted to those hits' IDs: refs pays
 /// for the sites it prints, not for every index (§GOAL-fast-feedback).

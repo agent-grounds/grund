@@ -220,7 +220,7 @@ fn row_checks(row: &RowDraft, late: &mut Vec<(usize, String)>) {
         && !row.scan
     {
         if complement {
-            // §FS-config-v2.schema.places.boundaries.6
+            // §FS-config-v2.schema.places.boundaries
             let message = format!(
                 "`[schema.kinds.{name}] scan = false` cannot unwalk the complement; narrow its places or use `[schema.sources] exclude`"
             );
@@ -286,7 +286,7 @@ fn named_rows(r: &Reader, late: &mut Vec<(usize, String)>) {
 /// §FS-config-v2.schema.places: the drafts as the schema's rows, in authored
 /// order; the scan as the union of their scanned places and the complement's
 /// extent, the config root unless `code` lists places
-/// (§FS-config-v2.schema.places.complement, §FS-config-v2.defaults.1); and a fetched kind's resolution, `must`
+/// (§FS-config-v2.schema.places.complement, §FS-config-v2.defaults); and a fetched kind's resolution, `must`
 /// unless `[rules.resolution]` says `warn`.
 fn lower(r: &mut Reader) {
     let rows: Vec<Row> = r

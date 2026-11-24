@@ -11,7 +11,7 @@ contract of [§FS-config.3.2](../../functional-spec/FS-config.md#32-id--id-gramm
 ## 1. Admission
 
 Replace bare-name prefix-freedom with the ordered name-boundary and head checks
-in [§FS-config.3.4.5.1](../../functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens).
+in [§FS-config.3.4.5](../../functional-spec/FS-config.md#345-name-rules).
 Heads are defined once ([§FS-config.3.2.9](../../functional-spec/FS-config.md#329-kind-head)).
 Heads alone would admit `GR` beside `GR-X` with distinct separators and silently
 lose malformed citations that match both name boundaries. Comparing arbitrary

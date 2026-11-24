@@ -31,7 +31,7 @@ that does not report the duplicate, by a path or by a selection, as they were, s
 that passes today fails. It would contradict
 [§FS-declarations.checks.duplicate.1](../../functional-spec/FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), under which the ID has one home whatever the scan
 reaches, and the scanned control, which draws the edge. It would also make the path or the
-selection decide resolution, which [§FS-check.1.3.6.1](../../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution) and [§FS-check.2.1.2](../../functional-spec/FS-check.md#212-selection-filters-the-complete-report) rule out:
+selection decide resolution, which [§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows) and [§FS-check.2.1.2](../../functional-spec/FS-check.md#212-selection-filters-the-complete-report) rule out:
 `grund check <path>` and `grund check .` never disagree about a citation they both read,
 and `--only` and `--ignore` filter a report already complete.
 
@@ -44,12 +44,12 @@ The verdict moves in three ways, and the message templates do not change.
 - **Sites renamed.** A duplicate or an ambiguity involving such a home names the target's
   declaration, as the scanned tree already did, so the located error may now sit in the
   unscanned target file ([§FS-check.2.1](../../functional-spec/FS-check.md#21-report-format)). A path-scoped run keeps a finding by its sites
-  ([§FS-check.1.3.6.2](../../functional-spec/FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)), so `check docs/b` over a stub in `docs/b` that collides with
+  ([§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows)), so `check docs/b` over a stub in `docs/b` that collides with
   `docs/c/o.md` now passes: neither site lies in `docs/b`, which is also the scanned
   control's answer.
 - **Pass to fail.** A run that leaves the false duplicate out of its report while it
   reads a citation of such an ID. A path does that when the citation lies inside it and the
-  stubs outside ([§FS-check.1.3.6.1](../../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)); so does a selection over the whole tree
+  stubs outside ([§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows)); so does a selection over the whole tree
   ([§FS-check.2.1.2](../../functional-spec/FS-check.md#212-selection-filters-the-complete-report)): `--only` with a code a rule produces, such as `forbidden-citation`
   or `citation-cardinality`; `--ignore duplicate`; or a trial
   `--rule "<sentence>" --only-rule`. The old run read the ID as ambiguous and counted no
@@ -83,7 +83,7 @@ The verdict moves in three ways, and the message templates do not change.
    This reaches only the misreading. Two real declarations of one ID, cited from `docs/fs` under the same rule, leave `check docs/fs`, `--only forbidden-citation` and `--ignore duplicate` passing on both builds, because there the ambiguity is the right resolution and a run that does not show the duplicate is the reporting boundary [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) allows.
    Nor does [§DF-section-citation-counts-in-rules.2.4](DF-section-citation-counts-in-rules.md#24-why-not-the-correction-route)'s refusal reach this: there a citation resolved to its declaration and only how rules counted it changed, while here the citation did not resolve to the one declaration its ID names, which is resolution, not counting.
 2. *Accepted proof.* This record. The [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path does not fit, because there is no old form to keep beside a new one, only a wrong answer, and nothing a user could write selects it: the stubs are right as written.
-   The ramp [§DF-section-citation-counts-in-rules.2.3](DF-section-citation-counts-in-rules.md#23-the-new-failures-take-the-deprecation-path) took through [§FS-rules.7.8](../../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) was owed there because no hard requirement forbade a change in counting; a wrong resolution is forbidden, so the ramp is not the route here, as it was not for the wrong answer [§DF-path-scope-resolves-project-wide.2.6](DF-path-scope-resolves-project-wide.md#26-req-backwards-compatibility5-is-the-route-and-all-five-conditions-hold) corrected.
+   The ramp [§DF-section-citation-counts-in-rules.2.3](DF-section-citation-counts-in-rules.md#23-the-new-failures-take-the-deprecation-path) took through [§FS-rules.5.1](../../functional-spec/FS-rules.md#51-facts-and-identity) was owed there because no hard requirement forbade a change in counting; a wrong resolution is forbidden, so the ramp is not the route here, as it was not for the wrong answer [§DF-path-scope-resolves-project-wide.2.6](DF-path-scope-resolves-project-wide.md#26-req-backwards-compatibility5-is-the-route-and-all-five-conditions-hold) corrected.
    The [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) mechanical migration has no command to point at, because no command can re-point a citation or rewrite a rule.
 3. *Named release.* The release note below names the verdict move in both directions, and the runs it reaches by path and by selection.
 4. *Actionable findings.* Every finding that replaces the old verdict is a rule's existing finding: `forbidden-citation` at the citation, naming the rule and the edit to make ([§FS-rules.7.5](../../functional-spec/FS-rules.md#75-prohibition-and-recommendation-reuse)), or a count at the declaration or chapter it judges, naming the rule, the count found and the count required ([§FS-rules.7.3](../../functional-spec/FS-rules.md#73-outbound-citation-cardinality), [§FS-rules.7.4](../../functional-spec/FS-rules.md#74-inbound-citation-cardinality)).

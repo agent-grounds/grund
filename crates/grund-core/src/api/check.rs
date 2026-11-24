@@ -64,7 +64,7 @@ pub struct CheckOutput {
     pub had_scan_errors: bool,
     /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
     /// cautions this run settled before any report existed — §FS-check.4.10's
-    /// unread opted-out block and §FS-workspace.6.1.7.6's undecidable ancestor
+    /// unread opted-out block and §FS-workspace.6.1.7's undecidable ancestor
     /// claim, each anchored at the
     /// `grund.toml` line its message names. Not report findings — the report
     /// carries none of them, and none enters the §FS-errors.5.5 selector
@@ -105,7 +105,7 @@ pub fn check_with_opts(opts: CheckOpts) -> Result<CheckOutput> {
 }
 
 /// [`check_with_opts`] with the run-root warnings preserved beside a later
-/// refusal (§FS-check.4.10.8), and with what the run armed, which only a
+/// refusal (§FS-check.4.10), and with what the run armed, which only a
 /// frontend's `--only` reads (§FS-check.1.4.1): it is never a field of the
 /// public [`CheckOutput`]. Frontends render the returned data; the engine
 /// writes no stream (§FS-distribution.3.1).

@@ -20,7 +20,7 @@ function refuse(problem) {
   process.exit(2);
 }
 
-// The same host-to-target rule as the binding's loader (§FS-distribution.3.2.3.2).
+// The same host-to-target rule as the binding's loader (§FS-distribution.3.2.3).
 function target() {
   const cpu = {x64: 'x86_64', arm64: 'aarch64'}[process.arch];
   if (process.platform === 'linux' && cpu) {

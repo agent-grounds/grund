@@ -6,7 +6,7 @@
 //! the sentence does not say what belongs there. Each caller wraps the form
 //! back into the text it read, so a refusal leaves the parser holding the
 //! whole sentence as typed with only the failed part replaced
-//! (§FS-rule-refusals.sentences.rewrite.replaced). This module reads that sentence again before offering
+//! (§FS-rule-refusals.sentences.rewrite). This module reads that sentence again before offering
 //! it, and renders the one message both rule surfaces print.
 
 use super::recovery::enabled;
@@ -17,7 +17,7 @@ use crate::model::remedies;
 /// What a refusing production offers in place of the text it read.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum Form {
-    /// The text with the failed production replaced (§FS-rule-refusals.sentences.rewrite.replaced).
+    /// The text with the failed production replaced (§FS-rule-refusals.sentences.rewrite).
     One(String),
     /// The forms a refusal offers together, such as a two-form refusal's pair
     /// or one per clause of a conjunction, and the word that joins them.

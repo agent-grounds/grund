@@ -45,7 +45,7 @@ pub(super) fn workspace_optional_members_error(config: &Config, message: String)
 ///
 /// The canonical roots `members` expanded to are read *before* the two lists are
 /// merged, because the dedup at the end of expansion would otherwise resolve
-/// §FS-workspace.2.2.7's "one entry belongs to one list" silently, by dropping one of
+/// §FS-workspace.2.2's "one entry belongs to one list" silently, by dropping one of
 /// the two entries the author wrote.
 ///
 /// That dedup is also why a repeated *absent* entry is collapsed here rather than
@@ -55,9 +55,9 @@ pub(super) fn workspace_optional_members_error(config: &Config, message: String)
 /// checkout without the directory and accepted in the checkout with it — one
 /// config with two verdicts, which is the checkout-dependent answer
 /// §FS-workspace.2.2 exists to remove. Collapsed, the two lists agree:
-/// `members = ["vendored", "vendored"]` is one member too (§FS-workspace.6.1.4).
+/// `members = ["vendored", "vendored"]` is one member too (§FS-workspace.2.3).
 ///
-/// §FS-workspace.2.2.1: absent is `is_dir` and nothing more. The empty directory git
+/// §FS-workspace.2.2: absent is `is_dir` and nothing more. The empty directory git
 /// leaves for an uninitialized submodule is *present*, and deliberately so —
 /// widening the test would put a typo'd directory on the unverified path and move
 /// the blind spot's edge somewhere no line of the repository records.
@@ -68,7 +68,7 @@ pub(super) fn expand_optional_members(
     let Some(source) = config.workspace_optional_members_source.clone() else {
         return Ok(Vec::new());
     };
-    // §FS-workspace.2.2.7 "one entry belongs to one list", for the collisions the
+    // §FS-workspace.2.2 "one entry belongs to one list", for the collisions the
     // entry text cannot show — a `members` glob that expanded onto this entry, or
     // two spellings of one directory. Read now; see this function's docs.
     let plain: Vec<PathBuf> = members.iter().map(|member| member.root.clone()).collect();
@@ -76,10 +76,10 @@ pub(super) fn expand_optional_members(
     let mut absent_roots: Vec<PathBuf> = Vec::new();
     for entry in &config.workspace_optional_members {
         let lexical = config.root.join(entry);
-        // §FS-workspace.2.2.1: absent is `is_dir` and nothing more — an empty
+        // §FS-workspace.2.2: absent is `is_dir` and nothing more — an empty
         // directory is *present*. See this function's docs.
         if !path_is_dir(&lexical) {
-            // §FS-workspace.6.1.4: two entries naming one root are one member, and the
+            // §FS-workspace.2.3: two entries naming one root are one member, and the
             // dedup below the merge reaches only the present ones — see this
             // function's docs.
             let root = canonical_workspace_path(&lexical);
@@ -112,7 +112,7 @@ pub(super) fn expand_optional_members(
 
 /// §FS-workspace.3: put each absent entry's alias into its block's sibling set,
 /// so the uniqueness rule reaches it. What `optional_members` is exempt from is
-/// where the alias *comes from* (§FS-workspace.2.2.2) — not whether the alias
+/// where the alias *comes from* (§FS-workspace.2.2) — not whether the alias
 /// occupies a level, which it must, because it is the name every citation into
 /// the namespace writes and the name the announcement prints.
 ///
@@ -132,7 +132,7 @@ pub(super) fn expand_optional_members(
 ///
 /// One entry written twice never reaches here as a collision: [`expand_optional_members`]
 /// folds a repeated absent entry the way expansion folds a repeated present one
-/// (§FS-workspace.2.2.8), so the two aliases this compares always come from two
+/// (§FS-workspace.2.2), so the two aliases this compares always come from two
 /// directories.
 pub(super) fn register_absent_optional_aliases(
     block: &Config,
@@ -143,7 +143,7 @@ pub(super) fn register_absent_optional_aliases(
 ) -> Result<()> {
     for namespace in absent {
         let alias = optional_member_alias_segment(&namespace.written).to_string();
-        // Canonical, like every other root this rule compares (§FS-workspace.6.1.4);
+        // Canonical, like every other root this rule compares (§FS-workspace.2.3);
         // an absent path has nothing to resolve and stays lexical.
         let root = canonical_workspace_path(&block.root.join(&namespace.written));
         if let Some(first) = siblings.get(&alias) {
@@ -161,7 +161,7 @@ pub(super) fn register_absent_optional_aliases(
     Ok(())
 }
 
-/// §FS-workspace.2.2.2.1: the alias of a **present** optional member. Still the
+/// §FS-workspace.2.2: the alias of a **present** optional member. Still the
 /// entry's last path segment — and a `project_name` that disagrees with it is a
 /// config error at the `optional_members` line rather than a second name.
 ///
@@ -188,7 +188,7 @@ pub(super) fn optional_member_alias(
     }
 }
 
-/// §FS-workspace.2.2.9, §FS-workspace.6.1.6: the `optional_members` entry of `block`
+/// §FS-workspace.2.2, §FS-workspace.6.1.5: the `optional_members` entry of `block`
 /// that names `child_root`, if any.
 ///
 /// The ancestor climb needs this and nothing pins it: an optional entry claims the
@@ -207,7 +207,7 @@ pub(super) fn optional_entry_naming<'a>(
         .find(|entry| canonical_workspace_path(&block.root.join(entry)) == child_root)
 }
 
-/// §FS-check.4.9.2: the alias path a namespace is announced by, composed one level
+/// §FS-check.4.9: the alias path a namespace is announced by, composed one level
 /// at a time exactly as a project's alias is (§FS-workspace.6.1) — `vendored` at
 /// the outermost root, `sub/vendored` for the same entry one block down.
 pub(super) fn qualify_absent_optional(
@@ -223,7 +223,7 @@ pub(super) fn qualify_absent_optional(
         .collect()
 }
 
-/// §FS-check.4.9.1: one warning per absent optional entry, in the order the list
+/// §FS-check.4.9: one warning per absent optional entry, in the order the list
 /// writes them, anchored at the `optional_members` line of the block that holds it.
 ///
 /// A **located** finding on stdout, where its nearest neighbour §FS-check.3.30 is a
@@ -277,7 +277,7 @@ pub(crate) fn absent_optional_members(config: &Config) -> &[AbsentOptionalNamesp
 }
 
 /// How a report names an absent optional entry, as the config wrote it: the
-/// opening words of `check`'s warning (§FS-check.4.9.2) and of `init`'s note
+/// opening words of `check`'s warning (§FS-check.4.9) and of `init`'s note
 /// (§FS-init.2.3.4) alike, so the two lines name one member one way.
 pub(crate) fn absent_optional_member_subject(written: &str) -> String {
     format!("optional workspace member `{written}`")
@@ -295,8 +295,8 @@ pub(crate) fn arm_optional_members(config: &Config, armed: &mut Armed) {
 /// The sentence [`absent_optional_member_warnings`] carries, built apart from the
 /// diagnostic so a test can read it: the entry as the config wrote it, the
 /// namespace by the whole alias path a citation has to write, and what the run
-/// therefore does not cover (§FS-check.4.9.2, §FS-errors.4), the managed blocks'
-/// workspace sections among it where the run verified one (§FS-check.4.9.1).
+/// therefore does not cover (§FS-check.4.9, §FS-errors.4), the managed blocks'
+/// workspace sections among it where the run verified one (§FS-check.4.9).
 fn absent_optional_member_message(written: &str, alias_path: &str, blocks: bool) -> String {
     let blocks = if blocks {
         ", nor the managed blocks' workspace sections"
@@ -310,18 +310,18 @@ fn absent_optional_member_message(written: &str, alias_path: &str, blocks: bool)
     )
 }
 
-/// §FS-workspace.2.2.10 / §FS-check.2.2: the empty-scan caution for a block that put
+/// §FS-workspace.2.2 / §FS-check.2.2: the empty-scan caution for a block that put
 /// no project in scope because every member it has is absent. Reachable only
 /// there: a block with `include_root = true` contributes its own root, a present
 /// member contributes itself, and a block with neither and no optional entry is
-/// the empty block §FS-workspace.6.1.3 refuses outright.
+/// the empty block §FS-workspace.6.1.2 refuses outright.
 ///
 /// It earns the caution — a run that read nothing must say so, and the
 /// announcements beside it name namespaces rather than the scope — but not either
 /// of §FS-check.2.2.2's other two messages, both of which would be false: the walk
 /// never reached `[scan] include`, so it did not look there and find nothing, and
 /// the `grund init --scaffold` tree it would offer to scaffold is not what is missing.
-/// A checkout is, and that is not grund's to ask for (§FS-check.4.9.3).
+/// A checkout is, and that is not grund's to ask for (§FS-check.4.9).
 pub(crate) fn absent_only_workspace_caution(
     config: &Config,
     no_projects: bool,
@@ -341,16 +341,16 @@ pub(crate) fn absent_only_workspace_caution(
     })
 }
 
-/// §FS-workspace.4.3: whether an alias path names, or descends into, a namespace
+/// §FS-workspace.4: whether an alias path names, or descends into, a namespace
 /// this run did not read. Such a citation is **unverified** — the third state
 /// beside resolved and unknown — so nothing is reported at its site: the citation
 /// may be perfect and the checkout merely partial, and a tree that cites an absent
 /// namespace widely would pay thousands of lines to be told one fact it is told
-/// once, at the entry that made the skip legal (§FS-check.4.9.1).
+/// once, at the entry that made the skip legal (§FS-check.4.9).
 ///
 /// Descending counts because an absent member may itself have declared
 /// `[workspace]` and the run cannot know how many levels it had or what they were
-/// called (§FS-workspace.2.2.2.3) — `hardware/AR-bus` and `hardware/sprayer/FS-nozzle`
+/// called (§FS-workspace.2.2) — `hardware/AR-bus` and `hardware/sprayer/FS-nozzle`
 /// alike when `hardware` is the absent entry.
 ///
 /// A missing import is read the same way, absorbing every alias path that begins

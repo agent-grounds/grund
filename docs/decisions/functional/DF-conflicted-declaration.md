@@ -27,15 +27,15 @@ exactly seven `<`, `|`, `=` or `>` ([§FS-declarations.body.conflict.markers](..
 the middle markers read only inside an open block ([§FS-declarations.body.conflict.block](../../functional-spec/FS-declarations.md#bodyconflictblock-a-conflict-block)), looked
 for in every line of a Markdown file that declares an ID, fences included, and in the body of
 every source declaration, the line right after a cut line-style run included
-([§FS-declarations.body.conflict.where](../../functional-spec/FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for)), and naming every declaration it overlaps
-([§FS-declarations.body.conflict.owners](../../functional-spec/FS-declarations.md#bodyconflictowners-which-declarations-a-block-names)).
+([§FS-declarations.body.conflict.block](../../functional-spec/FS-declarations.md#bodyconflictblock-a-conflict-block)), and naming every declaration it overlaps
+([§FS-declarations.body.conflict.block](../../functional-spec/FS-declarations.md#bodyconflictblock-a-conflict-block)).
 
 `check` reports each block as the error `conflict-marker` at its first line
 ([§FS-declarations.checks.conflict-marker](../../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)), from the release that carries this record. `fmt`
 takes the same block from the model as a refusal: no run that needs the whole declaration set
 writes anything while one exists ([§FS-fmt.7.4](../../functional-spec/FS-fmt.md#74-no-write-without-a-complete-model)), and each block is named in a
-`nothing was rewritten` line ([§FS-fmt.3.3](../../functional-spec/FS-fmt.md#33-a-refused-run-still-names-every-unreadable-path), [§FS-fmt.3.4](../../functional-spec/FS-fmt.md#34-a-refusal-says-that-nothing-was-rewritten)). And `fmt` writes nothing before the last
-refusal it can meet ([§FS-fmt.7.4.3](../../functional-spec/FS-fmt.md#743-nothing-is-written-before-the-last-refusal)), which makes the unreadable-path message true as well.
+`nothing was rewritten` line ([§FS-fmt.3.2](../../functional-spec/FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)). And `fmt` writes nothing before the last
+refusal it can meet ([§FS-fmt.7.4](../../functional-spec/FS-fmt.md#74-no-write-without-a-complete-model)), which makes the unreadable-path message true as well.
 
 Two readings were settled while the plan was reviewed. A conflict inside a `///` or `#` run cuts
 the run, because a marker line is not a comment line, so the block that opens on the line right
@@ -62,12 +62,12 @@ that has to show a marker line literally indents it by one space, which still re
 ## 5. Rejected alternative: guard each write site
 
 The lock pass and the shorthand's deferred scan each wrote after the walk had written. A guard
-beside each was the shape [§FS-fmt.7.4.1](../../functional-spec/FS-fmt.md#741-why-this-rule-is-structural) records failing twice. Planning every write before making
+beside each was the shape [§FS-fmt.7.4](../../functional-spec/FS-fmt.md#74-no-write-without-a-complete-model) records failing twice. Planning every write before making
 any puts each later pass before the first write by construction.
 
 ## 6. Consequences
 
-Only a tree that holds a block where [§FS-declarations.body.conflict.where](../../functional-spec/FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for) looks moves:
+Only a tree that holds a block where [§FS-declarations.body.conflict.block](../../functional-spec/FS-declarations.md#bodyconflictblock-a-conflict-block) looks moves:
 
 - **`check` goes from `0` to `1`.**
 
@@ -110,11 +110,11 @@ holds.
    The [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) mechanical migration has no command to point at, because no command can choose a side of a conflict: only the author knows which text is the declaration's.
 3. *Named release.* The release note below names the verdict move for `check` and for `fmt`.
 4. *Actionable findings.* The finding that replaces the old verdict is located at the block's first line, names the declarations it overlaps and the lines it spans, and says to resolve it by hand ([§FS-declarations.checks.conflict-marker](../../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)); `fmt`'s refusal carries the same location and message.
-5. *No new licence.* This is not a licence for anything else. The issue called the old verdict correct under the contract of its day, and of the functional specification that is true: no point defined a conflict block. The prohibition is [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), which predates the verdict; this change writes the specification point that applies it and invents none. A marker line where [§FS-declarations.body.conflict.where](../../functional-spec/FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for) does not look keeps its verdict.
+5. *No new licence.* This is not a licence for anything else. The issue called the old verdict correct under the contract of its day, and of the functional specification that is true: no point defined a conflict block. The prohibition is [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), which predates the verdict; this change writes the specification point that applies it and invents none. A marker line where [§FS-declarations.body.conflict.block](../../functional-spec/FS-declarations.md#bodyconflictblock-a-conflict-block) does not look keeps its verdict.
 
 ## release-note: Release note
 
-- [§FS-declarations.checks.conflict-marker](../../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict), [§FS-fmt.7.4.3](../../functional-spec/FS-fmt.md#743-nothing-is-written-before-the-last-refusal), [§DF-conflicted-declaration](DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing),
+- [§FS-declarations.checks.conflict-marker](../../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict), [§FS-fmt.7.4](../../functional-spec/FS-fmt.md#74-no-write-without-a-complete-model), [§DF-conflicted-declaration](DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing),
   [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution): **a declaration that still holds an
   unresolved merge conflict fails `check`, and `fmt` writes nothing while one exists.** A
   column-0 conflict block in a Markdown file that declares an ID, fences included, or in a source

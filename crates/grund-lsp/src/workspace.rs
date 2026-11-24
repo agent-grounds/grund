@@ -20,7 +20,7 @@ struct ProjectSnapshot {
     root: PathBuf,
     snapshot: LspSnapshot,
     kind_titles: BTreeMap<String, String>,
-    /// Cached core authoring context (§FS-lsp.1.6.4). Optional only for the
+    /// Cached core authoring context (§FS-lsp.1.6). Optional only for the
     /// existing transport fixtures that construct navigation snapshots.
     completion: Option<grund_core::LspCompletionContext>,
     /// The context the snapshot was loaded from, which a citation hover answers
@@ -69,7 +69,7 @@ impl ProjectSnapshot {
         }
     }
 
-    /// Install authoring and navigation from the same scan (§FS-lsp.1.6.4).
+    /// Install authoring and navigation from the same scan (§FS-lsp.1.6).
     fn with_completion(root: PathBuf, loaded: grund_core::LspSnapshotWithCompletion) -> Self {
         let mut project = Self::new(root, loaded.metadata);
         let scanned = &project.snapshot.scanned_files;
@@ -107,7 +107,7 @@ impl ProjectSnapshot {
     }
 }
 
-/// A config that will not load, as the editor is told about it (§FS-lsp.2.2.4.1):
+/// A config that will not load, as the editor is told about it (§FS-lsp.2.2.4):
 /// the file and line the load error names, and the error `grund check` prints.
 /// Read off the core's own error, never out of its message text, so the editor
 /// and the CLI locate it the same way (§FS-lsp.1.1).

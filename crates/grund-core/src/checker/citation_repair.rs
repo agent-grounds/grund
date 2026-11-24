@@ -1,4 +1,4 @@
-//! Applicable repairs for required marked index entries (§FS-check.3.12.2).
+//! Applicable repairs for required marked index entries (§FS-check.3.12).
 //! Both direction producers finish here, after rule deduplication, so repair
 //! selection changes only message text and never a verdict or its authority.
 
@@ -10,7 +10,7 @@ use crate::config::{Frame, Rules, Schema};
 use crate::model::remedies;
 use crate::model::{Catalog, CheckReport, Code, Expected, citation_direction_repair};
 
-/// §FS-check.3.12.2: replace only the ordinary repair at actual entry sites,
+/// §FS-check.3.12: replace only the ordinary repair at actual entry sites,
 /// retaining any trailing compatibility clause for either direction producer.
 /// Call after both passes, before narrowing or merging project reports; a
 /// suggestion has no repair and is left byte-for-byte unchanged.

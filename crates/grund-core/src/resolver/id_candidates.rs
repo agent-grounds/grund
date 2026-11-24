@@ -19,7 +19,7 @@ use crate::scanner::resolve_id_arg;
 /// A list of candidates as one clause: `a`, `a or b`, `a, b or c`. A string
 /// helper with no workspace in it, but this is the lowest component that reads
 /// it — the candidate clause below and the unknown-project hint of
-/// §FS-check.3.8.1, which is the checker's and reads it downward. It came out of
+/// §FS-check.3.8, which is the checker's and reads it downward. It came out of
 /// `checker/references.rs` with §AR-system.2.6 for that reason, and followed the
 /// candidate clause here when §AR-system.2.10 became a component — still the
 /// lowest of its two readers.
@@ -37,7 +37,7 @@ pub(crate) fn join_alternatives(items: &[String]) -> String {
 const MEMBER_CANDIDATE_CLAUSE: &str = "; did you mean ";
 
 /// Whether an `ID not found:` refusal already names a project that declares the
-/// ID (§FS-workspace.8.1.1.7). That is the one case where the `grund list` hint of
+/// ID (§FS-workspace.8.1.1). That is the one case where the `grund list` hint of
 /// §FS-show.3.5 is withheld: the catalogue it points at is what this line has
 /// already searched, and its other half proposes minting an ID that exists.
 pub fn names_member_id_candidate(message: &str) -> bool {
@@ -54,7 +54,7 @@ pub fn names_member_id_candidate(message: &str) -> bool {
 /// holds every member's findings is not loaded a second time to answer
 /// (§GOAL-fast-feedback).
 ///
-/// §FS-workspace.8.1.1.4: current-grammar rejection also reaches this rule;
+/// §FS-workspace.8.1.1: current-grammar rejection also reaches this rule;
 /// a real member declaration earns `not-found`, while no candidate preserves
 /// the original failure. Qualified lookups and unrelated errors stay unchanged.
 pub(crate) fn with_member_id_candidates(
@@ -96,7 +96,7 @@ pub(crate) fn with_member_id_candidates(
     }
 }
 
-/// §FS-workspace.8.1.1.2: append a clause only when another project declares
+/// §FS-workspace.8.1.1: append a clause only when another project declares
 /// the ID; where there is nothing to name, the refusal stays unchanged.
 fn member_id_candidate_clause(candidates: &[String]) -> Option<String> {
     (!candidates.is_empty()).then(|| {
@@ -107,7 +107,7 @@ fn member_id_candidate_clause(candidates: &[String]) -> Option<String> {
     })
 }
 
-/// §FS-workspace.8.2.2.1: refs keeps its failure data and offers qualified
+/// §FS-workspace.8.2.2: refs keeps its failure data and offers qualified
 /// commands only as text guidance, using the same declaration-backed candidates.
 pub(crate) fn member_id_refs_hint(
     context: &WorkspaceContext,
@@ -126,12 +126,12 @@ pub(crate) fn member_id_refs_hint(
 
 /// Every project other than the one the lookup ran against that declares the ID
 /// as written, qualified with its alias — sorted and cut at three, joined the
-/// way §FS-check.3.8.2 joins its own candidates. Several are listed and none is
+/// way §FS-check.3.8 joins its own candidates. Several are listed and none is
 /// chosen: two projects declaring one ID are two declarations in two namespaces
-/// (§FS-workspace.8.1.4), and picking one would be a guess
+/// (§FS-workspace.8.1.1), and picking one would be a guess
 /// (§REQ-no-wrong-citation.1).
 ///
-/// A narrowed run offers nothing (§FS-workspace.8.1.1.5). Member-local runs,
+/// A narrowed run offers nothing (§FS-workspace.8.1.1). Member-local runs,
 /// standalone repositories, and a `<path>` pinned inside a member all load with
 /// `workspace_loaded == false`; a run that cannot see the whole tree must not
 /// guess at what the rest of it declares.
@@ -170,7 +170,7 @@ pub(crate) fn member_id_candidates<'a>(
         .filter_map(|(alias, project)| qualified_declared_id(alias, project, raw_id))
         .collect();
     candidates.sort();
-    // Three is the §FS-check.3.8.2 cut: `grund list` is the catalogue, a
+    // Three is the §FS-check.3.8 cut: `grund list` is the catalogue, a
     // diagnostic is not.
     candidates.truncate(3);
     candidates
@@ -188,7 +188,7 @@ pub(crate) fn member_id_candidates<'a>(
 ///
 /// A section written after the ID is dropped: this run never looked for that
 /// coordinate here, so suggesting it would be the one guessed part of the line
-/// (§FS-workspace.8.1.1.6). A text this project's own grammar rejects, or a
+/// (§FS-workspace.8.1.1). A text this project's own grammar rejects, or a
 /// shorthand several of its declarations answer to, names no candidate here —
 /// the clause offers a spelling that resolves, or it offers nothing.
 fn qualified_declared_id(

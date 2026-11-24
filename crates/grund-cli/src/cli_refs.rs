@@ -159,7 +159,7 @@ fn command_refs(args: &[String]) -> ExitCode {
         Ok(format) => format,
         Err(code) => return code,
     };
-    // §FS-refs.4.1.1: each broken stub set aside beside a real home is named, in
+    // §FS-refs.4.1: each broken stub set aside beside a real home is named, in
     // text only; JSON keeps stderr empty and leaves the finding to `check`.
     if format != "json" {
         for warning in &set_aside {
@@ -217,7 +217,7 @@ fn render_refs_query_failure(failure: &RefsQueryFailure, format: &str, hint: Opt
 /// workspace, whose paths are already root-relative and distinct
 /// (§FS-workspace.8.2).
 fn render_refs_total(hits: &[RefHit], format: &str, clause: fn(grund_core::LspUsage) -> String) {
-    // §FS-lsp.1.2.5: the engine's fold and the engine's wording, never a second
+    // §FS-lsp.1.2.3: the engine's fold and the engine's wording, never a second
     // tally or a second phrasing kept beside them.
     let usage = usage_over_paths(hits.iter().map(|hit| hit.path.as_str()));
     if format == "json" {
@@ -227,7 +227,7 @@ fn render_refs_total(hits: &[RefHit], format: &str, clause: fn(grund_core::LspUs
     }
 }
 
-/// §FS-refs.3.3.1: append excluded sites to the complete existing summary row.
+/// §FS-refs.3.3: append excluded sites to the complete existing summary row.
 fn render_refs_summary(
     hits: &[RefHit],
     workspace: bool,
@@ -307,7 +307,7 @@ fn render_ref_hit_json(hit: &RefHit, workspace: bool, kind_title: Option<&str>) 
         hit.marker,
         json_escape(&hit.text),
         // §FS-refs.3.2: the citing site's unit between `text` and `kind_title`,
-        // which stays the record's final field (§FS-refs.3.2.1).
+        // which stays the record's final field (§FS-refs.3.2).
         json_string_or_null(hit.enclosing_declaration.as_deref()),
         json_string_or_null(hit.enclosing_section.as_deref()),
         metadata

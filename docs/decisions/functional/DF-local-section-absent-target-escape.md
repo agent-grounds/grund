@@ -87,7 +87,7 @@ say the same.
 |---|---|
 | Append the absence and the escape after the attribution, the [§FS-errors.3](../../functional-spec/FS-errors.md#3-message-text) route | No contract moves, but the advice that fails still comes first, permanently, which is what agent-grounds/grund#515 reports. |
 | Migrate over three releases, as [§FS-errors.3.7](../../functional-spec/FS-errors.md#37-the-rule-site-unknown-alias-reasons) did | The finding's code already exists and does not move, so a window gives exact-line consumers nothing new, and it prints the failing advice first for another release. |
-| Put the escape on `missing section` instead | That finding names the canonical coordinate and also fires on full citations, where the usual cause is a mistyped number and the escape is the wrong advice. The advice for one token would be split across two lines with the wrong half first, and [§FS-check.3.2.1](../../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not) holds that finding's wording fixed. |
+| Put the escape on `missing section` instead | That finding names the canonical coordinate and also fires on full citations, where the usual cause is a mistyped number and the escape is the wrong advice. The advice for one token would be split across two lines with the wrong half first, and [§FS-check.3.2](../../functional-spec/FS-check.md#32-missing-section) holds that finding's wording fixed. |
 | Keep `write <§>OWNER.N` and append the escape as a second option | The first option still fails whenever it is taken, and it is the one a reader or an agent applies first. |
 
 ## release-note: Release note

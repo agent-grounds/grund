@@ -140,7 +140,7 @@ pub(super) fn resolve_citation_owners(
 /// §AR-scanner.2.4.2: the enclosing declaration's kind (nearest preceding
 /// declaration whose body contains the site), else the file's unique kind home,
 /// else the homeless kind — `code`, or whatever the project named it
-/// (§FS-config.3.9.2.2).
+/// (§FS-config.3.9.2).
 fn classify_citation_sources(
     findings: &mut Catalog,
     schema: &Schema,
@@ -149,7 +149,7 @@ fn classify_citation_sources(
     record: &FileRecord,
 ) {
     let owners = LineOwners::new(findings, record);
-    // §FS-config.3.9.2.2: step 3 of the fallback is the homeless kind, whose name
+    // §FS-config.3.9.2: step 3 of the fallback is the homeless kind, whose name
     // is `code` only where the project did not name it something truer.
     let unowned_kind =
         file_home_kind(path, schema, frame).unwrap_or_else(|| schema.complement_name().to_string());
@@ -303,7 +303,7 @@ pub(super) fn inline_citation_sites(
         // skip a block that *declares* an ID already earned, and for the same
         // reason: its shape is not this spec's to govern.
 
-        // §FS-config-v2.schema.sources.declarations.prose: a block the gate keeps from
+        // §FS-config-v2.schema.sources.declarations: a block the gate keeps from
         // declaring is prose, so it is measured as any note is.
         if !recorded.doc
             && !(recorded.declares

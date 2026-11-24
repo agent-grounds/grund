@@ -2,7 +2,7 @@
 //! v2 reader, and the v1 file's project are each reduced to the meanings the
 //! gate compares, one section at a time, ignoring only what §FS-config-migrate.5.1
 //! lists; a section that differs prints its two readings. A block with
-//! `include_root = false` is compared as §FS-config-migrate.8.1.4 says, on the
+//! `include_root = false` is compared as §FS-config-migrate.8.1 says, on the
 //! one answer `opted_out.rs` gives (§AR-config.8.4).
 
 use std::collections::BTreeSet;
@@ -56,7 +56,7 @@ fn bare(row: &Row) -> Row {
     row
 }
 
-/// §FS-config-migrate.8.1.4: what a compact block's candidate keeps, the
+/// §FS-config-migrate.8.1: what a compact block's candidate keeps, the
 /// workspace records, the project name and the description; the report gate
 /// holds everything else.
 fn kept(p: &Project) -> Vec<Section> {
@@ -89,7 +89,7 @@ pub(super) fn reduce(p: &Project, root: &Path, block: Block) -> Vec<Section> {
     }
     let schema = &p.schema;
     let workspace = &p.workspace;
-    // §FS-config-migrate.8.1.1: no project reads the block's named sections.
+    // §FS-config-migrate.8.1: no project reads the block's named sections.
     let mut ids = schema.ids.clone();
     ids.named_sections |= block.opted_out();
     let notes = &schema.notes;

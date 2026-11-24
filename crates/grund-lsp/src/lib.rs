@@ -33,7 +33,7 @@ pub fn run() -> Result<()> {
     let definition_link_support = client_supports_definition_links(&initialize_params);
     let mut server = Server::new(connection, folders, definition_link_support)?;
     server.watch.client = client_registers_watchers(&initialize_params);
-    // §FS-lsp.1.6.1: advertise all initially loaded member introducers.
+    // §FS-lsp.1.6: advertise all initially loaded member introducers.
     let mut capabilities = server_capabilities(server.trigger());
     capabilities
         .completion_provider
@@ -107,7 +107,7 @@ fn on_type_trigger_characters(trigger: &str) -> Vec<String> {
     for ch in '!'..='~' {
         chars.insert(ch.to_string());
     }
-    // §FS-lsp.1.4.1: the shorthand expands on the keystroke that *ends* the token,
+    // §FS-lsp.1.4: the shorthand expands on the keystroke that *ends* the token,
     // and a space is the commonest way to end one. The printable range above
     // starts at `!`, so without this the ordinary `see <§>FS-042 and …` never fires.
     chars.insert(" ".to_string());
@@ -204,7 +204,7 @@ struct Server {
     connection: Connection,
     /// Folder identity stays keyed by the URI the client supplied. Distinct
     /// symlink aliases may canonicalize to one path, but removing either URI
-    /// must leave the other anchor active (§FS-lsp.2.2.5).
+    /// must leave the other anchor active (§FS-lsp.2.2.1).
     workspace_folders: BTreeMap<Url, PathBuf>,
     watch: ImportWatch,
     /// Every open document as the client's latest edit left it: what a typing
@@ -229,7 +229,7 @@ struct Installed {
     folder_roots: BTreeMap<Url, PathBuf>,
     /// The config each folder failed to load on its latest discovery, and the
     /// config a project's latest scan failed to load, keyed by its root: both
-    /// are published on that config until it loads (§FS-lsp.2.2.4.1).
+    /// are published on that config until it loads (§FS-lsp.2.2.4).
     folder_config_failures: BTreeMap<Url, ConfigFailure>,
     scan_config_failures: BTreeMap<PathBuf, ConfigFailure>,
     /// Shared with the rebuild that starts from them, which replaces only the
@@ -433,7 +433,7 @@ impl Server {
                 let params: lsp_types::DidChangeWorkspaceFoldersParams =
                     serde_json::from_value(notification.params)?;
                 // Unusable folder URIs are skipped, not fatal, so the rest of
-                // one mixed event still applies (§FS-lsp.2.2.5).
+                // one mixed event still applies (§FS-lsp.2.2.1).
                 for (folder_uri, _) in workspace_folder_paths(&params.event.removed) {
                     self.workspace_folders.remove(&folder_uri);
                     self.installed.folder_roots.remove(&folder_uri);
@@ -492,7 +492,7 @@ impl Server {
             return Ok(None);
         };
         // A citation that does not resolve has no preview body; its diagnostic
-        // already carries the nearest-ID hint (§FS-lsp.1.2.2).
+        // already carries the nearest-ID hint (§FS-lsp.1.2.1).
         let body = match show_from_snapshot(
             loaded,
             &citation.query_id,
@@ -810,7 +810,7 @@ impl Server {
 
     /// `text` is the whole document as the request found it, not just the edited
     /// line: the shorthand rewrite has to know whether the line sits inside a
-    /// fenced block, exactly as `grund fmt` does (§FS-lsp.1.4.3).
+    /// fenced block, exactly as `grund fmt` does (§FS-lsp.1.4).
     fn on_type_formatting(
         &self,
         params: Value,
@@ -850,7 +850,7 @@ impl Server {
     }
 
     /// The declarations in the session snapshot, for shorthand expansion in the
-    /// live transform (§FS-lsp.1.4.2). Section titles are excluded — only whole-ID
+    /// live transform (§FS-lsp.1.4). Section titles are excluded — only whole-ID
     /// declarations can be what a shorthand names.
     ///
     /// `query_id` carries an `<alias>/` prefix in workspace mode, which no `[id]
@@ -1001,7 +1001,7 @@ impl Installed {
     /// Multiple projects that only scan the same external path are ambiguous:
     /// neither folder order nor root depth establishes namespace ownership, so
     /// return no project rather than resolve a citation as a guess
-    /// (§FS-lsp.2.2.3, §REQ-no-wrong-citation.1).
+    /// (§FS-lsp.2.2.2, §REQ-no-wrong-citation.1).
     fn project_for_path(&self, path: &Path) -> Option<&ProjectSnapshot> {
         let path = normalize_path(path);
         // §FS-imports.editor: an import root no folder's project holds is its own project's.
@@ -1022,7 +1022,7 @@ impl Installed {
     /// are the exception, and both name a file no scan reads: an unreadable
     /// external file is necessarily not in `scanned_files`, and a run-level
     /// `[workspace]` warning anchors at a `grund.toml` that may lie above every
-    /// project root (§FS-lsp.1.1.3). For either, choose one of the snapshots that
+    /// project root (§FS-lsp.1.1). For either, choose one of the snapshots that
     /// reported that path rather than dropping it or publishing it from all of
     /// them.
     fn project_for_diagnostic_path(&self, path: &Path) -> Option<&ProjectSnapshot> {
@@ -1348,7 +1348,7 @@ fn on_type_replacement_for_line(
     let cursor = utf16_to_byte(line, position.character);
     // One config resolution per keystroke: the core helper resolves the edited
     // file's marker/trigger and the fmt-context exclusions together
-    // (§FS-lsp.1.4.6).
+    // (§FS-lsp.1.4).
     let at = |offset| Position {
         line: position.line,
         character: byte_to_utf16(line, offset),

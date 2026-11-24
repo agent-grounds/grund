@@ -48,7 +48,7 @@ GitHub: [#368](https://github.com/agent-grounds/grund/issues/368).
 This milestone shipped in grund 0.19.0: the two refusals of
 [§FS-errors.2.5.1](functional-spec/FS-errors.md#251-a-kind-that-declares-no-ids) and [§FS-rule-refusals.sentences.order](functional-spec/FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) print their reasons alone, and a pinned or `*/`
 `[citations]` target the run cannot accept fails the load
-([§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)). Its record is the compatibility notice that landed it,
+([§FS-config.3.9.5](functional-spec/FS-config.md#395-validation)). Its record is the compatibility notice that landed it,
 [§DF-one-grammar-lands-in-0-19.release-note](decisions/functional/DF-one-grammar-lands-in-0-19.md#release-note-release-note). The item's own plan is removed, as
 a shipped item's is; this address, heading text included, is kept while the
 decisions and specifications written before it still cite it.
@@ -59,7 +59,7 @@ GitHub: [#881](https://github.com/agent-grounds/grund/issues/881), which landed 
 
 The legacy prefix and the `; this wording changes in grund 0.19.0` suffix went,
 so the two reasons are the final templates of [§FS-errors.2.5.1](functional-spec/FS-errors.md#251-a-kind-that-declares-no-ids) and [§FS-rule-refusals.sentences.order](functional-spec/FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails), and each `[citations]`
-warning of [§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds) became an `error:` that fails the load with exit
+warning of [§FS-config.3.9.5](functional-spec/FS-config.md#395-validation) became an `error:` that fails the load with exit
 `2`, its text ending in `; this became an error in grund 0.19.0`. The release
 constant went with them, and the canonical config of
 [§DF-directions-render.3](decisions/functional/DF-directions-render.md#3-the-canonical-config), which pinned `api/AR` in a project that declared no
@@ -73,7 +73,7 @@ This milestone shipped in grund 0.19.0: a relative heading in a source doc-comme
 declaration body, and a heading whose path puts a name under a number there, is a
 section, and `parse-moves` is gone. Its record is the compatibility notice that
 landed it, [§DF-one-parse-answers-from-0-19.release-note](decisions/functional/DF-one-parse-answers-from-0-19.md#release-note-release-note), together with
-[§FS-declarations.section.relative.where](functional-spec/FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190). The item's own plan is removed, as a
+[§FS-declarations.section.relative.form](functional-spec/FS-declarations.md#sectionrelativeform-the-form). The item's own plan is removed, as a
 shipped item's is; this address, heading text included, is kept while the
 decisions and specifications written before it still cite it.
 
@@ -85,8 +85,8 @@ Implemented for grund 0.19.0: unresolved mixed citations and required rule or
 `[citations]` findings only they raise use ordinary errors, and unrecorded
 mixed addresses lose their historical suffix. The record is
 [§DF-mixed-path-citation-errors.release-note](decisions/functional/DF-mixed-path-citation-errors.md#release-note-release-note),
-together with [§FS-citations.checks.mixed-path](functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190)
-and [§FS-rules.7.12](functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190).
+together with [§FS-citations.checks.mixed-path](functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked)
+and [§FS-rules.5.1](functional-spec/FS-rules.md#51-facts-and-identity).
 The shared floor prevents a release below 0.19.0
 ([§FS-distribution.release-floor](functional-spec/FS-distribution.md#release-floor-one-shared-minimum-publishable-release)).
 The milestone address and heading remain for existing citations; its plan is
@@ -136,7 +136,7 @@ Implemented in source under [§FS-lsp.1.6](functional-spec/FS-lsp.md#16-declared
 
 ### 1. What
 
-`grund-lsp` returns completion items for declared IDs in the document's resolved project config. Completion triggers include the configured marker prefix (`§F` under defaults), the configured typing trigger prefix (`$$F` under defaults), and a partially typed ID immediately after either prefix. Applying a completion replaces only the active prefix/token range with the configured marker plus the chosen ID; it does not touch surrounding prose, existing markdown links, or another citation on the same line. Completion details show the declaration title and source path, and items sort by exact prefix match, then kind order, then ID for deterministic output ([§FS-lsp.1.6.2](functional-spec/FS-lsp.md#162-candidates-resolution-and-ordering)). Clients own their acceptance keys: the [setup guide](user-facing/lsp.md#write-a-citation) records default bindings and optional mappings for Helix, Neovim, Zed, VSCode, and eglot/lsp-mode. Helix cycles with Tab and accepts with Enter.
+`grund-lsp` returns completion items for declared IDs in the document's resolved project config. Completion triggers include the configured marker prefix (`§F` under defaults), the configured typing trigger prefix (`$$F` under defaults), and a partially typed ID immediately after either prefix. Applying a completion replaces only the active prefix/token range with the configured marker plus the chosen ID; it does not touch surrounding prose, existing markdown links, or another citation on the same line. Completion details show the declaration title and source path, and items sort by exact prefix match, then kind order, then ID for deterministic output ([§FS-lsp.1.6](functional-spec/FS-lsp.md#16-declared-id-completion)). Clients own their acceptance keys: the [setup guide](user-facing/lsp.md#write-a-citation) records default bindings and optional mappings for Helix, Neovim, Zed, VSCode, and eglot/lsp-mode. Helix cycles with Tab and accepts with Enter.
 
 ### 2. Why now
 
@@ -148,7 +148,7 @@ LSP tests open a fixture workspace, request completions after `§F`, `$$F`, and 
 
 ## RM-lsp-trigger-conversion-fix: fix the LSP trigger conversion
 
-Completion interaction coverage is implemented alongside [§FS-lsp.1.6.4](functional-spec/FS-lsp.md#164-snapshot-and-live-transform-interaction). Baseline investigation reproduced no generic trigger defect, so the shipped live transform [§FS-lsp.1.4](functional-spec/FS-lsp.md#14-live-trigger-transform) retains its behavior. The new request-sequence tests await execution; this is not a release commitment.
+Completion interaction coverage is implemented alongside [§FS-lsp.1.6](functional-spec/FS-lsp.md#16-declared-id-completion). Baseline investigation reproduced no generic trigger defect, so the shipped live transform [§FS-lsp.1.4](functional-spec/FS-lsp.md#14-live-trigger-transform) retains its behavior. The new request-sequence tests await execution; this is not a release commitment.
 
 ### 1. What
 
@@ -189,8 +189,7 @@ switch: a v2 project's `[schema.sources] declarations = "doc-comments"`, its
 default, recognizes a source declaration only inside a comment block its
 language's doc profile calls documentation, through one gate that answers before
 every recognizer
-([§FS-config-v2.schema.sources.declarations](functional-spec/FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare),
-[§FS-config-v2.schema.sources.declarations.gate](functional-spec/FS-config-v2.md#schemasourcesdeclarationsgate-one-gate-before-every-recognizer)),
+([§FS-config-v2.schema.sources.declarations](functional-spec/FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare)),
 and `declarations = "any-comment"` keeps the earlier reading. A v1 project keeps
 it unchanged. The plan this item carried, a v1 `[scan]` key, is removed; this
 address, heading text included, is kept while released changelogs still cite it.

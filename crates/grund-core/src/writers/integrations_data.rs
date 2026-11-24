@@ -1,7 +1,7 @@
 //! The hosts' spelling of `integrations` (§FS-distribution.3.3.6): the names a
 //! binding passes parsed into the command's vocabularies, and the typed answer
 //! projected into the JSON the Python and Node bindings return
-//! (§FS-integrations.1.3.2). It decides nothing the typed operation does not.
+//! (§FS-integrations.1.3). It decides nothing the typed operation does not.
 
 use super::integrations_agents::{ConversationRendering, ConversationTarget, IntegrationAgent};
 use super::integrations_api::integrations;

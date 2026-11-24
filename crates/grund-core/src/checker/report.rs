@@ -9,7 +9,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// The checker takes the resolved `Catalog` produced from §AR-scanner, asks
 /// §AR-rules for chapter-rule diagnostics, and produces one `CheckReport`. It
 /// implements the checks in §FS-check and orchestrates, but does not implement,
-/// the parser/facts/engine split of §FS-rules.11.
+/// the parser/facts/engine split of §AR-rules.1.
 ///
 /// ## placement: Where the checker sits
 ///
@@ -115,7 +115,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// runs (§AR-system.2.11): the managed-block version, every root agent
 /// entrypoint with the whole block `grund init` would write there, rendered by
 /// the same two calls `init` makes and split into the sections the comparison
-/// names (§FS-check.3.5.3, §FS-check.3.5.4), each for its own conversation
+/// names (§FS-check.3.5), each for its own conversation
 /// surface (§FS-init.2.3.6); at the outermost root of a full checkout, the
 /// workspace's project list the two workspace sections render from, and
 /// elsewhere the mark that leaves them out (§FS-check.3.5.5); the
@@ -157,8 +157,8 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// (§AR-scanner.4.6): a stub and the inline declaration it
 /// points at count as one, not two — whether or not the walk reached that declaration, and
 /// however many stubs point at it — and a declaration a stub stands for is named at its
-/// target (§FS-declarations.stubs.pairing.1, §FS-declarations.stubs.pairing.2,
-/// §FS-declarations.stubs.pairing.3).
+/// target (§FS-declarations.stubs.pairing.1,
+/// §FS-declarations.stubs.pairing).
 ///
 /// ### 2.2 Misplaced declarations (§FS-declarations.checks.misplaced-declaration)
 ///
@@ -186,7 +186,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 ///
 /// For each citation with a section path, look up the section in the matching
 /// declaration's recorded sections. Where the walk recorded only a stub of the ID,
-/// the lookup goes on to the stub's target, scanned or not (§FS-check.3.2.1),
+/// the lookup goes on to the stub's target, scanned or not (§FS-check.3.2),
 /// through the target's record the stub's verdict holds
 /// (§AR-scanner.4.6, §AR-resolver.5). Missing → one error at the
 /// citation site.
@@ -208,14 +208,14 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// through (§FS-declarations.checks.broken-stub.4), and the verdict is the one a save
 /// would give, a hidden or unlisted name judged as the stub wrote it and a heading
 /// inside a fence or a raw-text HTML block declaring nothing
-/// (§AR-scanner.4.6, §FS-declarations.stubs.target.2,
+/// (§AR-scanner.4.6, §FS-declarations.stubs.target,
 /// §FS-check.1.1.5.1, §FS-declarations.stubs.target.3).
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///
 /// For each declared ID never cited, emit one warning. Warnings do not cause a
 /// non-zero exit. `E2E` declarations are exempt — a case is exercised by being
-/// run, not by being cited (§FS-check.4.1.3).
+/// run, not by being cited (§FS-check.4.1).
 ///
 /// ### 2.7 Invalid agent-entrypoint init block (§FS-check.3.5)
 ///
@@ -234,7 +234,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// entrypoint's whole block by the same two calls `grund init` makes
 /// (§AR-system.2.11), split into the sections the comparison names, and hand it
 /// over as `Expected` (§AR-checker.1.3); this rule compares every section with
-/// disk, byte for byte (§FS-check.3.5.4), and never reads a presentation key. Which companion files count as
+/// disk, byte for byte (§FS-check.3.5), and never reads a presentation key. Which companion files count as
 /// entrypoints is the one entrypoint walk in `scanner/agent_entrypoints.rs`,
 /// which `init`'s own selection is derived from, and whose surface reach takes
 /// `&Presentation` explicitly (§AR-scanner.7). So this rule cannot disagree
@@ -263,9 +263,9 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// satisfying each obligation entry (entries are conjunctive, `|` inside an entry is
 /// a disjunction). The body extent and the per-citation `enclosing_declaration` come
 /// from the scanner (§AR-scanner.2.4), so this pass is a lookup, not a re-scan. The
-/// homeless-kind obligation is per source file (§FS-config.3.9.2.4) rather than
+/// homeless-kind obligation is per source file (§FS-config.3.9.2) rather than
 /// per declaration, and both per-file units are cut by the row's
-/// `grounding_level` like the grounding pass above (§FS-check.3.11.3). A `must` miss is a `missing-citation` error; a `should` miss is a
+/// `grounding_level` like the grounding pass above (§FS-check.3.11). A `must` miss is a `missing-citation` error; a `should` miss is a
 /// `suggested-citation` suggestion, emitted only under `--suggestions` (§FS-check.2.3).
 ///
 /// ### 2.10 Citation-direction prohibitions (§FS-check.3.12, §FS-config.3.9, §DF-citation-directions)
@@ -333,7 +333,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// one the ordinary run would have made. The narrowing also undoes the shorthand
 /// resolution the wider walk enabled (§AR-scanner.2.6.6) where the declaration it
 /// resolved against has just been dropped, so such a site is the unresolved
-/// shorthand a plain run reports — one cause, one finding (§FS-check.3.13.3).
+/// shorthand a plain run reports — one cause, one finding (§FS-check.3.13).
 ///
 /// ### 2.14 Inline citation style (§FS-check.3.10, §FS-check.4.4, §FS-inline-citation-style.4)
 ///
@@ -345,7 +345,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// this rule reads no file. A site that misses several caps yields one finding
 /// per cap; a block whose layout deviates yields one per offending *line*,
 /// anchored there rather than at the block's opener, because that is the line an
-/// author edits (§FS-inline-citation-style.4.4.1). Two of the three tiers are
+/// author edits (§FS-inline-citation-style.4.4). Two of the three tiers are
 /// opt-in and silent by default: the soft cap under `warn_on_suggested`, the
 /// layout under `inline_note_layout_check`.
 ///
@@ -407,7 +407,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// a declaration heading is decided once, in `index_entries.rs`: the entry rule
 /// and that carve-out, and with it `list --unused` and the `refs` label, read the
 /// same answer, so such a citation is the entry for none of them
-/// (§FS-check.3.18, §FS-check.4.1.2.1). The finding pass lives in
+/// (§FS-check.3.18, §FS-check.4.1). The finding pass lives in
 /// `index.rs` and its shared membership derivation in
 /// `index_entries.rs`, one file per invariant family and bounded helper
 /// (§AR-core-module-layout.1, §AR-core-module-layout.3).
@@ -460,9 +460,9 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// missing-field at the declaration's line, mistitled-field and
 /// invalid-field-value at the field's heading, misplaced-field walked chain by
 /// chain from each head against the nearest present predecessor's actual place,
-/// so one field out of place is one finding (§FS-fields.order.nearest), and
+/// so one field out of place is one finding (§FS-fields.checks.misplaced-field), and
 /// undeclared-chapter for each named direct section a closed kind does not
-/// declare. Each takes the channel §FS-fields.strengths.table names; a `may`
+/// declare. Each takes the channel §FS-fields.strengths names; a `may`
 /// field is unchecked when absent and an error when misshapen. The pass is
 /// node-local, so it sits in `conform`.
 ///

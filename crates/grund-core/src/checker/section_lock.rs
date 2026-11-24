@@ -32,7 +32,8 @@ pub(super) fn check_section_locks(
                 Code::INVALID_SECTION_LOCK,
                 judgement.path.clone(),
                 *line,
-                // §FS-section-lock.checks.remedy: the row's Fix, which takes the run by reference.
+                // §FS-section-lock.checks.invalid-section-lock: the row's Fix, which takes
+                // the run by reference.
                 format!(
                     "section lock line is not <coordinate> <fingerprint>; {}",
                     remedies::invalid_section_lock()
@@ -46,7 +47,8 @@ pub(super) fn check_section_locks(
                     Code::UNRECORDED_SECTION_CITATION,
                     citation.file.clone(),
                     citation.line,
-                    // §FS-section-lock.checks.remedy: the run that writes a lock, with its scope.
+                    // §FS-section-lock.checks.unrecorded-section-citation: the run that
+                    // writes a lock, with its scope.
                     format!(
                         "{} is cited but has no entry in {lock}; {}",
                         coordinate(section),

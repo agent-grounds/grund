@@ -20,7 +20,7 @@ A field is the direct section whose name is the field's key, never one matched b
 
 ### 2.3 `may` waives absence only
 
-A present `may` field is held to its placement, title and values, as an error ([§FS-fields.strengths.may](../../functional-spec/FS-fields.md#strengthsmay-a-present-optional-field-is-still-held-to-its-shape)). Leaving a present optional field unchecked was rejected, because a `one_of` that nothing enforces is a declaration that lies. A separate strength key for shape was rejected because the published format has none; an author who wants the shape soft writes `presence = "warn"`.
+A present `may` field is held to its placement, title and values, as an error ([§FS-fields.strengths](../../functional-spec/FS-fields.md#strengths-strengths-and-channels)). Leaving a present optional field unchecked was rejected, because a `one_of` that nothing enforces is a declaration that lies. A separate strength key for shape was rejected because the published format has none; an author who wants the shape soft writes `presence = "warn"`.
 
 ### 2.4 The value chapter moves into the field list
 

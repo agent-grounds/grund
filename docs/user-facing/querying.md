@@ -42,13 +42,13 @@ The founders sign the founding contract.
 ```
 
 The first command still exits 1; follow the qualified suggestion to read the
-body ([§FS-workspace.8.1.1.4](../functional-spec/FS-workspace.md#8114-each-project-is-asked-in-its-own-grammar)).
+body ([§FS-workspace.8.1.1](../functional-spec/FS-workspace.md#811-an-unqualified-id-another-project-declares)).
 For `grund refs ACT-001-founding-contract`, a root that does not know `ACT`
 keeps the invalid-ID refusal but offers `grund refs
 company/ACT-001-founding-contract` in its text hint. Use that command to list
 the member declaration's citation sites. Refs JSON keeps `invalid-id` and no
 hint; a root-valid ID with no local citations still gives the usual empty
-answer ([§FS-workspace.8.2.2.1](../functional-spec/FS-workspace.md#8221-a-member-only-kind-replaces-the-text-format-hint)).
+answer ([§FS-workspace.8.2.2](../functional-spec/FS-workspace.md#822-an-unqualified-query-at-the-workspace-root)).
 The existing [workspace example](../../examples/workspace/README.md) shows the
 same recovery with `api/FS-session` and `web/FS-session`.
 
@@ -143,7 +143,7 @@ naming its home, rather than as an unknown kind.
 To reach `requirements.1`, match it with a glob, `--glob 'FS-*.requirements.*'`, or
 expand the named chapter, as the section after next does. Every filter intersects
 the others, so `--selector` and `--glob` together list what both select
-([§FS-coordinate-globs.scope.filters](../functional-spec/FS-coordinate-globs.md#scopefilters-filters-intersect-and-never-widen)).
+([§FS-coordinate-globs.scope](../functional-spec/FS-coordinate-globs.md#scope-scope)).
 
 ## Count them: `list --total`
 
@@ -320,7 +320,7 @@ Each body names the unit it holds, so bodies read in bulk stay apart when they a
 concatenated. A selected section's body opens with its own heading at the full path,
 even where the file writes it relative: `### .2: Ceiling` under `## retry:` reads as
 `### retry.2: Ceiling`, and the heading lines below it stay as written
-([§FS-declarations.section.relative.shown.selected](../functional-spec/FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)).
+([§FS-declarations.section.relative.shown](../functional-spec/FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown)).
 
 ## Review a checklist: count, read, then map the diff
 
@@ -371,7 +371,7 @@ error: invalid coordinate glob "FS-**" at column 4: "**" must be a whole compone
 ```
 
 The grammar reads like the gitignore dialect of `exclude`, and departs from it
-deliberately ([§FS-coordinate-globs.grammar.departures](../functional-spec/FS-coordinate-globs.md#grammardepartures-where-it-departs-from-the-exclude-dialect)): `x**` is refused, braces
+deliberately ([§FS-coordinate-globs.grammar](../functional-spec/FS-coordinate-globs.md#grammar-grammar)): `x**` is refused, braces
 do not nest, `{,…}` keeps its empty alternative, a pattern is always anchored at the ID
 with no basename matching, there is no `!` negation and no `#` comment, and components
 are separated by `.`, with `/` only ending a qualifier.
@@ -470,7 +470,7 @@ them at once. The note names the declaration as the catalog spells it, whatever
 shorthand or digits you typed. An alias-qualified workspace query names its
 project, `grund list --project <alias> --unused`, and a case of a configured `E2E`
 kind adds `--kind E2E`, because `--unused` leaves those cases out unless that kind
-is selected ([§FS-list.1.3.1](../functional-spec/FS-list.md#131-a-configured-e2e-kind-is-left-out-unless-selected)).
+is selected ([§FS-list.1.3](../functional-spec/FS-list.md#13---unused)).
 
 The note is given only where that listing answers the question you asked. It is
 withheld under an explicit path, `.` included, which asks about part of the

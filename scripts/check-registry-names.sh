@@ -20,7 +20,7 @@ repo_pattern='github.com[/:](agent-grounds|vjovanov)/grund'
 
 # This project's crates.io identity, held as a constant because it is a
 # credential rather than a shape: it is compared literally against an owner
-# record's `login` (§FS-distribution.1.1.1).
+# record's `login` (§FS-distribution.1.1).
 crates_io_owner="vjovanov"
 
 tmpdir="$(mktemp -d)"
@@ -49,7 +49,7 @@ PY
 }
 
 # One owner response read as `owned`, `untrusted` or `unreadable`, the three
-# the diagnostics below are built from (§FS-distribution.1.1.2). Shape is
+# the diagnostics below are built from (§FS-distribution.1.1). Shape is
 # validated first, so malformed evidence never reads as an absent owner.
 crates_io_owner_verdict() {
   local file="$1"
@@ -75,15 +75,15 @@ if any(not isinstance(r, dict) or "kind" not in r or "login" not in r for r in u
 
 # Exactly a user record, exactly this login. Display name, profile URL, the
 # numeric id and github_username_matches are publisher-supplied or opaque, and
-# a team is a different subject (§FS-distribution.1.1.1).
+# a team is a different subject (§FS-distribution.1.1).
 owned = any(r["kind"] == "user" and r["login"] == trusted for r in users)
 print("owned" if owned else "untrusted")
 PY
 }
 
 # crates.io ownership is the registry's own owner record and never the
-# package's declared metadata (§FS-distribution.1.1.1); ownership that cannot
-# be established stops the release (§FS-distribution.1.1.2).
+# package's declared metadata (§FS-distribution.1.1); ownership that cannot
+# be established stops the release (§FS-distribution.1.1).
 check_crates_io_claimed_name() {
   local registry="$1"
   local name="$2"

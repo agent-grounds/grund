@@ -1,7 +1,7 @@
 //! The marker-qualified citation passes (§FS-workspace.1.2, §AR-scanner.2.3):
 //! a `§<alias>/<ID>` token read with the target project's grammar when the run
 //! loaded that project, and with the fallback shape when it did not
-//! (§FS-workspace.1.2.1, §FS-workspace.5.2).
+//! (§FS-workspace.1.2, §FS-workspace.5.2).
 
 use std::collections::BTreeSet;
 
@@ -31,7 +31,7 @@ use crate::workspace::WorkspaceCitationTarget;
 /// workspace-aware paths use the target's actual grammar via
 /// `scan_workspace_qualified_pass`, which is the one place the tail itself is
 /// judged — for a known alias; an unknown one has no target there either, and
-/// is read with this same shape (§FS-workspace.1.2.1).
+/// is read with this same shape (§FS-workspace.1.2).
 ///
 /// `qualified_claimed` carries the marker offsets a qualified citation already
 /// exists at — the full-ID pass's on entry, this pass's own on return. The
@@ -82,7 +82,7 @@ fn opaque_id(tail: &str) -> Id {
 /// `id_start`, is read with the loose `KIND[-NUM]-SLUG` shape rather than any
 /// project's grammar. Both runs that have no target to read a tail with use it:
 /// a run that loads no workspace (§FS-workspace.5.2), and a workspace run whose
-/// alias names no loaded project (§FS-workspace.1.2.1). Returns whether the
+/// alias names no loaded project (§FS-workspace.1.2). Returns whether the
 /// marker was claimed by a citation; a pattern's is the whole token, so the
 /// alias is reported and no prefix recorded (§FS-check.1.1.11).
 fn push_fallback_qualified_citation(
@@ -138,7 +138,7 @@ fn push_fallback_qualified_citation(
 /// One line's worth of marker-qualified workspace citations: a `§<alias>/<ID>`
 /// token whose ID tail parses with the target project's grammar
 /// (§FS-workspace.1.2, §AR-workspace.2), or whose alias names no loaded project
-/// and whose tail is read with the fallback shape (§FS-workspace.1.2.1). Runs
+/// and whose tail is read with the fallback shape (§FS-workspace.1.2). Runs
 /// inline during `scan_file` in workspace mode so the file is read once, not twice.
 pub(super) fn scan_workspace_qualified_pass(
     line: &CitationLine<'_>,
@@ -163,7 +163,7 @@ pub(super) fn scan_workspace_qualified_pass(
             continue;
         };
         let id_start = token_start + prefix.get(0).unwrap().end();
-        // §FS-workspace.1.2.1: an alias naming no loaded project has no target, so
+        // §FS-workspace.1.2: an alias naming no loaded project has no target, so
         // no loaded grammar reads its tail — the fallback shape does, whatever kind
         // it names, and the resolver reports the alias at this site.
         let Some(target) = targets.iter().find(|target| target.alias == alias) else {

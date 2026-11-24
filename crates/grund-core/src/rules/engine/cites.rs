@@ -1,7 +1,7 @@
 //! The `cites` relation's count over one subject (§FS-rules.5.1–5.3): every site
 //! a target matches counts, one pinned at the rule's own nested alias included
-//! (§FS-config.3.9.3). Mixed sites are ordinary (§FS-rules.7.12). Every count above zero hands
-//! the checker the citations it read (§FS-rules.7.3.1), through [`counted_citations`]. The
+//! (§FS-config.3.9.3). Mixed sites are ordinary (§FS-rules.5.1). Every count above zero hands
+//! the checker the citations it read (§FS-rules.7.3), through [`counted_citations`]. The
 //! `distinct` spelling counts the declarations those same rows name (§FS-rules.3.2.1).
 
 use super::super::facts::{NodeKey, RuleFacts, SiteMeta};
@@ -14,7 +14,7 @@ use crate::model::Code;
 use crate::model::remedies;
 use std::collections::{BTreeMap, BTreeSet};
 
-/// The citations a count read, one per row whatever the count makes of them (§FS-rules.7.3.1):
+/// The citations a count read, one per row whatever the count makes of them (§FS-rules.7.3):
 /// both count arms, outbound and inbound, call this one helper over the rows they counted. Each is
 /// the fact's own `SiteMeta`, its path, line, column and the citation as written (§AR-rules.5),
 /// so no new type crosses to the checker, which names the path from the run's spellings and base.
@@ -43,7 +43,7 @@ pub(super) fn evaluate_cites(
     let targets = target_nodes(&rule.targets, facts, index);
     for subject in subjects {
         if *mode == TargetMode::PerTarget {
-            // Each owner's sites, mixed ones as ordinary ones (§FS-rules.7.12).
+            // Each owner's sites, mixed ones as ordinary ones (§FS-rules.5.1).
             let mut rows: BTreeMap<_, Vec<&CitationRow>> = BTreeMap::new();
             for row in index.citations_in(subject) {
                 if let Some(owner) = index.owner(&row.2) {
@@ -61,7 +61,7 @@ pub(super) fn evaluate_cites(
                         rule.cardinality.times_wording(),
                         remedies::citation_cardinality()
                     );
-                    // §FS-rules.7.3.1: only this target's citations.
+                    // §FS-rules.7.3: only this target's citations.
                     push_counted(
                         out,
                         facts,
@@ -121,7 +121,7 @@ pub(super) fn evaluate_cites(
                         remedies::citation_cardinality()
                     )
                 };
-                // §FS-rules.7.3.1: a zero count reads nothing, so it names nothing.
+                // §FS-rules.7.3: a zero count reads nothing, so it names nothing.
                 let counted = counted_citations(facts, read);
                 push_counted(out, facts, subject, code, message, authority, counted);
             }
@@ -133,7 +133,7 @@ pub(super) fn evaluate_cites(
 /// declarations owning their targets, a declaration owning itself (§FS-rules.5.2). It fails as
 /// `citation-cardinality` at every count, zero included, with a row of its own
 /// (§FS-rules.7.3), and names every row it read, so its list adds up to the sites and not to
-/// the count (§FS-rules.7.3.1).
+/// the count (§FS-rules.7.3).
 fn distinct(
     rule: &SemanticRule,
     authority: &Authority,

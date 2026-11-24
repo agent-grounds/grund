@@ -1,4 +1,4 @@
-//! Feature-gated failures immediately after actual owned writes (§FS-distribution.3.2.3.1).
+//! Feature-gated failures immediately after actual owned writes (§FS-distribution.3.2.3).
 use std::cell::Cell;
 thread_local! {static REMAINING:Cell<Option<usize>>=const {Cell::new(None)};}
 pub struct BindingWriteFaultGuard(Option<usize>);

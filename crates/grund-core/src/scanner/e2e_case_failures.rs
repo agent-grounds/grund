@@ -15,7 +15,7 @@ use crate::model::{Catalog, FailureNames};
 /// declaration set and so met no case (§FS-fmt.7.2, §FS-declarations.e2e-case.failure): `fmt`
 /// names each bad case file `check` names on the same scope. The cases are read as `check` reads
 /// them, by [`scan_e2e_cases`] over what the walk met with `check`'s resolution scope
-/// (§FS-check.1.3.6.1), and `narrow` keeps those the report scope holds, as `check` keeps them.
+/// (§FS-check.1.3.6), and `narrow` keeps those the report scope holds, as `check` keeps them.
 /// One failure both passes meet is one line (§AR-scanner.1.relisted), and the list is sorted once
 /// more for both (§FS-errors.4.1).
 pub(crate) fn with_e2e_case_failures(
@@ -33,7 +33,7 @@ pub(crate) fn with_e2e_case_failures(
         failure_names: walked.failure_names.clone(),
         ..Catalog::default()
     };
-    // §FS-check.1.3.6.1: `check`'s `resolution_wide`, a path below the root.
+    // §FS-check.1.3.6: `check`'s `resolution_wide`, a path below the root.
     let below_root = explicit_scope
         && !scope_is_config_root(
             frame.root(),

@@ -1,7 +1,7 @@
-//! One `fmt` walk's plan (§FS-fmt.7.4.3): the new text of every file it
+//! One `fmt` walk's plan (§FS-fmt.7.4): the new text of every file it
 //! rewrites, worked out in both modes with nothing written, then the writes once
 //! every refusal is behind the run. Between the two, the lock pass judges the tree
-//! the plan leaves (§FS-section-lock.write.same-run); a workspace run plans every
+//! the plan leaves (§FS-section-lock.write.rules); a workspace run plans every
 //! project before it judges any project's locks, because a citation crosses into
 //! a project whose walk comes after its own.
 
@@ -18,7 +18,7 @@ use crate::config::Config;
 use crate::model::{Catalog, SECTION_LOCK_DIR};
 use crate::scanner::{ApiScanError, section_locks_present};
 
-/// What one walk worked out and has not written (§FS-fmt.7.4.3).
+/// What one walk worked out and has not written (§FS-fmt.7.4).
 pub(super) struct TreePlan<'a> {
     /// The rewritten lines, the unreadable paths and the refused writes, as
     /// the run reports them; the lock rows join them at the write.
@@ -52,7 +52,7 @@ pub(super) struct PlannedFile {
 }
 
 impl TreePlan<'_> {
-    /// The tree this walk's lock pass judges (§FS-section-lock.write.same-run), or
+    /// The tree this walk's lock pass judges (§FS-section-lock.write.rules), or
     /// `None` where there is no lock pass: a walk narrower than the whole project,
     /// and one that read no findings where no walked file may give a locked
     /// heading and no lock file exists (§FS-section-lock.write.rules).
@@ -76,7 +76,7 @@ impl TreePlan<'_> {
         JudgedTree::of(config, render, read, left.collect()).map(Some)
     }
 
-    /// Carry the plan out (§FS-fmt.7.4.3): the walk and the lock pass have both
+    /// Carry the plan out (§FS-fmt.7.4): the walk and the lock pass have both
     /// returned, so no refusal is left to meet. Under `write` the files go to
     /// disk in walk order and `locks` after them; either way the lock rows join
     /// the run's changes after the files'.
@@ -107,7 +107,7 @@ impl TreePlan<'_> {
                     &refused_writes,
                 )
             };
-            // §FS-distribution.3.2.2.1: a failed write still reports the files written before it.
+            // §FS-distribution.3.2.2: a failed write still reports the files written before it.
             fs::write(&file.path, &file.text).map_err(written)?;
             #[cfg(feature = "test-binding-writes")]
             if let Err(error) = super::binding_write_fault::after_write() {

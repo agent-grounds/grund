@@ -12,7 +12,7 @@ use crate::sources::physical_path_key;
 
 /// The configured index files, as a path-membership test (§FS-config.3.4).
 /// `grund fmt` reads it to keep the cross-reference pass running over an index
-/// whatever `[fmt.cross_refs] enabled` says (§FS-fmt.6.1.1,
+/// whatever `[fmt.cross_refs] enabled` says (§FS-fmt.6.1,
 /// §DF-index-always-linkified) — the one region the formatter always writes,
 /// mirroring §FS-fmt.2.3's regions it never writes.
 pub(crate) struct KindIndexFiles {

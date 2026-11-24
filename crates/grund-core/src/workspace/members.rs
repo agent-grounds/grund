@@ -12,7 +12,7 @@
 //! The two warnings this rule set produces are **returned**, never printed:
 //! each is a `Diagnostic` in the run's warning channel, anchored at the
 //! `grund.toml` line its message already names, and rendered by whichever
-//! frontend asked (§FS-check.4.10.11, §FS-workspace.6.1.7, §FS-distribution.3.1).
+//! frontend asked (§FS-check.4.10, §FS-workspace.6.1.7, §FS-distribution.3.1).
 //! The absorbed scan, once the third, is a config error at the `members` line
 //! (§FS-check.3.30). Every sentence is still built apart from the
 //! diagnostic that carries it, which is what lets a test read it
@@ -50,7 +50,7 @@ pub(crate) struct WorkspaceMember {
     /// §FS-workspace.2.2: whether the entry came from `optional_members`. Every
     /// rule below treats it the same — it is present, so it is an ordinary member
     /// — but its alias is the entry's last segment rather than its `project_name`
-    /// (§FS-workspace.2.2.2), and only the entry knows which list it was written in.
+    /// (§FS-workspace.2.2), and only the entry knows which list it was written in.
     pub(crate) optional: bool,
 }
 
@@ -87,7 +87,7 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
             }
             // §FS-workspace.2.4: directory I/O failures stay at the `members`
             // line and name the glob as written.
-            // §FS-check.6.1.1: cover this effective input before its shared read.
+            // §FS-check.6.1: cover this effective input before its shared read.
             let entries = Sources::on_disk().read_dir(&parent).map_err(|err| {
                 workspace_members_error(
                     config,
@@ -153,7 +153,7 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
     // overlap rule, and the strict containment `workspace_member_root` enforces.
     let absent = expand_optional_members(config, &mut roots)?;
     roots.sort_by_key(|member| sort_path_key(&member.root));
-    // §FS-workspace.6.1.4: two entries naming one root are one member — a glob is
+    // §FS-workspace.2.3: two entries naming one root are one member — a glob is
     // allowed to name what an explicit entry also names — so dedup by root, and
     // keep the earlier entry's spelling for any diagnostic below.
     roots.dedup_by(|later, earlier| later.root == earlier.root);
@@ -184,7 +184,7 @@ fn reject_overlapping_workspace_members(
     Ok(())
 }
 
-/// §FS-workspace.6.1.4: resolve one `members` entry to the canonical project root
+/// §FS-workspace.2.3: resolve one `members` entry to the canonical project root
 /// it names, or the located error that entry earns. Both errors are reported at
 /// the block's `members` line and name the entry **as written**: a canonical root
 /// renders as nothing when it equals the render base and as an absolute path when
@@ -204,7 +204,7 @@ fn reject_overlapping_workspace_members(
 /// `config`, because §FS-workspace.2.2 gave the block two lists that reach here and
 /// a reader sent to the wrong one of them has nothing to edit (§FS-errors.4).
 ///
-/// §FS-workspace.2.2.4: the default does not move. A `members` entry that is not
+/// §FS-workspace.2.2: the default does not move. A `members` entry that is not
 /// there is the same fatal config error it has always been, at the same line; only
 /// the sentence grows, by the one clause that stops a CI author having to guess an
 /// escape hatch exists (§FS-config.4.3).
@@ -216,7 +216,7 @@ pub(super) fn workspace_member_root(
 ) -> Result<PathBuf> {
     let located = |message: String| config_location_error(config, source, message);
     if !path_is_dir(lexical) {
-        // §FS-workspace.2.2.4: the unchanged default, one clause longer.
+        // §FS-workspace.2.2: the unchanged default, one clause longer.
         return Err(located(format!(
             "workspace member does not exist: {written} — list it in \
              [workspace] optional_members if it may be legitimately absent"
@@ -325,9 +325,9 @@ pub(crate) struct AncestorWorkspaces {
     /// one diagnostic per config whose `members` text could not be obtained.
     /// Collected rather than written to a stream, because the climb is seven
     /// levels below any frontend and every frontend renders it its own way
-    /// (§FS-distribution.3.1, §FS-lsp.1.1.3).
+    /// (§FS-distribution.3.1, §FS-lsp.1.1).
     warnings: Vec<Diagnostic>,
-    /// §FS-workspace.6.1.7.5: keep uncertainty even when this climb owes no warning.
+    /// §FS-workspace.6.1.7: keep uncertainty even when this climb owes no warning.
     undecidable: BTreeSet<PathBuf>,
     blocks: BTreeMap<PathBuf, Option<AncestorBlock>>,
 }
@@ -358,7 +358,7 @@ impl AncestorWorkspaces {
         }
     }
 
-    /// §FS-workspace.6.1.7.5: the cached uncertainty about ancestor member text
+    /// §FS-workspace.6.1.7: the cached uncertainty about ancestor member text
     /// that could not be obtained, kept whether or not this climb emits the
     /// warning. Both quiet consumers honour it, through one predicate: the
     /// standalone unlisted-workspace finding (§FS-check.3.29) and the placement
@@ -394,11 +394,11 @@ impl AncestorWorkspaces {
         if !self.blocks.contains_key(dir) {
             let (block, undecidable) =
                 read_ancestor_workspace_block(dir, cli_base, &self.report_base);
-            // §FS-workspace.6.1.7.5: retain uncertainty for quiet ownership checks.
+            // §FS-workspace.6.1.7: retain uncertainty for quiet ownership checks.
             if undecidable.is_some() {
                 self.undecidable.insert(dir.to_path_buf());
             }
-            // §FS-workspace.6.1.7.5: only the alias-path climb emits the warning.
+            // §FS-workspace.6.1.7: only the alias-path climb emits the warning.
             if self.warn_undecidable {
                 self.warnings.extend(undecidable);
             }
@@ -419,7 +419,7 @@ impl AncestorWorkspaces {
         // failing the claim — the same way an expansion failure is (§FS-workspace.6.1.7).
         let config = match &block.config {
             Ok(config) => config,
-            // §FS-lsp.2.2.4.1: re-raised typed, so the file and line it names reach an editor.
+            // §FS-lsp.2.2.4: re-raised typed, so the file and line it names reach an editor.
             Err(diagnostic) => return Err(diagnostic.clone().into()),
         };
         if block.members.is_none() {
@@ -436,11 +436,11 @@ impl AncestorWorkspaces {
 /// The `[workspace]` block `dir` holds, as far as deciding a claim needs it.
 /// `None` when no config or member entries establish a claim. An unobtainable
 /// `members` or `optional_members` value also yields no block, but the separate
-/// diagnostic preserves that the claim is undecidable (§FS-workspace.6.1.7.5).
+/// diagnostic preserves that the claim is undecidable (§FS-workspace.6.1.7).
 /// This walk reaches the filesystem root, so a stray broken `grund.toml` above
 /// a repository must not break every run beneath it (§AR-workspace.6.1.3).
 /// Only a climb that spells an alias path owes the reader that diagnostic;
-/// a quiet climb retains uncertainty without emitting it (§FS-workspace.6.1.7.5).
+/// a quiet climb retains uncertainty without emitting it (§FS-workspace.6.1.7).
 fn read_ancestor_workspace_block(
     dir: &Path,
     cli_base: &Path,

@@ -37,7 +37,7 @@ document must match.
   graph non-conforming. In grund the level decides the surface and the mapping is fixed:
   `must` and `must-not` are errors, while `should` and `should-not` are suggestions that
   never reach `grund check`'s standing output or its exit code and surface only under
-  `--suggestions`. A `should` is not a warning ([§FS-config.3.9.1.3](../functional-spec/FS-config.md#3913-the-levelsurface-mapping-is-fixed), [§FS-non-goals.9](../functional-spec/FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)).
+  `--suggestions`. A `should` is not a warning ([§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels), [§FS-non-goals.9](../functional-spec/FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)).
 - Both validate whatever constraint a schema author can express. grund's rules stay
   inside its own ID scheme, directions between kinds and chapter rules over declarations
   ([§FS-rules](../functional-spec/FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules)), and it validates no other structure ([§FS-non-goals.8](../functional-spec/FS-non-goals.md#8-generalization-beyond-the-id-scheme)).

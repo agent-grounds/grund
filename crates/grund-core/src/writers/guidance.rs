@@ -34,7 +34,7 @@ pub(crate) struct RuleGuidance<'a> {
 pub(crate) struct Guidance<'a> {
     config: &'a Config,
     /// The run as the render reads it, never with `--require-grounding`
-    /// (§FS-check.3.5.4).
+    /// (§FS-check.3.5).
     run: Run,
     pub(crate) layout: Layout,
     /// The version every block of the run carries (§FS-init.2.3.7).
@@ -118,7 +118,7 @@ impl<'a> Guidance<'a> {
     /// They are what `config migrate`'s guidance gate refuses a change to
     /// (§FS-config-migrate.5.3); `check` compares the whole block. The grounding
     /// setting the citation directions name is spelled in config `grammar`
-    /// (§FS-config-migrate.5.3.1).
+    /// (§FS-config-migrate.5.3).
     pub(crate) fn generated_sections(&self, path: &Path, grammar: u32) -> Vec<ExpectedSection> {
         let project = self.config.project();
         let mut sections = vec![
@@ -180,7 +180,7 @@ impl<'a> Guidance<'a> {
     }
 
     /// A root entrypoint as the drift check holds it: its whole block, cut into
-    /// the parts a stale finding names (§FS-check.3.5.3, §FS-check.3.5.4).
+    /// the parts a stale finding names (§FS-check.3.5).
     pub(crate) fn root_entrypoint(
         &self,
         path: PathBuf,

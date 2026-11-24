@@ -18,10 +18,10 @@ pub(super) struct CitationLine<'a> {
     /// Python docstring's interior with the quotes stripped (§AR-scanner.4.4) — so a
     /// position on this line and a position on that one are not the same number.
     /// Every never-rewrite question is asked at a **raw-line** offset and routed to
-    /// the right text by `docstring` below (§FS-fmt.2.3.1.1).
+    /// the right text by `docstring` below (§FS-fmt.2.3.1).
     pub(super) raw_line: &'a str,
     /// Where this line's Python docstring content sits in `raw_line`
-    /// (§FS-fmt.2.3.1.1) — the view every never-rewrite question is asked through,
+    /// (§FS-fmt.2.3.1) — the view every never-rewrite question is asked through,
     /// so a docstring line is judged on the text `fmt` reads there too.
     pub(super) docstring: DocstringContent<'a>,
     /// Where a Markdown line sits in its file's links, which the never-rewrite

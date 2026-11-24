@@ -1,4 +1,4 @@
-//! The index carve-out's one entry per owed ID (§FS-fmt.2.5.3). Which citation of
+//! The index carve-out's one entry per owed ID (§FS-fmt.6.1). Which citation of
 //! an owed ID the link pass may write where the ordinary pass is off depends on
 //! the whole file, a link the ordinary pass writes later on the page included, so
 //! a first walk of the file only surveys and a second writes what it decided.
@@ -83,7 +83,7 @@ impl<'a> IndexCarveOut<'a> {
         }
     }
 
-    /// Settle each owed ID's entry from the survey (§FS-fmt.2.5.3): its first link
+    /// Settle each owed ID's entry from the survey (§FS-fmt.6.1): its first link
     /// when that lies in the scope, nothing when it lies outside, and otherwise
     /// its first citation in the scope the pass can wrap.
     pub(crate) fn decide(&self) {

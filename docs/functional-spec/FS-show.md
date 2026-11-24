@@ -57,8 +57,8 @@ are the only ones: a source declaration loses its comment wrapper, leaving the M
 author wrote ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes)); `text` and `json` flatten cross-reference wrappers back to the
 bare citation ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)); and a relative heading prints its canonical path on the lines a
 reader copies a coordinate from, each line of the section map and a selected section's own
-first line ([§FS-declarations.section.relative.shown](FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown),
-[§FS-declarations.section.relative.shown.selected](FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)). An E2E case, which has no prose, prints a
+first line ([§FS-declarations.section.relative.shown](FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown)).
+An E2E case, which has no prose, prints a
 manifest of its case directory instead ([§FS-show.2.4](FS-show.md#24-e2e-cases)). Serves [§GOAL-token-economy.2](../goals.md#2-what-this-rules-out-1).
 
 ### requirements.next-step: A failed query names its next step
@@ -89,7 +89,7 @@ The first form reads one coordinate; the `--batch` forms answer many from one lo
 `<ID>` is the full ID without the marker (e.g. `FS-check`). It may include an inline section (`FS-check.3.1`) after the configured section separator ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). It also accepts an exact off-grammar ID the catalog retains, read in every slice ([§FS-config.3.2.5](FS-config.md#325-off-grammar-declarations-stay-readable)); an inline section that could start at two places fails rather than guesses ([§FS-config.3.2.6](FS-config.md#326-resolving-an-off-grammar-citation)); and a missing fetched snapshot fails without running its fetcher ([§REQ-runs-offline.1](../requirements/REQ-runs-offline.md#1-read-and-verification-paths-execute-nothing)).
 
 A configured literal such as `:` stays part of a conforming ID, as `list` prints it
-([§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set), [§FS-declarations.line.configured-literals](FS-declarations.md#lineconfigured-literals-configured-literals-belong-to-the-canonical-id)).
+([§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set), [§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)).
 
 ### 1.2 The number-only shorthand
 
@@ -206,7 +206,7 @@ outside that span ([§FS-fields.front-matter.coordinates](FS-fields.md#front-mat
 
 `grund FS-check.3.1` and `grund FS-check --section 3.1` select a section, at any depth
 ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth)); a named path such as `goals.performance` selects the same way where named
-sections are enabled ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names), [§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). The flag
+sections are enabled ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names), [§FS-config-v2.defaults](FS-config-v2.md#defaults-the-v2-epoch)). The flag
 determines how much of it is printed:
 
 - `--brief`: the section heading and its first paragraph.
@@ -216,7 +216,7 @@ determines how much of it is printed:
 
 The selected section's heading is printed in every mode and format, as written, except
 that a relative heading prints its canonical path
-([§FS-declarations.section.relative.shown.selected](FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)). A section that does not exist is
+([§FS-declarations.section.relative.shown](FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown)). A section that does not exist is
 `section not found` ([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure)), and a front-matter coordinate prints only its own slice
 ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
 
@@ -225,8 +225,8 @@ that a relative heading prints its canonical path
 When an ID has more than one home, the duplicate of [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration),
 `show` does not pick one. A stub and the source declaration it points at are one home,
 scanned or not and however many stubs point at it, and a home reached through stubs is named
-at its target ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once),
-[§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)). The read exits `1` with one bare line on stderr
+at its target ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [§FS-declarations.stubs.pairing](FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at)).
+The read exits `1` with one bare line on stderr
 ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)), its sites in the order of [§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites), and under `--format=json` the
 same sites in the finding's `sites` field ([§FS-errors.5](FS-errors.md#5-json-format)):
 
@@ -246,7 +246,7 @@ ambiguous ID: FS-042 (matches FS-042-user-login, FS-042-user-logout)
 
 When two headings of the selected declaration claim the requested path, numeric or named,
 the duplicate of [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path), `show` does not pick one either
-([§REQ-one-answer.sections.ambiguity](../requirements/REQ-one-answer.md#sectionsambiguity-check-and-show-judge-a-section-path-from-one-record)); a stub's sections are its target's ([§FS-check.3.2.1](FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)).
+([§REQ-one-answer.sections.ambiguity](../requirements/REQ-one-answer.md#sectionsambiguity-check-and-show-judge-a-section-path-from-one-record)); a stub's sections are its target's ([§FS-check.3.2](FS-check.md#32-missing-section)).
 It exits `1` with the same bare-line form and site order, under its own JSON code,
 `ambiguous-section`, because the fix is a renumbering inside one declaration rather than a
 second home to remove ([§DF-duplicate-section-path.2.5](../decisions/functional/DF-duplicate-section-path.md#25-show-refuses-the-ambiguous-section-instead-of-printing-a-pick)):
@@ -273,7 +273,7 @@ When an ID's home is in code, read directly or through a stub, `show` prints the
 declaration's comment block without its comment wrapper ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes)) and cuts every
 slice and section from that text as from a Markdown body. Its declaration line drops the `#`
 ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares), [§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix)), and one doc-comment may declare
-several IDs, each with its own body ([§FS-languages.comment-block.early-end](FS-languages.md#comment-blockearly-end-terminate-early-on-another-declaration)). An index link
+several IDs, each with its own body ([§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block)). An index link
 that enrolls the declaration ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) creates no declaration, so it changes no
 query's answer ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)).
 
@@ -285,7 +285,7 @@ selects, `--toc` does not list and no lead is cut at ([§FS-config.3.3.2](FS-con
 A stub that is not broken ([§FS-show.2.3.4](FS-show.md#234-broken-stub)) reads as the declaration it pairs with in its
 target: the body, the sections and the JSON `path` and `line` are that declaration's, and
 `show` refuses only where the same target, scanned, would ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned),
-[§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target)). Lying outside `[scan] include` changes none of that
+[§FS-declarations.stubs.pairing](FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at)). Lying outside `[scan] include` changes none of that
 ([§REQ-one-answer.stubs.outside-include](../requirements/REQ-one-answer.md#stubsoutside-include-a-target-outside-the-include-answers-as-if-scanned)), while a target the scan never reads, by its name
 or its extension, declares nothing, so its stub is broken ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).
 
@@ -295,15 +295,15 @@ A declaration is found on a "declaration line" — a line in declaration positio
 
 ##### 2.3.1.1 Find the open boundary
 
-Where the block opens is [§FS-languages.comment-block.open](FS-languages.md#comment-blockopen-find-the-open-boundary).
+Where the block opens is [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block).
 
 ##### 2.3.1.2 Find the close boundary
 
-Where the block closes is [§FS-languages.comment-block.close](FS-languages.md#comment-blockclose-find-the-close-boundary).
+Where the block closes is [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block).
 
 ##### 2.3.1.3 Terminate early on another declaration
 
-Where another declaration line ends the block early is [§FS-languages.comment-block.early-end](FS-languages.md#comment-blockearly-end-terminate-early-on-another-declaration).
+Where another declaration line ends the block early is [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block).
 
 #### 2.3.2 Stripping comment prefixes
 
@@ -440,8 +440,8 @@ heading listed twice carries each site's anchor, and a caller composes
 `<base>/blob/<ref>/<path>#<anchor>` from one read without slugging anything
 ([§DF-show-anchor-data](../decisions/functional/DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives)). `anchor` is `null` where the site has no heading anchor: under the
 `none` profile, for a declaration whose home is a source file, read directly or through a
-stub, for a value-source declaration ([§FS-output-shapes.4.3](FS-output-shapes.md#43-value-source-declarations)), for a front-matter coordinate
-([§FS-output-shapes.4.4](FS-output-shapes.md#44-front-matter-coordinates)), and for a `--toc` entry inside a source declaration; a caller then
+stub, for a value-source declaration ([§FS-output-shapes.4](FS-output-shapes.md#4-show---formatjson)), for a front-matter coordinate
+([§FS-output-shapes.4](FS-output-shapes.md#4-show---formatjson)), and for a `--toc` entry inside a source declaration; a caller then
 links by `line`, as `#L<line>`. `[fmt.cross_refs] enabled = false` and the formatter's
 exclusions govern what `fmt` writes, not what a heading's anchor is, so neither makes it
 `null`.
@@ -455,8 +455,8 @@ flatten each wrapper back to the bare citation, a qualified one such as
 `[<§>api/FS-login](...)` included ([§FS-workspace.8.5](FS-workspace.md#85-grund-fmt---cross-refs)). Decided in
 [§DF-show-cross-ref-flattening](../decisions/functional/DF-show-cross-ref-flattening.md#df-show-cross-ref-flattening-grund-show-flattens-cross-reference-link-wrappers).
 
-A wrapper is exactly what `fmt` recognizes as one ([§FS-citations.wrap.recognized](FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets),
-[§FS-citations.wrap.enclosing.wrap-wins](FS-citations.md#wrapenclosingwrap-wins-a-wrap-inside-a-longer-text-is-a-wrap)); a link its author wrote around a citation, and an image,
+A wrapper is exactly what `fmt` recognizes as one ([§FS-citations.wrap.recognized](FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets));
+a link its author wrote around a citation, and an image,
 are none and print as written ([§FS-citations.wrap.enclosing](FS-citations.md#wrapenclosing-a-citation-inside-a-link-its-author-wrote-is-left-to-the-author), [§FS-citations.wrap.enclosing.images](FS-citations.md#wrapenclosingimages-an-image-is-not-a-link)).
 Nothing in a Markdown fence is flattened ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)), but only a Markdown body has fences: in
 a source doc-comment, a value-source slice or an E2E manifest a wrapper is flattened even
@@ -554,13 +554,13 @@ Each hint is one line below the failure's message:
 - A missing snapshot of an ID whose kind carries `fetch` gets
   `hint: run grund fetch <qualified-ID>` ([§FS-check.4.12](FS-check.md#412-missing-snapshot), [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot),
   [§FS-show.requirements.next-step](FS-show.md#requirementsnext-step-a-failed-query-names-its-next-step)), unless the kind's `file` home is one [§FS-fetch.4](FS-fetch.md#4-file-home-write) refuses
-  ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)).
+  ([§FS-check.3.1](FS-check.md#31-dangling-citation)).
 - ``invalid ID `<arg>` `` gets a hint naming the ID template the kind was read against and the
   key that sets it, the kind's override where it has one and else the global template:
   `[schema.kinds.<KIND>] id_format` or `[schema] id_format` in a version-2 config
   ([§FS-config-v2.schema.1](FS-config-v2.md#schema1-schema)), `[[kinds]] format` or `[id] format` in a version-1 config
   ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)), and the defaults' `[id] format` when none is loaded. Each project of a
-  workspace is asked in its own grammar ([§FS-workspace.8.1.1.4](FS-workspace.md#8114-each-project-is-asked-in-its-own-grammar)). A section the grammar
+  workspace is asked in its own grammar ([§FS-workspace.8.1.1](FS-workspace.md#811-an-unqualified-id-another-project-declares)). A section the grammar
   rejects, `FS-widget.1.nope` where sections are numbered only, makes the ID invalid, while a
   section that parses but is absent is `section not found`:
 

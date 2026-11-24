@@ -43,7 +43,7 @@ Version 1's list reader takes no trailing comma at all: `["a",]` is `expected st
 
 ### 2.5 The ancestor climb records nothing
 
-The ancestor climb reads `[workspace] members` through the version-2 reader's own join, and has no run to report into. Through 0.21.x it reads what the full load reads, `members = ["a",,]` as the one member `a`, and from 0.22.0 it reads such a value as not a list, as it reads any value the full load refuses ([§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable)).
+The ancestor climb reads `[workspace] members` through the version-2 reader's own join, and has no run to report into. Through 0.21.x it reads what the full load reads, `members = ["a",,]` as the one member `a`, and from 0.22.0 it reads such a value as not a list, as it reads any value the full load refuses ([§FS-workspace.6.1.7](../../functional-spec/FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run)).
 
 ## 3. Alternatives considered
 

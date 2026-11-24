@@ -76,7 +76,7 @@ fn pass_over_file(
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<Catalog> {
     let mut findings = Catalog::default();
-    // §FS-check.6.1.1: `sources` observes this input before its shared read.
+    // §FS-check.6.1: `sources` observes this input before its shared read.
     let text = frame.sources().shared_text(file)?;
     scan_file_text(file, text, schema, frame, &mut findings, workspace_targets)?;
     findings.scanned_files.push(file.to_path_buf());

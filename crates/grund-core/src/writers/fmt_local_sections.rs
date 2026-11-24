@@ -1,5 +1,5 @@
 //! Canonical expansion of declaration-local section citations, and the
-//! details their report row names (§FS-fmt.2.4, §FS-fmt.3.6.1).
+//! details their report row names (§FS-fmt.2.4, §FS-fmt.3.6).
 
 use std::path::Path;
 
@@ -15,7 +15,7 @@ use crate::model::{Catalog, Citation, section_resolves};
 ///
 /// Each expansion is recorded in `expansions` as its byte offset in the returned
 /// line, the text it replaced, and the canonical text written — the details its
-/// line's one report row names (§FS-fmt.3.6.1). Recording them as the line is
+/// line's one report row names (§FS-fmt.3.6). Recording them as the line is
 /// built is what keeps the preview to exactly the sites the write expands
 /// (§FS-fmt.7.3).
 #[allow(clippy::too_many_arguments)]
@@ -89,7 +89,7 @@ pub(super) fn expand_local_section_citations(
 /// Whether the write expands this owned local site: a text the writer rules
 /// permit, and a cited section its owner records a heading for (§FS-fmt.2.4.6),
 /// asked of the lookup `check` withholds the command on (§FS-check.3.24), which
-/// reads a stub's sections from its target (§FS-check.3.2.1).
+/// reads a stub's sections from its target (§FS-check.3.2).
 fn expandable(cite: &Citation, findings: &Catalog) -> bool {
     cite.shorthand_rewritable
         && section_resolves(

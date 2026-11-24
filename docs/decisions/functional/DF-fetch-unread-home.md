@@ -28,7 +28,7 @@ nowhere after it, which is the tree [[§DF-fetch-folder-declaring-file.3](DF-fet
 [[§FS-fetch.4.2.1](../../functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)] refuses, first write included, with exit 2, empty stdout and the tree
 byte-identical, by the home's path and kind and before the integration runs, in the one function
 that already refuses a value source and a source home, so the refused fetch runs nothing and
-`check` stops offering `run grund fetch` there ([[§FS-check.3.1.3.1](../../functional-spec/FS-check.md#3131-a-home-fetch-refuses)]). For a `folder` home the
+`check` stops offering `run grund fetch` there ([[§FS-check.3.1](../../functional-spec/FS-check.md#31-dangling-citation)]). For a `folder` home the
 refusal holds for the `<ID>.md` `fetch` would create, when the one scan run before the
 integration finds no file in the home declaring the ID ([[§FS-fetch.6.1](../../functional-spec/FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]). The line's shape is
 [[§FS-fetch.4.2](../../functional-spec/FS-fetch.md#42-a-home-read-as-source-is-refused)]'s, and its reason is the one `check`'s unread warning gives, so the two say the
@@ -82,7 +82,7 @@ reads what it wrote.
 `check`'s tail at such a home moves from `— run grund fetch <ID>` to
 `— give the file a name the scan reads as Markdown`, or, at an `<ID>.md` an ignore file or an
 `exclude` rule keeps out of the walk, to `— the scan does not read <path>: <reason>; <repair>`
-([[§FS-check.3.1.3.1](../../functional-spec/FS-check.md#3131-a-home-fetch-refuses)]), in the same release, under the third
+([[§FS-check.3.1](../../functional-spec/FS-check.md#31-dangling-citation)]), in the same release, under the third
 exception of [[§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes)], the one for `check`'s fetch tail, and for
 its reason: a window would keep recommending on purpose a command that can only refuse. The base
 of the message, the code, the severity and the exit stay what they are.

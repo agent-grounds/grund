@@ -21,7 +21,7 @@ warnings lasted until 0.22.0 ([issue #1133](https://github.com/agent-grounds/gru
 ## 2. Decision
 
 In 0.22.0 (agent-grounds/grund#1133) a YAML value source takes the path a JSON one takes
-([§FS-values.2.2.4](../../functional-spec/FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings)):
+([§FS-values.2.2.3](../../functional-spec/FS-values.md#223-how-a-yaml-source-is-read)):
 
 - a finding at a YAML source carries its own code and severity, in the exit classes of
   [§FS-values.5.3](../../functional-spec/FS-values.md#53-incomplete-input-and-deterministic-output), so a missing index entry is a `missing-index-entry` error at exit `1`;
@@ -33,16 +33,17 @@ In 0.22.0 (agent-grounds/grund#1133) a YAML value source takes the path a JSON o
 - a fetched kind's YAML source is read, so a citation of an ID it declares resolves;
 - `grund fetch` into a `file` home that is a value source is refused at exit `2` with the file
   byte-identical, in either format ([§FS-fetch.4](../../functional-spec/FS-fetch.md#4-file-home-write)), and `check` stops naming `grund fetch` for such a home
-  ([§FS-check.3.1.3.1](../../functional-spec/FS-check.md#3131-a-home-fetch-refuses)). Now that the source is read, the Markdown a fetch
+  ([§FS-check.3.1](../../functional-spec/FS-check.md#31-dangling-citation)). Now that the source is read, the Markdown a fetch
   appended would be comments to YAML, so the fetch would exit `0`, the fetched value would be
   dropped and `check` would stay green on the old one. JSON takes the same refusal because the two
   formats keep one path: its half refuses earlier a tree the next `check` already refuses at exit
   `2`, and moves `fetch`'s own exit from `0` to `2`;
 - `yaml-value-source-deferred` is spent: it stays selectable, as a shipped code does, never fires,
   and `--only` says so ([§FS-errors.5.5](../../functional-spec/FS-errors.md#55-the-check-code-catalog), [§FS-check.1.4.1](../../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so));
-- [§FS-values.2.2.4](../../functional-spec/FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings) keeps its coordinate, because a section name that has shipped is kept
-  ([§REQ-spec-section-names.permanence](../../requirements/REQ-spec-section-names.md#permanence-a-name-is-permanent)) and [§DF-yaml-value-sources](DF-yaml-value-sources.md#df-yaml-value-sources-a-value-home-reads-yaml-beside-json-and-a-yaml-sources-findings-are-warnings-for-one-release) cites it: it says what is true
-  now, beside a past-tense account of what 0.21.x did.
+- <§>FS-values.2.2.4, the point titled for this closing, does not keep its coordinate: what is
+  true now is [§FS-values.2.2.3](../../functional-spec/FS-values.md#223-how-a-yaml-source-is-read)'s, and the past-tense account of what 0.21.x did is
+  this record's and [§DF-yaml-value-sources](DF-yaml-value-sources.md#df-yaml-value-sources-a-value-home-reads-yaml-beside-json-and-a-yaml-sources-findings-are-warnings-for-one-release)'s
+  ([§REQ-spec-content.homes](../../requirements/REQ-spec-content.md#homes-where-everything-else-lives)).
 
 The messages carry no release clause of their own. [§FS-distribution.4.2](../../functional-spec/FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name) describes a landed error
 naming the release that made it one, and the other closings of this release do that, because each
@@ -50,7 +51,7 @@ turned one warning into one new refusal. This closing changes where existing fin
 what they are. A `missing-index-entry` is the error it has been since 0.13.0 and says so at a YAML
 source as at a JSON one, and an unparsable source prints the JSON line with the format's word
 swapped. A clause at the YAML sites alone would make one finding read two ways by format, which is
-what [§FS-values.requirements.origin-blind](../../functional-spec/FS-values.md#requirementsorigin-blind-a-root-is-used-the-same-way-whichever-authority-made-it--realized-directional-for-the-next-authority) and this closing are against. The release guard loses
+what [§FS-values.requirements.origin-blind](../../functional-spec/FS-values.md#requirementsorigin-blind-a-root-is-used-the-same-way-whichever-authority-made-it) and this closing are against. The release guard loses
 nothing, because the landed messages of this release's other closings already refuse a cut below
 0.22.0 ([§FS-distribution.4.2.2](../../functional-spec/FS-distribution.md#422-the-release-guard-reads-the-releases-the-tree-names)), and the news is carried by the notice below, where a person reads
 the release.
@@ -75,7 +76,7 @@ the release.
 
 ## release-note: Release note
 
-- [§DF-yaml-value-window-closes-in-0-22](DF-yaml-value-window-closes-in-0-22.md#df-yaml-value-window-closes-in-0-22-the-yaml-value-source-warning-window-closes-in-0220), [§FS-values.2.2.4](../../functional-spec/FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings), [§FS-values.5.3](../../functional-spec/FS-values.md#53-incomplete-input-and-deterministic-output),
+- [§DF-yaml-value-window-closes-in-0-22](DF-yaml-value-window-closes-in-0-22.md#df-yaml-value-window-closes-in-0-22-the-yaml-value-source-warning-window-closes-in-0220), [§FS-values.2.2.3](../../functional-spec/FS-values.md#223-how-a-yaml-source-is-read), [§FS-values.5.3](../../functional-spec/FS-values.md#53-incomplete-input-and-deterministic-output),
   [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **a YAML value source is now reported as a JSON one is.** What
   grund 0.21.0 announced lands. A finding at a YAML source carries its own code and severity,
   where 0.21.x printed a `yaml-value-source-deferred` warning and exited `0`. A file that is not a

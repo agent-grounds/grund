@@ -61,7 +61,7 @@ pub struct Grammar {
     pub(super) docstring_decl_re: Regex,
     /// `\A`, the configured `[id] section_separator` and a section path the section
     /// grammar admits: what follows the ID of a coordinate, read by
-    /// [`Grammar::opens_section_suffix`] (§FS-declarations.line.section-suffix.3).
+    /// [`Grammar::opens_section_suffix`] (§FS-declarations.line.section-suffix).
     pub(super) section_suffix_re: Regex,
     pub(crate) section_re: Regex,
     /// Bare-token detection retains its word boundary (§FS-check.1.1.10).
@@ -89,7 +89,7 @@ pub struct Grammar {
     /// present only when `[id] format` carries both `{number}` and `{slug}`.
     /// `None` is the whole opt-out: every shorthand pass downstream is gated on
     /// this being `Some`, so a `{kind}-{slug}` repo like `grund` itself compiles
-    /// nothing extra and pays nothing (§FS-id.4.1).
+    /// nothing extra and pays nothing (§FS-id.4).
     pub(super) shorthand: Option<ShorthandGrammar>,
     /// Number-only shorthand grammars for kinds whose override carries both a
     /// number and a slug (§FS-config.3.2). Kept beside the legacy/default
@@ -101,7 +101,7 @@ pub struct Grammar {
     pub(super) elements: Vec<IdElement>,
     /// Per-kind full-ID parsers and render templates. Detection uses one union
     /// regex, then parsing selects the already-known kind's exact grammar
-    /// (§FS-config.3.2, §FS-config.3.4.10.1).
+    /// (§FS-config.3.2, §FS-config.3.4.10).
     pub(super) kind_parsers: Vec<(String, Regex)>,
     pub(super) kind_elements: BTreeMap<String, Vec<IdElement>>,
     pub(super) overridden_kinds: BTreeSet<String>,
@@ -197,7 +197,7 @@ impl Grammar {
                 overridden_kinds.insert(kind.name.clone());
             }
         }
-        // §FS-config-v2.defaults.1: a v2 file with no citable row has no kinds, so
+        // §FS-config-v2.defaults: a v2 file with no citable row has no kinds, so
         // its ID pattern is one that never matches (`\b\B`), not an empty one.
         let detection = if detection_patterns.is_empty() {
             r"\b\B".to_string()
@@ -273,7 +273,7 @@ impl Grammar {
         // mandatory in a file read as Markdown (§FS-fmt.2.3.1); code-form requires a comment
         // prefix and then the ID directly (§DF-code-declarations-drop-hash).
 
-        // §FS-declarations.line.configured-slug: the ID need not end in a word character.
+        // §FS-declarations.line: the ID need not end in a word character.
         // Match its delimiter explicitly so regex alternatives cannot claim a shorter prefix.
         let decl_re = Regex::new(&format!(
             r"^\s*(?:{prefix}\s+|(?P<mdhashes>#+)\s+){id}(?:[:\s`]|$)",
@@ -478,7 +478,7 @@ impl Grammar {
     /// The regex crate has no lookahead, so this is the post-match half of the
     /// declaration patterns, and the one check every reading of a declaration line
     /// makes (§AR-scanner.2.1.1). The separator and the sections are the project's
-    /// (§FS-declarations.line.section-suffix.3).
+    /// (§FS-declarations.line.section-suffix).
     pub(crate) fn opens_section_suffix(&self, rest: &str) -> bool {
         self.section_suffix_re.is_match(rest)
     }

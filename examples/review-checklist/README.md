@@ -24,7 +24,7 @@ grund list --glob 'FS-login.requirements{,.**}' --total examples/review-checklis
 
 `{,.**}` is the point and everything beneath it: the empty alternative keeps the chapter, and
 `.**` adds every point under it at any depth
-([§FS-coordinate-globs.grammar.globstar](../../docs/functional-spec/FS-coordinate-globs.md#grammarglobstar--is-a-whole-component)). `--total` prints the number of rows `list`
+([§FS-coordinate-globs.grammar](../../docs/functional-spec/FS-coordinate-globs.md#grammar-grammar)). `--total` prints the number of rows `list`
 would print and nothing else ([§FS-list.total](../../docs/functional-spec/FS-list.md#total---total-a-count-rung)), so the count is the cheap rung before the
 bodies. Drop `--total` to see the rows.
 

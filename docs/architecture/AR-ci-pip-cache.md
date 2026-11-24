@@ -4,7 +4,7 @@ A test that builds grund with `pip install` and puts it in a throwaway environme
 no wheel it built in pip's cache. That cache is the contributor's, shared with every other project
 they have, and nothing in this repository reclaims it, so what a test writes there stays
 until a person removes it. [§AR-ci.3.4.5](AR-ci.md#345-the-python-acceptances-shared-build-target) rules out the same accumulation for the Cargo
-target, and [§FS-repository-maintenance.2.2](../functional-spec/FS-repository-maintenance.md#22-automatic-reclamation) says of the Node target that contributors need
+target, and [§FS-repository-maintenance.2](../functional-spec/FS-repository-maintenance.md#2-external-node-acceptance-target-lifetime) says of the Node target that contributors need
 no separate prune command. This is that rule for a store the repository does not own.
 
 ## placement: Where the rule applies
@@ -37,7 +37,7 @@ Four `pip install` calls build grund, and each runs with pip's wheel cache off:
 - the module's install of `crates/grund-py`, in
   `tests/integration/test_python_binding_acceptance.py` ([§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-gate));
 - the clean checkout's install and the unpacked sdist's, in
-  `tests/bindings/python/test_build.py` ([§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-local-source-and-typing-handoff));
+  `tests/bindings/python/test_build.py` ([§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-interpreters-source-installs-and-typing));
 - `PythonSourceTests.install`, in `tests/integration/rehearsal/source_install.py`, of the
   candidate's sdists ([§FS-distribution-candidate.4.2](../functional-spec/FS-distribution-candidate.md#42-python-builds-from-the-sdist-only-when-asked)). It runs only in the manual rehearsal
   lane ([§AR-ci.6](AR-ci.md#6-pgo-stays-out-of-development-ci)), never in the Python gate. The rule reaches it because its builds run in

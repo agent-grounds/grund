@@ -91,7 +91,7 @@ impl RefsQueryFailureKind {
 }
 
 /// A `refs` operand rejected after workspace context and the target grammar
-/// were selected (§FS-errors.2.3, §FS-workspace.8.7.2).
+/// were selected (§FS-errors.2.3, §FS-refs.4).
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct RefsQueryFailure {
@@ -132,13 +132,13 @@ pub struct RefsOutput {
     pub note: Option<String>,
     pub scan_errors: Vec<ApiScanError>,
     /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
-    /// cautions of §FS-check.3.29, §FS-check.4.10.11 and
+    /// cautions of §FS-check.3.29, §FS-check.4.10 and
     /// §FS-workspace.6.1.7. A frontend renders each as one CLI-level `warning:`
     /// on stderr (§FS-check.2.1.1).
     ///
     /// Three keep the anchor the engine gave them — the `grund.toml` line their
     /// own message already names — and an editor publishes those on that line
-    /// (§FS-lsp.1.1.3). §FS-check.3.29's is the exception: it carries no
+    /// (§FS-lsp.1.1). §FS-check.3.29's is the exception: it carries no
     /// location field at all, states its location inside its own text
     /// (§FS-check.3.29), and reaches an editor off `check`'s report instead,
     /// located and as an error (§FS-check.3.29).
@@ -215,10 +215,10 @@ pub fn refs_with_metadata_and_hint(opts: RefsOpts) -> Result<(RefsWithMetadata, 
     Ok((metadata, hint))
 }
 
-/// §FS-refs.3.1.1 / §FS-refs.3.3.1: frontend-only excluded sites alongside the
+/// §FS-refs.3.1 / §FS-refs.3.3: frontend-only excluded sites alongside the
 /// unchanged records and resolver hint, derived from the same loaded context.
 /// The last element is the text of each warning a broken stub set aside beside a
-/// real home earns, which only `--format text` prints (§FS-refs.4.1.1).
+/// real home earns, which only `--format text` prints (§FS-refs.4.1).
 #[doc(hidden)]
 pub fn refs_with_text_annotations(
     opts: RefsOpts,

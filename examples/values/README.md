@@ -35,7 +35,7 @@ docs/solver.md:7: error: value mismatch for CONST-time-step (component 1): bound
 
 The line names what the site wrote: the root it cites, the literal whole, and
 component 1 as the one that differs
-([§FS-values.5.2.2](../../docs/functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). The citation is right, so keep it and correct the literal:
+([§FS-values.5.2](../../docs/functional-spec/FS-values.md#52-fixed-value-errors)). The citation is right, so keep it and correct the literal:
 change it to `0.001 s` and the repository passes; its config is on version 1, so
 the run prints that caution where `success` would stand
 ([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)).

@@ -98,7 +98,7 @@ pub(super) fn section_range_parts(
     {
         return (value.column, value.source_slice.clone());
     }
-    // §FS-lsp.1.2.4: a relative heading's range is the `.<component>` it writes.
+    // §FS-lsp.1.2.3: a relative heading's range is the `.<component>` it writes.
     let needle = match section.rsplit_once('.') {
         Some((_, last)) if info.relative => format!(".{last}"),
         _ if info.relative => format!(".{section}"),
@@ -107,8 +107,8 @@ pub(super) fn section_range_parts(
     let (column, mut text) = heading_span_parts(files, &decl.file, info.line, &needle);
     if info.marked() {
         // A marked root's tag is authored raw source but not part of its semantic
-        // title or editor selection (§FS-values.2.4.2, §FS-lsp.1.3); a chapter
-        // root's same bytes are no mark, so they stay its text (§FS-values.2.4.4).
+        // title or editor selection (§FS-values.6.1, §FS-lsp.1.3); a chapter
+        // root's same bytes are no mark, so they stay its text (§FS-values.2.4).
         text.truncate(without_value_tag(&text).len());
     }
     (column, text)

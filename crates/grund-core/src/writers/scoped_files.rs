@@ -134,7 +134,7 @@ pub(crate) fn orphan_files(root: &Path, dir: &str) -> Vec<(&'static str, OrphanF
         .chain(SCOPED_COMPANIONS)
         .filter_map(|name| {
             let path = root.join(dir).join(name);
-            // §FS-check.6.1.3: an absent one is an input too, which may appear.
+            // §FS-check.6.1: an absent one is an input too, which may appear.
             observe_input(&path, false);
             let is_symlink = link_metadata(&path).ok()?.file_type().is_symlink();
             match (name == CANONICAL_AGENT_ENTRYPOINT, is_symlink) {

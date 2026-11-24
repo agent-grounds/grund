@@ -35,13 +35,13 @@ docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.
    A stub target must be a file the scan reads. If an exclusion keeps it out,
    repair the target or the exclusion named by `broken-stub`
    ([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).
-6. The `AGENTS.md` / `CLAUDE.md` entry-point block is up to date. *(stale init)* `check` holds the whole block to what `grund init` would write there, so a config edit, a migration or a renamed kind reports the part it changed until `grund init` runs ([§FS-check.3.5.4](../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). The two workspace sections, `Project namespaces` and `Workspace members`, are judged only by a run at the root of a full workspace checkout: a run inside a member, at a nested group's root, or in a checkout without an optional member leaves them out ([§FS-check.3.5.5](../functional-spec/FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout)). In a version-2 config that includes each scoped `AGENTS.md` the root block lists: one that is missing, stale, or no longer placed by the config is reported at that file ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). A scoped `AGENTS.md` is guidance about its directory, never one of its units, so it is not held to that directory's citation rules.
+6. The `AGENTS.md` / `CLAUDE.md` entry-point block is up to date. *(stale init)* `check` holds the whole block to what `grund init` would write there, so a config edit, a migration or a renamed kind reports the part it changed until `grund init` runs ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). The two workspace sections, `Project namespaces` and `Workspace members`, are judged only by a run at the root of a full workspace checkout: a run inside a member, at a nested group's root, or in a checkout without an optional member leaves them out ([§FS-check.3.5.5](../functional-spec/FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout)). In a version-2 config that includes each scoped `AGENTS.md` the root block lists: one that is missing, stale, or no longer placed by the config is reported at that file ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). A scoped `AGENTS.md` is guidance about its directory, never one of its units, so it is not held to that directory's citation rules.
 7. Declared-but-uncited IDs are flagged. *(unused — warning, not error; a configured `E2E` kind's cases are exempt)*
 8. *(opt-in)* Set `[rules.citations.grounding] must = "file"` to require every source file to carry a citation; choose `h2` through `h6` to require citations down to those sections. *(ungrounded source file)*
 9. *(workspace)* Alias-qualified citations resolve across configured sub-projects. *(cross-project references — see [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace))*
 10. No declaration is left in the middle of a merge. *(conflict markers)* Each block of the lines git writes around a conflict, `<<<<<<<`, `|||||||`, `=======` and `>>>>>>>` at column 0, is one error at its first line, naming every declaration it overlaps ([§FS-declarations.checks.conflict-marker](../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)).
 
-A conflict block counts anywhere in a Markdown file that declares an ID, inside a fence too, and in a source file inside a declaration's doc-comment, including the lines right after a `///` or `#` run the conflict cut short ([§FS-declarations.body.conflict.where](../functional-spec/FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for)):
+A conflict block counts anywhere in a Markdown file that declares an ID, inside a fence too, and in a source file inside a declaration's doc-comment, including the lines right after a `///` or `#` run the conflict cut short ([§FS-declarations.body.conflict.block](../functional-spec/FS-declarations.md#bodyconflictblock-a-conflict-block)):
 
 ```text
 docs/login.md:7: error: unresolved merge conflict in FS-login, lines 7–11: resolve it by hand
@@ -96,7 +96,7 @@ grund init --check # exit 0 means managed guidance is current
 ## Fixing every wide line in a note
 
 A column finding lists every line over its selected limit, in source order, before its remedy
-([§FS-inline-citation-style.4.1.1.1](../functional-spec/FS-inline-citation-style.md#4111-every-over-limit-line)). For example:
+([§FS-inline-citation-style.4.1](../functional-spec/FS-inline-citation-style.md#41-errors--hard-caps)). For example:
 
 ```text
 src/ingest/parse.py:5: error: inline note is 105 columns, over the 100-column maximum: lines 5-7 cite §AR-ingest.1.1; over-limit lines: line 5: 103 columns, line 6: 105 columns; shorten or rewrap its widest line
@@ -112,7 +112,7 @@ column-budget findings carry the same list, measured against their own limit.
 ## Finding a stale workspace entry
 
 A stale workspace section shows the first differing nonblank body line as
-`expected …; found …` ([§FS-check.3.5.3.1](../functional-spec/FS-check.md#3531-first-differing-workspace-entry)).
+`expected …; found …` ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)).
 For example, the root block still carries the *(not yet initialized)* mark an
 earlier grund wrote for billing, where the current render links its directory:
 
@@ -158,7 +158,7 @@ hides the broken reference instead of fixing it.
 With named sections on by default, a marked citation of a name under a number
 is checked as a whole. From grund 0.19.0, an absent section or declaration is
 an ordinary error; the warning and its temporary release clause from 0.18.0
-are gone ([§FS-citations.checks.mixed-path](../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190)). For example, if
+are gone ([§FS-citations.checks.mixed-path](../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked)). For example, if
 `FS-login` exists but has no `1.goals` section:
 
 ```text
@@ -189,7 +189,7 @@ run `grund fmt --write` with no path at the workspace root, or at the project
 root outside a workspace, and commit the lock: `fmt` given a file, or a
 directory that is no project's root, writes no lock, and a member's own run
 writes none for a citation into a sibling
-([§FS-section-lock.checks.remedy](../functional-spec/FS-section-lock.md#checksremedy-the-run-that-writes-the-lock)).
+([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)).
 
 In a kind's index, an entry is a link that goes somewhere: the one `fmt`
 writes, an inline link whose text holds the citation, or a reference whose key a
@@ -197,7 +197,7 @@ definition matches. A citation that is an image's whole description,
 `- ![§ADR-use-redis](cache.png)`, is no link to the declaration, so it is no
 entry either. grund 0.19.0 still took it as one and warned; grund 0.20.0 retired
 that credit, so an ID the image alone listed is reported where it is declared
-([§FS-citations.checks.image-index-entry](../functional-spec/FS-citations.md#checksimage-index-entry-a-citation-only-image-is-an-index-entry-for-one-more-release)):
+([§FS-citations.checks.image-index-entry](../functional-spec/FS-citations.md#checksimage-index-entry-a-citation-only-image-is-no-index-entry-a-spent-check)):
 
 ```text
 docs/adr/use-redis.md:1: error: ADR-use-redis appears in docs/adr/README.md but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an error in grund 0.13.0
@@ -287,10 +287,10 @@ Watch stays resident until Ctrl-C; this capture has empty stderr and exits 0 aft
 
 A kind's index lists declarations for navigation. Its entry is a citation that
 `refs` lists, but it does not establish use, so `check` still warns
-([§FS-check.4.1.2](../functional-spec/FS-check.md#412-an-index-entry-does-not-count)).
+([§FS-check.4.1](../functional-spec/FS-check.md#41-unused-declaration)).
 The warning locates the discounted entry; text refs labels it, including within
-a file summary ([§FS-refs.3.1.1](../functional-spec/FS-refs.md#311-label-the-excluded-index-sites),
-[§FS-refs.3.3.1](../functional-spec/FS-refs.md#331-identify-the-excluded-sites-within-a-summary)).
+a file summary ([§FS-refs.3.1](../functional-spec/FS-refs.md#31---format-text-default),
+[§FS-refs.3.3](../functional-spec/FS-refs.md#33---summary)).
 
 For example, from the [authored-citations mini-repository](../../examples/authored-citations/README.md):
 
@@ -386,7 +386,7 @@ is, so it stays an error and the exit stays `2`, and it prints under its name
 there: with `e2e -> realE`, `check realE` says `realE/cases` and `check e2e` says
 `e2e/cases`.
 A failure with no name under the path is one caution, under the whole run's name
-([§FS-check.1.3.6.3](../functional-spec/FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud)).
+([§FS-check.1.3.6](../functional-spec/FS-check.md#136-an-explicit-path-still-narrows)).
 
 ### Imports are always reported
 
@@ -402,7 +402,7 @@ A neighbour whose path names no directory is one `import-missing` error there in
 run exits `1`, and every citation into it is left unchecked rather than passed
 ([§FS-imports.checks.import-missing](../functional-spec/FS-imports.md#checksimport-missing-an-import-names-no-directory)). Neither `--only` nor `--ignore` hides either line,
 as neither hides an `io` finding, so a narrowed run still says what it read
-([§FS-imports.checks](../functional-spec/FS-imports.md#checks-checks)).
+([§FS-imports.checks.import-live](../functional-spec/FS-imports.md#checksimport-live-an-import-is-read-live-unpinned), [§FS-imports.checks.import-missing](../functional-spec/FS-imports.md#checksimport-missing-an-import-names-no-directory)).
 
 ## What it does not check
 

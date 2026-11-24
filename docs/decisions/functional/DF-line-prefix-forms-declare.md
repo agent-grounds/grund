@@ -68,7 +68,7 @@ which is harmless: only lines led by a configured prefix are read.
 ## grounding: A Lisp doc block that cites nothing warns first
 
 Under `grounding_level` 2 or higher a doc-comment block is a grounding unit
-([§FS-check.3.6.2.2](../../functional-spec/FS-check.md#3622-in-a-source-file)), so the Lisp row makes units that did not exist, and one that
+([§FS-check.3.6.2](../../functional-spec/FS-check.md#362-the-unit)), so the Lisp row makes units that did not exist, and one that
 cites and declares nothing would fail a tree that passed. That is a new policy reaching
 existing code rather than a false verdict corrected, so it takes the deprecation path of
 [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): through 0.18.x an ungrounded Lisp doc-comment is a

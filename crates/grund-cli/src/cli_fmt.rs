@@ -42,13 +42,13 @@ fn command_fmt(args: &[String]) -> ExitCode {
         Ok(output) => output,
         Err(err) => {
             if let Some(abort) = err.downcast_ref::<FmtScanAbort>() {
-                // §FS-fmt.3.4: the engine keeps strict scan failures structured;
+                // §FS-fmt.3.2: the engine keeps strict scan failures structured;
                 // this frontend owns the prefix on every complete refusal line.
                 for error in &abort.scan_errors {
                     eprintln!("error: nothing was rewritten: {}", error.line());
                 }
             } else if let Some(abort) = err.downcast_ref::<FmtConflictAbort>() {
-                // §FS-fmt.3.4: a block's line carries its first line and its finding's message.
+                // §FS-fmt.3.2: a block's line carries its first line and its finding's message.
                 for conflict in &abort.conflicts {
                     let path = conflict.path.as_deref().unwrap_or_default();
                     let line = conflict.line.unwrap_or_default();
@@ -121,7 +121,7 @@ fn command_fmt(args: &[String]) -> ExitCode {
 }
 
 /// The `--write` summary's totals (§FS-fmt.3.7): one term per kind, in
-/// §FS-fmt.3.5.1's label order with the lock last, a zero left out and a one
+/// §FS-fmt.3.5's label order with the lock last, a zero left out and a one
 /// singular, joined by `, `. A class added later takes a unit here too
 /// (§FS-fmt.requirements.next-class).
 fn fmt_write_totals(counts: &grund_core::FmtCounts) -> String {

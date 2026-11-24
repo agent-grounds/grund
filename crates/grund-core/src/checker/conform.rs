@@ -69,7 +69,7 @@ fn check_declaration_homes(
 ) {
     let spellings = PlaceNames::new(schema, frame);
     for (id, decls) in &findings.declarations {
-        // §FS-declarations.stubs.pairing.3: a stub's home is named at its target, at
+        // §FS-declarations.stubs.pairing: a stub's home is named at its target, at
         // each line there that declares the ID (§FS-declarations.stubs.pairing.1).
         let paired = paired_declarations(decls);
         let repair = MissingStubRepair::new(&paired);

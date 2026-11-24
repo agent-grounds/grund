@@ -1,4 +1,4 @@
-//! The account of one change `fmt` makes (§FS-fmt.3.5.1, §FS-fmt.3.7): which
+//! The account of one change `fmt` makes (§FS-fmt.3.5, §FS-fmt.3.7): which
 //! kinds of rewrite fired on a line and how often, or which lock entry a row
 //! names and what the write does to its file. The row text both modes print is
 //! rendered from that one record, and the `--write` totals sum its counts, so the
@@ -8,7 +8,7 @@ use std::ops::AddAssign;
 use std::path::PathBuf;
 
 /// How many rewrites of each kind one change makes (§FS-fmt.3.7,
-/// §FS-distribution.3.2.2.2), in §FS-fmt.3.5.1's label order with the lock last.
+/// §FS-distribution.3.2.2), in §FS-fmt.3.5's label order with the lock last.
 /// A link counts where it is new or its destination changed; one already right
 /// changes no byte and counts nothing.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -112,7 +112,7 @@ impl FmtRow {
     }
 
     /// The JSON a partial run's diagnostic carries for this row
-    /// (§FS-distribution.3.2.2.1), rendered against `render`.
+    /// (§FS-distribution.3.2.2), rendered against `render`.
     pub(super) fn partial_json(&self, render: &crate::config::Config) -> serde_json::Value {
         let counts = &self.counts;
         serde_json::json!({
@@ -132,24 +132,24 @@ impl FmtRow {
     }
 }
 
-/// What one line's rewrites did (§FS-fmt.3.5.1): the counts, the text each
+/// What one line's rewrites did (§FS-fmt.3.5): the counts, the text each
 /// expansion wrote (§FS-fmt.3.6), a link's repeated-anchor detail
 /// (§DF-repeated-heading-anchor.decision.row), and each link it wrote, before
-/// and after (§FS-fmt.3.6.2).
+/// and after (§FS-fmt.3.6).
 #[derive(Default)]
 pub(super) struct LineRewrite {
     pub(super) counts: FmtCounts,
-    /// `written → canonical` for each expansion, in source order (§FS-fmt.3.6.1).
+    /// `written → canonical` for each expansion, in source order (§FS-fmt.3.6).
     pub(super) expansions: Vec<String>,
     pub(super) anchor_detail: Option<String>,
-    /// `replaced → written` for each link, in source order (§FS-fmt.3.6.2).
+    /// `replaced → written` for each link, in source order (§FS-fmt.3.6).
     pub(super) links: Vec<String>,
 }
 
 const LINK_LABEL: &str = "markdown link";
 
 impl LineRewrite {
-    /// The row text (§FS-fmt.3.5.1): the first kind that fired with the expansion
+    /// The row text (§FS-fmt.3.5): the first kind that fired with the expansion
     /// detail, then every other kind that fired, in label order, as one `, `
     /// list that follows the label with `; ` when it has detail and `, ` when not.
     /// A `markdown link` keeps its own detail wherever it stands; being last, it
@@ -180,7 +180,7 @@ impl LineRewrite {
             return String::new();
         };
         // §FS-fmt.3.6: the leading label carries the expansions' detail; a link's
-        // own detail rides on its label, leading or trailing (§FS-fmt.3.6.2).
+        // own detail rides on its label, leading or trailing (§FS-fmt.3.6).
         let detailed = !self.expansions.is_empty();
         if detailed {
             row.push_str(": ");
@@ -196,8 +196,8 @@ impl LineRewrite {
 
     /// `markdown link`, then `: ` and its detail where it has any: the
     /// repeated-anchor note, then `; ` and the items where both are present
-    /// (§FS-fmt.3.6.2). Both are appended, so the label alone, and the label with
-    /// the note, stay prefixes of it (§FS-fmt.3.5.1).
+    /// (§FS-fmt.3.6). Both are appended, so the label alone, and the label with
+    /// the note, stay prefixes of it (§FS-fmt.3.5).
     fn link_label(&self) -> String {
         let mut label = LINK_LABEL.to_string();
         let items = (!self.links.is_empty()).then(|| self.links.join(", "));

@@ -4,7 +4,7 @@
 //! scope can start (§FS-coordinate-globs.errors.note). `list`, `list --size` and the
 //! generated batch all select through it, so one pattern selects one set on each, and
 //! `refs --glob` and `cover --glob` select the citation sites whose cited coordinate it
-//! matches (§FS-coordinate-globs.matching.citations).
+//! matches (§FS-coordinate-globs.matching).
 
 use anyhow::Result;
 
@@ -140,7 +140,7 @@ impl<'g> GlobSelection<'g> {
     /// Whether any pattern selects what one citation in the project at `citing` cites:
     /// its coordinate in the project it targets, the loaded project its alias names or
     /// else the one it sits in, spelled under that project's grammar, declared or not
-    /// (§FS-coordinate-globs.matching.citations, §FS-coordinate-globs.scope.targets). An
+    /// (§FS-coordinate-globs.matching, §FS-coordinate-globs.scope). An
     /// alias that names no loaded project leaves the citation matched by no pattern.
     pub(crate) fn selects_citation(
         &self,

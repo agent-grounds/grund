@@ -34,7 +34,7 @@ pub(crate) fn adapt_markdown(
 }
 
 /// [`adapt_markdown`], with each declaration's direct non-chapter headings beside the
-/// facts (§FS-rules.7.2.1).
+/// facts (§FS-rules.7.2).
 pub(crate) fn adapt_markdown_with_headings(
     findings: &Catalog,
     project: MarkdownProject<'_>,
@@ -55,10 +55,10 @@ pub(crate) fn adapt_markdown_with_headings(
 /// nodes, the edges into it and the sections a citation of it reaches are read off
 /// each stub's verdict (§AR-scanner.4.6), and a declaration's chapters and
 /// citations off the record it is paired with, so a stub's target outside the walk
-/// lends both, judged as scanned ones since §FS-rules.7.11 closed
+/// lends both, judged as scanned ones since §FS-rules.5.1 closed
 /// (§FS-declarations.stubs.target.5).
 /// Each declaration's direct non-chapter headings come beside the facts
-/// (§FS-rules.7.2.1).
+/// (§FS-rules.7.2).
 pub(crate) fn adapt_workspace(
     selected: &str,
     projects: &[(&str, &Catalog, MarkdownProject<'_>)],
@@ -102,7 +102,7 @@ pub(crate) fn adapt_workspace(
             let paired = paired_declarations(homes);
             for (ordinal, home) in paired.stand_ins().enumerate() {
                 // §FS-declarations.stubs.target.5: the chapters are the paired record's,
-                // and §FS-declarations.stubs.pairing.4 anchors the declaration at it.
+                // and §FS-declarations.stubs.pairing anchors the declaration at it.
                 let records = paired
                     .iter()
                     .filter(|paired| std::ptr::eq(paired.stand_in, home));
@@ -211,7 +211,7 @@ pub(crate) fn adapt_workspace(
             else {
                 continue;
             };
-            // §FS-rules.5.1, §FS-rules.7.12: each section counts for its nearest named ancestor
+            // §FS-rules.5.1: each section counts for its nearest named ancestor
             // chapter, or else its declaration, including mixed paths. A stub's sections
             // resolve from its target, scanned or not (§AR-scanner.4.6).
             let target = match citation.section.as_ref() {
@@ -277,7 +277,7 @@ pub(crate) fn adapt_workspace(
     (facts, non_chapters)
 }
 
-/// §FS-rules.7.2.1: the direct headings of `record` that no rule counts, a numbered
+/// §FS-rules.7.2: the direct headings of `record` that no rule counts, a numbered
 /// section or an unmarked heading, in source order.
 fn direct_non_chapters(
     findings: &Catalog,

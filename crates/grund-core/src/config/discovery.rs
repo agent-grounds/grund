@@ -66,7 +66,7 @@ pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
 /// the load of a version-2 file reads it when `version_2`, of a version-1 file otherwise,
 /// `None` for a value the load refuses, and no finding recorded
 /// (§FS-config-v2.reader.6). The ancestor climb reads `[workspace] members`
-/// through this (§FS-workspace.6.1.7.5).
+/// through this (§FS-workspace.6.1.7).
 pub(crate) fn unloaded_string_list(
     version_2: bool,
     path: &Path,
@@ -91,7 +91,7 @@ pub(crate) fn unloaded_string_list(
 /// file — a dangling symlink at either name was already a miss under both
 /// tests, since `exists()` follows symlinks too.
 fn config_files_in(dir: &Path) -> impl Iterator<Item = PathBuf> + use<'_> {
-    // §FS-check.6.1.1: precedence probes are inputs, including absent names.
+    // §FS-check.6.1: precedence probes are inputs, including absent names.
     super::observe_config_candidates(dir);
     CONFIG_NAMES
         .iter()
@@ -152,7 +152,7 @@ pub(crate) fn config_file_under(root: &Path, read: &Path) -> PathBuf {
 
 /// The directory a path argument starts discovery from: a file's parent
 /// directory, and the working directory for a file named without a directory
-/// part, whose `parent()` is the empty path rather than `None` (§FS-config.1.4);
+/// part, whose `parent()` is the empty path rather than `None` (§FS-config.1);
 /// any other path is its own start. A link whose resolution loops starts where a file
 /// does, at its directory: it has no inside to start from, and its own spelling cannot be
 /// resolved, so the climb from it would lose the root (§FS-scan.scope.links.unresolvable).
@@ -272,7 +272,7 @@ fn resolved_start(start: &Path) -> Option<PathBuf> {
 /// workspace component asks.
 pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
     let start = invocation.path.as_path();
-    // §FS-check.6.1.1, §FS-check.6.1.3: cover the lexical invocation and its
+    // §FS-check.6.1: cover the lexical invocation and its
     // followed targets before type probes or the canonical root lose the link.
     anyhow::ensure!(
         super::observe_input(start, false),
@@ -321,7 +321,7 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
     // §FS-check.2.2.2: the one place a run learns that no config applies to it.
     run.found_no_config = true;
     let config = defaults_under(run, invocation);
-    // §FS-check.6.1.3: zero-config still has effective roots and probes.
+    // §FS-check.6.1: zero-config still has effective roots and probes.
     super::observe_config(&config);
     Ok(config)
 }
@@ -361,7 +361,7 @@ pub(crate) fn config_at(
             .unwrap_or_else(|_| path.to_path_buf()),
     };
     run.location_base = spelled_from.map_or_else(|| root.clone(), Path::to_path_buf);
-    // §FS-check.4.3.2: the loser of a two-name tie is recorded, not read, so every
+    // §FS-check.4.3: the loser of a two-name tie is recorded, not read, so every
     // surface that reports on the config can name the file grund ignored.
     run.redundant_config_file = redundant_config_file_in(&root).map(|path| report_relative(&path));
     let config = match candidate {
@@ -370,7 +370,7 @@ pub(crate) fn config_at(
             let report_path = report_relative(&candidate);
             run.config_file = Some(report_path.clone());
             // §FS-distribution.3.3.2: classify all config-load failures at discovery.
-            // §FS-lsp.2.2.4.1: and name the file it failed on, which an editor marks.
+            // §FS-lsp.2.2.4: and name the file it failed on, which an editor marks.
             read_config(&candidate, &report_path, &root, run, invocation).map_err(|mut error| {
                 if let Some(diagnostic) = error.downcast_mut::<crate::model::OperationDiagnostic>()
                 {
@@ -386,7 +386,7 @@ pub(crate) fn config_at(
             })?
         }
     };
-    // §FS-check.6.1.1: expose coverage before member expansion/checker reads.
+    // §FS-check.6.1: expose coverage before member expansion/checker reads.
     super::observe_config(&config);
     Ok(config)
 }
@@ -435,7 +435,7 @@ fn read_config(
     // §FS-config-migrate.5.2: the report gate's candidate, read in the file's place.
     let text = match super::call_scope::config_text_override(read_path) {
         Some(text) => text,
-        // §FS-check.6.1.1: cover this effective input before its shared read.
+        // §FS-check.6.1: cover this effective input before its shared read.
         None => super::input_read_to_string(read_path)
             .with_context(|| format!("read {}", format_path(report_path)))?,
     };
@@ -455,7 +455,7 @@ pub(crate) fn pending_config(text: &str, root: &Path, invocation: &Invocation) -
 /// The façade over `project`, a file already read and judged, as the config at
 /// `root`: how migration hands the scan the version 1 file it read tolerantly,
 /// which `pending_config` would refuse to read again, to learn what that file
-/// reads (§AR-config.8.1, §FS-config-migrate.3.1.4.1).
+/// reads (§AR-config.8.1, §FS-config-migrate.3.1.4).
 pub(super) fn project_config(
     project: &Project,
     root: &Path,

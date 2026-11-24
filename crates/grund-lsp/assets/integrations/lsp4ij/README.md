@@ -23,7 +23,7 @@ When IntelliJ has a formatter for a language, LSP4IJ otherwise withholds on-type
 formatting requests from grund-lsp. This includes Java, and Markdown when a
 formatter is installed. The setting lets those requests reach the live transform,
 so the default `$$` becomes `§` while typing a citation
-([§FS-lsp.2.4.1.1](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-lsp.md#2411-live-transform-client-configuration)).
+([§FS-lsp.2.4](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-lsp.md#24-installed-editor-integrations)).
 
 Open a file containing a grund citation to verify that diagnostics, hover, and
 navigation are available. Regenerate this directory after changing

@@ -55,7 +55,7 @@ pub fn complete_ids(opts: CompleteIdsOpts) -> Result<Vec<String>> {
 }
 
 /// [`complete_ids`] for a frontend that also renders the run's `[workspace]`
-/// warnings (§FS-check.4.10, §FS-workspace.6.1.7.6). The candidate
+/// warnings (§FS-check.4.10, §FS-workspace.6.1.7). The candidate
 /// list is a bare `Vec<String>`, so this is the only channel they have.
 #[doc(hidden)]
 pub fn complete_ids_with_run_warnings(
@@ -67,7 +67,7 @@ pub fn complete_ids_with_run_warnings(
 }
 
 fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> Result<Vec<String>> {
-    // §FS-completions.2.1: a narrower path bounds the candidates as `list <path>` does.
+    // §FS-completions.2: a narrower path bounds the candidates as `list <path>` does.
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
     *run_warnings = context_run_warnings(&context);
     let scope = reported_scope(&context, &opts.path, opts.path_provided)?;
@@ -120,7 +120,7 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
 }
 
 /// The candidates one project offers: its IDs, or their sections, of the records the
-/// path reports, as `list <path>` prints them (§FS-completions.2.1, §AR-resolver.3.3).
+/// path reports, as `list <path>` prints them (§FS-completions.2, §AR-resolver.3.3).
 fn add_complete_id_candidates(
     candidates: &mut BTreeSet<String>,
     alias: Option<&str>,

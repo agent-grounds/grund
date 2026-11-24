@@ -81,7 +81,7 @@ impl CheckFindingSelection {
     /// *and* its authority does — while `--ignore` wins over both and `io`
     /// cannot be hidden at all, because it marks a read the run could not make
     /// (§FS-check.1.4, §FS-check.2.4). Unhideable is not the same as exiting
-    /// `2`: the §FS-check.1.3.6.3 unread-source caution wears this code and is
+    /// `2`: the §FS-check.1.3.6 unread-source caution wears this code and is
     /// unselectable with it, and is a warning (§FS-check.2.1.2).
     pub fn retains(&self, code: &str, authority: &[String]) -> bool {
         self.retains_in(code, authority, false)
@@ -89,7 +89,7 @@ impl CheckFindingSelection {
 
     /// [`Self::retains`] in a run where an invalid rule did or did not leave a
     /// project's blocks uncompared, which carries `invalid-rule` with
-    /// `agents-init` (§FS-check.3.5.4).
+    /// `agents-init` (§FS-check.3.5).
     fn retains_in(&self, code: &str, authority: &[String], blocks_withheld: bool) -> bool {
         code == "io"
             // §FS-check.1.4: a file read and not parsed is the same hole in the run.
@@ -166,7 +166,7 @@ impl CheckFindingSelection {
 
     /// §FS-check.1.4: `--only agents-init` carries every `invalid-rule` row in a
     /// run where an invalid rule left a project's blocks uncompared, so that
-    /// skip never reads as a pass (§FS-check.3.5.4).
+    /// skip never reads as a pass (§FS-check.3.5).
     fn carried_with_blocks(&self, code: &str, blocks_withheld: bool) -> bool {
         blocks_withheld && code == "invalid-rule" && self.only.contains("agents-init")
     }

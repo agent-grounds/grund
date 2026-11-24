@@ -33,7 +33,7 @@ The flag vocabulary is `grund show`'s: the cheap read by default, `--section` fo
 
 ### 2.3 The bindings return the whole guide
 
-Python `agent_setup_instructions()` and Node `agentSetupInstructions()` keep their signatures and return the `--full` text ([§FS-distribution.3.2.1](../../functional-spec/FS-distribution.md#321-operations-options-and-refusals), [§FS-distribution.3.3.5](../../functional-spec/FS-distribution.md#335-complete-initial-inventory)). A program that receives the guide as data chooses what of it reaches a model's context, so no binding caller loses content. A `section` argument for the bindings is a separate request.
+Python `agent_setup_instructions()` and Node `agentSetupInstructions()` keep their signatures and return the `--full` text ([§FS-distribution.3.2.1](../../functional-spec/FS-distribution.md#321-operations-options-and-refusals), [§FS-distribution.3.3.5](../../functional-spec/FS-distribution.md#335-complete-inventory)). A program that receives the guide as data chooses what of it reaches a model's context, so no binding caller loses content. A `section` argument for the bindings is a separate request.
 
 ## 3. Rejected alternatives
 

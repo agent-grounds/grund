@@ -31,7 +31,7 @@ pub(crate) enum StubResolution {
     Excluded(ExcludingRule),
     /// The target was read, as the scan reads it on the text a save would write,
     /// and does not declare the ID (§AR-scanner.4.6,
-    /// §FS-declarations.stubs.target.2).
+    /// §FS-declarations.stubs.target).
     LacksId,
     /// The stub links to the file it sits in, which declares the ID elsewhere. The
     /// stub pairs with nothing there, so it is a declaration of its own
@@ -101,7 +101,7 @@ impl<'a> PairedDeclarations<'a> {
     /// The record of every declaration, in `path:line` order: a paired declaration's
     /// is its target's, scanned or not, so a reader that enumerates a declaration's
     /// rows or sections reads them from here as the scanned tree's readers do
-    /// (§FS-declarations.stubs.pairing.4, §FS-declarations.stubs.target.5).
+    /// (§FS-declarations.stubs.pairing, §FS-declarations.stubs.target.5).
     pub(crate) fn records(&self) -> impl Iterator<Item = &'a Declaration> + '_ {
         self.paired.iter().map(|paired| paired.record)
     }
@@ -133,7 +133,7 @@ impl<'a> PairedDeclarations<'a> {
 /// each record there that no declaration, and no stub before it in `path:line`
 /// order, already stands for, so stubs to one target stand for its declarations
 /// once between them and a target declaring the ID twice is two
-/// (§FS-declarations.stubs.pairing.2). Any other stub is a declaration of its
+/// (§FS-declarations.stubs.pairing). Any other stub is a declaration of its
 /// own: a broken one, and one that links to its own file.
 pub(crate) fn paired_declarations(decls: &[Declaration]) -> PairedDeclarations<'_> {
     let mut paired: Vec<Paired<'_>> = decls
@@ -180,7 +180,7 @@ pub(crate) fn paired_declarations(decls: &[Declaration]) -> PairedDeclarations<'
 /// cannot disagree. An undeclared `id` has no sections, and an owner with no
 /// numbered headings, a wholly absent path and a partially resolving one all answer
 /// `false`. A stub's sections are those of the target's record its verdict holds
-/// (§AR-scanner.4.6), scanned or not, as `check` reports them (§FS-check.3.2.1):
+/// (§AR-scanner.4.6), scanned or not, as `check` reports them (§FS-check.3.2):
 /// where no recorded declaration holds the path, the ID's one declaration answers
 /// from the record the scan kept on the stub that stands for it; an ID `show`
 /// refuses as ambiguous, and a broken stub, lend no section there.

@@ -68,8 +68,8 @@ be removed still fails, with the removal error.**
 ## 3. One helper decides
 
 Temporary-root helpers retain ownership through setup and use as
-[§FS-repository-maintenance.4.1](../functional-spec/FS-repository-maintenance.md#41-lifetime-and-removal) requires, with independent allocations and
-occupied-candidate preservation from [§FS-repository-maintenance.4.2](../functional-spec/FS-repository-maintenance.md#42-independent-allocation-and-occupied-roots). Ownership
+[§FS-repository-maintenance.4](../functional-spec/FS-repository-maintenance.md#4-temporary-test-roots-have-an-owner) requires, with independent allocations and
+occupied-candidate preservation from [§FS-repository-maintenance.4](../functional-spec/FS-repository-maintenance.md#4-temporary-test-roots-have-an-owner). Ownership
 starts immediately after the exclusive claim ([§AR-ci.10.2](AR-ci.md#102-the-root-is-claimed-not-adopted)), before fallible
 setup or canonicalization; their config-free base selection remains [§AR-ci.10.3](AR-ci.md#103-a-fixture-root-inherits-no-config-from-above-it).
 Their removal follows the same strict passing-path and non-raising unwinding

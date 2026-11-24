@@ -18,10 +18,10 @@ use crate::model::{Catalog, Citation, Code, Diagnostic, Switch, citation_directi
 /// its target is a `forbidden-citation` error (`must-not`) or a
 /// `discouraged-citation` suggestion (`should-not`). The error carries
 /// §FS-check.3.12's ordinary repair suffix, finalized for required index entries
-/// by §FS-check.3.12.2; the suggestion has none (§FS-check.2.3). A
+/// by §FS-check.3.12; the suggestion has none (§FS-check.2.3). A
 /// citation a stub's target lends is a site of its kind at its line in the target,
-/// judged as the scanned tree judges it (§FS-check.3.12, §FS-rules.7.11). A citation
-/// of a name under a number is an ordinary site (§FS-rules.7.12).
+/// judged as the scanned tree judges it (§FS-check.3.12, §FS-rules.5.1). A citation
+/// of a name under a number is an ordinary site (§FS-rules.5.1).
 pub(super) fn check_citation_prohibitions(
     findings: &Catalog,
     rules: &Rules,
@@ -140,8 +140,8 @@ fn prohibition_diagnostic(
         column: Some(cite.column),
         message: format!(
             "{} {verb} cite {} (citation direction){repair}",
-            // §FS-check.3.12.1: a non-citable citing kind is named by its place —
-            // the same label §FS-check.3.11.2 and the generated directions use,
+            // §FS-check.3.12: a non-citable citing kind is named by its place —
+            // the same label §FS-check.3.11 and the generated directions use,
             // because its name is a config handle and not a thing to read.
             citing_side_label(owners, &cite.source_kind, &cite.file),
             render_citation_target(&target)
@@ -156,7 +156,7 @@ fn prohibition_diagnostic(
 /// that list it matches, else the per-kind `default`, else the global
 /// `default`, else `may`; a default level has no entry behind it. The shared
 /// repair selection reads this same resolution to name the applicable list
-/// rather than reimplement precedence (§FS-check.3.12.2).
+/// rather than reimplement precedence (§FS-check.3.12).
 pub(super) fn citation_site_level<'r>(
     rules: &'r Rules,
     cite: &Citation,

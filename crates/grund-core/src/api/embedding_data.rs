@@ -71,7 +71,7 @@ record!(CoverLineSection; section, start, end);
 record!(CoverLineOwner; declaration, start, end, sections);
 record!(CoverLines; project, path, start, end, owners);
 record!(FmtChange; path, line, label, counts, lock_file);
-// §FS-distribution.3.2.2.2: the per-kind occurrences behind the `--write` totals.
+// §FS-distribution.3.2.2: the per-kind occurrences behind the `--write` totals.
 record!(FmtCounts; triggers_marked, citations_marked, local_sections_expanded,
     shorthands_expanded, links_written, section_lock_entries);
 impl Data for FmtLockFile {
@@ -91,7 +91,7 @@ impl Data for ListSizeMeasurement {
 }
 record!(InitEvent; verb, path);
 record!(InitNext; docs, declares_kinds, entrypoint, fs_home, allocation, scan_reads_file);
-// §FS-distribution.3.2.2.2: the selected home travels in the shape of the FS home.
+// §FS-distribution.3.2.2: the selected home travels in the shape of the FS home.
 record!(InitAllocation; kind, home, home_exists);
 impl Data for InitFsHome {
     fn data(&self) -> Value {

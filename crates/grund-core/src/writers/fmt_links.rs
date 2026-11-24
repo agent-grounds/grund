@@ -71,14 +71,14 @@ pub(crate) fn wrap_markdown_links(
     .line
 }
 
-/// One link the pass writes on a line (§FS-fmt.3.6.2): the span of the line it
+/// One link the pass writes on a line (§FS-fmt.3.6): the span of the line it
 /// read that the write replaces, and the text the write puts there. The link
 /// count, the repeated-anchor note and the row's items are all readings of this
 /// one record, so the preview cannot name a link the write does not write
 /// (§DF-fmt-link-row-names-what-it-writes.2.2). A wrap whose destination was
 /// already right writes nothing and has none.
 pub(super) struct WrittenLink {
-    /// §FS-fmt.3.6.2.1: a fresh span is one whole citation token; a re-pointed
+    /// §FS-fmt.3.6: a fresh span is one whole citation token; a re-pointed
     /// one runs from the wrap's `[` to the `)` that closes it.
     pub(super) span: Range<usize>,
     pub(super) written: String,
@@ -106,9 +106,9 @@ impl WrittenLink {
         ))
     }
 
-    /// The row's item for this link (§FS-fmt.3.6.2): the text replaced, then the
+    /// The row's item for this link (§FS-fmt.3.6): the text replaced, then the
     /// text written. Each side ends at the `)` that closes its `(`, or for a fresh
-    /// left side at its one citation token (§FS-fmt.3.6.2.2).
+    /// left side at its one citation token (§FS-fmt.3.6).
     fn item(&self, read: &str) -> String {
         format!("{} \u{2192} {}", self.replaced(read), self.written)
     }
@@ -116,8 +116,8 @@ impl WrittenLink {
 
 /// One line after the link pass, and what the pass wrote on it (§FS-fmt.3.7): one
 /// record per link it wrote, in source order, each span starting after the last
-/// ends (§FS-fmt.3.6.2.1). `unproven_aliases` names each project a link was
-/// withheld from, its scan having met an error (§FS-fmt.7.4.4).
+/// ends (§FS-fmt.3.6). `unproven_aliases` names each project a link was
+/// withheld from, its scan having met an error (§FS-fmt.7.4).
 pub(super) struct WrappedLine {
     pub(super) line: String,
     pub(super) links: Vec<WrittenLink>,
@@ -125,10 +125,10 @@ pub(super) struct WrappedLine {
 }
 
 impl WrappedLine {
-    /// Account for this line's links in its rewrite (§FS-fmt.3.5.1), given `read`,
+    /// Account for this line's links in its rewrite (§FS-fmt.3.5), given `read`,
     /// the line the pass read: the count the `--write` totals sum (§FS-fmt.3.7),
     /// the repeated-anchor note (§DF-repeated-heading-anchor.decision.row) and the
-    /// items (§FS-fmt.3.6.2), all read from the one record, for the ordinary pass
+    /// items (§FS-fmt.3.6), all read from the one record, for the ordinary pass
     /// and the index carve-out alike.
     pub(super) fn account(&self, read: &str, rewrite: &mut LineRewrite) {
         let links = &self.links;
@@ -138,9 +138,9 @@ impl WrappedLine {
     }
 }
 
-/// The production §FS-fmt.6 wrapper pass, sharing §FS-fmt.2.4.5's already-built
+/// The production §FS-fmt.6 wrapper pass, sharing §FS-fmt.2.4's already-built
 /// target indexes so accepted shorthand adds no per-citation catalog scan. Every
-/// anchor names its heading as `settled` says the run leaves it (§FS-fmt.6.3.3).
+/// anchor names its heading as `settled` says the run leaves it (§FS-fmt.6.3).
 /// `links` places the line in its file, which the reading of §FS-citations.wrap
 /// is of.
 #[allow(clippy::too_many_arguments)]
@@ -169,7 +169,7 @@ pub(super) fn wrap_markdown_links_with_targets(
         if citation.marker_start < cursor.max(binding_end) {
             continue;
         }
-        // §FS-fmt.2.5.3: the always-linkify carve-out reaches this line for the
+        // §FS-fmt.6.1: the always-linkify carve-out reaches this line for the
         // entries of the IDs the index owes (§FS-check.3.18) and writes nothing
         // else — a qualified citation is never an entry, and another ID is prose.
         let owed = carve_out
@@ -189,7 +189,7 @@ pub(super) fn wrap_markdown_links_with_targets(
         // left, in an index as anywhere, before any target is derived; an image keeps
         // its destination (§FS-citations.wrap.enclosing.images).
         let reading = citation_link(links, line, citation.marker_start, citation.token_end);
-        // §FS-fmt.2.5.3: a wrap or an authored link is an entry, by its shape alone.
+        // §FS-fmt.6.1: a wrap or an authored link is an entry, by its shape alone.
         if let Some(pass) = owed
             && let CitationLink::Wrap(_) | CitationLink::Enclosing { .. } = reading
         {
@@ -198,7 +198,7 @@ pub(super) fn wrap_markdown_links_with_targets(
         if let CitationLink::Enclosing { .. } | CitationLink::Image(_) = reading {
             continue;
         }
-        // §FS-fmt.2.5.3, §FS-check.3.18: where the ordinary pass is off, only the
+        // §FS-fmt.6.1, §FS-check.3.18: where the ordinary pass is off, only the
         // entry is written, and a surveying walk writes nothing.
         if let Some(CarveOutPass::Entries(carve_out)) = owed
             && (carve_out.surveying() && matches!(reading, CitationLink::Wrap(_))
@@ -240,7 +240,7 @@ pub(super) fn wrap_markdown_links_with_targets(
         let Some(target) = target else {
             continue;
         };
-        // §FS-fmt.7.4.4: a link is a write, so it needs the project it resolves against
+        // §FS-fmt.7.4: a link is a write, so it needs the project it resolves against
         // to have been read in full. A wrap already right writes nothing, and asks nothing.
         let already_right = matches!(reading, CitationLink::Wrap(wrap)
             if line[wrap.url_start..wrap.close] == target);
@@ -259,7 +259,7 @@ pub(super) fn wrap_markdown_links_with_targets(
             // §FS-fmt.3.7: a re-derived destination is a link written only if it moved.
             let old = &line[wrap.url_start..wrap.close];
             if old != target {
-                // §FS-fmt.3.6.2.1: the span runs from the wrap's `[` to its `)`.
+                // §FS-fmt.3.6: the span runs from the wrap's `[` to its `)`.
                 let span = (marker_start - 1)..(wrap.close + 1);
                 let opening = &line[span.start..wrap.url_start];
                 written_links.push(WrittenLink {
@@ -283,7 +283,7 @@ pub(super) fn wrap_markdown_links_with_targets(
             }
             _ => {}
         }
-        // §FS-fmt.3.6.2.1: a fresh span is the one whole citation token.
+        // §FS-fmt.3.6: a fresh span is the one whole citation token.
         let span = marker_start..marked_end;
         let citation = &line[span.clone()];
         let written = format!("[{citation}]({target})");

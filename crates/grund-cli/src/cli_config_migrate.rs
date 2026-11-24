@@ -282,7 +282,7 @@ fn render_migrate_notices(
     for notice in &report.notices {
         let verb = if notice.dropped { "dropped" } else { "changed" };
         let config = &report.config;
-        // §FS-config-migrate.8.1.3: the defaults notice names no line.
+        // §FS-config-migrate.8.1: the defaults notice names no line.
         let at = notice
             .line
             .map_or_else(|| config.clone(), |line| format!("{config}:{line}"));
