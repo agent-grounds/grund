@@ -16,7 +16,7 @@ use super::shorthand::{ShorthandIndexes, report_shorthand_citation};
 use super::snapshots::{Resolve, snapshot_warns};
 use super::support::{
     citation_in_markdown_inline_code, close_enough_for_hint, dangling_message_spelled,
-    edit_distance, missing_snapshot_message, qualify,
+    edit_distance, missing_snapshot_message, qualify, reference_hints,
 };
 use super::unread_homes::UnreadNames;
 use super::{mounted_citation::report_mounted_duplicate, reference_scope::ScanScope};
@@ -263,17 +263,20 @@ pub(super) fn check_citation_resolution(
             // §FS-config-v2.schema.sources: Markdown is the citing file's language's.
             let markdown = frame.reading(schema, &cite.file).markdown;
             let in_inline_code = citation_in_markdown_inline_code(findings, frame, cite, markdown);
-            let spelling = render_citation_id(
-                target.frame().grammar(),
-                &target.catalog.declarations,
+            // §FS-check.3.14.1: the out-of-scope tier always reports an error.
+            let should_warn = snapshot_row.is_some()
+                && tier == ReferenceTier::Configured
+                && snapshot_warns(resolve, cite.namespace.as_deref(), &cite.id.kind);
+            // §FS-check.3.1.5: select one remedy; warnings retain local hints only.
+            let (spelling, hints) = reference_hints(
+                schema,
+                frame,
+                &target,
                 cite,
-                &schema.citation.marker,
+                in_inline_code,
+                (!should_warn).then_some(workspace),
             );
             let (code, message, warning) = if let Some(row) = snapshot_row {
-                // §FS-check.3.14.1: out-of-scope citations stay fixed dangling errors;
-                // a target kind's in-scope `should` must not demote this opt-in tier.
-                let should_warn = tier == ReferenceTier::Configured
-                    && snapshot_warns(resolve, cite.namespace.as_deref(), &row.name);
                 let home = row
                     .fetch_home()
                     .expect("fetch-enabled kind has exactly one home after config validation");
@@ -282,9 +285,8 @@ pub(super) fn check_citation_resolution(
                     target.schema,
                     target.frame().displayed_by(frame.display),
                     cite.namespace.as_deref(),
-                    target.catalog,
                     &cite.id,
-                    in_inline_code,
+                    hints,
                     &home,
                     !should_warn,
                     &spelling,
@@ -306,9 +308,8 @@ pub(super) fn check_citation_resolution(
                         target.schema,
                         target.frame().displayed_by(frame.display),
                         cite.namespace.as_deref(),
-                        target.catalog,
                         &cite.id,
-                        in_inline_code,
+                        hints,
                         &spelling,
                     ),
                     false,

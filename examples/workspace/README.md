@@ -82,6 +82,34 @@ enclosing workspace's root project, explains the member relationship, and gives
 ([§FS-workspace.5.1.1](../../docs/functional-spec/FS-workspace.md#511-verified-enclosing-workspace-guidance)). The hint requires verified membership and alias identity;
 it does not promise that a modified target exists when checked from the root.
 
+## Repairing a missing alias
+
+Run from the grund repository root with the updated `grund` on `PATH`:
+
+```bash
+bash examples/workspace/missing-alias.sh
+```
+
+The script copies the valid fixture into a disposable directory under `~/ag/tmp`,
+checks the baseline, and changes only `<§>api/FS-session` to `<§>FS-session` in
+the root document. Check still exits 1, now naming the actual declarations:
+
+```text
+docs/functional-spec/FS-platform.md:3: error: unknown reference FS-session; did you mean api/FS-session or web/FS-session?
+```
+
+Choose the intended project: the script restores `<§>api/FS-session`, checks
+successfully and prints `check after repair: exit 0`. It asserts the diagnostic
+and exit statuses, then removes its copy. The checked-in fixture and its empty
+expected stdout stay valid. Its existing v1 migration cautions still appear on
+stderr.
+
+The suggestion uses only loaded projects and takes precedence over local typo
+guesses; it does not make the unqualified citation resolve. A member-local run
+cannot suggest unseen siblings. Unlike show's member-only-kind query above,
+check recognizes only the citing project's configured grammar
+([§FS-check.3.1.5](../../docs/functional-spec/FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)).
+
 ## Repairing an unlisted project
 
 Run this walkthrough from the grund repository root with the updated `grund`

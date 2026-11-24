@@ -4,7 +4,6 @@ mod support;
 use support::*;
 
 #[test]
-#[ignore = "red until #1489 check offers member candidates; implement removes this"]
 fn check_member_id_hints_original_text() {
     let tree = Tree::new();
     let run = tree.run("", &["check"]);
@@ -21,7 +20,6 @@ fn check_member_id_hints_original_text() {
 }
 
 #[test]
-#[ignore = "red until #1489 check offers member candidates; implement removes this"]
 fn check_member_id_hints_original_json() {
     let tree = Tree::new();
     let rows = tree.check("", None);
@@ -68,7 +66,6 @@ fn check_member_id_hints_show_and_local_control() {
 }
 
 #[test]
-#[ignore = "red until #1489 check offers member candidates; implement removes this"]
 fn check_member_id_hints_alternatives_grammar_and_section() {
     let tree = Tree::new();
     for (alias, numbered) in [
@@ -98,7 +95,57 @@ fn check_member_id_hints_alternatives_grammar_and_section() {
 }
 
 #[test]
-#[ignore = "red until #1489 member candidates precede fuzzy local hints; implement removes this"]
+fn check_member_id_hints_member_separator_owns_written_coordinate() {
+    let tree = Tree::new();
+    let id = "AR-monitor.9";
+    let candidate = format!("worldsim/{id}");
+    tree.edit(
+        "worldsim/grund.toml",
+        "slug_pattern = \"[a-z0-9][a-z0-9-]*\"",
+        "section_separator = \"_\"\nslug_pattern = \"[a-z0-9][a-z0-9.-]*\"",
+    );
+    tree.declare("worldsim", id);
+    tree.citation(&format!("{MARK}{id}"));
+    // Root reads .9 as a section; the member reads it as part of the ID.
+    let show = tree.run("", &[id]);
+    assert_eq!(show.status.code(), Some(1));
+    assert_eq!(stdout(&show), "");
+    assert_eq!(
+        stderr(&show),
+        format!("ID not found: AR-monitor; did you mean {candidate}?\n")
+    );
+    let qualified = tree.run("", &[&candidate]);
+    assert_eq!(qualified.status.code(), Some(0));
+    assert_eq!(stdout(&qualified), "The monitor.\n");
+    assert_eq!(stderr(&qualified), "");
+    let message = hinted("AR-monitor", &candidate);
+    dangling(at(&tree.check("", None), ROOT, 3), &message);
+
+    // The full-tree tier must pass the same complete coordinate to the rule.
+    tree.edit(
+        "grund.toml",
+        "\n[workspace]",
+        "\n[schema.kinds.code]\nfolders = [\"src\"]\n\n[workspace]",
+    );
+    tree.write("notes/citation.md", &format!("{MARK}{id}\n"));
+    let full = tree.run("", &["check", "--full", "--format", "json"]);
+    assert_eq!(full.status.code(), Some(1), "{full:?}");
+    assert_eq!(stderr(&full), "");
+    let rows: Vec<serde_json::Value> = stdout(&full)
+        .lines()
+        .map(|line| serde_json::from_str(line).unwrap())
+        .collect();
+    dangling(at(&rows, ROOT, 3), &message);
+    let outside = at(&rows, "notes/citation.md", 1);
+    assert_eq!(outside["code"], "out-of-scope-dangling", "{outside}");
+    assert_eq!(outside["severity"], "error", "{outside}");
+    assert_eq!(
+        outside["message"],
+        format!("outside configured places and source scope: {message}")
+    );
+}
+
+#[test]
 fn check_member_id_hints_member_precedes_local() {
     let tree = Tree::new();
     tree.declare("", "AR-005-invariant-monitors");
@@ -110,7 +157,6 @@ fn check_member_id_hints_member_precedes_local() {
 }
 
 #[test]
-#[ignore = "red until #1489 member and inline escape compose once; implement removes this"]
 fn check_member_id_hints_inline_configured_marker() {
     let tree = Tree::new();
     tree.edit("grund.toml", "[schema]\n", "[schema]\nmarker = \"@\"\n");
@@ -127,7 +173,6 @@ fn check_member_id_hints_inline_configured_marker() {
 }
 
 #[test]
-#[ignore = "red until #1489 member candidates suppress missing-place tails; implement removes this"]
 fn check_member_id_hints_missing_places() {
     let tree = Tree::new();
     tree.edit(
@@ -167,19 +212,16 @@ fn fetch_tail(inline: bool) {
 }
 
 #[test]
-#[ignore = "red until #1489 member candidates replace dangling fetch remedies; implement removes this"]
 fn check_member_id_hints_fetch_plain_tail() {
     fetch_tail(false);
 }
 
 #[test]
-#[ignore = "red until #1489 member candidates combine with fetch inline escape; implement removes this"]
 fn check_member_id_hints_fetch_inline_tail() {
     fetch_tail(true);
 }
 
 #[test]
-#[ignore = "red until #1489 root path-scoped checks offer loaded candidates; implement removes this"]
 fn check_member_id_hints_root_path_report_scope() {
     let tree = Tree::new();
     tree.write(
@@ -196,7 +238,6 @@ fn check_member_id_hints_root_path_report_scope() {
 }
 
 #[test]
-#[ignore = "red until #1489 root subdirectory checks offer loaded candidates; implement removes this"]
 fn check_member_id_hints_root_directory_report_scope() {
     let tree = Tree::new();
     tree.write(
@@ -216,7 +257,6 @@ fn check_member_id_hints_root_directory_report_scope() {
 }
 
 #[test]
-#[ignore = "red until #1489 candidate search uses the citing member identity; implement removes this"]
 fn check_member_id_hints_member_citing_sibling() {
     let tree = Tree::new();
     tree.project("consumer", false);
@@ -240,7 +280,6 @@ fn check_member_id_hints_member_citing_sibling() {
 }
 
 #[test]
-#[ignore = "red until #1489 candidate search includes root for a citing member; implement removes this"]
 fn check_member_id_hints_member_citing_root() {
     let tree = Tree::new();
     tree.edit(

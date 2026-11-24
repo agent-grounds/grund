@@ -11,7 +11,8 @@
 
 use anyhow::anyhow;
 
-use super::context::{WorkspaceContext, WorkspaceProject};
+use super::citation_target::WorkspaceCheckTarget;
+use super::context::WorkspaceContext;
 use crate::grammar::render_catalog_id;
 use crate::scanner::resolve_id_arg;
 
@@ -72,7 +73,7 @@ pub(crate) fn with_member_id_candidates(
     if !invalid_id && !message.starts_with("ID not found:") {
         return err;
     }
-    let candidates = member_id_candidates(context, raw_id);
+    let candidates = query_member_id_candidates(context, raw_id);
     match member_id_candidate_clause(&candidates) {
         Some(clause) => {
             let message = if invalid_id {
@@ -116,7 +117,7 @@ pub(crate) fn member_id_refs_hint(
     if qualified_alias.is_some() {
         return None;
     }
-    let commands = member_id_candidates(context, raw_id)
+    let commands = query_member_id_candidates(context, raw_id)
         .iter()
         .map(|id| format!("`grund refs {id}`"))
         .collect::<Vec<_>>();
@@ -134,16 +135,39 @@ pub(crate) fn member_id_refs_hint(
 /// standalone repositories, and a `<path>` pinned inside a member all load with
 /// `workspace_loaded == false`; a run that cannot see the whole tree must not
 /// guess at what the rest of it declares.
-fn member_id_candidates(context: &WorkspaceContext, raw_id: &str) -> Vec<String> {
+fn query_member_id_candidates(context: &WorkspaceContext, raw_id: &str) -> Vec<String> {
     if !context.workspace_loaded {
         return Vec::new();
     }
-    let mut candidates: Vec<String> = context
-        .projects
-        .iter()
-        .enumerate()
-        .filter(|(index, _)| Some(*index) != context.current)
-        .filter_map(|(_, project)| qualified_declared_id(project, raw_id))
+    member_id_candidates(
+        context.projects.iter().map(|project| {
+            (
+                project.alias.as_str(),
+                WorkspaceCheckTarget::of(
+                    &project.findings,
+                    project.config.schema(),
+                    project.config.frame(),
+                ),
+            )
+        }),
+        context
+            .current_project()
+            .map(|project| project.alias.as_str()),
+        raw_id,
+    )
+}
+
+/// §FS-workspace.8.1.1 / §FS-check.3.1.5: one declaration-backed selection for
+/// queries and dangling remedies. The caller supplies only loaded projects and
+/// identifies the current project (the citing project for check).
+pub(crate) fn member_id_candidates<'a>(
+    projects: impl Iterator<Item = (&'a str, WorkspaceCheckTarget<'a>)>,
+    current: Option<&str>,
+    raw_id: &str,
+) -> Vec<String> {
+    let mut candidates: Vec<String> = projects
+        .filter(|(alias, _)| Some(*alias) != current)
+        .filter_map(|(alias, project)| qualified_declared_id(alias, project, raw_id))
         .collect();
     candidates.sort();
     // Three is the §FS-check.3.8.2 cut: `grund list` is the catalogue, a
@@ -167,19 +191,22 @@ fn member_id_candidates(context: &WorkspaceContext, raw_id: &str) -> Vec<String>
 /// (§FS-workspace.8.1.1.6). A text this project's own grammar rejects, or a
 /// shorthand several of its declarations answer to, names no candidate here —
 /// the clause offers a spelling that resolves, or it offers nothing.
-fn qualified_declared_id(project: &WorkspaceProject, raw_id: &str) -> Option<String> {
-    let (id, _section) = resolve_id_arg(
-        raw_id,
-        project.config.schema(),
-        project.config.frame(),
-        &project.findings,
-    )
-    .ok()?;
-    project.findings.declarations.contains_key(&id).then(|| {
+fn qualified_declared_id(
+    alias: &str,
+    project: WorkspaceCheckTarget<'_>,
+    raw_id: &str,
+) -> Option<String> {
+    let (id, _section) =
+        resolve_id_arg(raw_id, project.schema, project.frame(), project.catalog).ok()?;
+    project.catalog.declarations.contains_key(&id).then(|| {
         format!(
             "{}/{}",
-            project.alias,
-            render_catalog_id(&project.config.grammar, &project.findings.declarations, &id)
+            alias,
+            render_catalog_id(
+                project.frame().grammar(),
+                &project.catalog.declarations,
+                &id
+            )
         )
     })
 }

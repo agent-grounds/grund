@@ -44,6 +44,21 @@ keep those points cited: see
 [Citers in a repository you cannot read](#citers-in-a-repository-you-cannot-read).
 See [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace).
 
+When a recognized unqualified citation names an ID declared only in another
+loaded project, check keeps the error and suggests the qualified spelling:
+
+```text
+unknown reference FS-session; did you mean api/FS-session or web/FS-session?
+```
+
+Choose the intended project and write that alias in the citation, for example
+`<§>api/FS-session`. Actual declarations outrank a local typo suggestion; several
+matches are listed rather than chosen. The hint uses only projects already
+loaded by this run: a member-local check cannot suggest unseen siblings, and a
+kind unknown to the citing project's grammar stays unrecognized
+([§FS-check.3.1.5](../functional-spec/FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)).
+Try the [missing-alias walkthrough](../../examples/workspace/README.md#repairing-a-missing-alias).
+
 A check from a member directory, or `grund check <member>`, checks that member
 locally and still rejects cross-project citations. When the refused alias names
 the verified enclosing workspace's root project, the finding explains the

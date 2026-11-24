@@ -1723,7 +1723,7 @@ Under v2 the same warning is selected by `[rules.resolution] <KIND> = "warn"`, a
 
 #### 4.12.1 A hint takes the fetch tail's place
 
-The declared-member, near-ID and escaped-inline-code hints ([§FS-check.3.1.5](FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)) of [§FS-check.3.1.1](FS-check.md#311-a-near-id) and [§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code) take precedence over the fetch action. The message retains `no snapshot for <qualified-ID> in <home>` and substitutes the existing conditional `; did you mean …`, `; write <§>…`, or combined tail for the em-dash fetch tail. That precedence never produces both a dangling and a missing-snapshot finding for one site.
+The near-ID and escaped-inline-code hints of [§FS-check.3.1.1](FS-check.md#311-a-near-id) and [§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code) take precedence over the fetch action. The warning retains `no snapshot for <qualified-ID> in <home>` and substitutes the existing conditional `; did you mean …`, `; write <§>…`, or combined tail for the em-dash fetch tail. Declared-member hints apply only to dangling errors ([§FS-check.3.1.5](FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)). One site never produces both findings.
 
 #### 4.12.2 In a workspace
 
