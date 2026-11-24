@@ -24,6 +24,14 @@ project boundary.
 5. Run `grund check` from the workspace root to validate the whole workspace and
    its qualified citations.
 
+When workspace check says `unknown reference <ID>; did you mean <alias>/<ID>?`,
+use the intended qualified spelling in the citation and check again. These are
+actual declarations in other loaded projects, ahead of local typo guesses;
+several matches require choosing the intended project. The citation remains an
+error until repaired. A member-local run cannot suggest unseen siblings, and
+check does not recognize kinds unknown to the citing project's grammar
+([member-ID hints](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)).
+
 For stale workspace sections, `expected …; found …` shows the first unequal
 entries; `<missing>` marks an absent side. Run `grund init` in the finding's
 directory (the checked project if omitted). See the [entry-detail rule](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3531-first-differing-workspace-entry).

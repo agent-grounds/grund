@@ -132,8 +132,8 @@ and the [runnable example](https://github.com/agent-grounds/grund/blob/main/exam
 
 `value mismatch for <ID> (component <path>)`: keep the root citation, fix the whole literal ([values guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/values.md#equality-and-diagnostics)).
 
-If a project needs its own grammar or independent check, follow
-Splitting off a member (`grund guide members`), then validate from the workspace root.
+For independent grammar/checks or workspace `unknown reference` member hints,
+read Splitting off a member (`grund guide members`); validate at the root.
 
 For an existing version-1 config, `grund config migrate --to 2` previews the
 translation. Read each listed comment's local reason and destination guidance:

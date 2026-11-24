@@ -4,12 +4,75 @@ use crate::config::{
 };
 #[cfg(test)]
 use crate::grammar::render_id;
-use crate::grammar::{is_inside_inline_code, render_catalog_id};
+use crate::grammar::{is_inside_inline_code, render_catalog_id, render_citation_id};
 use crate::model::remedies;
 use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
-use crate::resolver::fetch_place;
+use crate::resolver::{WorkspaceCheckTarget, fetch_place, join_alternatives, member_id_candidates};
 use crate::scanner::fetch_refused_home;
 use crate::sources::path_exists;
+use std::collections::BTreeMap;
+
+/// §FS-check.3.1.5: select the suggestion before rendering either dangling
+/// message, then compose it once with the citing project's inline escape.
+pub(super) struct ReferenceHints {
+    pub near: Option<String>,
+    pub escape: Option<String>,
+}
+
+/// §FS-check.3.1.5: actual member declarations precede local typos. `workspace`
+/// is withheld for warnings, which retain their local and escape hints. Pass the
+/// full written coordinate; each candidate project's grammar owns its section split.
+/// Return the citing grammar's diagnostic spelling alongside the selected hints.
+pub(super) fn reference_hints(
+    schema: &Schema,
+    frame: Frame<'_>,
+    target: &WorkspaceCheckTarget<'_>,
+    cite: &Citation,
+    in_inline_code: bool,
+    workspace: Option<&BTreeMap<String, WorkspaceCheckTarget<'_>>>,
+) -> (String, ReferenceHints) {
+    let spelling = render_citation_id(
+        target.frame().grammar(),
+        &target.catalog.declarations,
+        cite,
+        &schema.citation.marker,
+    );
+    let candidates = workspace
+        .filter(|_| cite.namespace.is_none())
+        .map(|projects| {
+            member_id_candidates(
+                projects
+                    .iter()
+                    .map(|(alias, project)| (alias.as_str(), *project)),
+                frame.alias,
+                cite.text
+                    .strip_prefix(&schema.citation.marker)
+                    .unwrap_or(&cite.text),
+            )
+        })
+        .unwrap_or_default();
+    let hints = ReferenceHints {
+        near: if candidates.is_empty() {
+            nearest_declared_id(
+                target.frame(),
+                cite.namespace.as_deref(),
+                target.catalog,
+                &cite.id,
+                &spelling,
+            )
+        } else {
+            Some(join_alternatives(&candidates))
+        },
+        escape: in_inline_code.then(|| {
+            format!(
+                "<{}>{}",
+                schema.citation.marker,
+                qualify(cite.namespace.as_deref(), &spelling)
+            )
+        }),
+    };
+    (spelling, hints)
+}
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
 /// Markdown inline-code context is a likely illustration. Offer whichever
@@ -25,33 +88,40 @@ pub(crate) fn dangling_message(
     missing: &Id,
     in_inline_code: bool,
 ) -> String {
+    let spelling = render_id(frame.grammar(), missing);
     dangling_message_spelled(
         schema,
         frame,
         namespace,
-        findings,
         missing,
-        in_inline_code,
-        &render_id(frame.grammar(), missing),
+        ReferenceHints {
+            near: nearest_declared_id(frame, namespace, findings, missing, &spelling),
+            escape: in_inline_code.then(|| {
+                format!(
+                    "<{}>{}",
+                    schema.citation.marker,
+                    qualify(namespace, &spelling)
+                )
+            }),
+        },
+        &spelling,
     )
 }
 
 /// The source citation supplies the spelling of an unresolved number
 /// (§FS-config.3.2.8); identity still selects same-kind suggestions.
+/// §FS-check.3.1.5: hints are already selected, before missing-place fallback.
 pub(super) fn dangling_message_spelled(
     schema: &Schema,
     frame: Frame<'_>,
     namespace: Option<&str>,
-    findings: &Catalog,
     missing: &Id,
-    in_inline_code: bool,
+    hints: ReferenceHints,
     spelling: &str,
 ) -> String {
     let unknown = qualify(namespace, spelling);
-    let near = nearest_declared_id(frame, namespace, findings, missing, spelling);
-    let escape = in_inline_code.then(|| format!("<{}>{unknown}", schema.citation.marker));
     // §FS-errors.5.5.1: the case of dangling's Fix the search and the site pick.
-    match (near, escape) {
+    match (hints.near, hints.escape) {
         (Some(near), Some(escape)) => format!(
             "unknown reference {unknown}; {}",
             remedies::dangling_near_escape(near, escape)
@@ -124,13 +194,13 @@ const UNREAD_HOME_TAIL: &str = "give the file a name the scan reads as Markdown"
 /// the target's, spelling paths as the report does, so a home `fetch` refuses
 /// (§FS-check.3.1.3.1) is asked of it and the tail names where the fetch runs
 /// (§FS-imports.writes.answer).
+/// §FS-check.3.1.5: the selected hints replace the action, keeping this base.
 pub(super) fn missing_snapshot_message(
     schema: &Schema,
     frame: Frame<'_>,
     namespace: Option<&str>,
-    findings: &Catalog,
     missing: &Id,
-    in_inline_code: bool,
+    hints: ReferenceHints,
     home: &str,
     must: bool,
     spelling: &str,
@@ -141,11 +211,9 @@ pub(super) fn missing_snapshot_message(
     } else {
         format!("no snapshot for {rendered} in {home}")
     };
-    let near = nearest_declared_id(frame, namespace, findings, missing, spelling);
-    let escape = in_inline_code.then(|| format!("<{}>{rendered}", schema.citation.marker));
     // §FS-errors.5.5.1: `must` reports dangling, otherwise missing-snapshot, and each
     // message carries its own code's case.
-    let remedy = match (near, escape, must) {
+    let remedy = match (hints.near, hints.escape, must) {
         (Some(near), Some(escape), true) => remedies::dangling_near_escape(near, escape),
         (Some(near), Some(escape), false) => remedies::missing_snapshot_near_escape(near, escape),
         (Some(near), None, true) => remedies::dangling_near(near),
@@ -255,7 +323,8 @@ pub(super) fn citation_in_markdown_inline_code(
     pos <= line.len() && is_inside_inline_code(&line, pos)
 }
 
-fn nearest_declared_id(
+/// §FS-check.3.1.1: the local fallback when no declaration-backed member matches.
+pub(super) fn nearest_declared_id(
     frame: Frame<'_>,
     namespace: Option<&str>,
     findings: &Catalog,
