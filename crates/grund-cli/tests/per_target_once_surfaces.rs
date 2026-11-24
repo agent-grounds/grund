@@ -1,4 +1,4 @@
-//! §FS-rules.9, §FS-init.2.3.5.10 and §REQ-one-answer.text.parity:
+//! §FS-rules.9, §FS-init.2.3.5 and §REQ-one-answer.text.parity:
 //! init and editor checks read the same per-target count grammar as check.
 
 #[path = "support/per_target_once.rs"]
@@ -11,7 +11,7 @@ const TITLE: &str = "SYS-overview.components must cite each AR at most once.";
 const NUMERIC: &str = "SYS-overview.components must cite each AR at most 1 times.";
 const REASON: &str = "numeric \"at most 1 times\" is not canonical; accepted form: SYS-overview.components must cite each AR at most once.";
 
-/// §FS-init.2.3.5.10, §FS-rules.9.1: render the authored sentence exactly,
+/// §FS-init.2.3.5, §FS-rules.9.1: render the authored sentence exactly,
 /// then check the same tree for agents-init drift and compare init's bytes.
 #[test]
 fn per_target_once_init_renders_the_exact_title_without_drift() {

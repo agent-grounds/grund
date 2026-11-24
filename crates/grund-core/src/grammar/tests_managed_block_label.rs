@@ -1,7 +1,7 @@
 //! Test module: the agent block's version heading in its two spellings
-//! (§FS-init.2.3.9.3). Inside the delimiters `(block vN)` and the unlabelled `(vN)`
+//! (§FS-init.2.3.9). Inside the delimiters `(block vN)` and the unlabelled `(vN)`
 //! of v30 and earlier are both the version heading and carry the same version; outside
-//! them only the unlabelled spelling opens a legacy block (§FS-init.2.3.9.2). The CLI
+//! them only the unlabelled spelling opens a legacy block (§FS-init.2.3.9). The CLI
 //! suite `init_block_revision_label.rs` pins what `init` and `check` make of it.
 
 use super::*;

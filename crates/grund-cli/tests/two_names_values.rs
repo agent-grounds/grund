@@ -1,7 +1,7 @@
 //! Black-box: a value spelling whose reading moved is a located finding, not a declaration gone
 //! from a green tree (§FS-scan.checks.reading-moved, §REQ-backwards-compatibility.5). The entry
 //! stays on the spelling: `.json` is what let the value home take the link at all
-//! (§FS-scan.identity.reading.entry).
+//! (§FS-scan.identity.reading).
 #![cfg(unix)]
 
 #[path = "support/two_names.rs"]

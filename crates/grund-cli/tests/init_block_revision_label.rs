@@ -1,10 +1,10 @@
 //! The managed block's version heading labels its number as the block's revision,
 //! `## Grounding with grund (block vN)`, so it no longer reads as a grund release
-//! (§FS-init.2.3.9.3, §FS-init.2.3.7). Labelling it is fixed text, so both current
-//! pairs move four: v31/v32 and v33/v34 (§FS-init.2.3.7.1). The reader keeps the
+//! (§FS-init.2.3.9, §FS-init.2.3.7). Labelling it is fixed text, so both current
+//! pairs move four: v31/v32 and v33/v34 (§FS-init.2.3.7). The reader keeps the
 //! unlabelled spelling of v30 and earlier inside the delimiters, migrates it in
-//! place (§FS-init.2.3.10.1) and refuses a newer version in either spelling
-//! (§FS-init.2.3.10.2); the new spelling opens no legacy block (§FS-init.2.3.9.2).
+//! place (§FS-init.2.3.10) and refuses a newer version in either spelling
+//! (§FS-init.2.3.10); the new spelling opens no legacy block (§FS-init.2.3.9).
 //! The first test is the reproduction of #827 run as a regression.
 
 use std::fs;
@@ -306,7 +306,7 @@ fn a_newer_labelled_block_is_refused_without_writes() {
     assert_eq!(read(&target.join("GEMINI.md")), "# Gemini notes\n");
 }
 
-/// Outside the delimiters the labelled heading opens no legacy block (§FS-init.2.3.9.2):
+/// Outside the delimiters the labelled heading opens no legacy block (§FS-init.2.3.9):
 /// the file has no block, so `init` appends one and keeps the text as it was.
 #[test]
 fn a_labelled_heading_without_delimiters_opens_no_legacy_block() {

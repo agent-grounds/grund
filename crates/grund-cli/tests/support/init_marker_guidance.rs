@@ -1,4 +1,4 @@
-//! The fresh config's one comment (§FS-init.2.4.5), in the sentence of
+//! The fresh config's one comment (§FS-init.2.4.3), in the sentence of
 //! §FS-config.4.2.3.1, through the ordinary e2e runner: the marker is a default,
 //! so `grund config show` names it, not the file.
 
@@ -38,13 +38,13 @@ fn assert_fresh_comments(case: &str, comments: usize) {
     assert_every_case_passed("fresh config comments", &[outcome]);
 }
 
-/// §FS-init.2.4.5: the default template keeps its first-line comment alone.
+/// §FS-init.2.4.3: the default template keeps its first-line comment alone.
 #[test]
 fn fresh_default_config_keeps_one_comment() {
     assert_fresh_comments("init-bare-empty-repo", 1);
 }
 
-/// §FS-init.2.4.5, §FS-init.2.4.9: the `none` template adds the two-line
+/// §FS-init.2.4.3, §FS-init.2.4.9: the `none` template adds the two-line
 /// comment on declaring a first kind, and nothing about the marker.
 #[test]
 fn fresh_none_config_keeps_its_comments() {

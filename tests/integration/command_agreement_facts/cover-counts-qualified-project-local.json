@@ -16,7 +16,7 @@
   },
   "facts": {
     "point": "§FS-cover.2.1",
-    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, marker §, `[id] format = \"{kind}-{slug}\"`, default kinds, `[scan] include = [\"docs\"]`) with no `[workspace]`; FS-login and its marked self-citation; docs/notes.md's §api/FS-login, a qualified citation whose ID keeps its alias (§FS-cover.2.1) and whose alias is unknown in every run (§FS-check.3.8); the FS folder has no README.md index (§FS-check.3.18.7). `show` and `refs` of api/FS-login exit 2 with the two stderr lines of §FS-workspace.8.1.3. Cross-reference emission, on by default (§FS-config.3.7), wraps the resolving self-citation; the unresolved one is left (§FS-fmt.6.4).",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, marker §, `[id] format = \"{kind}-{slug}\"`, default kinds, `[scan] include = [\"docs\"]`) with no `[workspace]`; FS-login and its marked self-citation; docs/notes.md's §api/FS-login, a qualified citation whose ID keeps its alias (§FS-cover.2.1) and whose alias is unknown in every run (§FS-check.3.8); the FS folder has no README.md index (§FS-check.3.18). `show` and `refs` of api/FS-login exit 2 with the two stderr lines of §FS-workspace.8.1.3. Cross-reference emission, on by default (§FS-config.3.7), wraps the resolving self-citation; the unresolved one is left (§FS-fmt.6.4).",
     "scanned": ["docs/functional-spec/FS-login.md","docs/notes.md"],
     "declarations": [
       {"id":"FS-login","kind":"FS","file":"docs/functional-spec/FS-login.md","heading":"FS-login: Login","title":"Login","body":[2,3],"anchor":"fs-login-login"}

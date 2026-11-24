@@ -505,7 +505,7 @@ fn front_page_lists_every_section_with_its_size_and_summary() {
     }
 }
 
-/// §FS-init.5.7: the deprecated name is gone from grund 0.20.0, so it is refused as
+/// §FS-init.5: the deprecated name is gone from grund 0.20.0, so it is refused as
 /// any first word that is no subcommand is: alone or with `--full`, the failed ID
 /// query of §FS-cli.1.2 (exit `1`), and as a help request the unknown command of
 /// §FS-cli.1.3 (exit `2`). No form prints the guide or the deprecation warning, which

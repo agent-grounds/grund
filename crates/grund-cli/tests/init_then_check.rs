@@ -1,5 +1,5 @@
 //! Integration: what `grund init` writes is what `grund check` holds it to
-//! (§FS-check.3.5.4, §FS-init.2.3.5.8). After every `init` end-to-end case that
+//! (§FS-check.3.5.4, §FS-init.2.3.7). After every `init` end-to-end case that
 //! writes, `check` reports no `agents-init` finding about a block `init` wrote
 //! — a member's fixture block a root run leaves alone is not one — and
 //! `init --check` exits 0,
@@ -135,7 +135,7 @@ fn init_in(repo: &Path, dir: &str) {
     );
 }
 
-/// §FS-init.2.3.4.15.8: the blocks `grund init` refreshes in a checkout without
+/// §FS-init.2.3.4: the blocks `grund init` refreshes in a checkout without
 /// an optional member, at the root and in a present member, are the ones the
 /// full checkout's root `check` accepts once the member is back (§FS-check.3.5.5).
 #[test]
@@ -209,7 +209,7 @@ should = ["AR"]
 should = ["FS|AR"]
 "#;
 
-/// §FS-check.2.2.1, §FS-init.2.3.5.15: the scoped `AGENTS.md` files `init` writes
+/// §FS-check.2.2.1, §FS-init.2.3.5: the scoped `AGENTS.md` files `init` writes
 /// into the starter's empty kind folders are no content of those folders, so a
 /// starter that adopts the recommended ruleset earns no `applies to nothing` line,
 /// from the table or from a rule about the same kind (§FS-check.2.2.1).

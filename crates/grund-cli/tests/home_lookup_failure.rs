@@ -272,7 +272,7 @@ fn outward_denied_check(name: &str, config: &str, link: &str, target: &str) -> O
     output
 }
 
-/// §FS-scan.scope.homes.lookup.outward: pruned as it is with the target open, so a mode
+/// §FS-scan.scope.homes.lookup: pruned as it is with the target open, so a mode
 /// outside the project decides nothing.
 #[test]
 fn outward_root_link_with_a_denied_parent_is_pruned_on_version_1() {
@@ -336,7 +336,7 @@ fn dangling_outward_home_link_stays_quiet_on_version_2() {
 
 /// §FS-config-v2.schema.places.boundaries.3.1: a place still inside the root where the lookup
 /// stops is not refused at load; its failure is the scan failure at the home.
-/// It is the link of §FS-scan.scope.links.owed.refused, so its line is the unopenable link's.
+/// It is the link of §FS-scan.scope.links.owed, so its line is the unopenable link's.
 #[test]
 fn inward_home_link_with_a_denied_parent_is_reported_on_version_2() {
     let mut fixture = Fixture::bare("inward-v2", V2_OUTWARD_HOME, "# FS-a: A\n\nPlain.\n");
@@ -356,9 +356,9 @@ fn inward_home_link_with_a_denied_parent_is_reported_on_version_2() {
     assert_exit(&output, 2);
 }
 
-/// §FS-scan.scope.homes.lookup.outward: a file link is followed wherever it resolves, so a
+/// §FS-scan.scope.homes.lookup: a file link is followed wherever it resolves, so a
 /// root named as a file the walk reads stays reported.
-/// It is the link of §FS-scan.scope.links.owed.refused, so its line is the unopenable link's.
+/// It is the link of §FS-scan.scope.links.owed, so its line is the unopenable link's.
 #[test]
 fn outward_root_link_named_as_a_read_file_is_reported() {
     const INCLUDE: &str = "grund_config_version = 1\nproject_name = \"outward-root\"\n\n\
@@ -380,8 +380,8 @@ fn outward_root_link_named_as_a_read_file_is_reported() {
     assert_exit(&output, 2);
 }
 
-/// §FS-scan.scope.homes.lookup.outward: a link staying inside the project is still reported.
-/// It is the link of §FS-scan.scope.links.owed.refused, so its line is the unopenable link's.
+/// §FS-scan.scope.homes.lookup: a link staying inside the project is still reported.
+/// It is the link of §FS-scan.scope.links.owed, so its line is the unopenable link's.
 #[test]
 fn inward_root_link_with_a_denied_parent_is_reported() {
     let mut fixture = Fixture::bare("inward", V1_DEFAULT_ROOTS, "# FS-a: A\n\nPlain.\n");

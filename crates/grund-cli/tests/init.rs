@@ -11,7 +11,7 @@ mod init_fixture;
 
 use init_fixture::{manifest_dir, run_grund, workdir};
 
-/// §FS-init.2.3.4.10: the starter config declares no citation rule, so a fresh
+/// §FS-init.2.3.5: the starter config declares no citation rule, so a fresh
 /// block has no `### Citation directions` section, and the guide it once linked
 /// is the one `grund guide citations` prints from the installed binary.
 fn assert_no_directions_and_the_guide_prints(form: &str, agents: &str) {
@@ -30,7 +30,7 @@ fn assert_no_directions_and_the_guide_prints(form: &str, agents: &str) {
 #[test]
 fn init_default_writes_canonical_pair_and_passes_check() {
     // §FS-init.2.1 (default form) + §FS-config.1 (config file location) +
-    // §FS-init.2.3.4.10 (no rule declared, no Citation directions section).
+    // §FS-init.2.3.5 (no rule declared, no Citation directions section).
     let target = workdir("init_default_writes_canonical_pair_and_passes_check");
     let output = run_grund(
         &["init", target.to_str().unwrap(), "--agents-md"],
@@ -55,7 +55,7 @@ fn init_default_writes_canonical_pair_and_passes_check() {
         "init must NOT write .agents/grund.toml — that form is discovered, not generated"
     );
 
-    // §FS-init.2.4.5: `grund guide citations` prints the guide; neither file links it.
+    // §FS-init.2.4.3: `grund guide citations` prints the guide; neither file links it.
     let agents = fs::read_to_string(target.join("AGENTS.md")).expect("read AGENTS.md");
     let grund_toml = fs::read_to_string(target.join("grund.toml")).expect("read grund.toml");
     assert_no_directions_and_the_guide_prints("fresh", &agents);
@@ -79,8 +79,8 @@ fn init_default_writes_canonical_pair_and_passes_check() {
 
 #[test]
 fn init_scaffold_form_emits_full_scaffold_and_check_is_clean() {
-    // §FS-init.2.1.3 (--scaffold form) + §FS-init.2.3.4.10 (the guide link, in AGENTS.md,
-    // not grund.toml: §FS-init.2.4.5). The scaffolded tree must satisfy `grund check` —
+    // §FS-init.2.1.3 (--scaffold form) + §FS-init.2.3.5 (the guide link, in AGENTS.md,
+    // not grund.toml: §FS-init.2.4.3). The scaffolded tree must satisfy `grund check` —
     // i.e. the canonical AGENTS.md + grund.toml + docs skeleton is internally consistent.
     let target = workdir("init_scaffold_form_emits_full_scaffold_and_check_is_clean");
     let output = run_grund(
@@ -149,7 +149,7 @@ fn init_scaffold_form_emits_full_scaffold_and_check_is_clean() {
 
 #[test]
 fn init_scaffold_default_fs_folder_is_scanned() {
-    // §FS-init.2.1 / §FS-init.2.4.10: the generated FS home is a row place v2 scans,
+    // §FS-init.2.1 / §FS-init.2.4.3: the generated FS home is a row place v2 scans,
     // so slug-only declarations added where `init` points users are resolvable.
     let target = workdir("init_scaffold_default_fs_folder_is_scanned");
     let output = run_grund(
@@ -367,13 +367,13 @@ title = "Architecture decision"
     );
     assert!(
         !agents.contains("`grund` scans:"),
-        "AGENTS.md must not surface scan scope (§FS-init.2.3.4.4):\n{agents}"
+        "AGENTS.md must not surface scan scope (§FS-init.2.3.4):\n{agents}"
     );
 }
 
 /// §FS-config.3.4.4 / §FS-init.2.1: a config without explicit kind homes takes the
 /// built-in FS folder, and `init --scaffold` must scaffold that effective home.
-/// §FS-init.1.3 is that rule seen from the `--scaffold` side: a config that omits
+/// §FS-init.2.1.3 is that rule seen from the `--scaffold` side: a config that omits
 /// `[[kinds]]` homes FS in `docs/functional-spec`, so the scaffold writes
 /// `docs/functional-spec/README.md` and the next-step guidance points there.
 #[test]
@@ -451,7 +451,7 @@ fn init_rerun_on_current_repo_writes_nothing_and_reports_exists() {
     );
 }
 
-/// §FS-init.2.4.2 / §FS-init.3.5: `.agents/grund.toml` is the repo's config, not a
+/// §FS-init.2.4 / §FS-init.3.4: `.agents/grund.toml` is the repo's config, not a
 /// scaffold artifact — `grund init --force` regenerates AGENTS.md but leaves an
 /// existing config byte-for-byte intact and reports it with `exists `, never
 /// `wrote `. (Overwriting it with the canonical template was a footgun.)
@@ -547,7 +547,7 @@ fn init_dry_run_writes_no_files_and_reports_would_prefixes() {
     assert!(target.join("grund.toml").is_file());
 }
 
-/// §FS-init.2.2.2.1: when every reported path is `exists ` (and no would-… lines
+/// §FS-init.2.2.2: when every reported path is `exists ` (and no would-… lines
 /// were emitted) and the selected home is on disk, the `next:` guidance block is
 /// suppressed — the setup is complete, so there is nothing to teach. This holds
 /// for both real runs and dry-runs.

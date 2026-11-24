@@ -93,7 +93,7 @@ fn a_source_two_homes_reach_that_cannot_be_stated_fails_once() {
 }
 
 /// §FS-values.5.3.1: a failed status is never a determination that the file is no source, and entry
-/// stays on the spelling (§FS-scan.identity.reading.entry), so a listed link whose target's own
+/// stays on the spelling (§FS-scan.identity.reading), so a listed link whose target's own
 /// name would read as no value source still fails, named by the format its own name claims. `data`
 /// is out of the walk, whose own line would otherwise report `data/x.txt` at that name as well.
 #[test]

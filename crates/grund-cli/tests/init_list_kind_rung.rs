@@ -1,5 +1,5 @@
 //! Black-box: the managed block's discovery rung names the project's own kinds in its `--kind`
-//! example, so the recipe runs in the project it was rendered for (§FS-init.2.3.4.3). Ports the
+//! example, so the recipe runs in the project it was rendered for (§FS-init.2.3.4). Ports the
 //! #972 reproducer: a REQ-only project, on its first init and after migrating to version 2.
 
 use std::fs;

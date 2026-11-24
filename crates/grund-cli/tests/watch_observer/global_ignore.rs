@@ -36,7 +36,7 @@ fn watch_inventory_git_home_child() {
     };
     let f = Fixture::new();
     // §FS-check.6.1.3: global patterns anchor at the repository top, the fixture, from any
-    // cwd (§FS-scan.scope.ignore-files.global). This process runs only the isolated child
+    // cwd (§FS-scan.scope.ignore-files). This process runs only the isolated child
     // case, so the parent tests keep their cwd.
     std::env::set_current_dir(&f.0).unwrap();
     f.write("src/main.rs", BAD);

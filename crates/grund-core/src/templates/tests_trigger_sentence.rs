@@ -1,5 +1,5 @@
 //! Test module: the managed block's trigger sentence names the ID that follows
-//! the trigger (§FS-init.2.3.8.4), because a grund-aware editor converts the
+//! the trigger (§FS-init.2.3.8), because a grund-aware editor converts the
 //! trigger only once a token with an ID's shape follows it (§FS-lsp.1.4). The
 //! configs are agent-grounds/grund#1370's and two that move the example.
 
@@ -27,7 +27,7 @@ fn trigger_sentence<'a>(block: &'a str, example: &str) -> &'a str {
         .unwrap_or_else(|| panic!("no sentence names the trigger example {code}:\n{block}"))
 }
 
-/// §FS-init.2.3.8.4: the sentence names `example`, says the trigger becomes
+/// §FS-init.2.3.8: the sentence names `example`, says the trigger becomes
 /// `marker`, and never says the ID has to be recognized or resolve.
 fn assert_names_the_following_id(block: &str, example: &str, marker: &str) {
     let sentence = trigger_sentence(block, example);
@@ -44,7 +44,7 @@ fn assert_names_the_following_id(block: &str, example: &str, marker: &str) {
     }
 }
 
-/// §FS-init.2.3.8.4: agent-grounds/grund#1370's project — one kind `FS`, format
+/// §FS-init.2.3.8: agent-grounds/grund#1370's project — one kind `FS`, format
 /// `{kind}-{slug}`, the default trigger and marker — no longer reads that a bare
 /// `$$` becomes `§`, and names `$$FS-user-login` instead.
 #[test]
@@ -62,7 +62,7 @@ fn the_trigger_sentence_names_a_following_id_of_the_projects_kind() {
     assert_names_the_following_id(&block, "$$FS-user-login", "§");
 }
 
-/// §FS-init.2.3.8.4: the example is the guided kind's *effective* format under
+/// §FS-init.2.3.8: the example is the guided kind's *effective* format under
 /// the configured trigger, so it converts in the host repo: a lone `REQ` row
 /// with its own numbered format and the trigger `%%` gives `%%REQ-042-user-login`.
 #[test]
@@ -78,7 +78,7 @@ fn the_trigger_example_follows_the_guided_kinds_effective_format_and_trigger() {
     assert_names_the_following_id(&block, "%%REQ-042-user-login", "§");
 }
 
-/// §FS-init.2.3.8.4: with no citable kind the format is filled with `FS`, as
+/// §FS-init.2.3.8: with no citable kind the format is filled with `FS`, as
 /// the worked citation example's is.
 #[test]
 fn with_no_citable_kind_the_trigger_example_falls_back_to_fs() {
@@ -91,9 +91,9 @@ fn with_no_citable_kind_the_trigger_example_falls_back_to_fs() {
     assert_names_the_following_id(&block, "$$FS-user-login", "§");
 }
 
-/// §FS-init.2.3.8.4: under v1 `[reference] strict = false` a bare ID-shaped
+/// §FS-init.2.3.8: under v1 `[reference] strict = false` a bare ID-shaped
 /// token is a citation, so the sentence names a following ID with no example,
-/// and the fresh block stays clean (§FS-init.2.3.8.2).
+/// and the fresh block stays clean (§FS-init.2.3.8).
 #[test]
 fn in_non_strict_mode_the_trigger_sentence_carries_no_example() {
     let block = block(

@@ -3,7 +3,7 @@
 //! 0.22.0 an array whose run of commas before its `]` holds a comma with no element before it is
 //! refused at its key's line as `expected string`, ending with the release that made it one
 //! where the array's text loaded through the 0.21.x window
-//! (§FS-config-v2.reader.5.commas.refusal), while one trailing comma after an element, and every
+//! (§FS-config-v2.reader.5.commas), while one trailing comma after an element, and every
 //! shape refused before, keep their verdicts.
 
 use std::fs;
@@ -23,7 +23,7 @@ const HEAD: &str = "grund_config_version = 2\n\n[schema.kinds.code]\nfolders = [
 const REFUSAL: &str = "error: grund.toml:9: expected string\n";
 
 /// The refusal of an array at line 9 whose text loaded through the window
-/// (§FS-config-v2.reader.5.commas.refusal).
+/// (§FS-config-v2.reader.5.commas).
 const BECAME: &str = "error: grund.toml:9: expected string; this became an error in grund 0.22.0\n";
 
 struct Fixture(PathBuf);
@@ -128,7 +128,7 @@ impl Drop for Fixture {
     }
 }
 
-/// grund.158's case, line 9, one comma against two (§FS-config-v2.reader.5.commas.refusal):
+/// grund.158's case, line 9, one comma against two (§FS-config-v2.reader.5.commas):
 /// `["ab",]` loads as `["ab"]` with no word, and `["ab",,]` is refused, naming 0.22.0.
 #[test]
 fn one_trailing_comma_loads_and_a_second_one_is_refused() {
@@ -136,7 +136,7 @@ fn one_trailing_comma_loads_and_a_second_one_is_refused() {
     Fixture::exclude("[\"ab\",,]").refused(BECAME);
 }
 
-/// §FS-config-v2.reader.5.commas.refusal: every run of two or more adjacent commas after the
+/// §FS-config-v2.reader.5.commas: every run of two or more adjacent commas after the
 /// last element is refused, naming 0.22.0, whatever whitespace stands around the run.
 #[test]
 fn adjacent_commas_after_the_last_element_are_refused() {
@@ -145,14 +145,14 @@ fn adjacent_commas_after_the_last_element_are_refused() {
     }
 }
 
-/// §FS-config-v2.reader.5.commas.refusal: in an array written across lines the refusal is at
+/// §FS-config-v2.reader.5.commas: in an array written across lines the refusal is at
 /// the key's line, line 9, though the doubled comma stands on line 10.
 #[test]
 fn a_doubled_comma_on_a_later_line_is_refused_at_the_keys_line() {
     Fixture::exclude("[\n  \"ab\",,\n]").refused(BECAME);
 }
 
-/// §FS-config-v2.reader.5.commas.refusal: an array with no element and one comma, or one run of
+/// §FS-config-v2.reader.5.commas: an array with no element and one comma, or one run of
 /// them, is refused, naming 0.22.0; a comment beside the `[` is read as whitespace is.
 #[test]
 fn an_array_of_commas_alone_is_refused() {
@@ -161,7 +161,7 @@ fn an_array_of_commas_alone_is_refused() {
     }
 }
 
-/// §FS-config-v2.reader.5.commas.refusal: the suffix is the array's text's, not the key's, so a
+/// §FS-config-v2.reader.5.commas: the suffix is the array's text's, not the key's, so a
 /// window shape under a key that would refuse its element anyway still names 0.22.0: 0.21.x
 /// said `unknown language` for `["nope",,]`. One trailing comma after the element keeps that
 /// refusal, and a shape refused before keeps its bare `expected string`.
@@ -173,7 +173,7 @@ fn a_window_shape_names_0_22_whatever_its_key_would_have_said() {
     Fixture::sources("languages", "[\"nope\", ,]").refused(REFUSAL);
 }
 
-/// §FS-config-v2.reader.5.commas.refusal, §FS-config-v2.reader.5.strings.refusal: the open line
+/// §FS-config-v2.reader.5.commas, §FS-config-v2.reader.5.strings: the open line
 /// is the array's last, so the array is refused for it before its doubled comma is read, and
 /// that refusal is the one thing printed.
 #[test]
@@ -183,9 +183,9 @@ fn an_open_line_and_a_doubled_comma_are_refused_as_the_open_line() {
     Fixture::exclude("[\n  \"a\nb\",,\n]").refused(refusal);
 }
 
-/// §FS-config-v2.reader.5.commas.refusal: an array with a string in it that closes early as
+/// §FS-config-v2.reader.5.commas: an array with a string in it that closes early as
 /// well is refused once, at its key's line, with the release that made it one
-/// (§FS-config-v2.reader.6.refusal); neither construct earns a warning beside it.
+/// (§FS-config-v2.reader.6); neither construct earns a warning beside it.
 #[test]
 fn an_early_close_beside_a_doubled_comma_is_refused_as_the_early_close() {
     let fx = Fixture::exclude("[\"a\" \"b\",,]");
@@ -196,7 +196,7 @@ fn an_early_close_beside_a_doubled_comma_is_refused_as_the_early_close() {
     fx.expect(&["check", "--format", "json"], 2, "", refusal);
 }
 
-/// §FS-config-v2.reader.5.commas.refusal: the elements are read before the suffix is earned, so
+/// §FS-config-v2.reader.5.commas: the elements are read before the suffix is earned, so
 /// where the run's removal leaves an element that is not a string, that element's bare refusal
 /// is the array's, as 0.21.x refused it (#1110's review, R1-01).
 #[test]
@@ -206,7 +206,7 @@ fn an_element_refused_first_keeps_its_bare_refusal() {
 
 /// Guard, green today and kept: a shape the readers before refused, because whitespace or an
 /// element stood between two commas, keeps its bare `expected string` and earns no warning
-/// (§FS-config-v2.reader.5.commas, §FS-config-v2.reader.5.commas.refusal).
+/// (§FS-config-v2.reader.5.commas).
 #[test]
 fn shapes_refused_before_keep_their_bare_refusal() {
     for value in [

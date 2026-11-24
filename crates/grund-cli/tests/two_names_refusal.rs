@@ -91,7 +91,7 @@ fn the_file_is_read_under_neither_name() {
 
 /// `fmt` leaves it alone and says so once, narrowed or not, with its exit code unchanged. A
 /// narrow run does the project walk that finds the other name
-/// (§FS-scan.identity.reading.every-caller).
+/// (§FS-scan.identity.reading).
 #[test]
 fn fmt_leaves_the_file_alone_and_says_so_once() {
     let tree = tree("fmt");

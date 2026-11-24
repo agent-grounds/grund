@@ -63,7 +63,7 @@ fn a_tree_written_for_another_id_format_stops_reporting_success() {
     assert_eq!(
         run.report.errors.len(),
         2,
-        "§FS-declarations.checks.declaration-near-miss.5: the near misses are the run's only errors"
+        "§FS-declarations.checks.declaration-near-miss: the near misses are the run's only errors"
     );
 }
 
@@ -136,7 +136,7 @@ fn the_caution_offers_both_readings_of_the_fact() {
 fn the_caution_proposes_no_id() {
     let root = test_root("the_caution_proposes_no_id");
     write(&root.join("grund.toml"), DEFAULT_CONFIG);
-    // Not kind-shaped, so §FS-declarations.checks.declaration-near-miss.1 stays silent and the
+    // Not kind-shaped, so §FS-declarations.checks.declaration-near-miss stays silent and the
     // caution speaks.
     write(&root.join("docs/alpha.md"), "# The alpha spec\n");
 

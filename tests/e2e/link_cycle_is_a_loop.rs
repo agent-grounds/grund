@@ -1,7 +1,7 @@
-//! Black-box: a link whose resolution loops is a loop whatever its name (§FS-scan.scope.links.owed.cycle),
+//! Black-box: a link whose resolution loops is a loop whatever its name (§FS-scan.scope.links.owed),
 //! so a self-link or a cycle of links met on the walk is reported at the link and exits `2`
 //! (§FS-scan.scope.links.unresolvable), and naming one as the path reports it rather than calling it
-//! missing (§FS-scan.scope.links.unresolvable.named). The controls hold what must not move: the
+//! missing (§FS-scan.scope.links.unresolvable). The controls hold what must not move: the
 //! extensionless dangling link stays the declared blind spot (§FS-scan.scope.links.blind-spot), and
 //! a looping link the ignore files or a hidden name keep out of the walk stays silent.
 #![cfg(unix)]
@@ -219,7 +219,7 @@ fn a_hidden_looping_link_stays_silent() {
 
 /// A loop is judged by the ignore files as a directory and only as one: a `.gitignore` that drops
 /// every entry of `docs/` but keeps its directories keeps a looping link, which is then owed a
-/// report whatever its name (§FS-scan.scope.links.owed.cycle).
+/// report whatever its name (§FS-scan.scope.links.owed).
 #[test]
 fn a_looping_link_kept_as_a_directory_is_reported() {
     let tree = Tree::new("negated")
@@ -232,7 +232,7 @@ fn a_looping_link_kept_as_a_directory_is_reported() {
 }
 
 /// A link back to its own directory covered only by a directory pattern is dropped as a
-/// directory, so it stays silent (§FS-scan.scope.links.owed.cycle).
+/// directory, so it stays silent (§FS-scan.scope.links.owed).
 #[test]
 fn a_link_to_its_own_directory_ignored_as_a_directory_stays_silent() {
     let tree = Tree::new("walk-ignored")
@@ -244,7 +244,7 @@ fn a_link_to_its_own_directory_ignored_as_a_directory_stays_silent() {
 
 /// A v2 `exclude` pattern keeps a looping link out as it keeps out a directory, whichever way the
 /// loop is found: a self-link, a link whose name `extensions` does not list, and a link back to its
-/// own directory (§FS-scan.scope.links.owed.cycle).
+/// own directory (§FS-scan.scope.links.owed).
 #[test]
 fn a_looping_link_a_v2_exclude_covers_stays_silent() {
     let cases: [(&str, &str, &[&str]); 4] = [

@@ -371,7 +371,7 @@ fn a_members_ignore_file_is_spelled_from_the_workspace_root() {
 
 /// §FS-declarations.stubs.target.3: global git ignores use the same matcher,
 /// and name the absolute ignore file plus the authored pattern. The pattern is
-/// anchored, and it anchors at the repository top (§FS-scan.scope.ignore-files.global).
+/// anchored, and it anchors at the repository top (§FS-scan.scope.ignore-files).
 /// This is the Windows case of that anchor: there the walk reads canonical `\\?\`
 /// paths, which no working directory prefixes, and they still anchor at the
 /// repository top.
@@ -386,7 +386,7 @@ fn a_global_ignore_refuses_and_names_its_file() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-/// §FS-scan.scope.ignore-files.global: an anchored global pattern anchors at the
+/// §FS-scan.scope.ignore-files: an anchored global pattern anchors at the
 /// repository top, not at the directory the run starts from, so `check` from `docs/`
 /// refuses the stub just as `check` from the top does, and as git ignores the target.
 #[test]
@@ -402,7 +402,7 @@ fn a_global_ignore_refuses_from_a_subdirectory() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-/// §FS-scan.scope.ignore-files.global: a `.gitignore` re-include outranks the global
+/// §FS-scan.scope.ignore-files: a `.gitignore` re-include outranks the global
 /// file, from the top and from a subdirectory alike, so the stub stays readable.
 #[test]
 fn a_gitignore_re_include_outranks_a_global_ignore_for_a_stub() {

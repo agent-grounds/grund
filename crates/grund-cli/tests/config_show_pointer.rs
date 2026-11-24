@@ -132,7 +132,7 @@ fn every_pointer_to_show_names_explain() {
     );
 }
 
-/// §FS-config.4.2.3.1, §FS-init.2.4.5: the comment a fresh `init` writes is the
+/// §FS-config.4.2.3.1, §FS-init.2.4.3: the comment a fresh `init` writes is the
 /// sentence, after what the file holds, on one line of at most 100 columns.
 #[test]
 fn the_shipped_header_is_the_sentence() {

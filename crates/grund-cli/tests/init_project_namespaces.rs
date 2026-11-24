@@ -1,4 +1,4 @@
-//! Workspace-only entrypoint guidance and its mechanical migration (§FS-init.2.3.4.16).
+//! Workspace-only entrypoint guidance and its mechanical migration (§FS-init.2.3.4).
 //! These are the plan diagnostic's standalone/root/member assertions through the CLI.
 
 use std::fs;
@@ -9,7 +9,7 @@ use std::process::Output;
 mod init_fixture;
 use init_fixture::{manifest_dir, run_grund, workdir};
 
-// §FS-init.2.3.4.16: independent bytes captured at 4115eeab9a before extraction.
+// §FS-init.2.3.4: independent bytes captured at 4115eeab9a before extraction.
 const BEFORE: &str =
     include_str!("../../grund-core/src/writers/fixtures/project-namespaces-v17.txt");
 
@@ -57,7 +57,7 @@ fn assert_sections(root: &Path, file: &str, namespaces: bool, members: bool, mar
     }
 }
 
-/// §FS-init.2.3.4.16, §FS-init-fixtures.6.3: fresh standalone omission, then re-init/check.
+/// §FS-init.2.3.4, §FS-init-fixtures.6.3: fresh standalone omission, then re-init/check.
 #[test]
 fn project_namespaces_fresh_standalone_omits_both_sections_and_stays_current() {
     let root = target("project_namespaces_fresh_standalone", None);
@@ -69,7 +69,7 @@ fn project_namespaces_fresh_standalone_omits_both_sections_and_stays_current() {
     assert_eq!(fs::read(root.join("AGENTS.md")).unwrap(), first);
 }
 
-/// §FS-init.2.3.4.16: the workspace-root and claimed-member controls from the diagnostic.
+/// §FS-init.2.3.4: the workspace-root and claimed-member controls from the diagnostic.
 #[test]
 fn project_namespaces_workspace_root_and_claimed_member_preserve_bytes() {
     let root = target(
@@ -90,7 +90,7 @@ fn project_namespaces_workspace_root_and_claimed_member_preserve_bytes() {
     }
 }
 
-/// §FS-init.2.3.4.16: expansion errors and duplicate aliases retain boundaries alone.
+/// §FS-init.2.3.4: expansion errors and duplicate aliases retain boundaries alone.
 #[test]
 fn project_namespaces_failed_expansion_and_duplicate_alias_controls() {
     for (name, members) in [
@@ -140,19 +140,19 @@ fn marker_companions(workspace: bool) {
     }
 }
 
-/// §FS-init.2.3.4.16: standalone companions omit the section with a configured marker.
+/// §FS-init.2.3.4: standalone companions omit the section with a configured marker.
 #[test]
 fn project_namespaces_standalone_marker_and_companions_share_omission() {
     marker_companions(false);
 }
 
-/// §FS-init.2.3.4.16: workspace companions preserve the section and configured marker.
+/// §FS-init.2.3.4: workspace companions preserve the section and configured marker.
 #[test]
 fn project_namespaces_workspace_marker_and_companions_preserve_bytes() {
     marker_companions(true);
 }
 
-/// §FS-init.2.3.4.16: explicit companion-only selection omits standalone guidance.
+/// §FS-init.2.3.4: explicit companion-only selection omits standalone guidance.
 #[test]
 fn project_namespaces_explicit_companion_only_standalone_omits_guidance() {
     let root = target("project_namespaces_companion_only", None);
@@ -162,7 +162,7 @@ fn project_namespaces_explicit_companion_only_standalone_omits_guidance() {
     success(init(&root, &["--claude", "--check"]));
 }
 
-/// §FS-init.2.3.4.16: preview measures the same omission, without writing.
+/// §FS-init.2.3.4: preview measures the same omission, without writing.
 #[test]
 fn project_namespaces_standalone_preview_does_not_restore_guidance() {
     let root = target("project_namespaces_preview", None);
@@ -260,13 +260,13 @@ fn migration(rules: bool) {
     assert!(!String::from_utf8_lossy(&checked.stdout).contains("outdated grund init block"));
 }
 
-/// §FS-init.2.3.7.1: intentional legacy v17 input and one-command migration.
+/// §FS-init.2.3.7: intentional legacy v17 input and one-command migration.
 #[test]
 fn project_namespaces_base_migration_keeps_unmanaged_content() {
     migration(false);
 }
 
-/// §FS-init.2.3.7.1: intentional legacy v18 rule input and one-command migration.
+/// §FS-init.2.3.7: intentional legacy v18 rule input and one-command migration.
 #[test]
 fn project_namespaces_rule_migration_keeps_unmanaged_content() {
     migration(true);

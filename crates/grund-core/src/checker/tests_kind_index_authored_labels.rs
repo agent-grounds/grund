@@ -1,5 +1,5 @@
 //! Test module: a citation inside a link its author wrote, read as a kind-index
-//! entry (§FS-citations.wrap.enclosing, §FS-check.3.18.5). The entry is a wrap or
+//! entry (§FS-citations.wrap.enclosing, §FS-check.3.18). The entry is a wrap or
 //! a citation in the text of an enclosing link whose destination is not empty;
 //! a bare citation `fmt` would wrap is still §FS-check.3.17's, and anything else
 //! still falls to §FS-check.3.18. Each case is one side of the three-way reading:
@@ -10,7 +10,7 @@
 use crate::api::CheckRun;
 use crate::testing::{check_run, codes, findings, kind_index_repo, kind_index_repo_loose, write};
 
-/// The clause §FS-check.3.18.5 names under `strict = true`, in the bytes it has
+/// The clause §FS-check.3.18 names under `strict = true`, in the bytes it has
 /// shipped in: one form that is enough, not the definition of an entry.
 const MENTION_CLAUSE: &str =
     "but not as an entry: an entry is a `§`-marked Markdown link to the declaration";
@@ -35,9 +35,9 @@ fn assert_entry(run: &CheckRun, why: &str) {
     );
 }
 
-/// §FS-citations.wrap.enclosing / §FS-check.3.18.5: an index row whose link the
+/// §FS-citations.wrap.enclosing / §FS-check.3.18: an index row whose link the
 /// author wrote, its text the citation and a title, is the entry. `fmt` leaves it,
-/// so `check` may not name `fmt` (§FS-check.3.17.4), and it is a link a reader can
+/// so `check` may not name `fmt` (§FS-check.3.17), and it is a link a reader can
 /// follow, so the ID is not missing either.
 #[test]
 fn an_authored_label_is_an_entry() {
@@ -48,7 +48,7 @@ fn an_authored_label_is_an_entry() {
     assert_entry(&run, "the author's link is the entry");
 }
 
-/// §FS-check.3.17.1 / §FS-check.3.18.5: the three readings side by side — a wrap
+/// §FS-check.3.17 / §FS-check.3.18: the three readings side by side — a wrap
 /// is an entry, a citation in an enclosing link is an entry, and a bare citation
 /// is the one `unlinked-index-entry` reports, at its own line.
 #[test]
@@ -109,7 +109,7 @@ fn each_citation_in_one_label_counts_for_its_own_id() {
     assert_entry(&run, "one link is the entry of both IDs it holds");
 }
 
-/// §FS-check.3.17.5 / §FS-citations.wrap.enclosing: off strict mode an unmarked
+/// §FS-check.3.17 / §FS-citations.wrap.enclosing: off strict mode an unmarked
 /// token is a citation, and a link its author wrote around it with a title is an
 /// entry, as a hand-written `[FS-x](…)` already is.
 #[test]
@@ -168,7 +168,7 @@ fn every_enclosing_shape_is_an_entry() {
     }
 }
 
-/// §FS-citations.wrap.enclosing / §FS-check.3.18.5: an enclosing link with an
+/// §FS-citations.wrap.enclosing / §FS-check.3.18: an enclosing link with an
 /// empty destination goes nowhere, so it is no entry and the ID falls to
 /// §FS-check.3.18 in the bytes that finding has shipped in — and never to
 /// §FS-check.3.17, whose command now leaves the link alone.
@@ -234,7 +234,7 @@ fn an_image_is_never_an_entry() {
 /// description is no link to the declaration (§FS-citations.wrap.enclosing.images),
 /// and from grund 0.20.0 it keeps no credit. The index mentions the ID and holds no
 /// entry for it, so the ID is §FS-check.3.18's, in the "appears" words of
-/// §FS-check.3.18.5, never §FS-check.3.17's, and the spent code never fires.
+/// §FS-check.3.18, never §FS-check.3.17's, and the spent code never fires.
 #[test]
 fn a_citation_only_image_is_no_entry() {
     let run = checked_index(

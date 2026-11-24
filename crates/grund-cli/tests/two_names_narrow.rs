@@ -89,7 +89,7 @@ fn a_content_finding_keeps_the_whole_runs_first_name() {
 }
 
 /// An unread first home warns only in the whole report; the explicit path keeps the same content
-/// finding (§FS-scan.checks.unread-scan-root.scope).
+/// finding (§FS-scan.checks.unread-scan-root).
 #[test]
 fn an_empty_first_home_changes_nothing() {
     let config = "grund_config_version = 2\nproject_name = \"n\"\n[schema.sources]\n\

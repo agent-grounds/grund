@@ -1,5 +1,5 @@
 //! Test module: the `### Citation directions` section of a config that declares
-//! no citation rule (§FS-init.2.3.4.10). There is no rule to state, so there is
+//! no citation rule (§FS-init.2.3.5). There is no rule to state, so there is
 //! no section, whatever kinds the config declares and with `kinds = []` alike;
 //! where grounding lands, the section is the heading and the grounding sentence
 //! alone, at the root and in a scoped block.
@@ -23,7 +23,7 @@ fn render(name: &str, config: &str) -> String {
     try_render(name, config).expect("a Citation directions section")
 }
 
-/// §FS-init.2.3.4.10: whether a file must ground at all is not a direction
+/// §FS-init.2.3.5: whether a file must ground at all is not a direction
 /// rule, so the sentence does not wait on `[citations]` being declared — and
 /// with no rule declared it is the section's only content: no legend, no static
 /// sentence, no closing line.
@@ -39,7 +39,7 @@ fn grounding_renders_without_a_citations_section() {
     );
 }
 
-/// §FS-init.2.3.4.10: a config that declares kinds and no rule states no
+/// §FS-init.2.3.5: a config that declares kinds and no rule states no
 /// direction, in either config version, so there is no section to render.
 #[test]
 fn kinds_without_rules_render_no_section() {
@@ -49,7 +49,7 @@ fn kinds_without_rules_render_no_section() {
     assert_eq!(try_render("kinds_without_rules_v2", v2), None);
 }
 
-/// §FS-init.2.3.4.4.2: `kinds = []` declares no rule either, so it renders what
+/// §FS-init.2.3.4: `kinds = []` declares no rule either, so it renders what
 /// every such config renders, and no "no kind is declared yet" paragraph.
 #[test]
 fn no_kinds_render_no_section() {
@@ -59,7 +59,7 @@ fn no_kinds_render_no_section() {
     );
 }
 
-/// §FS-init.2.3.5.12.1: a scoped block of a config without rules holds its
+/// §FS-init.2.3.5: a scoped block of a config without rules holds its
 /// destination's grounding sentence alone, as the root does, and a destination
 /// no grounding clause lands at has no section.
 #[test]

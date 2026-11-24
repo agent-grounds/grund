@@ -4,7 +4,7 @@
 //!
 //! The ramp that carried it on the warnings channel until then held its own
 //! deadline here, as the pending half of a ramp may
-//! (§FS-distribution.4.2.1). The landed half has no unit test to hold: what
+//! (§FS-distribution.4.2). The landed half has no unit test to hold: what
 //! refuses a cut below `0.16.0` now is `scripts/check_release_ramps.py`, on
 //! every publication path (§FS-distribution.4.2.6).
 

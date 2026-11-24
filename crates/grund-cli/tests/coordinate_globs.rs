@@ -306,7 +306,7 @@ fn own_tree_glob_lists_what_the_selector_lists() {
 }
 
 /// §FS-show.1.9: the batch a glob generates is the one the selector's rows would feed
-/// `show --batch` in generation order, so the `jq` pipe of §FS-init.2.3.4.3.1 has a one-flag form.
+/// `show --batch` in generation order, so the `jq` pipe of §FS-init.2.3.4 has a one-flag form.
 #[test]
 fn own_tree_glob_batch_reads_what_the_selector_pipe_reads() {
     let rows = grund(&["list", "--selector", "FS.terms", "--format", "json"]);

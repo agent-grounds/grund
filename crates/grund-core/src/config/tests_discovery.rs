@@ -446,7 +446,7 @@ fn uncovered_base_names_every_covering_config_when_none_is_clean() {
 /// writes — a repository already on `.agents/` is reported at the name it was
 /// found under and never grows the pair §FS-check.4.3 warns about.
 ///
-/// §FS-init.2.4.1: both discovery locations are probed, which is what the two
+/// §FS-init.2.4: both discovery locations are probed, which is what the two
 /// halves here assert — a fresh target gets the bare `grund.toml` and no
 /// `.agents/grund.toml`, while a target already carrying `.agents/grund.toml`
 /// is reported `exists .agents/grund.toml` and never grows the redundant pair.
@@ -455,7 +455,7 @@ fn init_generates_the_bare_form_and_leaves_an_agents_config_alone() {
     let fresh = test_root("init_generates_the_bare_form");
     let output = init(InitOpts {
         target: fresh.clone(),
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })
@@ -475,7 +475,7 @@ fn init_generates_the_bare_form_and_leaves_an_agents_config_alone() {
     write(&existing.join(".agents/grund.toml"), MARKER_AT);
     let output = init(InitOpts {
         target: existing.clone(),
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })

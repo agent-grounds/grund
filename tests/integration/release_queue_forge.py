@@ -1,5 +1,5 @@
 """A stand-in for `gh` that answers a release helper's forge calls from a state
-directory and plays grund's merge queue (§FS-distribution.4.4.1.1, §AR-ci.11).
+directory and plays grund's merge queue (§FS-distribution.4.4.1, §AR-ci.11).
 
 It is a script, not a test: `release_queue_fixture.py` puts a wrapper named `gh`
 on `PATH` that runs it. `GH_STUB_STATE` names the state directory and

@@ -400,7 +400,7 @@ fn an_imported_tree_answers_every_command_as_its_standalone_run() {
 
 /// §FS-remote-projects.ignore: a mounted root applies a `.gitignore` whether or not a repository
 /// encloses it, so a line of one that does not parse is a failure of the run that reads the mount
-/// (§FS-scan.scope.ignore-files.unparsed).
+/// (§FS-scan.scope.ignore-files).
 #[test]
 fn a_malformed_gitignore_under_a_mounted_root_with_no_repository_is_reported() {
     let fixture = Fixture::new("gitignore-unparsed");

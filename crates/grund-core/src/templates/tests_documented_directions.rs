@@ -35,7 +35,7 @@ fn documented_citation_directions_example_matches_production_render() {
     assert_eq!(rendered, expected);
 }
 
-/// §FS-init.2.3.4.10: the climbing convention the block no longer states is the
+/// §FS-init.2.3.5: the climbing convention the block no longer states is the
 /// page's recommended starting ruleset, its `toml` example that opens with the
 /// GOAL table; later sections carry toml examples of their own. Over the kinds
 /// the starter config declares (§FS-init.2.4) it loads, and every table it

@@ -1,6 +1,6 @@
 //! Test module: where each of the three run-level `[workspace]` warnings anchors
-//! (§FS-check.3.29.15, §FS-check.4.10.11, §FS-workspace.6.1.7), and where the
-//! absorbed-scan config error that was the fourth is located (§FS-check.3.30.1).
+//! (§FS-check.3.29, §FS-check.4.10.11, §FS-workspace.6.1.7), and where the
+//! absorbed-scan config error that was the fourth is located (§FS-check.3.30).
 //!
 //! The *text* of each is pinned end to end, in `tests/e2e/cases/`, because a byte
 //! on stderr is what a repository greps. The anchor is not on stderr at all: it
@@ -10,7 +10,7 @@
 //! so it is held here, one case per section that names one.
 //!
 //! Each case reads the anchor off the surface that carries that warning: three
-//! travel on `check`'s own warning channel, and §FS-check.3.29.13 is one of
+//! travel on `check`'s own warning channel, and §FS-check.3.29 is one of
 //! `check`'s report *errors* since its ramp ended, so its anchor is read off the
 //! report — through the editor snapshot, which is the surface that has to place it
 //! and the one §FS-lsp.4 holds against the terminal.
@@ -40,7 +40,7 @@ fn check_anchors(root: &Path) -> Vec<(Option<String>, Option<usize>)> {
     .collect()
 }
 
-/// §FS-check.3.30.1: the absorbed scan is a config error "located at the block's
+/// §FS-check.3.30: the absorbed scan is a config error "located at the block's
 /// `members` line", so the run refuses with that line's breadcrumb rather than
 /// returning a warning. The fixture is the shape of the
 /// `workspace-member-absorbs-scan-check` case — a block whose one scan root is also
@@ -147,10 +147,10 @@ fn an_unread_block_with_no_include_root_key_falls_back_to_the_workspace_line() {
     );
 }
 
-/// §FS-check.3.29.15, §FS-lsp.1.1.3: the unlisted block anchors at its `[workspace]`
+/// §FS-check.3.29, §FS-lsp.1.1.3: the unlisted block anchors at its `[workspace]`
 /// line — "the reader has two files to open and this is the one that is wrong" —
 /// and that anchor is the one thing the flip did not move. What moved is the
-/// channel: it is one of `check`'s report errors now (§FS-check.3.29.13), so the
+/// channel: it is one of `check`'s report errors now (§FS-check.3.29), so the
 /// editor takes it from the report and publishes it there as an error.
 #[test]
 fn an_unlisted_block_anchors_at_its_workspace_line() {

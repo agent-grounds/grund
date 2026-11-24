@@ -18,7 +18,7 @@
   },
   "facts": {
     "point": "§FS-list.2.4",
-    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `[reference] strict = false`, default kinds and scan); three Markdown declarations, each an H1 with a one-line body, AR-001-auth in the AR home and FS-001-login and FS-002-session in the FS home. The marked §FS-001-login on line 3 of AR-001-auth.md and of FS-002-session.md cites it from inside each one's body; AR-001-auth and FS-002-session are never cited (§FS-check.4.1), neither home has its README.md index (§FS-check.3.18.7), and `fmt` wraps both citations to FS-001-login's heading, relative to each citing file (§FS-fmt.6.2).",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `[reference] strict = false`, default kinds and scan); three Markdown declarations, each an H1 with a one-line body, AR-001-auth in the AR home and FS-001-login and FS-002-session in the FS home. The marked §FS-001-login on line 3 of AR-001-auth.md and of FS-002-session.md cites it from inside each one's body; AR-001-auth and FS-002-session are never cited (§FS-check.4.1), neither home has its README.md index (§FS-check.3.18), and `fmt` wraps both citations to FS-001-login's heading, relative to each citing file (§FS-fmt.6.2).",
     "scanned": ["docs/architecture/AR-001-auth.md","docs/functional-spec/FS-001-login.md","docs/functional-spec/FS-002-session.md"],
     "declarations": [
       {"id":"AR-001-auth","kind":"AR","file":"docs/architecture/AR-001-auth.md","heading":"AR-001-auth: The auth module","title":"The auth module","body":[2,3],"anchor":"ar-001-auth-the-auth-module"},

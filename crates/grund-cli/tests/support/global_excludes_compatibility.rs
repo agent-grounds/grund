@@ -1,5 +1,5 @@
 //! Optional pathname and malformed-config compatibility for the bounded repair
-//! in §FS-scan.scope.ignore-files.pathname. Saved baseline outcomes govern cases
+//! in §FS-scan.scope.ignore-files. Saved baseline outcomes govern cases
 //! Git rejects; no test assumes an installed Git prefix or changes shell HOME.
 
 use super::{BOTH, Fixture, git_path, write};

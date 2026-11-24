@@ -1,6 +1,6 @@
 //! Black-box regression for #824: maintenance already works, but the installed
 //! help and freshly generated guidance must teach it (§FS-cli.2.2,
-//! §FS-cli.2.3.3, §FS-init.2.3.4.9). Ported from the ticket-local reproducer.
+//! §FS-cli.2.3.3, §FS-init.2.3.4). Ported from the ticket-local reproducer.
 
 #[path = "support/fixture_cleanup.rs"]
 mod fixture_cleanup;
@@ -151,7 +151,7 @@ fn fmt_help_teaches_root_scoped_post_rename_maintenance() {
     );
 }
 
-/// §FS-init.2.3.4.9, §FS-init.2.3.4.3: inspect actual init output, keeping
+/// §FS-init.2.3.4: inspect actual init output, keeping
 /// the remedy near rename guidance rather than counting an unrelated --write.
 #[test]
 fn generated_guidance_connects_refs_to_rename_maintenance_and_verification() {

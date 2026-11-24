@@ -155,7 +155,7 @@ fn two_malformed_lines_in_a_root_ignore_file_are_reported_once_at_it() {
     for file in [".ignore", ".gitignore"] {
         let tree = Tree::new(&format!("root{file}"));
         tree.write(file, TWO_LINES);
-        // §FS-scan.scope.ignore-files.unparsed: a `.gitignore` is only applied in a repository.
+        // §FS-scan.scope.ignore-files: a `.gitignore` is only applied in a repository.
         if file == ".gitignore" {
             fs::create_dir(tree.root.join(".git")).expect("create the repository marker");
         }

@@ -1,9 +1,9 @@
-//! Test module: the scoped files `init` owns (§FS-init.2.3.5.13.1,
-//! §FS-init.2.3.5.14): the list on disk it reads them from, the byte-exact test
-//! that deletes an orphan only when its block was the whole file, which files
-//! of an orphan's directory lose their block, a chapter rule written into its
-//! subject kind's scoped block, and the root section the swap of
-//! `finish_root_block` leaves out when no rule is declared (§FS-init.2.3.4.10).
+//! Test module: the scoped files `init` owns (§FS-init.2.3.5): the list on disk
+//! it reads them from, the byte-exact test that deletes an orphan only when its
+//! block was the whole file, which files of an orphan's directory lose their
+//! block, a chapter rule written into its subject kind's scoped block, and the
+//! root section the swap of `finish_root_block` leaves out when no rule is
+//! declared (§FS-init.2.3.5).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
@@ -15,7 +15,7 @@ use crate::testing::{test_root, write};
 
 const BLOCK: &str = "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v21)\n\nScoped.\n<!-- END GRUND MANAGED BLOCK -->\n";
 
-/// §FS-init.2.3.5.13.1: only a `` - `<path>`: `` line of the `### Scoped
+/// §FS-init.2.3.5: only a `` - `<path>`: `` line of the `### Scoped
 /// guidance` section names a path, and a path that is absolute, climbs with
 /// `..`, or does not end in `/AGENTS.md` is ignored.
 #[test]
@@ -33,7 +33,7 @@ fn the_list_on_disk_names_only_relative_scoped_agents_files() {
     );
 }
 
-/// §FS-init.2.3.5.14.2: a file is deleted only when the block is the whole of
+/// §FS-init.2.3.5: a file is deleted only when the block is the whole of
 /// it, byte for byte; one byte more and the block is cut, every other byte
 /// kept. A file with no block is left alone, and a dry run writes nothing.
 #[test]
@@ -62,7 +62,7 @@ fn an_orphan_is_deleted_only_when_its_block_was_the_whole_file() {
     assert_eq!(fs::read_to_string(&plain).unwrap(), "# Notes\n");
 }
 
-/// §FS-init.2.3.5.14.3: the `AGENTS.md` and each standalone companion of an
+/// §FS-init.2.3.5: the `AGENTS.md` and each standalone companion of an
 /// orphan's directory lose their block each on its own account, whether the
 /// `AGENTS.md` is there or not, and only a symlink to that `AGENTS.md` is
 /// touched, never one that is itself the `AGENTS.md`.
@@ -99,7 +99,7 @@ fn an_orphans_files_lose_their_block_each_on_its_own_account() {
     assert_eq!(orphan_files(&root, "linked"), [("GEMINI.md", Standalone)]);
 }
 
-/// §FS-init.2.3.5.11, §FS-init.2.3.5.10: a chapter rule renders in the scoped
+/// §FS-init.2.3.5: a chapter rule renders in the scoped
 /// block of the kind it is about, not in the root block, and the run's blocks
 /// carry v50.
 #[test]
@@ -156,7 +156,7 @@ fn a_chapter_rule_renders_in_its_subject_kinds_scoped_block() {
 }
 
 /// A version-2 project `t` whose GRUND kind is `docs/grund.md`, with `rows` added
-/// and `dirs` laid, so each scoped destination exists (§FS-init.2.3.5.11.4).
+/// and `dirs` laid, so each scoped destination exists (§FS-init.2.3.5).
 fn init_v2(name: &str, rows: &str, dirs: &[&str]) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
@@ -178,7 +178,7 @@ fn init_v2(name: &str, rows: &str, dirs: &[&str]) -> crate::testing::TemporaryRo
     root
 }
 
-/// §FS-init.2.3.4.10, §FS-init.2.3.5.12.1: with no rule and grounding on one
+/// §FS-init.2.3.5: with no rule and grounding on one
 /// scoped home alone, the all-rows section has a grounding clause and the root's
 /// has none, so the swap takes the section out with its separator: one blank
 /// line stays where it stood, and the scoped block holds the grounding sentence
@@ -206,7 +206,7 @@ fn the_swap_takes_a_section_only_scoped_rows_ground_out_with_its_separator() {
     );
 }
 
-/// §FS-init.2.3.4.10: scoped only by a field, with no rule and no grounding,
+/// §FS-init.2.3.5: scoped only by a field, with no rule and no grounding,
 /// neither block has a section, so there is nothing to swap and the root block
 /// is whole from its first byte.
 #[test]

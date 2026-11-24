@@ -1,6 +1,6 @@
-//! The managed block's `### Workspace members` section through the CLI (§FS-init.2.3.4.15): which
+//! The managed block's `### Workspace members` section through the CLI (§FS-init.2.3.4): which
 //! projects it lists from where `grund init` runs, and the discoverability line above them
-//! (§FS-init.2.3.4.15.2). The renderer's own cases are
+//! (§FS-init.2.3.4). The renderer's own cases are
 //! `crates/grund-core/src/writers/tests_workspace_members.rs`.
 
 use std::fs;
@@ -12,9 +12,9 @@ use init_fixture::{manifest_dir, run_grund, workdir};
 
 #[test]
 fn init_workspace_companion_only_omits_self_and_uses_marker() {
-    // §FS-init.2.3.4.15: a companion-only workspace init omits self just like
+    // §FS-init.2.3.4: a companion-only workspace init omits self just like
     // canonical init, retains foreign rows, and uses the local citation marker
-    // in the discoverability line §FS-init.2.3.4.15.2 gives verbatim.
+    // in the discoverability line §FS-init.2.3.4 gives verbatim.
     let root = workdir("init_workspace_companion_only_omits_self_and_uses_marker");
     fs::create_dir_all(root.join(".agents")).expect("create root config dir");
     fs::write(
@@ -53,6 +53,6 @@ fn init_workspace_companion_only_omits_self_and_uses_marker() {
     );
     assert!(
         claude.contains("- [`root`](../../)\n") && !claude.contains("not yet initialized"),
-        "the foreign root row should link its directory, unannotated (§FS-init.2.3.4.15.6):\n{claude}"
+        "the foreign root row should link its directory, unannotated (§FS-init.2.3.4):\n{claude}"
     );
 }

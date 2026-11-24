@@ -57,7 +57,7 @@ pub fn a_stubbed_declaration_is_at_one_site() -> Verdict {
 /// Closed row U01: a citation into a section the outside target declares twice is
 /// refused by `check` as `show` refuses it (§REQ-one-answer.stubs.outside-include),
 /// `check` reporting the section where the target declares it twice
-/// (§FS-declarations.checks.duplicate-section.2).
+/// (§FS-declarations.checks.duplicate-section).
 pub fn a_twice_declared_section_is_refused_once() -> Verdict {
     let target = concat!(
         "/// FS-x: X\n///\n/// Lead.\n///\n/// ## 1. One\n///\n/// First.\n///\n",

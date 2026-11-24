@@ -3,7 +3,7 @@
 //! name, one per agent, and never a second file for an agent that already has
 //! one. The cases that need a symlinked companion live here too: an explicit
 //! request is the only thing that writes past one, and only where the committed
-//! `conversation = "link"` opinion makes the two files differ (§FS-init.2.3.4.17.3).
+//! `conversation = "link"` opinion makes the two files differ (§FS-init.2.3.6).
 //!
 //! The automatic-mode half is `init_agent_entrypoints.rs`; both build their
 //! targets with the shared fixture in `support/init_fixture.rs`.
@@ -17,7 +17,7 @@ use init_fixture::{manifest_dir, run_grund, workdir};
 
 /// §FS-init.1.5 / §FS-init.2.1: explicit agent flags create exactly the requested
 /// entrypoint families and do not add the automatic AGENTS.md fallback.
-/// §FS-init.2.1.1.2: one entrypoint per agent — Claude reads two files and gets
+/// §FS-init.2.1.1: one entrypoint per agent — Claude reads two files and gets
 /// the root-visible one, not both.
 #[test]
 fn init_agent_flags_create_requested_entrypoints() {
@@ -135,7 +135,7 @@ fn init_claude_flag_reports_a_repo_that_carries_both_entrypoints() {
     );
 }
 
-/// §FS-init.2.1 / §FS-init.2.3.12.1: explicit --cursor updates legacy .cursorrules
+/// §FS-init.2.1 / §FS-init.2.3.12: explicit --cursor updates legacy .cursorrules
 /// when it already exists, and never creates the legacy file for new adopters.
 /// §FS-init.2.1.1: Cursor reads both rule surfaces, so the repo's existing one
 /// is updated rather than a second one added beside it.
@@ -189,7 +189,7 @@ fn init_cursor_flag_updates_existing_legacy_cursorrules() {
     );
 }
 
-/// §FS-init.2.1 / §FS-init.2.3.12.2: a requested companion symlink to AGENTS.md is
+/// §FS-init.2.1 / §FS-init.2.3.12: a requested companion symlink to AGENTS.md is
 /// covered by updating the canonical target, even when --agents-md was not
 /// passed explicitly — and §FS-init.2.1.1: covered means covered, so nothing
 /// is created beside it while the block both files would carry is the same.
@@ -229,7 +229,7 @@ fn init_agent_flag_updates_canonical_target_for_symlinked_entrypoint() {
     );
 }
 
-/// §FS-init.2.1.1.1 / §FS-init.2.3.4.17.3: the one case where a symlinked
+/// §FS-init.2.1.1 / §FS-init.2.3.6: the one case where a symlinked
 /// companion leaves its agent uncovered. With `conversation = "link"` the
 /// canonical file carries the plain form — the one Claude is not meant to
 /// read — so `--claude` writes the Claude entrypoint the symlink left free,
@@ -280,7 +280,7 @@ fn init_claude_flag_writes_the_real_entrypoint_a_link_repo_symlinked_away() {
     );
 }
 
-/// §FS-init.2.1.1.1 / §FS-init.2.3.4.17.5: both of Claude's paths symlinked to
+/// §FS-init.2.1.1 / §FS-init.2.3.6: both of Claude's paths symlinked to
 /// AGENTS.md under the `link` opinion. There is no free path, so `--claude`
 /// writes nothing for Claude — and the note has to name the fix that is
 /// actually left rather than the command the user just ran.
@@ -349,7 +349,7 @@ fn init_dry_run_reports_a_duplicated_entrypoint_in_the_conditional() {
     );
 }
 
-/// §FS-init.2.1.1.1 / §FS-init.2.3.4.17.5: whether Claude has an entrypoint of
+/// §FS-init.2.1.1 / §FS-init.2.3.6: whether Claude has an entrypoint of
 /// its own is a fact about the tree, not about which flag this run carries.
 /// A run that selected some other agent has not changed it, so it must reach
 /// the same diagnosis a flagless run does — naming the real entrypoint and

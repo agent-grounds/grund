@@ -1,4 +1,4 @@
-//! Black-box guidance in a project without FS (§FS-init.2.2.2.3): port the #940
+//! Black-box guidance in a project without FS (§FS-init.2.2.2): port the #940
 //! reproducer, a REQ-only adoption through `grund config migrate`, and pin each
 //! configured-kind block §FS-init-fixtures.8 gives and the selection behind it.
 
@@ -162,7 +162,7 @@ fn text(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
 }
 
-/// §FS-init.2.2.2.3: the project declares neither, so no guidance names them.
+/// §FS-init.2.2.2: the project declares neither, so no guidance names them.
 fn assert_names_no_fs(label: &str, stderr: &str) {
     for forbidden in ["grund id FS", "docs/functional-spec", "--scaffold"] {
         assert!(
@@ -191,7 +191,7 @@ fn req_only_adoption_teaches_req_and_the_refresh_after_migrating_is_quiet() {
         "check asks for the refresh: {report}"
     );
 
-    // §FS-init.2.2.2.1: the previews see the same complete refresh and print no
+    // §FS-init.2.2.2: the previews see the same complete refresh and print no
     // block; --dry-run writes nothing and exits 0, a pending --check exits 1.
     let before = fixture.snapshot();
     let preview = "would-update AGENTS.md\nexists grund.toml\n";
@@ -315,7 +315,7 @@ fn the_scaffold_lays_an_ar_home_at_the_starters_place() {
     );
 }
 
-/// §FS-init.2.2.2.3, §FS-init-fixtures.8: every place that gives the reason the
+/// §FS-init.2.2.2, §FS-init-fixtures.8: every place that gives the reason the
 /// configured-kind form never offers `--scaffold` says the scaffold lays the whole
 /// software-development starter rather than the selected home alone, and none says it
 /// lays the FS starter alone or never lays the selected home (#974).
@@ -374,7 +374,7 @@ fn asks_for(kind: &str, home: &str, under: &str) -> String {
     )
 }
 
-/// §FS-init.2.2.2.3: a row's first file comes before its first folder, whichever
+/// §FS-init.2.2.2: a row's first file comes before its first folder, whichever
 /// key is written first, and an existing folder does not win over a missing file.
 #[test]
 fn a_rows_first_file_comes_before_its_folder_even_when_only_the_folder_exists() {
@@ -385,7 +385,7 @@ fn a_rows_first_file_comes_before_its_folder_even_when_only_the_folder_exists() 
     );
 }
 
-/// §FS-init.2.2.2.3: the first place in written order is the one named, though a
+/// §FS-init.2.2.2: the first place in written order is the one named, though a
 /// later one exists.
 #[test]
 fn the_first_place_wins_though_a_later_one_exists() {
@@ -396,7 +396,7 @@ fn the_first_place_wins_though_a_later_one_exists() {
     );
 }
 
-/// §FS-init.2.2.2.3: non-citable rows never qualify, the complement `code`
+/// §FS-init.2.2.2: non-citable rows never qualify, the complement `code`
 /// included, however early they are written.
 #[test]
 fn non_citable_rows_and_the_complement_are_skipped() {
@@ -411,7 +411,7 @@ fn non_citable_rows_and_the_complement_are_skipped() {
     );
 }
 
-/// §FS-init.2.2.2.3: the first citable row with a home wins over an earlier
+/// §FS-init.2.2.2: the first citable row with a home wins over an earlier
 /// citable row without one.
 #[test]
 fn a_row_with_a_home_wins_over_an_earlier_row_without_one() {
@@ -422,7 +422,7 @@ fn a_row_with_a_home_wins_over_an_earlier_row_without_one() {
     );
 }
 
-/// §FS-init.2.2.2.3: a declared FS row with no home is not FS with a home, so
+/// §FS-init.2.2.2: a declared FS row with no home is not FS with a home, so
 /// the guidance falls through to the first citable row that has one and never
 /// names the built-in `docs/functional-spec`.
 #[test]
@@ -435,7 +435,7 @@ fn an_fs_row_without_a_home_falls_through_to_a_row_with_one() {
     assert_eq!(stderr, asks_for("REQ", "docs/req", "add it under docs/req"));
 }
 
-/// §FS-init.2.2.2.3: where no citable row has a home, FS included, the first
+/// §FS-init.2.2.2: where no citable row has a home, FS included, the first
 /// citable row is selected and taught as a doc-comment declaration.
 #[test]
 fn an_fs_row_without_a_home_alone_teaches_a_doc_comment() {

@@ -43,7 +43,7 @@ fn a_file_whose_own_name_claims_a_reading_is_read_by_that_name() {
     );
 }
 
-/// §FS-scan.identity.reading.claims: `LICENSE` claims nothing, so each link keeps its own reading.
+/// §FS-scan.identity.reading: `LICENSE` claims nothing, so each link keeps its own reading.
 #[test]
 fn a_file_whose_own_name_claims_nothing_keeps_the_reaching_name() {
     let (root, config) = project("read_name_nothing", V2);
@@ -60,7 +60,7 @@ fn a_file_whose_own_name_claims_nothing_keeps_the_reaching_name() {
     );
 }
 
-/// §FS-scan.identity.reading.outside: a target outside the config root decides nothing, whatever
+/// §FS-scan.identity.reading: a target outside the config root decides nothing, whatever
 /// its name would claim.
 #[test]
 fn a_file_outside_the_root_keeps_the_reaching_name() {
@@ -77,7 +77,7 @@ fn a_file_outside_the_root_keeps_the_reaching_name() {
     );
 }
 
-/// §FS-scan.identity.reading.claims, §FS-scan.scope.extensions.empty: a version 1 list holding `""`
+/// §FS-scan.identity.reading, §FS-scan.scope.extensions.empty: a version 1 list holding `""`
 /// reads `LICENSE`, so `LICENSE` claims a reading and the link stops being Markdown.
 #[test]
 fn a_version_1_empty_extension_claims_a_file_with_no_extension() {

@@ -1,7 +1,7 @@
 //! A version-1 config whose non-citable rows carry citation rules and ground nothing migrates
 //! with both gates equal (§FS-config-migrate.5.3.1). Each such row's Citation directions bullet
 //! names the setting that would make an uncited file a finding, spelled in the live config's
-//! version (§FS-init.2.3.5.2.2), so the block version 1 renders and the candidate's differ in that
+//! version (§FS-init.2.3.5), so the block version 1 renders and the candidate's differ in that
 //! spelling alone. The rule does not move: the migrated tree still passes `grund check` with a file
 //! in the folder home that cites nothing. Issue #1440 is the report: the guidance gate compared
 //! the bytes and refused every such config with `repair: none`.
@@ -129,7 +129,7 @@ fn config_migrate_passes_ungrounded_rows() {
     assert_migrates(&tree, &[]);
 }
 
-/// §FS-config-migrate.5.3.1, §FS-init.2.3.5.2.2: the migrated tree holds the same rule. After
+/// §FS-config-migrate.5.3.1, §FS-init.2.3.5: the migrated tree holds the same rule. After
 /// `--write` and `grund init`, the block spells the setting in version 2, and `grund check` still
 /// passes a file in the folder home that cites nothing. Today `--write` is refused and writes
 /// nothing.

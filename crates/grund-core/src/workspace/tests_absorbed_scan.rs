@@ -30,7 +30,7 @@ fn repo_text(relative: &str) -> Option<String> {
     std::fs::read_to_string(repo_file(relative)).ok()
 }
 
-/// §FS-check.3.30.1, §FS-workspace.2.1.1: the whole sentence, assembled from
+/// §FS-check.3.30, §FS-workspace.2.1.1: the whole sentence, assembled from
 /// the covered pairs the rule found — each covered root named beside the member
 /// entry it is inside — with the golden's `members`-line breadcrumb taken off
 /// the front. Held here as well as end to end because this is where a failure
@@ -50,7 +50,7 @@ fn the_message_is_assembled_from_the_covered_pairs() {
     );
 }
 
-/// §FS-check.3.30.1: the message the spec shows and the message the binary
+/// §FS-check.3.30: the message the spec shows and the message the binary
 /// prints are one string. Without this the release the error landed in could be
 /// kept in the golden and stale in the document a reader reaches by citation.
 #[test]
@@ -65,7 +65,7 @@ fn the_documented_message_is_the_shipped_message() {
     );
 }
 
-/// §FS-check.3.30.1: a scope root is named by its lexically folded path under the
+/// §FS-check.3.30: a scope root is named by its lexically folded path under the
 /// block root — `.` for the block root itself, the folded subtree otherwise, and
 /// the climb kept for a root that folds to somewhere outside the block.
 #[test]

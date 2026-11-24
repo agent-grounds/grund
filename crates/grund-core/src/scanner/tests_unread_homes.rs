@@ -1,5 +1,5 @@
 //! Folder evidence and the shared fetch refusal follow the scan's reading, in either version
-//! (§FS-scan.checks.unread-scan-root.folder, §FS-fetch.4.2.1, §FS-fetch.5.5).
+//! (§FS-scan.checks.unread-scan-root, §FS-fetch.4.2.1, §FS-fetch.5.5).
 
 use super::fetch_refused_home;
 use crate::config::{Config, RefusedHome, load_config};

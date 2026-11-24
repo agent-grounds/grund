@@ -1,4 +1,4 @@
-//! §FS-check.3.18.5.2 — the entry a not-listed `missing-index-entry` prints is
+//! §FS-check.3.18 — the entry a not-listed `missing-index-entry` prints is
 //! the repair: pasted into the index, it clears the finding, raises no
 //! `unlinked-index-entry` (§FS-check.3.17), and the next `grund fmt --write`
 //! leaves it alone, because it is the link `fmt --cross-refs` would write.
@@ -6,7 +6,7 @@
 //! The e2e goldens pin the words; they cannot show the words are *true*. This
 //! takes the literal out of the message the real binary printed and writes it
 //! back, under both `strict` settings and for an index file that does not exist
-//! yet (§FS-check.3.18.7), whose repair is a file holding that entry.
+//! yet (§FS-check.3.18), whose repair is a file holding that entry.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -72,7 +72,7 @@ fn printed_entries(check: &str) -> Vec<String> {
         .filter(|line| line.contains(" is not listed in "))
         .map(|line| {
             let (_, rest) = line.split_once("; write `").unwrap_or_else(|| {
-                panic!("§FS-check.3.18.5.2: a not-listed finding names no entry: {line}")
+                panic!("§FS-check.3.18: a not-listed finding names no entry: {line}")
             });
             let (entry, _) = rest
                 .split_once("` in docs/specs/README.md")

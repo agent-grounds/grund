@@ -1,4 +1,4 @@
-//! Black-box: a `'` string is one version 2 does not read (§FS-config-v2.reader.6.literal).
+//! Black-box: a `'` string is one version 2 does not read (§FS-config-v2.reader.6).
 //! Ports grund.162's reproducer (#1103): a scalar or an element written as a TOML literal
 //! string, `'…'`, or a multi-line literal string, `'''…'''`, is refused at its key's line as
 //! `expected string`, exit 2, as before, and the refusal now names the form and the remedy.

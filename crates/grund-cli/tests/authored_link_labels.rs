@@ -112,7 +112,7 @@ fn assert_round_trip_leaves(dir: &Path, files: &[(&str, &str)]) {
     );
 }
 
-/// §FS-citations.wrap.enclosing, §FS-check.3.17.4, §FS-fmt.6.4: the reproducer of
+/// §FS-citations.wrap.enclosing, §FS-check.3.17, §FS-fmt.6.4: the reproducer of
 /// grund#825, ported to golden cases — `check` passes with no "is not a link",
 /// `fmt --write` writes nothing, `fmt --check` is clean, and a dangling or
 /// missing-section citation in a label keeps its usual finding.
@@ -131,7 +131,7 @@ fn authored_link_label_cases() {
 }
 
 /// §FS-citations.wrap.enclosing.images, §FS-citations.wrap.enclosing.wrap-wins,
-/// §FS-check.3.18.5: what must not move — an image encloses nothing, a nested line
+/// §FS-check.3.18: what must not move — an image encloses nothing, a nested line
 /// is a fixed point, and the missing-entry message keeps both its forms' bytes.
 #[test]
 fn authored_link_label_guard_cases() {
@@ -295,7 +295,7 @@ fn the_marker_pass_still_marks_a_citation_in_an_authored_label() {
     );
 }
 
-/// §FS-check.3.18.3: a link the author aimed at a source declaration's home never
+/// §FS-check.3.18: a link the author aimed at a source declaration's home never
 /// enrolls it, so `fmt --write` does not turn it into one that does.
 #[test]
 fn an_authored_label_to_a_source_home_does_not_enroll_it() {
@@ -327,7 +327,7 @@ fn an_authored_label_to_a_source_home_does_not_enroll_it() {
     );
 }
 
-/// §FS-citations.wrap.enclosing, §FS-check.3.18.5: an enclosing link with an empty
+/// §FS-citations.wrap.enclosing, §FS-check.3.18: an enclosing link with an empty
 /// destination is left by `fmt` and is no entry, so the ID is missing from the index,
 /// in the bytes that finding has shipped in.
 #[test]

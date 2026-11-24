@@ -1,6 +1,6 @@
 //! The managed block's cheap-grounding list teaches `grund list --unused` as one bullet directly
-//! after the `grund list --kind` one (§FS-init.2.3.4.3), in every v47–v50 block
-//! (§FS-init.2.3.7.1).
+//! after the `grund list --kind` one (§FS-init.2.3.4), in every v47–v50 block
+//! (§FS-init.2.3.7).
 
 use std::fs;
 

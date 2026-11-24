@@ -1,4 +1,4 @@
-//! LSP parity for the configured lead-size warning (§FS-declarations.checks.oversized-lead.2,
+//! LSP parity for the configured lead-size warning (§FS-declarations.checks.oversized-lead,
 //! §FS-lsp.1.1).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 

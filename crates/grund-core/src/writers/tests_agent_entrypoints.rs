@@ -55,7 +55,7 @@ fn discovers_known_companion_agent_entrypoints() {
 
 #[test]
 fn init_discovers_missing_aliases_for_existing_agent_workspaces() {
-    // §FS-init.2.1.1.2: `.claude/` proves Claude is in use, which is one fact
+    // §FS-init.2.1.1: `.claude/` proves Claude is in use, which is one fact
     // and so one alias — the root-visible `CLAUDE.md`, not both of Claude's
     // entrypoints.
     let root = test_root("init_discovers_missing_aliases_for_existing_agent_workspaces");
@@ -176,7 +176,7 @@ fn check_ignores_companion_agent_entrypoints_without_canonical_agents_md() {
     );
 }
 
-/// §FS-init.2.3.7.2: agent-entrypoint validation reads the marker line and the
+/// §FS-init.2.3.7: agent-entrypoint validation reads the marker line and the
 /// version it carries, not a byte-diff against the canonical text — the body
 /// here is arbitrary, and the finding is about `v99` alone.
 #[test]

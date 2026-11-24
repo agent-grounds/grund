@@ -1,8 +1,8 @@
 //! Independent form, ownership, syntax, and target-existence findings for local
 //! numeric section citations (§FS-check.3.2, §FS-check.3.24, §AR-checker), the
-//! release pair every one of them names (§FS-check.3.24.1, §FS-check.3.24.2), and
+//! release pair every one of them names (§FS-check.3.24), and
 //! the escape an owned site is offered where its owner lacks the section
-//! (§FS-check.3.24.3).
+//! (§FS-check.3.24).
 
 use super::references::{LOCAL_SECTION_RULE_PRIOR_RELEASE, LOCAL_SECTION_RULE_RELEASE};
 use super::*;
@@ -47,7 +47,7 @@ fn local_section_findings_are_actionable_and_missing_is_independent() {
         ),
         (
             "local-section-citation",
-            // §FS-check.3.24.3: `FS-001-alpha` has no section 9.9, so the finding
+            // §FS-check.3.24: `FS-001-alpha` has no section 9.9, so the finding
             // says so and offers the escape, and the command goes with the
             // rewrite §FS-fmt.2.4.6 refuses.
             "local section citation \u{a7}9.9; FS-001-alpha has no section 9.9, so write a full citation or <§>9.9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
@@ -160,7 +160,7 @@ fn version(text: &str) -> (u64, u64, u64) {
     )
 }
 
-/// §FS-check.3.24.1: both halves of the pair are claims about releases that
+/// §FS-check.3.24: both halves of the pair are claims about releases that
 /// happened — a verdict this rule *moved between* — written in the past-tense
 /// half of the vocabulary §FS-distribution.4.2 closes, so a tree that printed
 /// either as a version still ahead would be promising rather than reporting.
@@ -177,20 +177,20 @@ fn local_section_rule_releases_are_ordered_and_behind_us() {
     );
     assert!(
         prior <= current,
-        "§FS-check.3.24.1 says the form was unchecked in {LOCAL_SECTION_RULE_PRIOR_RELEASE}, which has to be a release that happened (this tree is {})",
+        "§FS-check.3.24 says the form was unchecked in {LOCAL_SECTION_RULE_PRIOR_RELEASE}, which has to be a release that happened (this tree is {})",
         env!("CARGO_PKG_VERSION")
     );
     assert!(
         arrival <= current,
-        "§FS-check.3.24.1 says the verdict moved in {LOCAL_SECTION_RULE_RELEASE}, which has to be a release that happened rather than one still ahead (this tree is {})",
+        "§FS-check.3.24 says the verdict moved in {LOCAL_SECTION_RULE_RELEASE}, which has to be a release that happened rather than one still ahead (this tree is {})",
         env!("CARGO_PKG_VERSION")
     );
 }
 
-/// §FS-check.3.24.1's third withholding case: out past `[scan] include`, `fmt`
+/// §FS-check.3.24's third withholding case: out past `[scan] include`, `fmt`
 /// does not reach the site either, so the command offer goes for the reason
-/// §FS-check.3.14.4 withholds the sibling's — while the tier still leads the
-/// message and the attribution still trails it (§FS-check.3.14.6). The fixture
+/// §FS-check.3.14 withholds the sibling's — while the tier still leads the
+/// message and the attribution still trails it (§FS-check.3.14). The fixture
 /// writes the *same* owned construct twice, once under `include` and once past
 /// it, so the one difference the tier makes is the whole of the diff.
 #[test]
@@ -231,16 +231,16 @@ fn the_out_of_scope_tier_withholds_the_command_but_keeps_the_attribution() {
             "docs/in/FS-in.md:3: local section citation \u{a7}2; write \u{a7}FS-in.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
             "sim/FS-out.md:3: outside [scan] include: local section citation \u{a7}2; write \u{a7}FS-out.2 — unchecked in grund 0.13.1, an error in 0.14.0",
         ],
-        "§FS-check.3.24.1: the same site keeps the attribution and loses only the command once it is out of the configured scope"
+        "§FS-check.3.24: the same site keeps the attribution and loses only the command once it is out of the configured scope"
     );
 }
 
-/// §FS-check.3.24.1's fourth withholding case, over all three shapes
+/// §FS-check.3.24's fourth withholding case, over all three shapes
 /// §FS-fmt.2.4.6 refuses: a wholly absent path, a partially resolving one, and
 /// an owner with no numbered sections at all. A resolving control sits in the
 /// same tree under the same tier, so the one difference the predicate makes is
 /// the whole of the diff. Each refused site says on its own line that the owner
-/// lacks the section and offers the escape (§FS-check.3.24.3), and the
+/// lacks the section and offers the escape (§FS-check.3.24), and the
 /// `missing section` error still stays beside it (§FS-check.3.2).
 #[test]
 fn an_absent_target_section_withholds_the_command_and_keeps_both_findings() {
@@ -292,7 +292,7 @@ fn an_absent_target_section_withholds_the_command_and_keeps_both_findings() {
     );
 }
 
-/// The config every §FS-check.3.24.3 fixture below starts from: one `FS` home
+/// The config every §FS-check.3.24 fixture below starts from: one `FS` home
 /// under `docs`, and `extra` appended for the one key a case is about.
 fn absent_target_config(extra: &str) -> String {
     format!(
@@ -307,7 +307,7 @@ fn absent_target_config(extra: &str) -> String {
     )
 }
 
-/// §FS-check.3.24.3's condition, read off one run: an owned site is answered with
+/// §FS-check.3.24's condition, read off one run: an owned site is answered with
 /// the escape exactly where `missing section` names the same coordinate on the
 /// same line, and with the full citation exactly where it does not. Returns the
 /// sites that broke it, so the assertion names them.
@@ -353,12 +353,12 @@ fn escape_follows_missing_section(run: &CheckRun) -> Vec<String> {
     broken
 }
 
-/// §FS-check.3.24.3 over every place an owned site can sit: the wording turns on
+/// §FS-check.3.24 over every place an owned site can sit: the wording turns on
 /// the owner alone, so a resolving control, a partly resolving path, a wholly
 /// absent one, an owner with no numbered sections, a protected inline-code site,
 /// and a `[fmt] exclude` file each read as the condition says, and only the
 /// resolving sites the formatter would write keep the command clause
-/// (§FS-check.3.24.1). The `missing section` error stays beside every absent site
+/// (§FS-check.3.24). The `missing section` error stays beside every absent site
 /// (§FS-check.3.2), unchanged.
 #[test]
 fn an_absent_target_section_is_answered_with_the_escape_exactly_where_missing_section_fires() {
@@ -413,16 +413,16 @@ fn an_absent_target_section_is_answered_with_the_escape_exactly_where_missing_se
             "docs/FS-nine.md:6: local section citation \u{a7}9; FS-nine has no section 9, so write a full citation or <§>9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
             "docs/FS-nine.md:6: missing section FS-nine.9; write <§> before it to show the shape without citing it",
         ],
-        "§FS-check.3.24.3: every absent site names the absence and the escape; every resolving one keeps today's bytes"
+        "§FS-check.3.24: every absent site names the absence and the escape; every resolving one keeps today's bytes"
     );
     assert_eq!(
         escape_follows_missing_section(&run),
         Vec::<String>::new(),
-        "§FS-check.3.24.3: the escape appears exactly where `missing section` names the same coordinate"
+        "§FS-check.3.24: the escape appears exactly where `missing section` names the same coordinate"
     );
 }
 
-/// §FS-check.3.24.3's words under a configured marker and a custom separator: the
+/// §FS-check.3.24's words under a configured marker and a custom separator: the
 /// escape carries the marker, and the path the finding says the owner lacks is the
 /// token's own dotted path (§FS-check.1.1.8), so the separator `missing section`
 /// puts between the owner and the path appears in neither. The resolving control
@@ -461,14 +461,14 @@ fn the_escape_carries_the_configured_marker_and_the_path_without_the_separator()
             "docs/FS-a.md:4: local section citation @5.1; FS-a has no section 5.1, so write a full citation or <@>5.1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
             "docs/FS-a.md:4: missing section FS-a:5.1; write <@> before it to show the shape without citing it",
         ],
-        "§FS-check.3.24.3: `<@>5.1`, and `5.1` rather than `:5.1`"
+        "§FS-check.3.24: `<@>5.1`, and `5.1` rather than `:5.1`"
     );
     assert_eq!(escape_follows_missing_section(&run), Vec::<String>::new());
 }
 
-/// §FS-check.3.24.3 out past `[scan] include` under `--full`: the same absent site
+/// §FS-check.3.24 out past `[scan] include` under `--full`: the same absent site
 /// is answered with the same escape, the scope still leads the message
-/// (§FS-check.3.14.6), and the attribution still trails it with no command after
+/// (§FS-check.3.14), and the attribution still trails it with no command after
 /// it. The in-scope twin shows the tier changes nothing but the lead.
 #[test]
 fn an_out_of_scope_absent_site_keeps_the_scope_first_and_answers_with_the_escape() {
@@ -503,6 +503,6 @@ fn an_out_of_scope_absent_site_keeps_the_scope_first_and_answers_with_the_escape
             "docs/in/FS-in.md:3: local section citation \u{a7}9; FS-in has no section 9, so write a full citation or <§>9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
             "sim/FS-out.md:3: outside [scan] include: local section citation \u{a7}9; FS-out has no section 9, so write a full citation or <§>9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
         ],
-        "§FS-check.3.14.6: the scope leads; §FS-check.3.24.3: the escape follows"
+        "§FS-check.3.14: the scope leads; §FS-check.3.24: the escape follows"
     );
 }

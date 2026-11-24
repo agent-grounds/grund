@@ -136,7 +136,7 @@ CHECK_ONLY = "narrows the report"
 # The page cites rather than restates these.
 CITED = ("REQ-one-answer.differences.scope", "FS-workspace.6.2")
 # Non-blank lines on main at 1640b6c47c; every file the move touches ends below it.
-# FS-check's adds #634's 10-line chapter, §FS-check.3.17.4's wrap-test line (grund#655)
+# FS-check's adds #634's 10-line chapter, §FS-check.3.17's wrap-test line (grund#655)
 # and #756's 9 lines of checks.config-version-1: a restatement still has one line to regrow.
 
 # FS-workspace's adds #823's 20 lines of §FS-workspace.5.1.1 and #921's 3 of §FS-workspace.2.2.2;
@@ -145,7 +145,7 @@ CITED = ("REQ-one-answer.differences.scope", "FS-workspace.6.2")
 
 # #932 adds 4 lines of §FS-check.3.5.3.1; retain the one-line margin.
 # #1010 adds 8 lines of §FS-workspace.6.1.7.5; the margin is unchanged.
-# #1046 adds 15 lines of §FS-check.1.1.5.2, §FS-check.3.24.1 and §FS-check.3.17.4; the same.
+# #1046 adds 15 lines of §FS-check.1.1.5.2, §FS-check.3.24 and §FS-check.3.17; the same.
 
 # #1079 adds 14 lines of §FS-check.2.2.2; the same.
 # #1069 adds 12 lines of §FS-check.3.1.4; the same.

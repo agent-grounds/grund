@@ -1,5 +1,5 @@
 //! The managed block, the user-facing guide and the `grund-init` skill teach how
-//! to query grund's structure (§FS-init.2.3.4.3.1): selecting units and expanding
+//! to query grund's structure (§FS-init.2.3.4): selecting units and expanding
 //! them with `show --batch … --toc --format json`. What the glob recipe says is
 //! pinned in `init_coordinate_globs.rs`; this file holds what that leaves out.
 
@@ -14,7 +14,7 @@ const QUERYING_URL: &str =
     "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md";
 
 /// The block lands in other repositories, so the bullet that expands units links the
-/// guide absolutely and never by a repo-relative path (§FS-init.2.3.4.3.1).
+/// guide absolutely and never by a repo-relative path (§FS-init.2.3.4).
 #[test]
 fn init_block_links_the_query_guide_absolutely() {
     let target = workdir("init_block_links_the_query_guide_absolutely");
@@ -46,7 +46,7 @@ fn init_block_links_the_query_guide_absolutely() {
 }
 
 /// The guide holds every recipe the spec names, and both skill copies' `queries`
-/// section teaches the subtree expansion and links the guide (§FS-init.2.3.4.3.1). The explicit stdin form
+/// section teaches the subtree expansion and links the guide (§FS-init.2.3.4). The explicit stdin form
 /// stays in the guide; the skill teaches it through `--glob`.
 #[test]
 fn querying_guide_and_skill_hold_the_query_recipes() {
@@ -93,7 +93,7 @@ fn querying_guide_and_skill_hold_the_query_recipes() {
 /// skill copies name the call, so an agent that reads them never loops `grund refs` over
 /// every ID. The guide and both skill copies state the `E2E` exclusion as a configured
 /// `E2E` kind's and carry no `--unused --kind E2E` example, a form the default kinds refuse
-/// (§FS-init.2.3.4.3.1, §FS-list.1.3.2).
+/// (§FS-init.2.3.4, §FS-list.1.3.2).
 #[test]
 fn querying_guide_and_skill_teach_the_unused_recipe() {
     let root = manifest_dir();

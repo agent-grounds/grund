@@ -1,4 +1,4 @@
-"""§FS-distribution.4.2.2.1: refuse what the plan still owes a release before candidates.
+"""§FS-distribution.4.2.2: refuse what the plan still owes a release before candidates.
 
 Candidate headings exercise the existing §DISC-core-concerns.9.9 validator,
 without duplicating its rule. Guard probes restore a planned notice, or a
@@ -111,7 +111,7 @@ PHASE_HEADING = re.compile(r"^### 9\.4 Phase 3:[^\n]*\n\n", re.MULTILINE)
 
 
 class PhasePreflightTests(unittest.TestCase):
-    """§FS-distribution.4.2.2.1: a phase lead still `Not shipped` for the release refuses it."""
+    """§FS-distribution.4.2.2: a phase lead still `Not shipped` for the release refuses it."""
 
     def guard(self, release, lead=None):
         """Run the guard on a copy of the tree, its 9.4 lead replaced by `lead`."""

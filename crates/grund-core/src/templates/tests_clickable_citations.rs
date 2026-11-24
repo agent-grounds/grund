@@ -18,13 +18,13 @@ fn clickable_citations_section_is_fixed_without_opinion() {
     );
 }
 
-/// §FS-init.2.3.4.17, §DF-conversation-link-target: the committed `link`
+/// §FS-init.2.3.6, §DF-conversation-link-target: the committed `link`
 /// opinion adds the config-derived local-conversation sentence, in the form
 /// the entrypoint's own agent is verified to render.
 ///
-/// §FS-init.2.3.4.17.2 is that split: the gated entrypoints carry the plain
+/// §FS-init.2.3.6 is that split: the gated entrypoints carry the plain
 /// `path:line` sentence and Claude's carry the Markdown link over the
-/// machine-independent `file` target. §FS-init.2.3.4.17.6 is the fixed
+/// machine-independent `file` target. §FS-init.2.3.6 is the fixed
 /// deference clause that follows either form, deferring to a user-level block.
 #[test]
 fn clickable_citations_section_renders_conversation_opinion() {
@@ -57,7 +57,7 @@ fn clickable_citations_section_renders_conversation_opinion() {
     assert!(!linked.ends_with('\n'));
 }
 
-/// §FS-init.2.3.6 / §FS-init.2.3.4.17.1: the wording is fixed, the marker is
+/// §FS-init.2.3.6: the wording is fixed, the marker is
 /// the repository's — every `§` in this section's sentences is the configured
 /// `[reference] marker`. A hardcoded `§` in a repo configured with another
 /// marker would teach agents a token that repo does not treat as a citation —

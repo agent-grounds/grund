@@ -1,7 +1,7 @@
 //! A missing `<path>` given to `check` in a workspace whose root block leaves a
 //! tree unread: the run still says the block's warning, then refuses the path
-//! (§FS-scan.scope.homes.lookup.path, §FS-check.4.10.7). The library's refusal
-//! of an unmarked path (§FS-scan.scope.homes.lookup.path.library) does not move
+//! (§FS-scan.scope.homes.lookup, §FS-check.4.10.7). The library's refusal
+//! of an unmarked path (§FS-scan.scope.homes.lookup) does not move
 //! the CLI's marked path ahead of the warning.
 
 #[path = "support/temporary_root.rs"]

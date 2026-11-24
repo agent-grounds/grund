@@ -1,9 +1,9 @@
 //! Black-box: a directory link whose target lookup is refused on the way, because a directory
 //! above the target cannot be searched, is not a broken link: it is reported at the link, whatever
 //! its name, and a run given the link as its path does not say the path does not exist
-//! (§FS-scan.scope.links.owed.refused, §FS-scan.scope.links.unresolvable.unopenable). A broken
+//! (§FS-scan.scope.links.owed, §FS-scan.scope.links.unresolvable). A broken
 //! link with no extension stays the declared blind spot (§FS-scan.scope.links.blind-spot), and a
-//! link the fence prunes stays silent (§FS-scan.scope.links.owed.fence). Git carries no mode, so
+//! link the fence prunes stays silent (§FS-scan.scope.links.owed). Git carries no mode, so
 //! the e2e corpus cannot hold these trees, and every test skips where mode 000 does not bar the
 //! user (root).
 #![cfg(unix)]
@@ -17,7 +17,7 @@ const CONFIG: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n\
     [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
     [schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n";
 
-/// The line §FS-scan.scope.links.unresolvable.unopenable gives the link `docs/x`.
+/// The line §FS-scan.scope.links.unresolvable gives the link `docs/x`.
 const LINE: &str = "error: docs/x: unreadable symlink: permission denied; \
     make the path readable, or keep it out of the scan";
 
@@ -193,7 +193,7 @@ fn a_missing_target_with_no_extension_stays_the_blind_spot() {
 }
 
 /// Control: a link leaving the project, its target behind a barred directory out there, is
-/// pruned by the fence in silence (§FS-scan.scope.links.owed.fence).
+/// pruned by the fence in silence (§FS-scan.scope.links.owed).
 #[test]
 fn an_outward_link_behind_a_barred_parent_stays_pruned() {
     let mut tree = Tree::new("outward");
@@ -302,7 +302,7 @@ fn a_link_behind_a_barred_parent_fails_cover_list_and_fmt() {
 }
 
 /// Behind a refusal the run cannot tell whether anything stands there, so a link whose target
-/// would not exist is reported the same way (§FS-scan.scope.links.owed.refused).
+/// would not exist is reported the same way (§FS-scan.scope.links.owed).
 #[test]
 fn a_link_behind_a_barred_parent_is_reported_whatever_stands_behind_it() {
     let mut tree = Tree::new("unknown");
@@ -315,8 +315,8 @@ fn a_link_behind_a_barred_parent_is_reported_whatever_stands_behind_it() {
 }
 
 /// Control: only a refused lookup is rerouted. An extensionless cycle fails its lookup with a
-/// loop, not a refusal, so it takes the loop's route (§FS-scan.scope.links.owed.cycle) and never
-/// earns the refusal's line (§FS-scan.scope.links.owed.refused).
+/// loop, not a refusal, so it takes the loop's route (§FS-scan.scope.links.owed) and never
+/// earns the refusal's line (§FS-scan.scope.links.owed).
 #[test]
 fn an_extensionless_cycle_keeps_its_route() {
     let tree = Tree::new("cycle");

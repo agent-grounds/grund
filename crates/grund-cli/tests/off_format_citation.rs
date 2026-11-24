@@ -220,7 +220,7 @@ fn a_plain_run_reports_nothing_outside_the_default_scope() {
     assert_eq!(run.stdout, UNUSED_FS_A);
 }
 
-/// Under `--full` an out-of-scope site takes the compound code (§FS-check.3.14.5), its message
+/// Under `--full` an out-of-scope site takes the compound code (§FS-check.3.14), its message
 /// after the scope, in text and in JSON.
 #[test]
 fn under_full_an_out_of_scope_site_takes_the_compound_code() {

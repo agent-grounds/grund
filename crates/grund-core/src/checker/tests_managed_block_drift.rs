@@ -14,7 +14,7 @@ use crate::writers::{
     render_agents_append_block_at,
 };
 
-// §FS-check.3.5 / §FS-init.2.3.5.8: a v-current managed block whose generated
+// §FS-check.3.5 / §FS-init.2.3.5: a v-current managed block whose generated
 // citation directions no longer match `[citations]` is an agents-init finding.
 #[test]
 fn citation_directions_drift_is_reported() {
@@ -78,7 +78,7 @@ fn require_grounding_flag_leaves_the_block_render_alone() {
     );
 }
 
-// §FS-check.3.5 / §FS-init.2.3.6.1: flipping `[reference] conversation` without
+// §FS-check.3.5 / §FS-init.2.3.7: flipping `[reference] conversation` without
 // re-running `grund init` leaves a v-current block whose clickable-citations
 // section disagrees with the live config — an agents-init drift finding.
 #[test]
@@ -156,7 +156,7 @@ fn agent_guidance_block_upgrades_older_version_in_place() {
     assert!(updated.ends_with("keep-after\n"));
 }
 
-// §FS-check.3.5 / §FS-init.2.3.5.8: only the managed block content can satisfy
+// §FS-check.3.5 / §FS-init.2.3.5: only the managed block content can satisfy
 // citation-direction drift validation; matching prose elsewhere is ignored.
 #[test]
 fn citation_directions_drift_compares_managed_block_only() {
@@ -191,7 +191,7 @@ fn citation_directions_drift_compares_managed_block_only() {
     );
 }
 
-// §FS-check.3.5 / §FS-init.2.3.5.8: byte comparison is against the rendered
+// §FS-check.3.5 / §FS-init.2.3.5: byte comparison is against the rendered
 // Citation directions section, not a substring search for the current text.
 #[test]
 fn citation_directions_drift_rejects_extra_managed_section_bytes() {
@@ -283,14 +283,14 @@ fn citation_directions_section_extraction_is_position_independent() {
 /// of the deprecated process adapter.
 #[test]
 fn agents_init_messages_cover_all_five_final_templates() {
-    // §FS-init.2.3.4.10: the default config declares no rule, so its block has no
+    // §FS-init.2.3.5: the default config declares no rule, so its block has no
     // directions section; the clickable citations section is always there.
     let stale = current_block().replacen(
         "### Clickable citations\n",
         "### Clickable citations\nstale generated guidance\n",
         1,
     );
-    // §FS-init.2.3.7.3.1: `unsupported` names this binary's maximum, not the selection.
+    // §FS-init.2.3.7: `unsupported` names this binary's maximum, not the selection.
     let unsupported = format!(
         "repo maintenance: unsupported grund init block v99 — this grund supports v{} (does not affect citation validity)",
         crate::grammar::AGENTS_BLOCK_VERSION
@@ -342,7 +342,7 @@ fn agents_init_messages_cover_all_five_final_templates() {
                 .map(|error| (error.code, error.message.as_str()))
                 .collect::<Vec<_>>()
         );
-        // §FS-init.2.3.7.3.3: every variant keeps the one `agents-init` code.
+        // §FS-init.2.3.7: every variant keeps the one `agents-init` code.
         assert_eq!(report.errors[0].code, "agents-init", "{name}");
         assert_eq!(report.errors[0].message, expected, "{name}");
     }

@@ -1,14 +1,14 @@
-//! Project-boundary guidance follows workspace discovery (§FS-init.2.3.4.16).
+//! Project-boundary guidance follows workspace discovery (§FS-init.2.3.4).
 
 use super::render_agents_md;
 use crate::config::{Config, load_config};
 use crate::testing::{test_root, write};
 use std::path::Path;
 
-// §FS-init.2.3.4.16: frozen before extraction at 4115eeab9a; independent of assets.
+// §FS-init.2.3.4: frozen before extraction at 4115eeab9a; independent of assets.
 const BEFORE: &str = include_str!("fixtures/project-namespaces-v17.txt");
 
-/// §FS-init.2.3.4.16: the extracted production fragment retains independent baseline bytes.
+/// §FS-init.2.3.4: the extracted production fragment retains independent baseline bytes.
 #[test]
 fn project_namespaces_extracted_fragment_preserves_bytes_and_marker() {
     for marker in ["§", "@"] {
@@ -40,7 +40,7 @@ fn assert_workspace_section(block: &str, marker: &str) {
     assert!(block[..start].ends_with("\n\n"), "section separator");
 }
 
-/// §FS-init.2.3.4.16: standalone discovery omits both workspace sections.
+/// §FS-init.2.3.4: standalone discovery omits both workspace sections.
 #[test]
 fn project_namespaces_omitted_without_workspace() {
     let root = test_root("project_namespaces_omitted_without_workspace");
@@ -53,7 +53,7 @@ fn project_namespaces_omitted_without_workspace() {
     );
 }
 
-/// §FS-init.2.3.4.16: independent preservation control, including marker substitution.
+/// §FS-init.2.3.4: independent preservation control, including marker substitution.
 #[test]
 fn project_namespaces_workspace_bytes_preserved_for_configured_markers() {
     let root = test_root("project_namespaces_workspace_bytes_preserved_for_configured_markers");
@@ -77,7 +77,7 @@ fn project_namespaces_workspace_bytes_preserved_for_configured_markers() {
     }
 }
 
-/// §FS-init.2.3.4.16: expansion failure does not erase discovered workspace guidance.
+/// §FS-init.2.3.4: expansion failure does not erase discovered workspace guidance.
 #[test]
 fn project_namespaces_retained_when_workspace_members_are_suppressed() {
     let root = test_root("project_namespaces_retained_when_workspace_members_are_suppressed");
@@ -94,7 +94,7 @@ fn project_namespaces_retained_when_workspace_members_are_suppressed() {
     }
 }
 
-/// §FS-init.2.3.4.16, §FS-workspace.6.1: claimed chains and unrelated ancestors.
+/// §FS-init.2.3.4, §FS-workspace.6.1: claimed chains and unrelated ancestors.
 #[test]
 fn project_namespaces_nested_claims_and_unclaimed_ancestors() {
     let root = test_root("project_namespaces_nested_claims_and_unclaimed_ancestors");
@@ -123,7 +123,7 @@ fn project_namespaces_nested_claims_and_unclaimed_ancestors() {
     );
 }
 
-/// §FS-init.2.3.4.16, §FS-workspace.6.1.8: an unclaimed group keeps its own tree.
+/// §FS-init.2.3.4, §FS-workspace.6.1.8: an unclaimed group keeps its own tree.
 #[test]
 fn project_namespaces_unclaimed_group_keeps_its_own_workspace() {
     let root = test_root("project_namespaces_unclaimed_group_keeps_its_own_workspace");
@@ -146,7 +146,7 @@ fn project_namespaces_unclaimed_group_keeps_its_own_workspace() {
     assert!(!block.contains("`outer`") && !block.contains("`listed`"));
 }
 
-/// §FS-init.2.3.7.1: support and checker agree on a new base-plus-one version pair.
+/// §FS-init.2.3.7: support and checker agree on a new base-plus-one version pair.
 #[test]
 fn project_namespaces_version_selectors_advance_together() {
     let root = test_root("project_namespaces_version_selectors_advance_together");
@@ -157,7 +157,7 @@ fn project_namespaces_version_selectors_advance_together() {
     );
     let rules = super::super::block_version(&load_config(&root).unwrap());
     assert_eq!(rules, base + 1);
-    // §FS-init.2.3.5.11: scoped guidance adds two above the rule-enabled base.
+    // §FS-init.2.3.5: scoped guidance adds two above the rule-enabled base.
     assert_eq!(crate::grammar::AGENTS_BLOCK_VERSION, rules + 2);
     assert!(
         base > 18,

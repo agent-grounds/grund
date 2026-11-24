@@ -126,7 +126,7 @@ fn init_scaffold_force_refreshes_every_example_to_the_repository_format() {
     assert_eq!(
         fs::read(target.join("grund.toml")).unwrap(),
         configured,
-        "--force must preserve the effective configuration (§FS-init.3.5)"
+        "--force must preserve the effective configuration (§FS-init.3.4)"
     );
     assert_example(&target, "AGENTS.md", "<KIND>-<NNN>-<slug>[.<section>]");
     assert_scaffold_shape(&target, "<NNN>-<slug>");

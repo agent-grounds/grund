@@ -509,7 +509,7 @@ fn full_scope_keeps_the_include_spelling_of_an_aliased_root() {
     );
 }
 
-/// §FS-check.3.14.7: the wider walk reaches files the configured scope never
+/// §FS-check.3.14: the wider walk reaches files the configured scope never
 /// touched, so one it cannot read is the §FS-check.2.4 scan failure and exit 2 —
 /// on a tree whose plain `check` exits 0.
 #[cfg(unix)]
@@ -531,7 +531,7 @@ fn full_scope_exits_two_on_an_unreadable_file_outside_include() {
     let full = check_run(&root, true);
     assert!(
         full.had_scan_errors,
-        "§FS-check.3.14.7: a file the wider walk cannot read is a scan failure, and the run exits 2"
+        "§FS-check.3.14: a file the wider walk cannot read is a scan failure, and the run exits 2"
     );
     assert!(
         full.report

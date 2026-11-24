@@ -1,10 +1,10 @@
-//! §FS-init.2.3.4.4.3 — the title of the complement's Project-map row. An
+//! §FS-init.2.3.4 — the title of the complement's Project-map row. An
 //! untitled `code` row with places reads `Every scanned file no other row claims`,
 //! never `Declaration`, whether `grund config migrate --to 2` made it from a
 //! version-1 `[scan] include` (agent-grounds/grund#782) or a version-2 file wrote
 //! it directly. A configured title wins, every other untitled row still reads
 //! `Declaration`, and the citation-directions subject does not move
-//! (§FS-init.2.3.5.2), so the migration's guidance comparison
+//! (§FS-init.2.3.5), so the migration's guidance comparison
 //! (§FS-config-migrate.5.3) passes as it did.
 //!
 //! These are not golden cases under `tests/e2e/cases/`: the reported path is
@@ -20,7 +20,7 @@ mod init_fixture;
 
 use init_fixture::{manifest_dir, run_grund, workdir};
 
-/// The title §FS-init.2.3.4.4.3 gives an untitled complement row.
+/// The title §FS-init.2.3.4 gives an untitled complement row.
 const COMPLEMENT_TITLE: &str = "Every scanned file no other row claims";
 
 /// The note §FS-config-migrate.5.3 prints when the complement gains a row.

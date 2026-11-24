@@ -1,6 +1,6 @@
 //! Issue #1169's cases, run alone: a version-1 `[scan] include` entry spelled through `..` is
 //! named by its lexically folded path under the block root, `.` for the block root itself, in
-//! the unread-workspace-block warning and the absorbed-scan error alike (§FS-check.3.30.1,
+//! the unread-workspace-block warning and the absorbed-scan error alike (§FS-check.3.30,
 //! §FS-check.4.10.5).
 
 use super::case_runner::CaseKind::E2e;

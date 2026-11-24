@@ -1,5 +1,5 @@
 //! Loaded-version repair vocabulary: §FS-show.3.5,
-//! §FS-declarations.checks.declaration-near-miss.4, §FS-check.4.5.2,
+//! §FS-declarations.checks.declaration-near-miss, §FS-check.4.5.2,
 //! §FS-check.2.2.2 and §FS-cli.2.3. These black-box runs port #817's
 //! near-miss, nothing-recognized and help reproducer, then cover each hint adapter.
 
@@ -329,7 +329,7 @@ fn v2_explicit_full_scope_caution() {
     );
 }
 
-/// §FS-check.3.14.6: the tier label is also live source-scope guidance.
+/// §FS-check.3.14: the tier label is also live source-scope guidance.
 #[test]
 fn v2_full_outside_scope_label() {
     let fixture = Fixture::new(2, false);

@@ -1,4 +1,4 @@
-//! §FS-init.2.3.5.10: init, fmt, and the chapter-rule drift checker agree on bytes.
+//! §FS-init.2.3.5: init, fmt, and the chapter-rule drift checker agree on bytes.
 //! Ports grund.34's isolated git reproducer into the CLI e2e harness. Unlike a
 //! single-command golden, this workflow checks both gates on the same tree.
 

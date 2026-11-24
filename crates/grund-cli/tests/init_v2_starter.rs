@@ -153,7 +153,7 @@ fn tree(root: &Path) -> Vec<(String, Vec<u8>)> {
 
 /// §FS-init-fixtures.2: a fresh `--scaffold` tree is version 2 and passes `grund
 /// check` and `grund init --check` unmodified; so does a fresh `none` tree, whose
-/// check still teaches the open step of declaring a kind (§FS-init.2.2.2.2).
+/// check still teaches the open step of declaring a kind (§FS-init.2.2.2).
 #[test]
 fn a_fresh_v2_tree_passes_check_and_init_check() {
     let scaffold = workdir("init_v2_scaffold_gates");

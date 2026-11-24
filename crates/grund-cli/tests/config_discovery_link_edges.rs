@@ -1,8 +1,8 @@
 //! Black-box: the starts and spellings lexical config discovery keeps or moves
 //! (§FS-config.1.5). A looping link given as the path starts at its directory
-//! (§FS-scan.scope.links.unresolvable.named); a link whose target lookup is refused is
+//! (§FS-scan.scope.links.unresolvable); a link whose target lookup is refused is
 //! placed as far as the disk answers, so it still reaches its project
-//! (§FS-scan.scope.links.owed.refused); a path through a directory link inside the root
+//! (§FS-scan.scope.links.owed); a path through a directory link inside the root
 //! is spelled from the path given (§FS-cli.3.4, §FS-config.3.6.1,
 //! §FS-scan.identity.link-path); and a relative path that does not exist still climbs
 //! the working directory's parents (§FS-config.1). The refused cases skip where mode 000
@@ -119,7 +119,7 @@ impl Run {
     }
 }
 
-/// §FS-scan.scope.links.unresolvable.named, §FS-config.1.5: a looping link given as the
+/// §FS-scan.scope.links.unresolvable, §FS-config.1.5: a looping link given as the
 /// path starts discovery at its directory, so under the invocation base the link is
 /// `self` and the config `../grund.toml`, the spellings of a start at `docs`.
 #[test]
@@ -140,7 +140,7 @@ fn a_looping_link_given_as_the_path_starts_at_its_directory() {
         );
 }
 
-/// §FS-scan.scope.links.owed.refused, §FS-cli.3.4: a link given as the path whose target
+/// §FS-scan.scope.links.owed, §FS-cli.3.4: a link given as the path whose target
 /// lookup is refused fails at the link, and the invocation base is the working directory,
 /// because a refused lookup cannot tell a file from a directory, so the link is `docs/x`.
 #[test]
@@ -158,7 +158,7 @@ fn a_refused_link_given_as_the_path_is_spelled_from_the_working_directory() {
         );
 }
 
-/// §FS-config.1.5, §FS-scan.scope.links.owed.refused: from outside every project, a link
+/// §FS-config.1.5, §FS-scan.scope.links.owed: from outside every project, a link
 /// into one whose target lookup is refused is placed as far as the disk answers, so the
 /// run takes that project's config and fails at the link rather than passing under the
 /// defaults, and `config explain` reads the same project.

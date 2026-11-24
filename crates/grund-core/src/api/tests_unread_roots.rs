@@ -1,6 +1,6 @@
 //! The message bytes of the unread-scan-root warning for a root a hidden name keeps
 //! out, alone or beside the extension list: one case per row of the hidden reason and
-//! fix tables of §FS-scan.checks.unread-scan-root.message, and the `citable = false`
+//! fix tables of §FS-scan.checks.unread-scan-root, and the `citable = false`
 //! ending (§DF-unread-hidden-root.2.1).
 
 use std::path::PathBuf;
@@ -40,7 +40,7 @@ fn a_hidden_home_with_a_listed_extension_is_told_to_rename() {
         "[[kinds]] NOTE home `.notes.md` is not read — its name begins with `.`, and grund \
          reads no hidden file, so nothing in it is checked. Rename the file to a name that \
          is not hidden.",
-        "§FS-scan.checks.unread-scan-root.message: only the name refuses it"
+        "§FS-scan.checks.unread-scan-root: only the name refuses it"
     );
 }
 
@@ -51,7 +51,7 @@ fn a_hidden_include_entry_is_told_to_rename_or_drop() {
         "[scan] include entry `.extra.md` is not read — its name begins with `.`, and grund \
          reads no hidden file, so nothing in it is checked. Rename the file to a name that \
          is not hidden, or drop the entry.",
-        "§FS-scan.checks.unread-scan-root.message: an include entry may be dropped"
+        "§FS-scan.checks.unread-scan-root: an include entry may be dropped"
     );
 }
 
@@ -69,7 +69,7 @@ fn a_hidden_and_unlisted_root_names_both_rules_in_version_1() {
         "[scan] include entry `.extra.txt` is not read — its name begins with `.`, and extension \
          txt is not in [scan] extensions, so nothing in it is checked. Rename the file to a name \
          that is not hidden and an extension the list holds, or drop the entry.",
-        "§FS-scan.checks.unread-scan-root.message: the include rename names both rules"
+        "§FS-scan.checks.unread-scan-root: the include rename names both rules"
     );
 }
 
@@ -80,14 +80,14 @@ fn a_hidden_and_unlisted_root_names_both_rules_in_version_2() {
         "[schema.kinds.NOTE] file `.notes.txt` is not read — its name begins with `.`, and \
          no language in [schema.sources] languages reads `.txt`, so nothing in it is checked. \
          Rename the file to a name that is not hidden and an extension a listed language reads.",
-        "§FS-scan.checks.unread-scan-root.message: the version-2 hidden rows"
+        "§FS-scan.checks.unread-scan-root: the version-2 hidden rows"
     );
     assert_eq!(
         unread_root_message(&hidden(home(true), ".notes.md", false), true),
         "[schema.kinds.NOTE] file `.notes.md` is not read — its name begins with `.`, and \
          grund reads no hidden file, so nothing in it is checked. Rename the file to a name \
          that is not hidden.",
-        "§FS-scan.checks.unread-scan-root.message: only the name refuses it"
+        "§FS-scan.checks.unread-scan-root: only the name refuses it"
     );
 }
 
@@ -98,7 +98,7 @@ fn a_hidden_root_with_no_extension_says_it_has_none() {
         "[[kinds]] NOTE home `.notes` is not read — its name begins with `.`, and it has no \
          extension, so nothing in it is checked. Rename the file to a name that is not hidden \
          and an extension the list holds.",
-        "§FS-scan.checks.unread-scan-root.message: a hidden file with no extension"
+        "§FS-scan.checks.unread-scan-root: a hidden file with no extension"
     );
 }
 

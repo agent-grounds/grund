@@ -1,6 +1,6 @@
 //! Folder coverage joins eligible spellings to actual reads by either pass, without changing
-//! entry gates or the file's reading (§FS-scan.checks.unread-scan-root.folder,
-//! §FS-scan.identity.read-once, §FS-scan.identity.reading.entry).
+//! entry gates or the file's reading (§FS-scan.checks.unread-scan-root,
+//! §FS-scan.identity.read-once, §FS-scan.identity.reading).
 #![cfg(unix)]
 
 #[path = "support/two_names.rs"]

@@ -376,7 +376,7 @@ fn invalid_rule_makes_init_a_no_write_operation() {
     assert_eq!(fs::read(root.join("AGENTS.md")).expect("sentinel"), before);
 }
 
-/// §FS-init.2.3.5.10: a rule kind renders the exact ordered `### Chapter rules`
+/// §FS-init.2.3.5: a rule kind renders the exact ordered `### Chapter rules`
 /// section after the directions, and `check` rejects any byte drift in it.
 #[test]
 fn valid_rules_render_exact_sentences_in_a_rule_enabled_managed_section() {

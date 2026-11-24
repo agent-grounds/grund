@@ -1,4 +1,4 @@
-//! Black-box init guidance for each config version (§FS-init.2.3.8.1).
+//! Black-box init guidance for each config version (§FS-init.2.3.8).
 //! The v2 cases port #784's successful-init/absent-key reproducer through the
 //! existing init fixture; v1's two sentences remain compatibility controls.
 

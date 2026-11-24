@@ -2,10 +2,10 @@
 //! Ports grund.159's reproducer (#1088) and #1094's: from grund 0.22.0 a scalar, an element or
 //! a quoted key whose string closes early is refused at its key's line as `expected string`,
 //! ending with the release that made it one, where it loaded through the 0.21.x window
-//! (§FS-config-v2.reader.6.refusal); a `"""` string on one line is refused with a parenthetical
-//! saying version 2 does not read it (§FS-config-v2.reader.6.multi-line). A value refused
+//! (§FS-config-v2.reader.6); a `"""` string on one line is refused with a parenthetical
+//! saying version 2 does not read it (§FS-config-v2.reader.6). A value refused
 //! before keeps the bare message, and an array with an open line is refused for that line first
-//! (§FS-config-v2.reader.5.strings.refusal). Version 1 keeps its reading for good (§FS-config.5.2)
+//! (§FS-config-v2.reader.5.strings). Version 1 keeps its reading for good (§FS-config.5.2)
 //! and meets the rule at `config migrate` (§FS-config-migrate.3.1.8).
 
 use std::fs;
@@ -21,18 +21,18 @@ const HEAD: &str = "grund_config_version = 2\n\n[schema.kinds.code]\nfolders = [
                     [schema.kinds.SPEC]\nfiles = [\"specs/spec.md\"]\n";
 
 /// The 0.22.0 refusal of a string that closes early in the value at line `key`, which
-/// loaded through the 0.21.x window (§FS-config-v2.reader.6.refusal).
+/// loaded through the 0.21.x window (§FS-config-v2.reader.6).
 fn refusal(key: usize) -> String {
     format!("error: grund.toml:{key}: expected string; this became an error in grund 0.22.0\n")
 }
 
 /// The 0.22.0 refusal of the array at line 10 whose string is open at the end of line 11,
-/// which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
+/// which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings).
 const OPEN_LINE: &str = "error: grund.toml:10: unclosed array (a string is still open at the \
                          end of line 11); this became an error in grund 0.22.0\n";
 
 /// [`OPEN_LINE`] where the string open at line 11's end opened with `"""`
-/// (§FS-config-v2.reader.5.strings.multi-line).
+/// (§FS-config-v2.reader.5.strings).
 const MULTI_LINE_OPEN: &str = "error: grund.toml:10: unclosed array (a multi-line string opens \
                                on line 11, which version 2 does not read); this became an error \
                                in grund 0.22.0\n";
@@ -151,7 +151,7 @@ fn a_presentation_title_that_closes_early_is_refused() {
     Fixture::v2("\n[presentation.kinds.SPEC]\ntitle = \"one\" \"two\"\n").refuses(&refusal(10));
 }
 
-/// §FS-config-v2.reader.6.refusal: a quoted key is a string of its own, and is refused at
+/// §FS-config-v2.reader.6: a quoted key is a string of its own, and is refused at
 /// its line.
 #[test]
 fn a_quoted_key_that_closes_early_is_refused() {
@@ -159,7 +159,7 @@ fn a_quoted_key_that_closes_early_is_refused() {
         .refuses(&refusal(10));
 }
 
-/// §FS-config-v2.reader.6.multi-line: `title = """one"""` is refused with the parenthetical
+/// §FS-config-v2.reader.6: `title = """one"""` is refused with the parenthetical
 /// that names the form, then the suffix.
 #[test]
 fn a_triple_quoted_string_on_one_line_is_refused_as_one_version_2_does_not_read() {
@@ -168,7 +168,7 @@ fn a_triple_quoted_string_on_one_line_is_refused_as_one_version_2_does_not_read(
     Fixture::v2("\n[presentation.kinds.SPEC]\ntitle = \"\"\"one\"\"\"\n").refuses(refusal);
 }
 
-/// §FS-config-v2.reader.6.refusal: in an array written across lines the refusal stays at the
+/// §FS-config-v2.reader.6: in an array written across lines the refusal stays at the
 /// key's line, as every value's does.
 #[test]
 fn an_element_on_a_later_line_is_refused_at_its_key() {
@@ -176,13 +176,13 @@ fn an_element_on_a_later_line_is_refused_at_its_key() {
         .refuses(&refusal(10));
 }
 
-/// §FS-config-v2.reader.6.refusal: a value with two strings that close early is refused once.
+/// §FS-config-v2.reader.6: a value with two strings that close early is refused once.
 #[test]
 fn a_value_with_two_early_closes_is_refused_once() {
     Fixture::v2("\n[schema.sources]\nexclude = [\"a\" \"b\", \"c\" \"d\"]\n").refuses(&refusal(10));
 }
 
-/// §FS-config-v2.reader.5.strings.refusal, §FS-config-v2.reader.6.refusal: an array with an
+/// §FS-config-v2.reader.5.strings, §FS-config-v2.reader.6: an array with an
 /// open line ends there and is refused for it before any element is read, so its string that
 /// closes early earns no refusal of its own.
 #[test]
@@ -190,7 +190,7 @@ fn an_open_line_and_an_early_close_are_refused_as_the_open_line() {
     Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\" \"c\",\n]\n").refuses(OPEN_LINE);
 }
 
-/// §FS-config-v2.reader.6.multi-line, §FS-config-v2.reader.5.strings.multi-line: a `"""` string
+/// §FS-config-v2.reader.6, §FS-config-v2.reader.5.strings: a `"""` string
 /// a line break runs through is the open line's construct, refused as an unclosed array with
 /// its multi-line parenthetical, never as a string that closes early.
 #[test]
@@ -199,7 +199,7 @@ fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
         .refuses(MULTI_LINE_OPEN);
 }
 
-/// §FS-config-v2.reader.5.strings.refusal: the first open line is the array's last, so of two
+/// §FS-config-v2.reader.5.strings: the first open line is the array's last, so of two
 /// `"""` strings over breaks the first is the one the refusal names.
 #[test]
 fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
@@ -207,7 +207,7 @@ fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
         .refuses(MULTI_LINE_OPEN);
 }
 
-/// §FS-config-v2.reader.5.strings.refusal: a `"""` string over a break after a plain open line
+/// §FS-config-v2.reader.5.strings: a `"""` string over a break after a plain open line
 /// is never reached, so the plain open line is the refusal's.
 #[test]
 fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_is_refused_as_that_line() {
@@ -216,7 +216,7 @@ fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_is_refused_as_tha
 }
 
 /// Guard, green today and kept: a value the readers before refused keeps its bare refusal
-/// (§FS-config-v2.reader.6.refusal).
+/// (§FS-config-v2.reader.6).
 #[test]
 fn a_value_refused_before_is_refused_as_before() {
     let fx = Fixture::v2("\n[schema.sources]\nexclude = [\"target\" \"a,b\"]\n");

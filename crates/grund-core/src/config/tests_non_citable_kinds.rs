@@ -62,7 +62,7 @@ fn a_kind_home_outside_include_is_still_walked() {
     );
 }
 
-/// §FS-declarations.checks.misplaced-declaration.3: the home admits no declaration, and the finding names the
+/// §FS-declarations.checks.misplaced-declaration: the home admits no declaration, and the finding names the
 /// place rather than a kind the author could have written instead.
 #[test]
 fn a_declaration_in_a_non_citable_home_is_misplaced() {
@@ -181,7 +181,7 @@ fn require_grounding_reaches_markdown_in_a_non_citable_home() {
     );
 }
 
-/// §FS-config.3.4.1.1 / §FS-config.3.4.1.2 / §FS-init.2.3.4.4.1: the row a
+/// §FS-config.3.4.1.1 / §FS-config.3.4.1.2 / §FS-init.2.3.4: the row a
 /// non-citable kind keeps in the generated Project map and directions names the
 /// kind by its *place*, never by its name, and leaves it out of the ID
 /// vocabulary.
@@ -201,7 +201,7 @@ fn the_generated_block_names_a_non_citable_kind_by_place() {
     );
     assert!(
         block.contains("- Each file in **skills/** that cites anything must cite FS."),
-        "directions row by place, with the unit it is checked per (§FS-init.2.3.5.2.2): {block}"
+        "directions row by place, with the unit it is checked per (§FS-init.2.3.5): {block}"
     );
     assert!(
         block.contains("KIND ∈ {FS, AR}"),
@@ -256,7 +256,7 @@ fn citable_names_still_collide_and_names_are_unique() {
 /// §FS-config.3.4.1 / §FS-config.3.4.2.2: the keys a non-citable kind may not
 /// combine — `index` is valid only on a citable folder kind, because it lists
 /// declarations this one will never have, and a place with no home is `code`.
-/// §FS-check.3.18.1: "a non-citable kind declares nothing to index" is the
+/// §FS-check.3.18: "a non-citable kind declares nothing to index" is the
 /// config refusal that keeps the enrollment rule off such a kind — the set it
 /// would index can never be non-empty, so the mistake is caught at load rather
 /// than passing as a silent no-op.
@@ -433,7 +433,7 @@ fn the_named_homeless_kind_takes_the_rules_and_code_becomes_unknown() {
     );
 }
 
-/// §FS-config.3.9.2.5 / §FS-init.2.3.4.4.1 / §FS-init.2.3.5: no map row — it is
+/// §FS-config.3.9.2.5 / §FS-init.2.3.4 / §FS-init.2.3.5: no map row — it is
 /// the one kind that is not a place — and a directions row rendered last,
 /// carrying its `title` as the scope where the project wrote one.
 #[test]

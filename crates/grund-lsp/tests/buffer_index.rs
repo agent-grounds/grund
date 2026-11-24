@@ -2,7 +2,7 @@
 //! look reads the index as a save would write it (§FS-scan.text.buffer), and
 //! whether a line is a declaration heading is read off the record of that same
 //! text (§AR-scanner.2.8.5), so the buffer gives the missing-entry message a save
-//! would (§FS-check.3.18.5.1).
+//! would (§FS-check.3.18).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
@@ -32,7 +32,7 @@ fn settled_diagnostics(receiver: &mpsc::Receiver<Value>, uri_suffix: &str) -> Ve
     last
 }
 
-/// The missing-entry messages among `diagnostics` (§FS-check.3.18.5.1).
+/// The missing-entry messages among `diagnostics` (§FS-check.3.18).
 fn messages(diagnostics: &[Value]) -> Vec<&str> {
     diagnostics
         .iter()
@@ -123,7 +123,7 @@ fn shifting_an_unsaved_index_buffer_moves_no_mention() {
 /// The entry pass: the buffer's entry citation sits on line 1, where the saved
 /// text holds a declaration heading. The heading is asked of the buffer's record,
 /// not the saved one, so the buffer lists FS-002-session as saving it would
-/// (§FS-check.3.17.4).
+/// (§FS-check.3.17).
 #[test]
 fn an_entry_in_an_unsaved_index_buffer_lists_the_id() {
     let link = "[\u{a7}FS-002-session](FS-002-session.md#fs-002-session-user-session)";

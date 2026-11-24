@@ -1,7 +1,7 @@
 //! The two surfaces an agent reads before it runs `grund <ID>` say that a section read opens
 //! with its own heading line, as every format prints it (§FS-show.2.2): the `show` page's
 //! `--format` row (§FS-cli.2.3.4) and the managed block's first grounding rung
-//! (§FS-init.2.3.4.3).
+//! (§FS-init.2.3.4).
 
 use std::fs;
 
@@ -35,7 +35,7 @@ fn show_help_format_row_names_the_section_heading() {
     );
 }
 
-/// The block's first rung reads exactly as §FS-init.2.3.4.3 fixes it, once.
+/// The block's first rung reads exactly as §FS-init.2.3.4 fixes it, once.
 #[test]
 fn init_block_lead_rung_names_the_section_heading() {
     let target = workdir("init_block_lead_rung_names_the_section_heading");
@@ -57,6 +57,6 @@ fn init_block_lead_rung_names_the_section_heading() {
     assert_eq!(
         rungs.len(),
         1,
-        "the block does not carry §FS-init.2.3.4.3's rung once:\n{agents}"
+        "the block does not carry §FS-init.2.3.4's rung once:\n{agents}"
     );
 }

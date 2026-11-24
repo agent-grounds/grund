@@ -1,6 +1,6 @@
 //! Black-box contract for opt-in oversized-lead warnings and current-block guidance
 //! (§FS-config.3.1.2, §FS-check.1, §FS-declarations.checks.oversized-lead, §FS-errors.5.1,
-//! §FS-init.2.3.7, §FS-init.2.3.4.3).
+//! §FS-init.2.3.7, §FS-init.2.3.4).
 
 use serde_json::Value;
 use std::fs;
@@ -94,9 +94,9 @@ fn assert_success(output: &Output) {
     );
 }
 
-/// §FS-declarations.checks.oversized-lead.1: the fixed `oversized-lead` code, warning severity, and
+/// §FS-declarations.checks.oversized-lead: the fixed `oversized-lead` code, warning severity, and
 /// the exact message text after the `<path>:<line>: ` prefix, in both the text
-/// and JSON renderings. §FS-declarations.checks.oversized-lead.3: only the key activates it — with the
+/// and JSON renderings. §FS-declarations.checks.oversized-lead: only the key activates it — with the
 /// key absent the same tree is byte-stable `success` on stdout and empty on
 /// stderr, and `--only` / `--ignore` select the finding after the complete
 /// check rather than switching the measurement on.
@@ -234,7 +234,7 @@ fn duplicate_sites_warn_locally_broken_stubs_stay_silent_and_errors_still_win() 
     );
 }
 
-/// §FS-declarations.checks.oversized-lead.4: which sites the rule judges. An explicit-path check
+/// §FS-declarations.checks.oversized-lead: which sites the rule judges. An explicit-path check
 /// judges only the sites scanned at that path, `--full` adds no lead warning
 /// outside the configured scan scope, and in a workspace each member's own
 /// effective key governs only that member's sites — the member without the key

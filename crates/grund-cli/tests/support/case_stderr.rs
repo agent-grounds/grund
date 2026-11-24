@@ -116,7 +116,7 @@ fn is_migration_v1_key(key: &str) -> bool {
 
 /// The absorbed-scan config error opens with this, after its `members`-line
 /// breadcrumb. It was a carried warning for three releases before it became an
-/// error, and its sentence is the one §FS-check.3.30.1 fixes, so it keeps those
+/// error, and its sentence is the one §FS-check.3.30 fixes, so it keeps those
 /// bytes rather than the cap.
 const ABSORBED_SCAN_SENTENCE: &str = ": [workspace] members swallows this project's whole scan — ";
 
@@ -189,7 +189,7 @@ fn is_relayed_check_finding(line: &str) -> bool {
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
 /// line stays text and keeps the plain 180-byte cap, while a carried text
 /// warning keeps the bytes its own specification already fixes
-/// (§FS-check.4.10.5), and so does the absorbed-scan error (§FS-check.3.30.1). Only a line that opens a JSON object is parsed and
+/// (§FS-check.4.10.5), and so does the absorbed-scan error (§FS-check.3.30). Only a line that opens a JSON object is parsed and
 /// judged by its `message` field instead of its serialized length — the
 /// scaffolding around it (§FS-distribution.3.0.1's `severity`, `path`,
 /// `line`, `code`, `sites`, `authority`) is fixed cost the conciseness policy

@@ -1,4 +1,4 @@
-//! Black-box: §FS-scan.scope.homes.lookup.path in a workspace run. A workspace run walks each
+//! Black-box: §FS-scan.scope.homes.lookup in a workspace run. A workspace run walks each
 //! project whole and narrows its report to the `<path>` afterwards (§FS-check.1.3.6.1), so no walk
 //! starts at the path and the walk never asks it. A path behind a directory the user cannot
 //! search must still fail at the path as given, with exit `2`, on `check` in text and JSON and on
@@ -184,7 +184,7 @@ impl Drop for Workspace {
 }
 
 impl Run {
-    /// What went wrong for §FS-scan.scope.homes.lookup.path, or `None`: exit `2`, the permission
+    /// What went wrong for §FS-scan.scope.homes.lookup, or `None`: exit `2`, the permission
     /// line at `path` exactly as given, and never `path does not exist`.
     fn permission_failure_at(&self, path: &str) -> Option<String> {
         let line = format!("error: {path}: permission denied; {PASSED_FIX}");

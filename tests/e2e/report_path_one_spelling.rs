@@ -292,7 +292,7 @@ fn fetch_and_check_name_an_ignore_file_outside_the_root_alike() {
     let scratch = scratch_root("outside-ignore");
     let (home, xdg, root) = (scratch.join("home"), scratch.join("xdg"), scratch.join("p"));
     fs::create_dir_all(&home).expect("create the home");
-    // A global excludes file applies in a Git repository (§FS-scan.scope.ignore-files.global).
+    // A global excludes file applies in a Git repository (§FS-scan.scope.ignore-files).
     fs::create_dir_all(root.join(".git")).expect("mark the repository");
     write(&xdg.join("git/ignore"), "T-1.md\n");
     write(

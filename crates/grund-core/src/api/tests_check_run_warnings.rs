@@ -31,7 +31,7 @@ fn warning(code: &'static str, line: usize, message: &str) -> Finding {
     }
 }
 
-/// §FS-check.3.30.1: the absorbed scan's config error, as `{err:#}` renders it.
+/// §FS-check.3.30: the absorbed scan's config error, as `{err:#}` renders it.
 const ABSORBED_ERROR: &str = "grund.toml:16: [workspace] members swallows this project's whole scan — \
      every scan root is inside a member: `docs` in `docs` — so its declarations \
      are unreachable and its citations are never checked. Point [scan] include \
@@ -123,7 +123,7 @@ fn check_with_opts_keeps_its_result_output_contract() {
     );
 }
 
-/// §FS-check.3.30.2: the absorbed scan is asked of the run's root block before
+/// §FS-check.3.30: the absorbed scan is asked of the run's root block before
 /// its nested members expand, so when a later expansion refusal would also apply
 /// the absorbed scan is the one error reported, and no warning is left behind.
 #[test]

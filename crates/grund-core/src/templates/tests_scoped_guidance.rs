@@ -1,6 +1,6 @@
 //! Test module: where a row's guidance lands under scoped guidance
-//! (§FS-init.2.3.5.11) and what each destination's block renders
-//! (§FS-init.2.3.5.12): the deepest common directory over a row's places, the
+//! (§FS-init.2.3.5) and what each destination's block renders
+//! (§FS-init.2.3.5): the deepest common directory over a row's places, the
 //! rows that stay at the root, and the grounding sentence each destination gets.
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
@@ -39,7 +39,7 @@ fn layout(config: &Config, missing: &[&str]) -> Layout {
     })
 }
 
-/// §FS-init.2.3.5.11.1: siblings share their parent, a folder nested in another
+/// §FS-init.2.3.5: siblings share their parent, a folder nested in another
 /// lands in the outer one, a file counts as its parent, and a file at the root
 /// or places sharing no leading component land at the root.
 #[test]
@@ -66,7 +66,7 @@ folders = ["docs/a", "tests/b"]
     assert_eq!(dest(&config, "APART"), "");
 }
 
-/// §FS-init.2.3.5.11.2-.4: a kind with no place stays at the root, a row that
+/// §FS-init.2.3.5: a kind with no place stays at the root, a row that
 /// renders nothing has no destination, and a destination directory that does
 /// not exist renders at the root.
 #[test]
@@ -108,7 +108,7 @@ must = ["FS"]
     assert!(!root.contains("**FS**"), "{root}");
 }
 
-/// §FS-init.2.3.5.11.5: `rules = "root"` and every version-1 config place every
+/// §FS-init.2.3.5: `rules = "root"` and every version-1 config place every
 /// row at the root, so no scoped file and no pointer render.
 #[test]
 fn rules_root_and_version_one_render_everything_at_the_root() {
@@ -131,7 +131,7 @@ fn rules_root_and_version_one_render_everything_at_the_root() {
     );
 }
 
-/// §FS-init.2.3.5.7.1: each destination's grounding sentence names only the
+/// §FS-init.2.3.5: each destination's grounding sentence names only the
 /// clauses that land there — a home's clause in its scoped block, the
 /// source-file clause in the complement's.
 #[test]
@@ -171,7 +171,7 @@ must = "file"
     assert!(!block.contains("### Declaration shapes") && !block.contains("### Scoped guidance"));
 }
 
-/// §FS-init.2.3.5.12.2: a kind's shape renders as `grund schema`'s shape lines
+/// §FS-init.2.3.5: a kind's shape renders as `grund schema`'s shape lines
 /// (§FS-schema.4.1), in its destination's block, and a version-1 config renders none.
 #[test]
 fn a_kinds_shape_renders_in_its_destination_in_the_schema_views_words() {
@@ -199,7 +199,7 @@ position = "first"
     );
 }
 
-/// §FS-init.2.3.5.12.1, §FS-init.2.3.5.13: the complement's scoped block carries
+/// §FS-init.2.3.5: the complement's scoped block carries
 /// the pointer too, so a source declaration's guidance names where its kind's
 /// shape lives.
 #[test]

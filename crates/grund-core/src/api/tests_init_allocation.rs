@@ -1,5 +1,5 @@
 //! Test module: the kind and place init's guidance names, and the refresh test
-//! that reads the same selection (§FS-init.2.2.2.3, §FS-init.2.2.2.1).
+//! that reads the same selection (§FS-init.2.2.2).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
@@ -25,7 +25,7 @@ fn tree(name: &str, config: &str, dirs: &[&str]) -> crate::testing::TemporaryRoo
     root
 }
 
-/// `init` over `root`, a bare temp root no VCS marker covers (§FS-init.1.2.3).
+/// `init` over `root`, a bare temp root no VCS marker covers (§FS-init.1.2).
 fn run(root: &Path, dry_run: bool, check: bool) -> InitOutput {
     init(InitOpts {
         target: root.to_path_buf(),
@@ -81,7 +81,7 @@ fn refresh(name: &str, config: &str, dirs: &[&str]) -> InitOutput {
     output
 }
 
-/// §FS-init.2.2.2.3: a row's first file comes before its first folder, whichever
+/// §FS-init.2.2.2: a row's first file comes before its first folder, whichever
 /// key is written first, and the folder existing does not move the selection.
 #[test]
 fn a_rows_first_file_is_selected_before_its_folder() {
@@ -101,7 +101,7 @@ fn a_rows_first_file_is_selected_before_its_folder() {
     );
 }
 
-/// §FS-init.2.2.2.3: the first place in written order, though a later one exists.
+/// §FS-init.2.2.2: the first place in written order, though a later one exists.
 #[test]
 fn the_first_place_is_selected_though_a_later_one_exists() {
     let rows = "\n[schema.kinds.REQ]\nfolders = [\"docs/a\", \"docs/b\"]\n";
@@ -115,7 +115,7 @@ fn the_first_place_is_selected_though_a_later_one_exists() {
     );
 }
 
-/// §FS-init.2.2.2.3: a non-citable row never qualifies, the complement included.
+/// §FS-init.2.2.2: a non-citable row never qualifies, the complement included.
 #[test]
 fn non_citable_rows_and_the_complement_are_skipped() {
     let rows = "\n[schema.kinds.code]\nfolders = [\"src\"]\n\n[schema.kinds.runbook]\n\
@@ -128,7 +128,7 @@ fn non_citable_rows_and_the_complement_are_skipped() {
     );
 }
 
-/// §FS-init.2.2.2.3: an FS row with no home is not FS with a home, so the first
+/// §FS-init.2.2.2: an FS row with no home is not FS with a home, so the first
 /// row with one wins; the scaffold keeps the built-in FS folder for itself.
 #[test]
 fn an_fs_row_without_a_home_falls_through_to_a_row_with_one() {
@@ -147,7 +147,7 @@ fn an_fs_row_without_a_home_falls_through_to_a_row_with_one() {
     );
 }
 
-/// §FS-init.2.2.2.3: where no citable row has a home the first is selected, with
+/// §FS-init.2.2.2: where no citable row has a home the first is selected, with
 /// no home and so none on disk; the block names no directory.
 #[test]
 fn a_selection_without_a_home_has_none_on_disk() {
@@ -163,7 +163,7 @@ fn a_selection_without_a_home_has_none_on_disk() {
     assert!(!rendered.contains("docs/functional-spec"), "{rendered}");
 }
 
-/// §FS-init.2.2.2.3: a first run names an existing home and never asks for it.
+/// §FS-init.2.2.2: a first run names an existing home and never asks for it.
 #[test]
 fn a_first_run_names_an_existing_home_without_asking_for_it() {
     let root = tree("allocation_first_existing", REQ_V1, &["docs/req"]);
@@ -180,7 +180,7 @@ fn a_first_run_names_an_existing_home_without_asking_for_it() {
     );
 }
 
-/// §FS-init.2.2.2.3: a first run asks for a missing home, and never by `--scaffold`.
+/// §FS-init.2.2.2: a first run asks for a missing home, and never by `--scaffold`.
 #[test]
 fn a_first_run_asks_for_a_missing_home() {
     let root = tree("allocation_first_missing", REQ_V1, &[]);
@@ -192,14 +192,14 @@ fn a_first_run_asks_for_a_missing_home() {
     assert!(!rendered.contains("--scaffold"), "{rendered}");
 }
 
-/// §FS-init.2.2.2.1: a refresh whose selected home exists teaches nothing.
+/// §FS-init.2.2.2: a refresh whose selected home exists teaches nothing.
 #[test]
 fn a_refresh_with_the_selected_home_teaches_nothing() {
     let output = refresh("allocation_refresh_existing", REQ_V1, &["docs/req"]);
     assert_eq!(output.next, None);
 }
 
-/// §FS-init.2.2.2.1: a refresh whose selected home is absent keeps the block.
+/// §FS-init.2.2.2: a refresh whose selected home is absent keeps the block.
 #[test]
 fn a_refresh_without_the_selected_home_keeps_the_block() {
     let output = refresh("allocation_refresh_missing", REQ_V1, &[]);
@@ -210,7 +210,7 @@ fn a_refresh_without_the_selected_home_keeps_the_block() {
     );
 }
 
-/// §FS-init.2.2.2.1: a refresh of a row with no home has no home left to create.
+/// §FS-init.2.2.2: a refresh of a row with no home has no home left to create.
 #[test]
 fn a_refresh_of_a_row_without_a_home_teaches_nothing() {
     let config = REQ_V1.replace("folder = \"docs/req\"\n", "");
@@ -218,7 +218,7 @@ fn a_refresh_of_a_row_without_a_home_teaches_nothing() {
     assert_eq!(output.next, None);
 }
 
-/// §FS-init.2.2.2.1: the previews see the same complete refresh. Neither writes,
+/// §FS-init.2.2.2: the previews see the same complete refresh. Neither writes,
 /// and `--check` still reports the pending update it exits `1` on.
 #[test]
 fn the_previews_of_a_complete_refresh_write_nothing_and_teach_nothing() {
@@ -245,7 +245,7 @@ fn the_previews_of_a_complete_refresh_write_nothing_and_teach_nothing() {
     }
 }
 
-/// §FS-init.2.2.2.3, §FS-init.2.2.2.2: `allocation` is `None` exactly where the
+/// §FS-init.2.2.2: `allocation` is `None` exactly where the
 /// config has no citable row, the answer `declares_kinds` gives.
 #[test]
 fn allocation_is_none_exactly_without_a_citable_row() {

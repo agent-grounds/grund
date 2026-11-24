@@ -1,6 +1,6 @@
 //! Black-box: a field's line shows the heading to write, with its placement and content in
 //! check's words (§FS-schema.4.1), in the managed block's `### Declaration shapes`
-//! (§FS-init.2.3.5.12.2) and in `grund schema`. The triage reproducer's five cases are pinned as
+//! (§FS-init.2.3.5) and in `grund schema`. The triage reproducer's five cases are pinned as
 //! the rendered words: `directly after` where check holds a field directly after another, in the
 //! block (A) and in the view (B); a scalar's title as its value (C); a value chapter's named
 //! roots and numbered parts (D); and a value kind's file form with the citation its first element
@@ -10,8 +10,8 @@
 //! Mermaid and DOT label the same lines (§FS-schema.9, §FS-schema.10), and `config migrate`
 //! prints them in its refusal (§FS-config-migrate.5.3). A document written from each rendered
 //! line as shown checks clean. A shape-rendering config renders the v49/v50 pair, sharing the
-//! v47–v50 bump of #1408 (§FS-init.2.3.7.1), and a scoped block above an unscoped selection stays
-//! stale `scoped guidance` (§FS-init.2.3.7.3.2). The red tests wait on #1373; the controls pass
+//! v47–v50 bump of #1408 (§FS-init.2.3.7), and a scoped block above an unscoped selection stays
+//! stale `scoped guidance` (§FS-init.2.3.7). The red tests wait on #1373; the controls pass
 //! before it and after.
 #![cfg(unix)]
 
@@ -143,7 +143,7 @@ form = "value"
 fetch = "scripts/fetch-const"
 "#;
 
-/// The full fixture's `### Declaration shapes`, as §FS-init.2.3.5.12.2 prints it.
+/// The full fixture's `### Declaration shapes`, as §FS-init.2.3.5 prints it.
 const FULL_SECTION: &str = "### Declaration shapes
 
 `grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them. Each heading is shown under a declaration written `# <ID>: …`; a field always sits one level below its declaration's heading:
@@ -572,7 +572,7 @@ fn outdated(found: u32, selected: u32) -> String {
     )
 }
 
-/// The line check prints for a block of the unselected scoped member (§FS-init.2.3.7.3.2).
+/// The line check prints for a block of the unselected scoped member (§FS-init.2.3.7).
 const STALE_SCOPED: &str = "AGENTS.md:3: error: repo maintenance: stale grund init block: the \
                             scoped guidance section differs from grund.toml — run `grund init` \
                             to refresh (does not affect citation validity)";

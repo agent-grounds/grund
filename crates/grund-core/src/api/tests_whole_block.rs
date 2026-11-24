@@ -62,7 +62,7 @@ fn workspace(name: &str, members: &[&str], optional: &[&str]) -> crate::testing:
 fn init_at(root: &Path) {
     init(InitOpts {
         target: root.to_path_buf(),
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })
@@ -70,7 +70,7 @@ fn init_at(root: &Path) {
 }
 
 /// `init` once in every project of the workspace at `root`: no block says which
-/// projects are initialized, so the order leaves none stale (§FS-init.2.3.4.15.6,
+/// projects are initialized, so the order leaves none stale (§FS-init.2.3.4,
 /// §FS-init.requirements.clean).
 fn init_workspace(root: &Path, members: &[&Path]) {
     members.iter().for_each(|member| init_at(member));
@@ -106,7 +106,7 @@ fn block_on_disk(path: &Path) -> String {
     text[start..end].to_string()
 }
 
-/// §FS-check.3.5.4, §FS-init.2.3.5.8: the parts `Expected` holds a root
+/// §FS-check.3.5.4, §FS-init.2.3.7: the parts `Expected` holds a root
 /// entrypoint to are, in order, the block `init` wrote there, on the plain
 /// surface of `AGENTS.md` and the linked one of a standalone `CLAUDE.md`.
 #[test]
@@ -171,7 +171,7 @@ fn block_sections_name_every_part_of_the_block() {
     assert_eq!(whole, block[..block.find(END).expect("end")]);
 }
 
-/// §FS-check.3.5.3, §FS-init.2.3.4.10: a config that declares a rule renders
+/// §FS-check.3.5.3, §FS-init.2.3.5: a config that declares a rule renders
 /// the citation directions section, and the parts name it in block order.
 #[test]
 fn block_sections_name_the_directions_a_declared_rule_renders() {
@@ -201,7 +201,7 @@ fn block_sections_name_the_directions_a_declared_rule_renders() {
     assert_eq!(whole, block[..block.find(END).expect("end")]);
 }
 
-/// §FS-check.3.5.5, §FS-init.2.3.4.15: after `init` in every project the
+/// §FS-check.3.5.5, §FS-init.2.3.4: after `init` in every project the
 /// root's run renders the members' bullets as `init` did; a member joining
 /// turns every block red, and each finding about another project's block —
 /// a companion under `.claude/` included — names that project's root

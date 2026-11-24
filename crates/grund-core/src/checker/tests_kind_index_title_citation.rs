@@ -63,7 +63,7 @@ fn a_title_citation_in_its_own_index_is_not_the_entry() {
     );
 }
 
-/// §FS-check.4.1.2.1 / §FS-check.3.18.5.1: one run gives one answer. The index
+/// §FS-check.4.1.2.1 / §FS-check.3.18: one run gives one answer. The index
 /// holds no entry for `FS-session`, and its title citation is use, exactly as
 /// `FS-login`'s title citation of `FS-token` is.
 #[test]

@@ -1,6 +1,6 @@
-//! Test module: the row init's guidance names (§FS-init.2.2.2.3), which the
+//! Test module: the row init's guidance names (§FS-init.2.2.2), which the
 //! `next:` block allocates in and the managed block's discovery rung leads its
-//! `--kind` example with (§FS-init.2.3.4.3).
+//! `--kind` example with (§FS-init.2.3.4).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::config::{Config, guided_kind, load_config};
@@ -20,7 +20,7 @@ fn guided(config: &Config) -> Option<&str> {
     guided_kind(&config.kinds).map(|row| row.kind.as_str())
 }
 
-/// §FS-init.2.2.2.3: FS with a home wins wherever it sits in config order.
+/// §FS-init.2.2.2: FS with a home wins wherever it sits in config order.
 #[test]
 fn fs_with_a_home_is_guided_first() {
     let config = load(
@@ -31,7 +31,7 @@ fn fs_with_a_home_is_guided_first() {
     assert_eq!(guided(&config), Some("FS"));
 }
 
-/// §FS-init.2.2.2.3: a homeless FS gives way to the first citable row with a
+/// §FS-init.2.2.2: a homeless FS gives way to the first citable row with a
 /// home, and a non-citable row never qualifies.
 #[test]
 fn a_homeless_fs_gives_way_to_a_homed_row() {
@@ -44,7 +44,7 @@ fn a_homeless_fs_gives_way_to_a_homed_row() {
     assert_eq!(guided(&config), Some("REQ"));
 }
 
-/// §FS-init.2.2.2.3: with no home anywhere, the first citable row; with no
+/// §FS-init.2.2.2: with no home anywhere, the first citable row; with no
 /// citable row, nothing.
 #[test]
 fn homeless_and_empty_configs() {

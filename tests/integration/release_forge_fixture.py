@@ -18,7 +18,7 @@ unknown commit, and a commit the table marks failed fails as a server error.
 An endpoint the table marks flaky - `repo`, or a commit - first fails once per
 entry of its sequence, in order, and then answers: `truncated` exits non-zero
 the way `gh` does after a truncated response, and `partial` exits zero with the
-first bytes of a JSON answer (§FS-distribution.4.6.3.1). The count of calls per
+first bytes of a JSON answer (§FS-distribution.4.6.3). The count of calls per
 endpoint lives in the scratch directory, so it holds across the one process each
 call is, and on the Windows `gh.cmd` leg alike.
 Every call is logged, one JSON argument list per line.
@@ -155,7 +155,7 @@ class ForgeRepository(GitFixture):
 
     def _flaky(self, endpoint: str, *failures: str) -> None:
         """Fail `endpoint` - `repo` or a commit - once per failure, `truncated` or
-        `partial`, before it answers (§FS-distribution.4.6.3.1)."""
+        `partial`, before it answers (§FS-distribution.4.6.3)."""
         self.answers["flaky"][endpoint] = list(failures)
 
     def _calls(self, commit: str) -> int:

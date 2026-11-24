@@ -1,6 +1,6 @@
 //! Canonical parsing selects a format independently of malformed-token name
 //! boundaries (§FS-config.3.2); attribution remains unique
-//! (§FS-citations.recognized.off-format, §FS-declarations.checks.declaration-near-miss.1).
+//! (§FS-citations.recognized.off-format, §FS-declarations.checks.declaration-near-miss).
 
 use super::id_format::id_token_end_at;
 use super::settings::GrammarKind;

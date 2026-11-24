@@ -1,5 +1,5 @@
 //! The readable global excludes file is the one Git resolves, with literal
-//! interior tildes and one leading-home expansion (§FS-scan.scope.ignore-files.pathname).
+//! interior tildes and one leading-home expansion (§FS-scan.scope.ignore-files).
 //! Port of #788's control/interior-tilde reproduction; repository anchoring has
 //! separate coverage in `global_excludes_anchor.rs`.
 

@@ -62,7 +62,7 @@ pub(super) fn scanned_index(root: &Path) -> (Config, Catalog, KindIndexEntries) 
     (config, findings, entries)
 }
 
-/// §FS-check.3.18.3: the canonical bare-ID source link is membership and entry
+/// §FS-check.3.18: the canonical bare-ID source link is membership and entry
 /// at once. With no other citation, §FS-check.4.1.2 still reports the source
 /// declaration unused — proof that the link is navigation rather than use.
 #[test]
@@ -167,7 +167,7 @@ fn a_noncanonical_link_is_an_ordinary_reference() {
     assert!(!entries.is_index_entry(&findings.citations[0]));
 }
 
-/// §FS-check.3.18.4: the exception is for inline source declarations only. A
+/// §FS-check.3.18: the exception is for inline source declarations only. A
 /// canonical link to a Markdown declaration outside the configured folder is
 /// still ordinary prose and does not redefine the kind home.
 #[test]
@@ -328,7 +328,7 @@ fn a_shorthand_link_does_not_enroll() {
     assert!(!entries.is_index_entry(&findings.citations[0]));
 }
 
-/// §FS-check.3.18.4: a citation nested in another Markdown link's destination
+/// §FS-check.3.18: a citation nested in another Markdown link's destination
 /// is in a never-rewrite zone, not an entry, even when its inner wrapper and
 /// destination otherwise spell the canonical enrollment form.
 #[test]
@@ -354,7 +354,7 @@ fn a_link_nested_in_a_markdown_destination_does_not_enroll() {
     assert!(!entries.is_index_entry(&findings.citations[0]));
 }
 
-/// §FS-check.3.18.3 / §FS-check.4.1.2.1: the link that enrolls is the entry that
+/// §FS-check.3.18 / §FS-check.4.1.2.1: the link that enrolls is the entry that
 /// satisfies, and a canonical link riding on the index's own declaration heading is
 /// a citation from that declaration, never the entry. So it enrolls nothing: the
 /// index owes no entry it could not take, and the link is use.

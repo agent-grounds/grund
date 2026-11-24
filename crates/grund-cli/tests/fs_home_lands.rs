@@ -2,7 +2,7 @@
 //! (§DF-fs-home-lands-in-0-19): a project with no config file and a `grund.toml`
 //! that omits `[[kinds]]` give one answer, `folder = "docs/functional-spec"`
 //! (§FS-config.3.4.4), and the `software-development` scaffold homes `FS` there
-//! (§FS-init.2.4.10).
+//! (§FS-init.2.4.3).
 //!
 //! The zero-config trees cannot be e2e cases under `tests/e2e/cases/`: discovery
 //! would walk up into this repository's own `grund.toml` (§FS-config.1). Each
@@ -169,7 +169,7 @@ fn zero_config_requirements_md_gets_the_kindless_answer_and_no_warning() {
     }
 }
 
-/// §FS-init.2.4.10, §FS-init.2.1.3, §FS-init-fixtures.2: a fresh
+/// §FS-init.2.4.3, §FS-init.2.1.3, §FS-init-fixtures.2: a fresh
 /// `software-development` scaffold declares `FS` in `docs/functional-spec/`
 /// and `REQ` in `docs/requirements/`, writes no `requirements.md`, and passes
 /// `grund check` and `grund init --check` unmodified.

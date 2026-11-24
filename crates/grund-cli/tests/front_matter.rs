@@ -368,7 +368,7 @@ fn cover_lines_gives_front_matter_to_the_first_declaration() {
 
 /// A local shorthand in front matter is owned, so it is reported with the form to write, but
 /// `check` does not offer `grund fmt --write`, which would rewrite nothing there
-/// (§FS-check.3.24.1).
+/// (§FS-check.3.24).
 #[test]
 fn a_front_matter_shorthand_errors_without_the_fmt_offer() {
     let fx = Fixture::new(

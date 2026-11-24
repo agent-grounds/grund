@@ -1,4 +1,4 @@
-"""§FS-distribution.4.6.4.2 — contributor-visible correction audit guidance.
+"""§FS-distribution.4.6.4 — contributor-visible correction audit guidance.
 
 Run the actual repository walk (§AR-goal-measurement.3), capturing the default
 unittest rendering rather than substituting the helper's unabridged strings.

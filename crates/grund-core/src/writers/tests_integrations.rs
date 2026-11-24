@@ -486,10 +486,10 @@ fn conversation_target_is_recorded_independently() {
     );
 }
 
-/// §FS-init.2.3.4.17: a Claude entrypoint that is a symlink to the canonical
+/// §FS-init.2.3.6: a Claude entrypoint that is a symlink to the canonical
 /// `AGENTS.md` resolves to that one file, which every other agent reads too,
 /// so the linked form cannot reach Claude through it. `init` must say so.
-/// Unix-only: the fixture needs a real symlink (§FS-init.2.3.4.17).
+/// Unix-only: the fixture needs a real symlink (§FS-init.2.3.6).
 #[cfg(unix)]
 #[test]
 fn claude_symlink_to_agents_md_is_detected() {
@@ -514,10 +514,10 @@ fn claude_symlink_to_agents_md_is_detected() {
     );
 }
 
-/// §FS-init.2.3.4.17.4: the note is emitted only when the repository actually
+/// §FS-init.2.3.6: the note is emitted only when the repository actually
 /// commits the opinion — without it there is no linked form to be shadowed,
 /// and a note would be noise on every run in a repo that never opted in.
-/// Unix-only: the fixture needs a real symlink (§FS-init.2.3.4.17).
+/// Unix-only: the fixture needs a real symlink (§FS-init.2.3.6).
 #[cfg(unix)]
 #[test]
 fn symlinked_claude_entrypoint_is_reported_only_under_the_link_opinion() {
@@ -529,7 +529,7 @@ fn symlinked_claude_entrypoint_is_reported_only_under_the_link_opinion() {
     let output = init(InitOpts {
         target: root.clone(),
         dry_run: true,
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })
@@ -543,7 +543,7 @@ fn symlinked_claude_entrypoint_is_reported_only_under_the_link_opinion() {
     let output = init(InitOpts {
         target: root.clone(),
         dry_run: true,
-        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        // §FS-init.1.2: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })

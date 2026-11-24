@@ -1,11 +1,11 @@
-//! Binary-level contract for the licence §FS-check.3.24.2 claims: the text the
+//! Binary-level contract for the licence §FS-check.3.24 claims: the text the
 //! declaration-local section finding shipped with survives as a verbatim
 //! contiguous prefix of every one of its three shapes, at the same offsets, so
-//! the release attribution §FS-check.3.24.1 adds is an append rather than a
+//! the release attribution §FS-check.3.24 adds is an append rather than a
 //! wording change — on the owned shape, wherever the owner has the section. Where
-//! it has not, the one exception §FS-check.3.24.2 names holds instead: the head
+//! it has not, the one exception §FS-check.3.24 names holds instead: the head
 //! through the token and the attribution at the end are all that is kept
-//! (§FS-check.3.24.3).
+//! (§FS-check.3.24).
 //!
 //! Its own target rather than a group inside `local_section_citations.rs`: that
 //! file records the finding's *current* bytes and is expected to move whenever
@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// The three shapes' text as the rule shipped it in `0.14.0`, before
-/// §FS-check.3.24.1's clauses were appended. Written out rather than derived,
+/// §FS-check.3.24's clauses were appended. Written out rather than derived,
 /// because a derived prefix would move with the code it is holding still.
 const SHIPPED: [&str; 3] = [
     "local section citation \u{a7}2; write \u{a7}FS-a.2",
@@ -26,7 +26,7 @@ const SHIPPED: [&str; 3] = [
     "local section citation \u{a7}2 has no enclosing declaration; write a full citation or <\u{a7}>2 to show the shape without citing it",
 ];
 
-/// §FS-check.3.24.1: the clause every shape ends with — the pair of releases the
+/// §FS-check.3.24: the clause every shape ends with — the pair of releases the
 /// verdict moved between.
 const ATTRIBUTION: &str = " \u{2014} unchecked in grund 0.13.1, an error in 0.14.0";
 
@@ -97,7 +97,7 @@ fn local_section_messages(root: &Path) -> Vec<String> {
     messages
 }
 
-/// §FS-check.3.24.2: the licence rests on this and nothing else. A consumer
+/// §FS-check.3.24: the licence rests on this and nothing else. A consumer
 /// matching the shipped text still matches, so the change needs no deprecation
 /// path of its own under §REQ-backwards-compatibility.1 — and an edit that
 /// rewords the *head* of one of these lines while believing it only appends is
@@ -121,7 +121,7 @@ fn the_shipped_local_section_text_is_still_a_verbatim_prefix() {
         });
         assert!(
             appended.starts_with(ATTRIBUTION),
-            "§FS-check.3.24.1: the attribution follows the shipped text immediately: {appended:?}"
+            "§FS-check.3.24: the attribution follows the shipped text immediately: {appended:?}"
         );
     }
 }
@@ -129,7 +129,7 @@ fn the_shipped_local_section_text_is_still_a_verbatim_prefix() {
 /// §FS-check.3.24's third bullet: a digit-starting mixed, named, or glued tail
 /// names the releases too, and never the command — §FS-fmt.2.4 leaves it
 /// byte-identical, so an offer to run the formatter would answer
-/// `rewrote 0 lines` (§FS-check.3.17.5). Pinned here because the e2e golden
+/// `rewrote 0 lines` (§FS-check.3.17). Pinned here because the e2e golden
 /// covers the owned and ownerless shapes only.
 #[test]
 fn a_digit_starting_unsupported_token_names_the_releases_without_the_command() {
@@ -148,9 +148,9 @@ fn a_digit_starting_unsupported_token_names_the_releases_without_the_command() {
     );
 }
 
-/// §FS-check.3.24.2's one exception, and the narrower promise it keeps. Where
+/// §FS-check.3.24's one exception, and the narrower promise it keeps. Where
 /// §FS-fmt.2.4.6 refuses the rewrite because the owner lacks the section, the
-/// shipped `write <citation>` is replaced (§FS-check.3.24.3), so it is no longer
+/// shipped `write <citation>` is replaced (§FS-check.3.24), so it is no longer
 /// a prefix there; what a consumer can still match is the head through
 /// `local section citation <token>; ` and the attribution, which ends the line
 /// with nothing after it. The resolving control beside it keeps every byte. Its
@@ -204,14 +204,14 @@ fn an_absent_site_keeps_the_head_and_the_attribution_and_drops_the_shipped_remed
     let absent = &messages[1];
     assert!(
         absent.starts_with("local section citation \u{a7}9.9; "),
-        "§FS-check.3.24.2: the head through the token is kept: {absent:?}"
+        "§FS-check.3.24: the head through the token is kept: {absent:?}"
     );
     assert!(
         absent.ends_with(ATTRIBUTION),
-        "§FS-check.3.24.2: the attribution still ends the line, with nothing after it: {absent:?}"
+        "§FS-check.3.24: the attribution still ends the line, with nothing after it: {absent:?}"
     );
     assert!(
         !absent.starts_with("local section citation \u{a7}9.9; write \u{a7}FS-a.9.9"),
-        "§FS-check.3.24.2's exception: the shipped remedy names a section FS-a lacks, so it is replaced rather than kept as a prefix: {absent:?}"
+        "§FS-check.3.24's exception: the shipped remedy names a section FS-a lacks, so it is replaced rather than kept as a prefix: {absent:?}"
     );
 }

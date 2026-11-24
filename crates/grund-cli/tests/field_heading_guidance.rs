@@ -1,4 +1,4 @@
-//! Binary regressions for the appended field repair (§FS-declarations.checks.unmarked-heading.2.2).
+//! Binary regressions for the appended field repair (§FS-declarations.checks.unmarked-heading).
 //! Field recognition and v1 output remain §FS-fields.identity.name and §FS-fields.v1.
 
 #[path = "support/fixture_cleanup.rs"]

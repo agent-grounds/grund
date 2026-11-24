@@ -73,7 +73,7 @@ const protectedConfig = await fixture('init-force-keeps-existing-config');
 const initial = await bytes(protectedConfig);
 const { allocation } = (await api.init(protectedConfig, { dryRun: true, noVcs: true })).next;
 assert.deepEqual(await bytes(protectedConfig), initial);
-// §FS-init.2.2.2.3: the SPEC row is the guidance's selection, its folder not yet made.
+// §FS-init.2.2.2: the SPEC row is the guidance's selection, its folder not yet made.
 assert.equal(allocation.kind, 'SPEC');
 assert.deepEqual([allocation.home.kind, allocation.home.path], ['folder', 'specs']);
 assert.equal(allocation.homeExists, false);
@@ -83,7 +83,7 @@ await api.init(protectedConfig, { force: true, noVcs: true });
 const after = await bytes(protectedConfig);
 assert.equal(after['grund.toml'], initial['grund.toml'], 'force never rewrites existing config');
 assert.deepEqual(after, await bytes(cases + 'init-force-keeps-existing-config/expected.repo'));
-// §FS-init.2.3.8.3: invalid config refuses before writes; existing prose accepts append.
+// §FS-init.2.3.8: invalid config refuses before writes; existing prose accepts append.
 const appending = await fixture('init-conflict-no-force');
 const appendBefore = await bytes(appending);
 const prose = await readFile(appending + '/AGENTS.md', 'utf8');
