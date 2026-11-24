@@ -7,7 +7,6 @@ use super::*;
 /// §FS-citations.zones.link-destination: destination openers use the existing
 /// inline-code reader, including run lengths and literal backslashes in code.
 #[test]
-#[ignore = "red until #1487 skips code spans before destination openers; implement removes this"]
 fn issue_1487_destination_openers_skip_complete_code_spans() {
     for line in [
         "`](` then @FS-a",

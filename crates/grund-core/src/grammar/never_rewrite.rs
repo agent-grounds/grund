@@ -382,6 +382,15 @@ pub(crate) fn is_inside_markdown_link_destination(line: &str, pos: usize) -> boo
     let bytes = line.as_bytes();
     let mut i = 0;
     while i + 1 < bytes.len() {
+        // §FS-citations.zones.link-destination: code cannot open a destination;
+        // pass its whole span over using §FS-citations.zones.inline-code.
+        if bytes[i] == b'`' && !is_escaped(bytes, i) {
+            match inline_code_span_end(bytes, i) {
+                Some(end) => i = end,
+                None => break,
+            }
+            continue;
+        }
         if bytes[i] == b']' && bytes[i + 1] == b'(' && !is_escaped(bytes, i) {
             let start = i + 2;
             match link_destination_close(bytes, start) {
