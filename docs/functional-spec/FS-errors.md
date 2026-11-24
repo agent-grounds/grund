@@ -300,7 +300,8 @@ A missing fetch-backed declaration has two frozen identities, `dangling` /
 `error` ([§FS-check.3.1](FS-check.md#31-dangling-citation)) and
 `missing-snapshot` / `warning` ([§FS-check.4.12](FS-check.md#412-missing-snapshot)); those sections own the exact
 message bytes, the bare-text fetch remedy, and the precedence of an existing
-near-ID or illustration hint over the fetch-action tail.
+member-candidate, near-ID or illustration hint over the fetch-action tail
+([§FS-check.3.1.5](FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)).
 
 ### 3.6 The `agents-init` messages
 
@@ -900,6 +901,7 @@ names a specification ID or holds a link, and each is written by these rules.
   word or hyphenated words. **`none — <why>`** is a code that nothing the user
   does clears, and the rest of the cell says why; it is never an invented
   remedy.
+- **Dangling suggestions.** The `dangling` row's `near` and `near-escape` slots hold the selected suggestion: declared member alternatives first, otherwise a local near ID, as [§FS-check.3.1.5](FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member) specifies. Their labels and templates are unchanged; several alternatives occupy the one `{near}` slot.
 - **Inside a template**, `{words}`, lowercase words in braces, is a slot the
   finding fills, such as `{new address}`, and `` {fix of `<code>`} `` stands
   for that row's *Fix* template, worded once there: its side of the same
