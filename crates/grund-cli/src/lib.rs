@@ -80,7 +80,7 @@ const SUBCOMMANDS: &[&str] = &[
 
 /// Dispatched by `main_entry` but kept out of help and completion: the shell
 /// completion helper (§FS-completions.2). `guide`'s old name is gone from grund
-/// 0.20.0, so it is no subcommand at all (§FS-init.5.7).
+/// 0.20.0, so it is no subcommand at all (§FS-init.5).
 const HIDDEN_SUBCOMMANDS: &[&str] = &["complete"];
 
 // §AR-bindings.3: distributed builds erase private hooks and their arguments.

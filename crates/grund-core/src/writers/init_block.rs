@@ -48,7 +48,7 @@ impl AgentsUpdateResult {
 }
 
 /// What one root entrypoint's write did with its `### Workspace members` section
-/// (§FS-init.2.3.4.15.8): kept the bytes its block held, or wrote the section from
+/// (§FS-init.2.3.4): kept the bytes its block held, or wrote the section from
 /// what the run can read — a new file, a block appended, or a block that had none.
 /// It is what the absent-member note says per entrypoint.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -70,7 +70,7 @@ impl MembersSection {
 /// Returns the file event for the canonical entrypoint and what became of its
 /// member list, or an already formatted I/O message for the caller to surface.
 /// `keep_members` is whether an optional member is absent from this run, so the
-/// list the file holds is kept rather than rendered (§FS-init.2.3.4.15.8).
+/// list the file holds is kept rather than rendered (§FS-init.2.3.4).
 pub(super) fn write_or_update_canonical_agent_entrypoint(
     target: &Path,
     rel: &str,
@@ -94,7 +94,7 @@ pub(super) fn write_or_update_canonical_agent_entrypoint(
         }
     } else {
         // §FS-init.3.4: `--force` keeps none of the file but the member list
-        // §FS-init.2.3.4.15.8 keeps, read before the overwrite; unreadable, none.
+        // §FS-init.2.3.4 keeps, read before the overwrite; unreadable, none.
         let kept = (keep_members && path_exists(&dest))
             .then(|| Sources::on_disk().text(&dest).ok())
             .flatten()
@@ -127,7 +127,7 @@ pub(super) fn write_or_update_canonical_agent_entrypoint(
 ///
 /// With `keep_members`, the block on disk keeps its `### Workspace members`
 /// section and the comparison runs on the spliced render, so `exists`, `updated`
-/// and the preview all follow from the one splice (§FS-init.2.3.4.15.8). A scoped
+/// and the preview all follow from the one splice (§FS-init.2.3.4). A scoped
 /// file carries no such section and passes `false`.
 pub(super) fn update_agents_block(
     dest: &Path,
@@ -147,7 +147,7 @@ pub(super) fn update_agents_block(
     Ok((result, MembersSection::of(&kept)))
 }
 
-/// §FS-init.2.3.4.15.8: `block`, the current render, with its `### Workspace
+/// §FS-init.2.3.4: `block`, the current render, with its `### Workspace
 /// members` section replaced by the bytes of the one the managed block in
 /// `existing` holds, from that heading to the next, in whatever rendering wrote
 /// them. `None` where `existing` has no block, its block has no such section, or
@@ -187,9 +187,9 @@ pub(crate) fn keep_workspace_members(existing: &str, block: &str) -> Option<Stri
 
 /// The pure string transform behind `update_agents_block`: splice the current
 /// managed block into `existing`, preserving everything outside it byte-for-byte
-/// — including the block's position and any CRLF endings (§FS-init.2.3.1,
-/// §FS-init.2.3.2). Returns `Unchanged` when the splice would reproduce
-/// `existing` exactly. A newer-than-supported block is an error.
+/// — including the block's position and any CRLF endings (§FS-init.2.3.10).
+/// Returns `Unchanged` when the splice would reproduce `existing` exactly. A
+/// newer-than-supported block is an error.
 pub(crate) fn update_agents_text(
     existing: &str,
     block: &str,
@@ -229,9 +229,9 @@ pub(crate) fn update_agents_text(
 }
 
 /// The one classification of an existing entrypoint's managed block, which both
-/// the write pass and the pre-write pass ask (§FS-init.1.2.6): the block to
+/// the write pass and the pre-write pass ask (§FS-init.1.2): the block to
 /// splice over, `None` when there is none, or the refusal for a malformed
-/// (§FS-init.2.3.11) or newer (§FS-init.2.3.10.2) block.
+/// (§FS-init.2.3.11) or newer (§FS-init.2.3.10) block.
 fn spliceable_agents_block(existing: &str, label: &str) -> Result<Option<AgentsBlock>> {
     match find_agents_block(existing) {
         // §FS-init.2.3.11: splicing against broken delimiters risks eating user
@@ -254,7 +254,7 @@ fn spliceable_agents_block(existing: &str, label: &str) -> Result<Option<AgentsB
     }
 }
 
-/// §FS-init.1.2.6: read every planned entrypoint the write pass would update and
+/// §FS-init.1.2: read every planned entrypoint the write pass would update and
 /// classify its block before the first write, so a refused block anywhere in the
 /// plan refuses the whole run. Walks the plan in write order — the canonical
 /// entrypoint (only when `--force` does not overwrite it), then each existing

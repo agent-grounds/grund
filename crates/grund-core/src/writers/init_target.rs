@@ -7,7 +7,7 @@ use super::integrations_clients::expand_target;
 use crate::model::{format_list, remedies};
 use crate::sources::{io_reason, lookup_refused, path_lookup};
 
-/// §FS-init.1.2.3: the version-control markers whose presence in the target or
+/// §FS-init.1.2: the version-control markers whose presence in the target or
 /// any ancestor says it is inside a working tree. Presence is what is tested,
 /// not type — a linked worktree and a submodule both write `.git` as a file.
 /// Nothing here reads any of them, so §FS-non-goals.6 is untouched: the
@@ -88,7 +88,7 @@ pub(crate) fn refuse_init_target(target: &Path, no_vcs: bool) -> Option<String> 
     ))
 }
 
-/// §FS-init.1.2.2 — decline when a planned entrypoint is one of the file-backed
+/// §FS-init.1.2 — decline when a planned entrypoint is one of the file-backed
 /// user-global agent instruction targets of §FS-integrations.4.3.8. This is not
 /// the home-directory rule restated: that one fires when `<path>` *is* `$HOME`,
 /// and `<path>` is arbitrary. `<path>/AGENTS.md` with `<path>` at `~/.codex`,

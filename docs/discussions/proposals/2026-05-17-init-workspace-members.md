@@ -9,7 +9,7 @@ Concluded. Ready to draft as additions to [§FS-init](../../functional-spec/FS-i
 `grund init` is workspace-blind today. It writes a single `AGENTS.md` (plus
 companion entrypoints) and a single `.agents/grund.toml` for the directory it is
 invoked in, and the managed block's Project Map
-([§FS-init.2.3.4.4](../../functional-spec/FS-init.md#2344-project-map))
+([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections))
 lists only the declaration homes from that one project's effective config.
 
 That is fine for a single-project repo and matches [§FS-init](../../functional-spec/FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo)'s commitment to "no
@@ -63,7 +63,7 @@ directories. Bootstrapping a member's own `AGENTS.md` remains a separate
 - Do not add a `[workspace]` block to a config that does not already have one.
   The section appears only when the config already declares members.
 - Do not change the Project Map format
-  ([§FS-init.2.3.4.4](../../functional-spec/FS-init.md#2344-project-map)) —
+  ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)) —
   the members list is a sibling section, not an extension of the existing list,
   so the "declaration homes" semantics stay clean.
 - Do not surface `include_root = false` as anything other than the absence of
@@ -185,5 +185,5 @@ resolutions of the open questions and refinements on top.
 
 Next step: fold these into [§FS-init](../../functional-spec/FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo) alongside the existing managed-block
 contract, and update the Project Map section
-([§FS-init.2.3.4.4](../../functional-spec/FS-init.md#2344-project-map))
+([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections))
 to reference the new sibling section.

@@ -894,7 +894,7 @@ the `named` case follows for the first such heading, so `## 1. Terms` at line 5
 gets `; write line 5 as ## terms: Terms`: its `#` run, `NAME` in lower case,
 `: ` and its title. It is left out where that lower-case `NAME` is not a
 section name or is already the handle of a direct chapter. An unmarked heading it names shows
-the same form in its own finding ([§FS-declarations.checks.unmarked-heading.2.2](FS-declarations.md#checksunmarked-heading22-a-direct-field-title-or-name-is-also-shown-the-field-form)).
+the same form in its own finding ([§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)).
 
 ### 7.3 Outbound citation cardinality
 
@@ -1118,7 +1118,7 @@ citation shows there as `<ID>.<n>` where a plain one shows as `<ID>`, which is
 what tells the author which citation counted. The code was an error throughout and only these
 findings warned, so no finding is left to tell apart and the landed change has no
 line of its own for the release guard to read, as with
-[§FS-distribution.4.2.4](FS-distribution.md#424-the-scalar-clause-is-the-refs-warnings)'s scalar clause. What counts is specified at
+[§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s scalar clause. What counts is specified at
 [§FS-rules.5.1](FS-rules.md#51-facts-and-identity), and the decision and its completed route are
 [§DF-section-citation-counts-in-rules](../decisions/functional/DF-section-citation-counts-in-rules.md#df-section-citation-counts-in-rules-a-resolved-citation-to-a-numbered-section-counts-in-chapter-rules). This address, heading text included, is
 kept only so citations written during the window still resolve.
@@ -1315,7 +1315,7 @@ opt-in.
 ### 9.1 One tree renders one block
 
 The rendered section is a function of the authored sentences and of how the
-entrypoint renders their citations ([§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules)), never of the scope a
+entrypoint renders their citations ([§FS-init.2.3.5](FS-init.md#235-citation-directions)), never of the scope a
 run was given, so the bullet an unverifiable rule earns is the sentence exactly
 as its heading spells it. A member-scoped `init` therefore writes the bytes a
 run that held the whole workspace would write for that same file, and a `check`

@@ -37,7 +37,7 @@ pub(crate) fn member_root_for_scope(
 ) -> Option<PathBuf> {
     let scope = match canonical_path(start) {
         Ok(scope) => scope,
-        // §FS-scan.scope.homes.lookup.path: a refused path belongs to no member.
+        // §FS-scan.scope.homes.lookup: a refused path belongs to no member.
         Err(_) if path_lookup(start).is_err_and(|error| lookup_refused(&error)) => return None,
         Err(_) => start.to_path_buf(),
     };
@@ -123,7 +123,7 @@ fn canonical_member_path(path: &Path) -> PathBuf {
 /// across lines, or ending in the trailing comma TOML allows, is the list the
 /// config loads, and one still open at the end of the file, or at a line that ends
 /// inside a string, is residue, as the load refuses it
-/// (§FS-config-v2.reader.5.strings.refusal). Read one
+/// (§FS-config-v2.reader.5.strings). Read one
 /// line at a time, such a list was "not a list", and a workspace written that way
 /// silenced every unlisted block below it. Another key's array is joined only to
 /// be passed over; one that never closes swallows lines a claim may stand on, and
@@ -181,7 +181,7 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
             }
         };
         // A version-2 claim still open at the end of the file, or at its open line, is not a
-        // list, exactly where the load refuses it (§FS-config-v2.reader.5.strings.refusal).
+        // list, exactly where the load refuses it (§FS-config-v2.reader.5.strings).
         let value = match spans_lines {
             true => joined_value(value, idx + 1, &mut lines).value,
             false => Some(value.trim().to_string()),

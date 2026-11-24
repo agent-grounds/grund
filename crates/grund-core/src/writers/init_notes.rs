@@ -13,14 +13,14 @@ use crate::workspace::absent_optional_member_subject;
 
 /// The `note:` for a repository whose committed `link` opinion cannot reach
 /// Claude, because a Claude entrypoint is a symlink to the canonical file
-/// (§FS-init.2.3.4.17.4). Silence here reads as the opinion not working, on the
+/// (§FS-init.2.3.6). Silence here reads as the opinion not working, on the
 /// one agent it was mostly written for.
 ///
 /// The fix the note names is the one the *tree* leaves open, not the one this
 /// run happens to be about: whether Claude has an entrypoint of its own is a
 /// fact about the repository, and a run that selected some other agent has not
 /// changed it. So `planned` — this run's plan for the files Claude reads
-/// (§FS-init.2.1.1.1) — only decides *which* entrypoint to name and whether it is
+/// (§FS-init.2.1.1) — only decides *which* entrypoint to name and whether it is
 /// current by the time the run ends; an entrypoint already on disk answers the
 /// question just as well. Where Claude has none: write it where a path is free,
 /// and — where symlinks have taken every path Claude reads — delete one first,
@@ -132,7 +132,7 @@ fn claude_entrypoint_rows() -> impl Iterator<Item = &'static CompanionAgentEntry
 ///
 /// `reach` withholds that reading for a symlink whose agent the canonical render
 /// cannot speak for, because there the shadowed-entrypoint note above names the
-/// same two files and a *better* fix (§FS-init.2.3.4.17.4). "Delete the one you do
+/// same two files and a *better* fix (§FS-init.2.3.6). "Delete the one you do
 /// not want" is the wrong sentence for a repository that committed the `link`
 /// opinion and just asked for the second file: one of the two is a symlink to
 /// the entrypoint every other agent reads, and only the specific note says which.
@@ -193,7 +193,7 @@ pub(super) fn duplicate_agent_entrypoint_notes(
     notes
 }
 
-/// §FS-init.2.3.4.15.8: one `note:` per optional member absent from this run,
+/// §FS-init.2.3.4: one `note:` per optional member absent from this run,
 /// ordered by namespace. It names the member as `check`'s warning does, then says
 /// for each root entrypoint the run reports (`members`, in report order) whether
 /// that entrypoint's `### Workspace members` section was kept as it was or written

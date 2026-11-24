@@ -61,7 +61,7 @@ pub struct LspSnapshot {
     /// report findings: they are settled before a report exists, and the server
     /// publishes them beside `report` rather than inside it. The unlisted
     /// `[workspace]` block was the fourth and travels in `report` now, as a
-    /// located error (§FS-check.3.29.13); the absorbed scan was the third and
+    /// located error (§FS-check.3.29); the absorbed scan was the third and
     /// refuses the run as a config error (§FS-check.3.30).
     pub run_warnings: Vec<Finding>,
     pub declarations: Vec<LspDeclaration>,
@@ -71,7 +71,7 @@ pub struct LspSnapshot {
     /// whole-ID home set stays the bare-ID declarations.
     pub sections: Vec<LspDeclaration>,
     /// Exact spans for located findings that must not become editor navigation
-    /// targets (§FS-lsp.1.1, §FS-lsp.1.1.1, §FS-declarations.checks.section-outside-declaration.2).
+    /// targets (§FS-lsp.1.1, §FS-lsp.1.1.1, §FS-declarations.checks.section-outside-declaration).
     pub finding_ranges: Vec<LspFindingRange>,
     pub stubs: Vec<LspStub>,
     pub citations: Vec<LspCitation>,

@@ -35,7 +35,7 @@ use std::collections::BTreeMap;
 /// Which of a `--full` run's two scopes a citation site is being judged on
 /// (§FS-check.1.3.3). It changes exactly one thing: outside the configured scope,
 /// `grund fmt --write` will not rewrite the site either, so the mechanical
-/// shorthand form is withheld there (§FS-check.3.14.4).
+/// shorthand form is withheld there (§FS-check.3.14).
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum ReferenceTier {
     Configured,
@@ -43,7 +43,7 @@ pub(crate) enum ReferenceTier {
 }
 
 /// The last release cut before the declaration-local section form became an
-/// error — the "from" half of the pair §FS-check.3.24.1 requires every shape of
+/// error — the "from" half of the pair §FS-check.3.24 requires every shape of
 /// the finding to name, in the past tense §FS-distribution.4.2 closes the
 /// vocabulary on. `local_section_rule_releases_are_ordered_and_behind_us` holds
 /// both halves to releases that actually happened, the way
@@ -51,19 +51,19 @@ pub(crate) enum ReferenceTier {
 pub(super) const LOCAL_SECTION_RULE_PRIOR_RELEASE: &str = "0.13.1";
 
 /// The release the declaration-local section verdict moved in — the "to" half of
-/// that pair (§FS-check.3.24.1).
+/// that pair (§FS-check.3.24).
 pub(super) const LOCAL_SECTION_RULE_RELEASE: &str = "0.14.0";
 
-/// §FS-check.3.24.1: the clause every shape of the finding ends with. Appended,
+/// §FS-check.3.24: the clause every shape of the finding ends with. Appended,
 /// never woven in, so the text the rule shipped with survives as a verbatim
-/// contiguous prefix wherever that text still stands (§FS-check.3.24.2).
+/// contiguous prefix wherever that text still stands (§FS-check.3.24).
 fn local_section_release_attribution() -> String {
     format!(
         " — unchecked in grund {LOCAL_SECTION_RULE_PRIOR_RELEASE}, an error in {LOCAL_SECTION_RULE_RELEASE}"
     )
 }
 
-/// §FS-check.3.24, §FS-check.3.24.3: the remedy of every shape that has no full
+/// §FS-check.3.24: the remedy of every shape that has no full
 /// citation to propose — an ownerless site, an unsupported token, and an owned site
 /// whose owner lacks the section. `<tail>` is the token with its marker taken off,
 /// so the escape is the token the author would type.
@@ -113,7 +113,7 @@ pub(super) fn check_citation_resolution(
         let written = cite.text.trim();
         let section = cite.section.as_deref().unwrap_or_default();
         let owner = render_catalog_id(frame.grammar(), &findings.declarations, &cite.id);
-        // §FS-check.3.24.3: where `missing section` fires beside this site, its full
+        // §FS-check.3.24: where `missing section` fires beside this site, its full
         // citation would only trade one error for the other; name the absence and the
         // escape instead.
         let resolves = section_resolves(findings, &cite.id, section);
@@ -128,16 +128,16 @@ pub(super) fn check_citation_resolution(
                 full_citation_or_escape(schema, written)
             )
         };
-        // §FS-check.3.24.1: offered exactly where the next formatter pass would
-        // write this site — the test §FS-check.3.14.4 makes for the sibling rule,
+        // §FS-check.3.24: offered exactly where the next formatter pass would
+        // write this site — the test §FS-check.3.14 makes for the sibling rule,
         // so no finding names a command that would answer `rewrote 0 lines`.
 
         // §FS-errors.5.5.1: its own case, after the release clause rather than a slot in it.
         let command = if cite.shorthand_rewritable
             && tier == ReferenceTier::Configured
-            // §FS-check.3.24.1: an absent target section is a site fmt declines.
+            // §FS-check.3.24: an absent target section is a site fmt declines.
             && resolves
-            // §FS-check.3.24.1: so is front matter, which fmt never rewrites
+            // §FS-check.3.24: so is front matter, which fmt never rewrites
             // (§FS-check.1.1.5.2); the error still fires, only the offer goes.
             && !findings
                 .files
@@ -172,7 +172,7 @@ pub(super) fn check_citation_resolution(
         } else {
             format!("local section citation {written} has no enclosing declaration; {guidance}")
         };
-        // §FS-check.3.24.1: both candidate shapes name the releases and neither
+        // §FS-check.3.24: both candidate shapes name the releases and neither
         // ever names the command — §FS-fmt.2.4 leaves them byte-identical
         // because there is no owner to expand them against.
         message.push_str(&local_section_release_attribution());

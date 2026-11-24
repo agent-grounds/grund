@@ -160,7 +160,7 @@ such as `fs.json` is read as data, and only a value kind reads that data. A fetc
 snapshot needs a document language instead, so give it a name a listed
 document language reads; changing the fetched kind to a value kind cannot make
 its Markdown output valid JSON
-([§FS-scan.checks.unread-scan-root.message](../functional-spec/FS-scan.md#checksunread-scan-rootmessage-the-message)).
+([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).
 
 A fetch also refuses, before the integration runs, when the selected project's
 scan finds the ID declared outside the home, in Markdown or a source comment, for

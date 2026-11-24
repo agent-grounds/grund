@@ -16,7 +16,7 @@ pub struct InitOpts {
     pub description: Option<String>,
     /// `--template` — the built-in template named on the command line, if any
     /// (§FS-init.1.6). `None` lays the default; a named one, the default's name
-    /// included, also earns the note over an existing config (§FS-init.1.6.5).
+    /// included, also earns the note over an existing config (§FS-init.1.6).
     pub template: Option<String>,
     /// `--scaffold` — also lay the template's starter files (§FS-init.1). The
     /// field keeps its name because it is published API (§DF-init-templates.2.3).
@@ -29,7 +29,7 @@ pub struct InitOpts {
     /// implies `dry_run` inside `init` rather than opening a second path through it.
     pub check: bool,
     /// `--no-vcs` — scaffold into a target no version-control marker covers
-    /// (§FS-init.1.2.3). Lifts that rule and only that one; it is not `--force`,
+    /// (§FS-init.1.2). Lifts that rule and only that one; it is not `--force`,
     /// which decides whether files `init` owns get overwritten (§FS-init.3).
     pub no_vcs: bool,
     pub agent_selection: InitAgentEntrypointSelection,
@@ -80,14 +80,14 @@ pub struct InitOutput {
     /// `--dry-run` (§FS-init.4.1); operational failures instead earn 2.
     pub errors: Vec<Finding>,
     /// Things the run could not do that the caller would otherwise have to
-    /// notice for itself (§FS-init.2.3.4.17.4). Reported, never fatal.
+    /// notice for itself (§FS-init.2.3.6). Reported, never fatal.
     pub notes: Vec<String>,
     pub next: Option<InitNext>,
     /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
     /// cautions the walk-up settled — §FS-check.4.10's unread opted-out block
     /// and §FS-workspace.6.1.7.5's undecidable ancestor claim; an absorbed scan
     /// fails the expansion instead, which leaves the section out
-    /// (§FS-check.3.30.2). `init` expands the outermost workspace above
+    /// (§FS-check.3.30). `init` expands the outermost workspace above
     /// its target to teach the alias set, so it resolves a block's member
     /// boundary like every other walking command and owes the reader the same
     /// lines (§FS-check.2.1.1).

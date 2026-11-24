@@ -5,7 +5,7 @@
 //! check that raises it ask one component for one answer from opposite
 //! directions (§AR-checker.2.7, §FS-check.3.5.4). The chapter-rule section is
 //! rendered from the check run's own catalog, so building it adds no walk
-//! (§FS-init.2.3.4.15), and the workspace sections from the projects the run
+//! (§FS-init.2.3.4), and the workspace sections from the projects the run
 //! already loaded, or not at all (§FS-check.3.5.5).
 
 use crate::sources::path_exists;
@@ -88,7 +88,7 @@ pub(crate) fn expected(
     });
     let blocks_withheld = matches!(sentences, Some(Err(_)));
     let rules = sentences.and_then(Result::ok);
-    // §FS-init.2.3.5.10: render destinations from the same loaded declarations
+    // §FS-init.2.3.5: render destinations from the same loaded declarations
     // that supplied the validated, ordered rule sentences.
     let guidance = Guidance::new(
         config,
@@ -101,7 +101,7 @@ pub(crate) fn expected(
     let root = &config.root;
     let canonical = root.join(CANONICAL_AGENT_ENTRYPOINT);
     let canonical_exists = path_exists(&canonical);
-    // §FS-init.2.3.4.15: one workspace render for every surface of the project.
+    // §FS-init.2.3.4: one workspace render for every surface of the project.
     let members = blocks.guidance(root, &config.marker);
     let mut entrypoints = Vec::new();
     if canonical_exists {
@@ -139,10 +139,10 @@ pub(crate) fn expected(
 
 /// The scoped entrypoints `check` compares (§FS-check.3.5): each destination's
 /// `AGENTS.md` and the standalone companions beside it, then the files of each
-/// orphan the list on disk names that lose their block (§FS-init.2.3.5.14.3),
+/// orphan the list on disk names that lose their block (§FS-init.2.3.5),
 /// all only where a root entrypoint already carries a block. Returns every
 /// scoped file and companion no row's `files` lists, which are guidance about a
-/// directory's units and never one of them (§FS-init.2.3.5.11).
+/// directory's units and never one of them (§FS-init.2.3.5).
 fn scoped_entrypoints(
     config: &Config,
     guidance: &Guidance<'_>,
@@ -198,7 +198,7 @@ fn scoped_entrypoints(
 }
 
 /// The managed-block version this config asks for without scoped guidance:
-/// the rule-kind member once a kind declares rules (§FS-init.2.3.7.1);
+/// the rule-kind member once a kind declares rules (§FS-init.2.3.7);
 /// `Guidance` moves it to the scoped pair for a scoped file or a declaration shape.
 pub(crate) fn block_version(config: &Config) -> u32 {
     let rules = config.kinds.iter().any(|kind| kind.rules);
@@ -210,7 +210,7 @@ pub(crate) fn block_version(config: &Config) -> u32 {
 }
 
 /// The shared chapter-rule section for `init` and the drift comparison's
-/// `Expected` (§FS-init.2.3.5.10). Preserve ordered authored titles and use the
+/// `Expected` (§FS-init.2.3.5). Preserve ordered authored titles and use the
 /// formatter's destination/anchor resolver for live citations relative to this
 /// entrypoint. Only the citation is rendered; no formatter runs over the
 /// authored sentence.

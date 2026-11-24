@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-27
 
-Settles how the `### Citation directions` section joins a prohibition's targets, as [§FS-init.2.3.5.4](../../functional-spec/FS-init.md#2354-targets) specifies. Refines the target rules of [§DF-directions-render.2.2](DF-directions-render.md#22-the-rules-the-render-follows). Serves [§GOAL-agent-grounding](../../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work): the rule an agent reads is the rule `grund check` enforces.
+Settles how the `### Citation directions` section joins a prohibition's targets, as [§FS-init.2.3.5](../../functional-spec/FS-init.md#235-citation-directions) specifies. Refines the target rules of [§DF-directions-render.2.2](DF-directions-render.md#22-the-rules-the-render-follows). Serves [§GOAL-agent-grounding](../../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work): the rule an agent reads is the rule `grund check` enforces.
 
 ## status: Accepted
 
@@ -12,13 +12,13 @@ Settles how the `### Citation directions` section joins a prohibition's targets,
 
 ## 2. Decision
 
-A prohibition clause's targets join as one list of alternatives: every entry's alternatives in written order, "or" between two, the Oxford comma from three, and no parentheses, since nothing is grouped ([§FS-init.2.3.5.4](../../functional-spec/FS-init.md#2354-targets)). `must-not = ["FS", "AR"]` and `must-not = ["FS|AR"]` forbid the same citations, so they render the same `must not cite FS or AR`. An obligation keeps the grouping of [§DF-directions-render.2.2](DF-directions-render.md#22-the-rules-the-render-follows). No `grund check` verdict moves: only the text an agent reads, under the block-version bump it shares ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)).
+A prohibition clause's targets join as one list of alternatives: every entry's alternatives in written order, "or" between two, the Oxford comma from three, and no parentheses, since nothing is grouped ([§FS-init.2.3.5](../../functional-spec/FS-init.md#235-citation-directions)). `must-not = ["FS", "AR"]` and `must-not = ["FS|AR"]` forbid the same citations, so they render the same `must not cite FS or AR`. An obligation keeps the grouping of [§DF-directions-render.2.2](DF-directions-render.md#22-the-rules-the-render-follows). No `grund check` verdict moves: only the text an agent reads, under the block-version bump it shares ([§FS-init.2.3.7](../../functional-spec/FS-init.md#237-the-block-version)).
 
 ## 3. Alternatives considered
 
 | Option | Why rejected |
 |---|---|
-| `must not cite FS and must not cite AR` | Says the same thing at twice the length, and the clause order of [§FS-init.2.3.5.3](../../functional-spec/FS-init.md#2353-the-clauses) has no slot for a repeated modal. |
+| `must not cite FS and must not cite AR` | Says the same thing at twice the length, and the clause order of [§FS-init.2.3.5](../../functional-spec/FS-init.md#235-citation-directions) has no slot for a repeated modal. |
 | `must not cite FS nor AR` | "nor" after "not" is archaic in English and reads as a double negative to a reader for whom English is a second language. |
 | `must not cite any of FS and AR` | Keeps the "and" that misled, and adds a quantifier no other clause has. |
 

@@ -230,7 +230,7 @@ pub(crate) fn expand_workspace_tree(
 }
 
 /// [`expand_workspace_tree`] with the base every block's config path is rendered
-/// against named explicitly (§FS-check.3.29.7, §FS-errors.4).
+/// against named explicitly (§FS-check.3.29, §FS-errors.4).
 ///
 /// One run renders every block against one base, and that base is the root the
 /// run was launched at — the same one [`AncestorWorkspaces::for_run_at`] carries
@@ -448,7 +448,7 @@ pub(super) fn expand_workspace_projects(
 /// reached them: the run names each one's config findings (§FS-check.4.11.3), and
 /// poses §FS-check.4.10 to those with a present member once it knows where the run's
 /// projects are (§FS-check.2.1). A block whose own members swallow its scan is
-/// refused here instead, at its own `members` line (§FS-check.3.30.2).
+/// refused here instead, at its own `members` line (§FS-check.3.30).
 #[allow(clippy::too_many_arguments)]
 fn collect_workspace_members(
     members: &[WorkspaceMember],
@@ -535,7 +535,7 @@ fn collect_workspace_members(
         // contributes its whole subtree, and `include_root` on *its* block
         // decides whether the grouping directory is one of the projects.
         let nested = expand_workspace_member_list(&member_config)?;
-        // §FS-check.3.30.2: a block below the run's root is populated here and
+        // §FS-check.3.30: a block below the run's root is populated here and
         // nowhere else, so this is where it is refused — at its own `members`
         // line (§FS-errors.4).
         reject_absorbed_scan(&member_config, &nested.members)?;

@@ -68,7 +68,7 @@ The *default* is a different question, and it is committable. `file` embeds noth
 the agent composes the absolute path at write time from the repository root it already has, so two
 installs render the same instruction byte-for-byte ([§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). A repository that commits
 `conversation = "link"` therefore teaches the `file` form through its generated entrypoint
-([§FS-init.2.3.4.17](../../functional-spec/FS-init.md#23417-clickable-citations)), and a machine that names a target overrides it under the precedence rule that
+([§FS-init.2.3.6](../../functional-spec/FS-init.md#236-clickable-citations)), and a machine that names a target overrides it under the precedence rule that
 already governs this pair ([§DF-repo-conversation-opinion.2.3](DF-repo-conversation-opinion.md#23-precedence)).
 
 ### 2.4 The form is gated per agent, and the fallback is `path`
@@ -147,7 +147,7 @@ what the user set.
   decision exists, and the reason an unverified row is now recorded as unverified rather than as
   behavior.
 - The clause *never a Markdown link* leaves the three texts that carried it — the repository entrypoint
-  ([§FS-init.2.3.4.17](../../functional-spec/FS-init.md#23417-clickable-citations)), the `link` global block ([§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions)), and [§DF-repo-conversation-opinion.2.1](DF-repo-conversation-opinion.md#21-the-link-form-is-a-markdown-link-over-an-absolute-uri)
+  ([§FS-init.2.3.6](../../functional-spec/FS-init.md#236-clickable-citations)), the `link` global block ([§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions)), and [§DF-repo-conversation-opinion.2.1](DF-repo-conversation-opinion.md#21-the-link-form-is-a-markdown-link-over-an-absolute-uri)
   — and is replaced by the narrower true statement: never a *relative* target, and never a local target
   on a surface that renders the destination in place of the label.
 - The managed entrypoint block bumps to v6 and the agent-guidance block to v3 ([§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).

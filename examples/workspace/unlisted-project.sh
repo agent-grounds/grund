@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Demonstrate §FS-declarations.checks.misplaced-declaration.unlisted-project.
+# Demonstrate §FS-declarations.checks.misplaced-declaration.
 set -eu
 
 mkdir -p "$HOME/ag/tmp"

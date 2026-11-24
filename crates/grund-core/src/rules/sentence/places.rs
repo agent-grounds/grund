@@ -18,7 +18,7 @@ pub(crate) struct SubjectKinds {
     pub(super) entries: BTreeMap<String, KindEntry>,
     places: Vec<CitationPlace>,
     /// Each place whose row grounds nothing, with the setting that makes its
-    /// uncited files findings (§FS-init.2.3.5.2.2).
+    /// uncited files findings (§FS-init.2.3.5).
     ungrounded: BTreeMap<String, String>,
 }
 
@@ -94,7 +94,7 @@ impl SubjectKinds {
             return None;
         }
         let target = escape_toml_basic(target);
-        // §FS-init.2.3.5.2.2: the entry alone never judges a file that cites nothing.
+        // §FS-init.2.3.5: the entry alone never judges a file that cites nothing.
         // §FS-errors.5.5.1: invalid-rule's place case, with its grounding where the entry
         // alone never judges a file that cites nothing.
         let express = match self.ungrounded.get(&place.name) {

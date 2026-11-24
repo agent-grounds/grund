@@ -1,8 +1,8 @@
 //! What it means for an index to **mention** an ID it holds no entry for
-//! (§FS-check.3.18.5.1) — the look `check_kind_indexes` words its missing-entry
+//! (§FS-check.3.18) — the look `check_kind_indexes` words its missing-entry
 //! finding on, in a file of its own beside the rule that raises it
 //! (§AR-core-module-layout.1). It decides nothing and raises nothing
-//! (§FS-check.3.18.6): it answers one question about the index's text.
+//! (§FS-check.3.18): it answers one question about the index's text.
 
 use std::collections::BTreeSet;
 
@@ -11,7 +11,7 @@ use crate::grammar::{MarkdownBlocks, parse_id};
 use crate::model::{Declaration, Id};
 
 /// Whether `line` names `file_name` as a **whole** file name
-/// (§FS-check.3.18.5.1). The character on either side must be one that cannot
+/// (§FS-check.3.18). The character on either side must be one that cannot
 /// continue a file name, so `overview.md` is named by neither `my-overview.md`
 /// nor `overview.markdown`, while a path ending in the name still names that
 /// file, because `/` cannot continue one either.
@@ -40,8 +40,8 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
 }
 
 /// Which of the index's unentered covered IDs its text **mentions**
-/// (§FS-check.3.18.5.1) — the evidence §FS-check.3.18's missing-entry finding
-/// words itself on, and never a finding of its own (§FS-check.3.18.6).
+/// (§FS-check.3.18) — the evidence §FS-check.3.18's missing-entry finding
+/// words itself on, and never a finding of its own (§FS-check.3.18).
 ///
 /// One pass over the index's lines. A line inside a fenced block is not the page
 /// saying anything, by the one fence reader every Markdown surface shares
@@ -50,7 +50,7 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
 /// declaration heading declares the ID rather than mentioning it — the same test
 /// the entry-form pass applies (§FS-fmt.6.4). Inline code is deliberately *not*
 /// excluded, which is what lets one sentence be true both of a citation the scan
-/// recorded and discarded (§FS-check.3.17.4) and of a markerless mention it never
+/// recorded and discarded (§FS-check.3.17) and of a markerless mention it never
 /// recorded at all.
 ///
 /// Whether a 1-indexed line is a declaration heading is `declaration_heading`'s

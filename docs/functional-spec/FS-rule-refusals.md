@@ -765,7 +765,7 @@ It names the supported configuration route, never an `accepted form`, and
 never recommends making the row citable. That entry alone judges only a file
 there that already cites something ([§FS-check.3.11](FS-check.md#311-missing-required-citation)), so where the row grounds
 nothing at any strength the hint also names the grounding setting the Citation
-directions bullet names ([§FS-init.2.3.5.2.2](FS-init.md#23522-a-home-whose-row-grounds-nothing-says-so)), in the live version, as what
+directions bullet names ([§FS-init.2.3.5](FS-init.md#235-citation-directions)), in the live version, as what
 makes a file there that cites nothing a finding. Where the row grounds, the hint
 names the citation entry alone.
 

@@ -31,7 +31,7 @@ use crate::scanner::SliceSink;
 /// one walk (§AR-scanner.2.8). A stub that reaches it has no body to
 /// measure: either it is broken (§FS-list.2.5, §FS-list.3.4), or its home lies
 /// outside the walk and the caller is `check`'s lead budget, which judges scanned
-/// sites only (§FS-declarations.checks.oversized-lead.4). The size catalog passes
+/// sites only (§FS-declarations.checks.oversized-lead). The size catalog passes
 /// such a stub's home instead (§FS-list.3.4.6).
 pub(crate) fn point_body_pair(
     files: &FileRecords,

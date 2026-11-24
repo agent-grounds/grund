@@ -13,7 +13,7 @@ use crate::model::remedies;
 use crate::model::{Catalog, CheckReport, Code, Diagnostic, LANDED_CLAUSE};
 
 /// §FS-declarations.checks.declaration-near-miss: one error per heading that came close, since
-/// `0.16.0` (§FS-declarations.checks.declaration-near-miss.5). The severity never changes catalog
+/// `0.16.0` (§FS-declarations.checks.declaration-near-miss). The severity never changes catalog
 /// recognition or citation promotion, so the read commands still resolve the ID. Sorted with the
 /// rest of the report by the shared comparator, so a run over one tree prints them in the same
 /// order every time (§FS-errors.4.1).
@@ -43,8 +43,8 @@ pub(super) fn check_declaration_near_misses(
 /// that template reads. Three facts, no proposal — `check` reports facts about
 /// the tree and the config (§FS-check.3 vs §FS-check.4), and the corrected ID is the one
 /// thing here that would be a guess. It names the loaded effective key
-/// (§FS-declarations.checks.declaration-near-miss.4) and ends in the landed clause
-/// (§FS-declarations.checks.declaration-near-miss.5).
+/// (§FS-declarations.checks.declaration-near-miss) and ends in the landed clause
+/// (§FS-declarations.checks.declaration-near-miss).
 fn near_miss_message(schema: &Schema, frame: Frame<'_>, text: &str) -> String {
     let guidance = format_guidance(schema, frame, Some(text));
     format!(

@@ -1,5 +1,5 @@
 //! Context for placement errors beneath unread project configs
-//! (§FS-declarations.checks.misplaced-declaration.unlisted-project). Discovery and
+//! (§FS-declarations.checks.misplaced-declaration). Discovery and
 //! the quiet workspace claim test are shared with the standalone workspace rule;
 //! neither a candidate nor this explanation establishes a new scan boundary.
 
@@ -13,7 +13,7 @@ use super::unlisted::members_entry;
 use crate::config::{Frame, Run, Schema, config_file_in, root_scope_roots, unread_project_name};
 
 /// One quiet claim cache for both uses of an unlisted config
-/// (§FS-declarations.checks.misplaced-declaration.unlisted-project, §FS-check.3.29.2).
+/// (§FS-declarations.checks.misplaced-declaration, §FS-check.3.29).
 pub(super) struct UnlistedProjects<'a> {
     run: &'a Run,
     root: PathBuf,
@@ -21,7 +21,7 @@ pub(super) struct UnlistedProjects<'a> {
 }
 
 impl<'a> UnlistedProjects<'a> {
-    /// §FS-declarations.checks.misplaced-declaration.unlisted-project: reuse ancestor
+    /// §FS-declarations.checks.misplaced-declaration: reuse ancestor
     /// answers throughout a run rather than loading every candidate as a project.
     pub(super) fn new(run: &'a Run) -> Self {
         Self {
@@ -36,8 +36,8 @@ impl<'a> UnlistedProjects<'a> {
     /// member text was obtained (§FS-workspace.6.1.7.5): a named claim that cannot
     /// expand, or an ancestor whose `members` or `optional_members` cannot be read,
     /// leaves the claim undecidable, and undecidable is not unlisted. The standalone
-    /// unlisted-workspace finding (§FS-check.3.29.2) and the placement context
-    /// (§FS-declarations.checks.misplaced-declaration.unlisted-project) ask this one
+    /// unlisted-workspace finding (§FS-check.3.29) and the placement context
+    /// (§FS-declarations.checks.misplaced-declaration) ask this one
     /// question.
     pub(super) fn is_unlisted(&mut self, dir: &Path) -> bool {
         let canonical = canonical_workspace_path(dir);
@@ -59,7 +59,7 @@ impl<'a> UnlistedProjects<'a> {
     }
 }
 
-/// §FS-declarations.checks.misplaced-declaration.unlisted-project: config-only
+/// §FS-declarations.checks.misplaced-declaration: config-only
 /// context for the directories the checker asks about. This layer neither judges
 /// declarations nor changes diagnostics; it answers discovery and ownership.
 pub(crate) fn unlisted_project_contexts<'a>(
@@ -104,7 +104,7 @@ pub(crate) fn unlisted_project_contexts<'a>(
     contexts
 }
 
-/// §FS-declarations.checks.misplaced-declaration.unlisted-project: report paths
+/// §FS-declarations.checks.misplaced-declaration: report paths
 /// describe locations, while member entries and exclusion patterns are edits
 /// relative to the owning config root. A configured root needs a second edit.
 fn placement_context(
@@ -155,7 +155,7 @@ fn enclosing_config(frame: Frame<'_>) -> String {
 /// §FS-check.3.8.5: a bare unknown-alias `message` of an un-narrowed run, ended in
 /// the members entry its alias path needs when it names a directory beneath the
 /// run's root whose config no workspace lists. An undecidable claim is not
-/// unlisted, so it keeps the message bare (§FS-check.3.29.2).
+/// unlisted, so it keeps the message bare (§FS-check.3.29).
 pub(crate) fn with_unlisted_alias_repair(frame: Frame<'_>, alias: &str, message: String) -> String {
     let dir = frame.root().join(alias);
     let bare = frame.run.workspace.scope_path.is_empty()

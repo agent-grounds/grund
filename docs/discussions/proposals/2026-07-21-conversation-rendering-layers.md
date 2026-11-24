@@ -17,7 +17,7 @@ the committed entrypoint.
 [§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions) installs the local-conversation rendering preference (`plain` | `link`)
 exclusively into *global* agent instruction files (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, …),
 on the grounds that rendering is "a property of the user's machine, not a repository". The
-repository entrypoint owns only the repository-web rule ([§FS-init.2.3.4.17](../../functional-spec/FS-init.md#23417-clickable-citations)), and the repository
+repository entrypoint owns only the repository-web rule ([§FS-init.2.3.6](../../functional-spec/FS-init.md#236-clickable-citations)), and the repository
 `.agents/grund.toml` schema deliberately has no rendering keys ([§FS-config](../../functional-spec/FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)).
 
 Two frictions with the global-only design surfaced in practice:
@@ -35,7 +35,7 @@ researched and turns out to be portable to exactly one agent ([§DISC-conversati
 ## 3. Proposal
 
 Split conversation-rendering guidance across two layers with a defined precedence, mirroring the
-web-rule ownership split that already exists ([§FS-init.2.3.4.17](../../functional-spec/FS-init.md#23417-clickable-citations), [§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions)).
+web-rule ownership split that already exists ([§FS-init.2.3.6](../../functional-spec/FS-init.md#236-clickable-citations), [§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions)).
 
 ## 4. Repository layer: an opt-in committed opinion
 
@@ -177,7 +177,7 @@ cannot be reached any other way.
   order, and the reversal of the "no rendering keys" stance. Cites [§DF-neural-link-generation](../../decisions/functional/DF-neural-link-generation.md#df-neural-link-generation-agents-compose-clickable-citation-links-themselves-grund-does-not-grow-a-link-command) and
   [§DF-integrations-command](../../decisions/functional/DF-integrations-command.md#df-integrations-command-integrations-earns-a-cli-slot-as-one-time-setup-where-a-per-citation-link-command-did-not) as the standing frame.
 - [§FS-config.3](../../functional-spec/FS-config.md#3-keys-version-1): the `[reference] conversation` key (closed enum, `link` only, absent by default).
-- [§FS-init.2.3.4.17](../../functional-spec/FS-init.md#23417-clickable-citations) / [§FS-init.2.3.6](../../functional-spec/FS-init.md#236-clickable-citations): config-derived local-conversation sentence; managed-block
+- [§FS-init.2.3.6](../../functional-spec/FS-init.md#236-clickable-citations): config-derived local-conversation sentence; managed-block
   version bump v4 → v5.
 - [§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions): new self-scoping canonical block texts with the precedence sentence;
   global-instruction block version bump; drop the "schema has no rendering keys" sentence in favor

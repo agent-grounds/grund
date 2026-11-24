@@ -208,7 +208,7 @@ impl KindIndexEntries {
     /// So is a citation on a declaration heading, for either branch: it is a
     /// citation from the declaration that heading declares, the entry of no
     /// folder-owned ID (§FS-check.4.1.2.1) and the enrollment of no external one
-    /// (§FS-check.3.18.3).
+    /// (§FS-check.3.18).
     pub(crate) fn is_index_entry(&self, citation: &Citation) -> bool {
         if citation.namespace.is_some() || self.owed.is_empty() {
             return false;
@@ -241,7 +241,7 @@ impl KindIndexEntries {
     /// the one answer the entry rule, its mention look, the unused carve-out, `list
     /// --unused` and the `refs` label all read (§AR-checker.2.16). A citation on one
     /// is the entry of no ID (§FS-check.4.1.2.1), and the line declares an ID rather
-    /// than mentioning one (§FS-check.3.18.5.1).
+    /// than mentioning one (§FS-check.3.18).
     pub(super) fn on_declaration_heading(&self, path: &Path, line: usize) -> bool {
         scanned_decl_relative_path(path, &self.configured_root, &self.physical_root).is_some_and(
             |relative| {
@@ -367,7 +367,7 @@ fn refused_attempt_sites<'a>(
 /// The unqualified citation sites, as (file, line, column), that `fmt` leaves
 /// unwrapped as a value binding or as an attempt at one `check` refuses
 /// (§FS-values.8), by the predicates the formatter asks. A bare one in a kind's
-/// index is therefore no entry `grund fmt --write` would repair (§FS-check.3.17.4).
+/// index is therefore no entry `grund fmt --write` would repair (§FS-check.3.17).
 pub(super) fn fmt_protected_value_sites<'a>(
     findings: &'a Catalog,
     schema: &'a Schema,

@@ -6,7 +6,7 @@
 
 ## 1. Context
 
-[§FS-fmt.2.3](../../functional-spec/FS-fmt.md#23-what-is-never-rewritten) has always kept a citation inside a Markdown inline code span out of every rewrite, and [§FS-check.3.13.1](../../functional-spec/FS-check.md#3131-where-the-text-forbids-the-rewrite), [§FS-check.3.1.2](../../functional-spec/FS-check.md#312-an-illustration-in-inline-code) and [§FS-check.3.17.4](../../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule) read the same spans from the checker's side. None of them said where a span ends, and the one predicate they share answered by parity: every unescaped backtick flipped the line between prose and code. CommonMark does not read a span that way. A span opened by a run of two backticks closes only at the next run of exactly two, which is how Markdown writes a literal backtick in code:
+[§FS-fmt.2.3](../../functional-spec/FS-fmt.md#23-what-is-never-rewritten) has always kept a citation inside a Markdown inline code span out of every rewrite, and [§FS-check.3.13.1](../../functional-spec/FS-check.md#3131-where-the-text-forbids-the-rewrite), [§FS-check.3.1.2](../../functional-spec/FS-check.md#312-an-illustration-in-inline-code) and [§FS-check.3.17](../../functional-spec/FS-check.md#317-index-entry-is-not-a-link) read the same spans from the checker's side. None of them said where a span ends, and the one predicate they share answered by parity: every unescaped backtick flipped the line between prose and code. CommonMark does not read a span that way. A span opened by a run of two backticks closes only at the next run of exactly two, which is how Markdown writes a literal backtick in code:
 
 ```markdown
 Escaped `` \ ` * `` then [§GOAL-a](goals.md#goal-a-stale) here.

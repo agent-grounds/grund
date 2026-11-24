@@ -109,7 +109,7 @@ def watch(run_ids: list[str], main: str | None, deadline: float | None) -> int:
             else:
                 print(f"{name} passed", file=sys.stderr)
         pending = still
-        # A failure seen on the same poll as a move is a failure (§FS-distribution.4.4.1.4).
+        # A failure seen on the same poll as a move is a failure (§FS-distribution.4.4.1).
         if failed:
             cancel(pending)
             print(f"error: {failed}", file=sys.stderr)

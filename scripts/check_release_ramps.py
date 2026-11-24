@@ -12,7 +12,7 @@ Exit 1 if no release is possible, without choosing a candidate version.
 
 Given the version about to be cut, also check what the core-concerns plan still
 owes it: the deprecation ledger's notice statuses and the phase leads
-(§FS-distribution.4.2.2.1). Exit 1 when a message, the shared floor, a notice or
+(§FS-distribution.4.2.2). Exit 1 when a message, the shared floor, a notice or
 a phase disagrees with that release.
 
 Usage: check_release_ramps.py [release] [--root <tree>]
@@ -65,7 +65,7 @@ PATTERNS = tuple(
     (re.compile(re.escape(clause) + r"\s+(?:grund\s+)?\*{0,2}(\d+\.\d+\.\d+)"), clause, direction)
     for clause, direction in CLAUSES
 ) + (
-    # §FS-distribution.4.2.3.1: the landed half of an attribution pair is the bare
+    # §FS-distribution.4.2.3: the landed half of an attribution pair is the bare
     # clause, and it is a substring of both named-error tenses — so it is read only
     # where it opens a clause, never where a word stands in front of it.
     (
@@ -73,7 +73,7 @@ PATTERNS = tuple(
         "an error in",
         LANDED,
     ),
-    # §FS-distribution.4.2.4: scalar migrations say what a command "will exit"
+    # §FS-distribution.4.2.3: scalar migrations say what a command "will exit"
     # before the final `in grund <release>` deadline rather than putting the
     # release directly after the verb phrase.
     (
@@ -229,7 +229,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # §FS-distribution.release-floor: manifest rewrites cannot lower the tree's floor.
     try:
         shared_floor = read_release_floor(args.root)
-        # §FS-distribution.4.2.2.1: only an explicit candidate has the plan's deadlines.
+        # §FS-distribution.4.2.2: only an explicit candidate has the plan's deadlines.
         ledger_problems = (
             notice_problems(args.root, args.release) + phase_lead_problems(args.root, args.release)
             if args.release is not None else []

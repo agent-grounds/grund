@@ -18,8 +18,8 @@ use crate::templates::Template;
 /// The template a run lays, settled from its `--template` and `--scaffold`
 /// before anything is read or written. An unknown name and `none` beside
 /// `--scaffold` are refused here, so a refused run writes nothing
-/// (§FS-init.1.6.3, §FS-init.1.6.4). `None` is the default template
-/// (§FS-init.1.6.1).
+/// (§FS-init.1.6). `None` is the default template
+/// (§FS-init.1.6).
 pub(super) fn resolve_template(name: Option<&str>, scaffold: bool) -> Result<Template, String> {
     let template = match name {
         None => Template::default(),
@@ -41,7 +41,7 @@ pub(super) fn resolve_template(name: Option<&str>, scaffold: bool) -> Result<Tem
 }
 
 /// The note an explicitly named template earns when the target already has a
-/// config, which `init` never writes over (§FS-init.1.6.5): the flag must not
+/// config, which `init` never writes over (§FS-init.1.6): the flag must not
 /// silently do nothing. `existing` is the config as the report names it. The
 /// wording holds for a preview and a write alike, because neither writes it.
 pub(super) fn template_config_note(template: Template, existing: &str) -> String {

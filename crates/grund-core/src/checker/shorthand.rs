@@ -38,7 +38,7 @@ use crate::resolver::WorkspaceCheckTarget;
 /// A shorthand that resolves to zero or several declarations is still reported
 /// there — that is a dangling reference, not a formatting nit. The out-of-scope
 /// tier of `check --full` withholds it for the same reason: `fmt` scopes by
-/// `[scan] include` too (§FS-check.3.14.4).
+/// `[scan] include` too (§FS-check.3.14).
 ///
 /// A shorthand matching nothing earns `None` too while the run could not read the
 /// home of its kind's `fetch`, as a full ID absent from that home does: the run
@@ -64,7 +64,7 @@ fn shorthand_diagnostic(
             if unique.legacy_spelling().is_some() {
                 return None;
             }
-            // §FS-check.3.14.4: outside the configured scope `fmt` will not rewrite
+            // §FS-check.3.14: outside the configured scope `fmt` will not rewrite
             // the site either, so the same withholding applies for the same reason.
             if !cite.shorthand_rewritable || tier == ReferenceTier::OutOfScope {
                 return None;
@@ -87,7 +87,7 @@ fn shorthand_diagnostic(
                 ),
                 section
             );
-            // §FS-check.3.15.1: the same site, a different verdict — `fmt` will not
+            // §FS-check.3.15: the same site, a different verdict — `fmt` will not
             // rewrite a numeral in a run, so naming only the canonical form would
             // advise the edit that corrupts the line. Both exits; the author picks.
             if cite.numeric_run {

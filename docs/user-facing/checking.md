@@ -29,7 +29,7 @@ docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.
    for the repairs grund offers.
 2. Every section coordinate (`.3.1`) resolves to a heading inside the declaration. *(missing sections)*
 3. No ID is declared in two places. *(duplicates)*
-4. Every deeper ATX heading inside a scanned Markdown declaration body is another declaration or carries a numeric or enabled named section coordinate. Fences, file titles, body-closing headings, source doc-comments, setext text, and bold labels are exempt. *(unmarked headings)* A heading whose path is already in place but lacks a title (`### requirements.1`), has a `_` in a name (`## open_questions: Open Questions`), or writes a purely numeric path with a `:` (`## 1: Embedded`) is also told that fault and shown its repair with the path kept, `### requirements.1: Untitled`, `## open-questions: Open Questions` or `## 1. Embedded` ([§FS-declarations.checks.unmarked-heading.2.3](../functional-spec/FS-declarations.md#checksunmarked-heading23-a-complete-path-that-lacks-only-a-title-has-a-_-or-is-numeric-before-a--is-also-shown-its-fault)).
+4. Every deeper ATX heading inside a scanned Markdown declaration body is another declaration or carries a numeric or enabled named section coordinate. Fences, file titles, body-closing headings, source doc-comments, setext text, and bold labels are exempt. *(unmarked headings)* A heading whose path is already in place but lacks a title (`### requirements.1`), has a `_` in a name (`## open_questions: Open Questions`), or writes a purely numeric path with a `:` (`## 1: Embedded`) is also told that fault and shown its repair with the path kept, `### requirements.1: Untitled`, `## open-questions: Open Questions` or `## 1. Embedded` ([§FS-declarations.checks.unmarked-heading](../functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)).
 5. Every stub heading `# <ID>: [<text>](<path>)` points at a file containing the inline declaration. *(broken stubs)*
 
    A stub target must be a file the scan reads. If an exclusion keeps it out,
@@ -242,7 +242,7 @@ read and the walk refused at least one visible file by extension or language.
 The reason and repair come from the first such file in path order. An empty or
 absent home, a `.gitkeep`-only home, and content deliberately excluded or ignored
 stay silent. A file read by the value pass counts too
-([§FS-scan.checks.unread-scan-root.folder](../functional-spec/FS-scan.md#checksunread-scan-rootfolder-a-folder-home-in-which-nothing-is-read)).
+([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).
 For example, a folder holding `.txt` files with only Markdown admitted says:
 
 ```text
@@ -257,10 +257,10 @@ rename also names any required admission. A `.md` file is never read as data: an
 Rule folders need a document reader: admitting Rust cannot read a Markdown rule
 heading in `terms.rs`. Rename it to a suffix an admitted document language reads,
 such as `.md`
-([§FS-scan.checks.unread-scan-root.folder](../functional-spec/FS-scan.md#checksunread-scan-rootfolder-a-folder-home-in-which-nothing-is-read)).
+([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).
 Hidden data files still need
 a name that is not hidden as well as a document reader
-([§FS-scan.checks.unread-scan-root.message](../functional-spec/FS-scan.md#checksunread-scan-rootmessage-the-message)).
+([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).
 If the whole v2 scan has no language read for declarations, its empty-scan caution
 names the key to change: admit a language such as `markdown` in `languages`, or
 drop the mapping, such as `rs = "json"`, that keeps a listed language from reading its suffix
@@ -322,7 +322,7 @@ enclosing `[workspace] members` entry lists it, that directory is ordinary tree
 to the enclosing scan and its declarations follow the enclosing kind homes.
 When one is misplaced, the error identifies the unread nested config and the
 enclosing config/project whose homes apply, in text and JSON
-([§FS-declarations.checks.misplaced-declaration.unlisted-project](../functional-spec/FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)).
+([§FS-declarations.checks.misplaced-declaration](../functional-spec/FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)).
 
 For example, `packages/notify/requirements.md` can be misplaced when the enclosing
 project's home is its own root-level `requirements.md`. If notify belongs to the

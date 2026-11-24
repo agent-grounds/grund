@@ -48,8 +48,8 @@ learns the block.
 
 Front matter joins the zones no `fmt` pass rewrites ([§FS-citations.zones](../../functional-spec/FS-citations.md#zones-where-citation-text-is-never-rewritten)), because a Markdown
 link is not a valid YAML or TOML value. `check` follows: it withholds the
-`; run grund fmt --write` offer there ([§FS-check.3.24.1](../../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)) and does not demand an index entry
-there as a link ([§FS-check.3.17.4](../../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), so no finding names a command that would rewrite nothing.
+`; run grund fmt --write` offer there ([§FS-check.3.24](../../functional-spec/FS-check.md#324-declaration-local-section-citation)) and does not demand an index entry
+there as a link ([§FS-check.3.17](../../functional-spec/FS-check.md#317-index-entry-is-not-a-link)), so no finding names a command that would rewrite nothing.
 The shorthand error itself still fires, because the canonical form is valid YAML and TOML and
 the author can always write it by hand; front matter is not added to
 [§FS-citations.rewrite-exemption](../../functional-spec/FS-citations.md#rewrite-exemption-where-the-text-forbids-the-rewrite).

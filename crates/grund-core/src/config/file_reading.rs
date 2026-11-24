@@ -141,7 +141,7 @@ pub(crate) struct FileReading<'a> {
     /// of every file but a built-in's or a `document` or `data` definition's
     /// (§FS-languages.multi-line-string.suffix).
     extension: Option<&'a str>,
-    /// The spelling handed, which the name rules below ask (§FS-scan.identity.reading.entry).
+    /// The spelling handed, which the name rules below ask (§FS-scan.identity.reading).
     path: &'a Path,
     /// What the walk reads, whose `[scan] extensions` claim on a YAML file comes
     /// before a value home's (§FS-values.2.2).
@@ -154,7 +154,7 @@ pub(crate) struct FileReading<'a> {
 
 impl<'a> FileReading<'a> {
     /// The admitted data reader's name, for the one unread-name reason
-    /// (§FS-scan.checks.unread-scan-root.message).
+    /// (§FS-scan.checks.unread-scan-root).
     pub(crate) fn data_language(&self) -> Option<&'a str> {
         self.language
             .filter(|language| language.class == LanguageClass::Data)
@@ -162,7 +162,7 @@ impl<'a> FileReading<'a> {
     }
 
     /// The reading of `name`, which only the rule of §AR-config.1.6 can hand here. The path kept
-    /// is the spelling, which the entry tests ask (§FS-scan.identity.reading.entry).
+    /// is the spelling, which the entry tests ask (§FS-scan.identity.reading).
     pub(super) fn of(compiled: &'a Compiled, schema: &'a Schema, name: ReadName<'a>) -> Self {
         let (path, extension) = (name.spelling(), name.extension());
         let mut lexical = compiled.lexical(schema);

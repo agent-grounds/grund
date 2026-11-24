@@ -96,7 +96,7 @@ pub(super) fn root_lookup_failure(
         version,
     };
     let reason = walk_error_reason(&located);
-    // §FS-scan.scope.links.unresolvable.named: a looping link handed as the path is the line
+    // §FS-scan.scope.links.unresolvable: a looping link handed as the path is the line
     // the walk reports for it, so the two routes to one link stay one failure.
     let looping_link = located
         .io_error()
@@ -209,7 +209,7 @@ fn walk_error_report(
 /// is in no declared blind spot (§AR-scanner.1.9). A link whose resolution loops — a
 /// self-link, a cycle of links — is a loop, not a broken link, and is asked what the
 /// walker-reported loop is asked: the hidden-name and `[scan] exclude` tests and the
-/// ignore files as a directory, never `extensions` (§FS-scan.scope.links.owed.cycle). Any
+/// ignore files as a directory, never `extensions` (§FS-scan.scope.links.owed). Any
 /// other link, broken, is asked the name tests, the filter's `exclude` test and the
 /// ignore files, as the file it names would be.
 ///
@@ -237,7 +237,7 @@ fn walk_skips_link(
     match path_resolution(path) {
         _ if refused => directory_link_skipped(path, depth, filter, schema, frame),
         Resolution::Directory => directory_link_skipped(path, depth, filter, schema, frame),
-        // §FS-scan.scope.links.owed.cycle: a loop faces what a directory faces, never `extensions`.
+        // §FS-scan.scope.links.owed: a loop faces what a directory faces, never `extensions`.
         Resolution::Loop => depth > 0 && loop_skipped(path, filter, schema, frame),
         Resolution::NotDirectory | Resolution::Unresolved(_) => {
             // §FS-config-v2.schema.sources.exclude.roots: a pattern keeps a dangling file link out.
@@ -424,7 +424,7 @@ pub(super) fn loop_reason(bare: &str, name: Option<String>) -> String {
 
 /// Whether the walk was never going to read through a looping link, whichever way the loop
 /// was found: what a directory faces, the hidden-name and `[scan] exclude` tests and the
-/// ignore files as a directory, and never `extensions` (§FS-scan.scope.links.owed.cycle).
+/// ignore files as a directory, and never `extensions` (§FS-scan.scope.links.owed).
 /// The exclude test is the walk filter's own, so a v2 pattern keeps a loop out as it keeps
 /// out a directory (§FS-config-v2.schema.sources.exclude.roots), and the ignore files judge
 /// a link asked as a directory by their rules, whether or not it opens.

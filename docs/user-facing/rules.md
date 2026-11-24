@@ -371,7 +371,7 @@ each run pinned.
 In a version-2 config, a rule's bullet is written where its subject kind's
 guidance lands: the `### Chapter rules` section of the `AGENTS.md` above that
 kind's places, with its link relative to that file, rather than the root
-entrypoint ([§FS-init.2.3.5.11](../functional-spec/FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)). A rule about a kind with no place, or
+entrypoint ([§FS-init.2.3.5](../functional-spec/FS-init.md#235-citation-directions)). A rule about a kind with no place, or
 about another project's kind, stays in the root block, and
 `[presentation] rules = "root"` keeps every rule there
 ([setting up with `grund init`](init.md#scoped-guidance-in-a-version-2-config)).

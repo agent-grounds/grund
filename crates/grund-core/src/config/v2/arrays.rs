@@ -1,7 +1,7 @@
 //! An array written across lines (§FS-config-v2.reader.5): the lines it spans, joined
 //! into the one value the walk reads at its key's line, with its one trailing comma
 //! taken off (§FS-config-v2.reader.5.commas). A line that ends inside a string is the
-//! array's last, and the array is refused there (§FS-config-v2.reader.5.strings.refusal);
+//! array's last, and the array is refused there (§FS-config-v2.reader.5.strings);
 //! the quote-at-a-time reading of the readers before 0.22.0 is kept only to tell whether
 //! their window loaded it. The ancestor climb reads `[workspace] members` through this
 //! too (§FS-workspace.6.1.7.5). Apart from `walk.rs` so the line walk stays one pass and
@@ -13,7 +13,7 @@ use crate::grammar::is_escaped;
 /// The value a `key = value` line starts, as [`joined_value`] reads it.
 pub(crate) struct Joined {
     /// The value, or `None` when the array is refused as `unclosed array`: still open at the
-    /// end of the text, or at its open line (§FS-config-v2.reader.5.strings.refusal).
+    /// end of the text, or at its open line (§FS-config-v2.reader.5.strings).
     pub(crate) value: Option<String>,
     /// The array's open line, the first that ends inside a string and its last
     /// (§FS-config-v2.reader.5.strings); `None` when every string closes on its line.
@@ -21,13 +21,13 @@ pub(crate) struct Joined {
     /// For an array that loads, whether its text read through the 0.21.x trailing-comma
     /// window, so the refusal of its empty element names grund 0.22.0: whether taking off
     /// the whole run of commas before its `]` would leave no empty element where the one
-    /// trailing comma leaves one (§FS-config-v2.reader.5.commas.refusal).
+    /// trailing comma leaves one (§FS-config-v2.reader.5.commas).
     pub(crate) through_window: bool,
     /// For an array refused at its open line, its text as the readers before 0.22.0 read it,
     /// where their join closed it: its lines joined a quote at a time, each break read as one
     /// space, and the whole run of commas before its `]` taken off. Whether its elements then
     /// read as they read them tells whether their window loaded the array, and so whether its
-    /// refusal names grund 0.22.0 (§FS-config-v2.reader.5.strings.refusal).
+    /// refusal names grund 0.22.0 (§FS-config-v2.reader.5.strings).
     pub(crate) as_before: Option<String>,
 }
 
@@ -37,13 +37,13 @@ pub(crate) struct OpenLine {
     /// The line, 1-based.
     pub(crate) line: usize,
     /// Whether the string open at its end is a multi-line one, opened by three quotes in a
-    /// row, which version 2 does not read (§FS-config-v2.reader.5.strings.multi-line).
+    /// row, which version 2 does not read (§FS-config-v2.reader.5.strings).
     pub(crate) multi_line: bool,
 }
 
 impl OpenLine {
     /// The parenthetical `unclosed array` appends for this open line
-    /// (§FS-config-v2.reader.5, §FS-config-v2.reader.5.strings.multi-line).
+    /// (§FS-config-v2.reader.5, §FS-config-v2.reader.5.strings).
     pub(crate) fn parenthetical(self) -> String {
         let line = self.line;
         if self.multi_line {
@@ -63,7 +63,7 @@ impl OpenLine {
 /// config loads is never one the climb cannot read (§FS-workspace.6.1.7.5).
 ///
 /// A line that ends inside a string is the array's open line and its last, so the array
-/// is refused there, and `lines` is left after it (§FS-config-v2.reader.5.strings.refusal).
+/// is refused there, and `lines` is left after it (§FS-config-v2.reader.5.strings).
 /// Only then are the lines read again from the key's, as the readers before 0.22.0 joined
 /// them, for the text whose elements tell whether their window loaded the array.
 pub(crate) fn joined_value<'a, I>(value: &str, line: usize, lines: &mut I) -> Joined
@@ -91,7 +91,7 @@ where
             }
         }
         Join::Open(open) => {
-            // §FS-config-v2.reader.5.strings.refusal: the text 0.21.x read, whether or not
+            // §FS-config-v2.reader.5.strings: the text 0.21.x read, whether or not
             // their reading met an open line in it.
             let read_before = open.map(|_| join(value, line, &mut before, Quotes::OneAtATime));
             let as_before = match read_before {
@@ -119,9 +119,9 @@ enum Join {
 /// Join the lines of the array whose key's line, `line`, holds `value`, each with its `#`
 /// comment taken off on its own (§FS-config-v2.reader.5), until its `[` closes outside a
 /// string. Read as TOML reads quotes, the open line is the array's last
-/// (§FS-config-v2.reader.5.strings.refusal); read a quote at a time, as the 0.18.0 to 0.21.x
+/// (§FS-config-v2.reader.5.strings); read a quote at a time, as the 0.18.0 to 0.21.x
 /// readers read them, a string open at a line's end runs on into the next, the break read
-/// as one space (§FS-config-v2.reader.5.strings.window).
+/// as one space (§FS-config-v2.reader.5.strings).
 fn join<'a>(
     value: &str,
     line: usize,
@@ -159,7 +159,7 @@ enum Quotes {
     Toml,
     /// One at a time, each opening or closing a basic string, as the readers before 0.22.0
     /// read them, which only tells whether they loaded an array that version 2 refuses
-    /// (§FS-config-v2.reader.5.strings.refusal).
+    /// (§FS-config-v2.reader.5.strings).
     OneAtATime,
 }
 
@@ -243,7 +243,7 @@ fn multi_line_close(bytes: &[u8], mut from: usize) -> Option<usize> {
 /// An array value with its one trailing comma taken off, the one TOML allows: a comma
 /// before the `]` whose text before it, whitespace skipped, is neither `[` nor `,`
 /// (§FS-config-v2.reader.5.commas). Any other comma before the `]` has no element before
-/// it and stays for the element reader to refuse (§FS-config-v2.reader.5.commas.refusal),
+/// it and stays for the element reader to refuse (§FS-config-v2.reader.5.commas),
 /// which is told whether the array's text read through the 0.21.x window: whether taking
 /// off the whole run of adjacent commas, as the 0.18.0 to 0.21.x readers did, would have
 /// left no empty element behind.
@@ -263,7 +263,7 @@ fn array_value(value: &str) -> (String, bool) {
 }
 
 /// An array's text with the whole run of adjacent commas before its `]` taken off, as the
-/// 0.18.0 to 0.21.x readers took it off (§FS-config-v2.reader.5.commas.window).
+/// 0.18.0 to 0.21.x readers took it off (§FS-config-v2.reader.5.commas).
 fn commas_off(value: &str) -> String {
     match value.strip_suffix(']') {
         Some(inner) if value.starts_with('[') && inner.trim_end().ends_with(',') => {

@@ -112,7 +112,7 @@ The `yaml-value-source-deferred` code that used to report all of this is spent (
 
 A key repeated in one JSON object or YAML mapping, the same ID declared across value sources of either format, a Markdown/value-source collision, or the same value source claimed by two opted-in homes is an ambiguous duplicate declaration even when the components agree. The existing duplicate rule wins; neither source nor kind takes precedence ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)).
 
-The home is what enrolls a value source, so two opted-in homes are two claims on one set of declarations: the duplicate stands, it names each spelling once, and each spelling is judged at its own home ([§FS-declarations.checks.misplaced-declaration.2](FS-declarations.md#checksmisplaced-declaration2-another-kinds-home)). So with `a/limits.json -> ../values/limits.json`, where CONST owns `values/` and OTHER owns `a/`:
+The home is what enrolls a value source, so two opted-in homes are two claims on one set of declarations: the duplicate stands, it names each spelling once, and each spelling is judged at its own home ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)). So with `a/limits.json -> ../values/limits.json`, where CONST owns `values/` and OTHER owns `a/`:
 
 ```text
 a/limits.json:1: error: CONST-room-limit declares kind CONST inside OTHER home a; move it to a home of its own kind

@@ -27,7 +27,7 @@ struct Table {
     /// The physical files read under neither name (§FS-scan.checks.reading-conflict).
     refused: BTreeSet<PathBuf>,
     /// Each name no plain run reaches, of a file it reaches by another: that other name, which it
-    /// is read by (§FS-scan.identity.reading.plain).
+    /// is read by (§FS-scan.identity.reading).
     plain_names: HashMap<PathBuf, PathBuf>,
     /// Whether a walk has published, so that a miss means the spelling is the file's own.
     walked: bool,
@@ -145,7 +145,7 @@ impl Spellings {
     }
 
     /// `name` is reached by no plain run, and `plain` is the name that run reads the file by
-    /// (§FS-scan.identity.reading.plain).
+    /// (§FS-scan.identity.reading).
     pub(crate) fn publish_plain_name(&self, name: &Path, plain: &Path) {
         self.write()
             .plain_names
@@ -153,7 +153,7 @@ impl Spellings {
     }
 
     /// The name a plain run reads the file by, where `spelling` is not one it reaches and another
-    /// is (§FS-scan.identity.reading.plain).
+    /// is (§FS-scan.identity.reading).
     pub(crate) fn plain_name_of(&self, spelling: &Path) -> Option<PathBuf> {
         self.read().plain_names.get(spelling).cloned()
     }

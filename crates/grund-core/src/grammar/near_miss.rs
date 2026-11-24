@@ -147,7 +147,7 @@ fn first_declaration_bytes(comment_prefixes: &[String]) -> Vec<u8> {
     bytes
 }
 
-/// The heading token §FS-declarations.checks.declaration-near-miss.1 reports, or `None` when this line is not one.
+/// The heading token §FS-declarations.checks.declaration-near-miss reports, or `None` when this line is not one.
 /// Normally asked where [`declaration_captures`] already declined, which it does for two
 /// kinds of line: a heading that came close and missed, and one whose ID the section
 /// separator and a section follow, which is a coordinate and no heading at all
@@ -194,7 +194,7 @@ fn off_grammar_heading<'line, 'grammar>(
         return Some(found);
     }
 
-    // §FS-declarations.checks.declaration-near-miss.1: retain an unambiguous rejected declaration
+    // §FS-declarations.checks.declaration-near-miss: retain an unambiguous rejected declaration
     // token. Its kind's effective grammar is authoritative; the repository default cannot suppress
     // a persisted spelling rejected by an override (§FS-config.3.2).
     let caps = legacy_declaration_captures(grammar, line, in_py_docstring, is_md)?;
@@ -206,7 +206,7 @@ fn off_grammar_heading<'line, 'grammar>(
 
 impl Grammar {
     /// Exactly one nonempty malformed name owns the token
-    /// (§FS-citations.recognized.off-format, §FS-declarations.checks.declaration-near-miss.1).
+    /// (§FS-citations.recognized.off-format, §FS-declarations.checks.declaration-near-miss).
     pub(crate) fn legacy_kind_and_format<'a>(&'a self, token: &str) -> Option<(&'a str, &'a str)> {
         let mut matches = self.legacy.kinds.iter().filter(|(kind, _)| {
             token.len() > kind.len() && super::kind_name_at_boundary(token, kind)

@@ -20,14 +20,14 @@ pub struct InitNext {
     pub docs: bool,
     /// Whether the effective config declares any citable kind, the answer
     /// `allocation.is_some()` gives. Where it does not, the guidance teaches the
-    /// first kind instead (§FS-init.2.2.2.2).
+    /// first kind instead (§FS-init.2.2.2).
     pub declares_kinds: bool,
     pub entrypoint: String,
     /// The home `--scaffold` lays the FS starter in, the built-in FS folder where
-    /// no FS row has one (§FS-init.2.2.2.3). The guidance names `allocation`.
+    /// no FS row has one (§FS-init.2.2.2). The guidance names `allocation`.
     pub fs_home: InitFsHome,
     /// The kind and place the guidance names, `None` exactly where the config has
-    /// no citable row (§FS-init.2.2.2.3).
+    /// no citable row (§FS-init.2.2.2).
     pub allocation: Option<InitAllocation>,
     /// Whether the effective scanner found a readable file before this guidance
     /// was rendered (§FS-init.2.2.2). Both command adapters consume this decision;
@@ -39,7 +39,7 @@ impl InitNext {
     /// Render the shared trailing guidance for the shipped CLI and the deprecated
     /// core command adapter (§FS-init.2.2.2): the block of the kind `allocation`
     /// selected, or, with none, the block that teaches the first kind
-    /// (§FS-init.2.2.2.3).
+    /// (§FS-init.2.2.2).
     pub fn render(&self) -> String {
         match &self.allocation {
             Some(allocation) => render_next_block(
@@ -75,8 +75,8 @@ impl InitFsHome {
     }
 }
 
-/// The kind and place the guidance names (§FS-init.2.2.2.3): one selection, read
-/// by the allocation step and by the refresh test of §FS-init.2.2.2.1.
+/// The kind and place the guidance names (§FS-init.2.2.2): one selection, read
+/// by the allocation step and by the refresh test of §FS-init.2.2.2.
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct InitAllocation {
@@ -90,7 +90,7 @@ pub struct InitAllocation {
     pub home_exists: bool,
 }
 
-/// The selected place, in the shapes [`InitFsHome`] gives one (§FS-init.2.2.2.3).
+/// The selected place, in the shapes [`InitFsHome`] gives one (§FS-init.2.2.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum InitAllocationHome {
@@ -115,23 +115,23 @@ impl InitAllocationHome {
 
 impl InitAllocation {
     /// Whether the selection still names a home the disk lacks. A refresh that
-    /// leaves none to create is complete (§FS-init.2.2.2.1), and only a missing
-    /// home earns the configured-kind form a create step (§FS-init.2.2.2.3).
+    /// leaves none to create is complete (§FS-init.2.2.2), and only a missing
+    /// home earns the configured-kind form a create step (§FS-init.2.2.2).
     pub(crate) fn home_missing(&self) -> bool {
         self.home.is_some() && !self.home_exists
     }
 
-    /// Whether the selection gets the FS form: FS with a home (§FS-init.2.2.2.3).
+    /// Whether the selection gets the FS form: FS with a home (§FS-init.2.2.2).
     fn is_fs_with_home(&self) -> bool {
         self.kind == "FS" && self.home.is_some()
     }
 }
 
-/// Select the kind and place the guidance names (§FS-init.2.2.2.3): the `FS` row
+/// Select the kind and place the guidance names (§FS-init.2.2.2): the `FS` row
 /// when it is citable and has a home, else the first citable row with a home,
 /// else the first citable row, in configuration order; `None` where no row is
-/// citable (§FS-init.2.2.2.2). Whether the place exists is read from `target`
-/// once, for the create step and the refresh test alike (§FS-init.2.2.2.1).
+/// citable (§FS-init.2.2.2). Whether the place exists is read from `target`
+/// once, for the create step and the refresh test alike (§FS-init.2.2.2).
 pub(crate) fn init_allocation(config: &Config, target: &Path) -> Option<InitAllocation> {
     let row = guided_kind(&config.kinds)?;
     let home = row_home(row);
@@ -146,7 +146,7 @@ pub(crate) fn init_allocation(config: &Config, target: &Path) -> Option<InitAllo
 }
 
 /// A row's one place: its first `file`, else its first `folder`, each in written
-/// order, and never another because that one exists (§FS-init.2.2.2.3). A
+/// order, and never another because that one exists (§FS-init.2.2.2). A
 /// scaffold seeds one starter at the same place (§FS-init.2.1).
 fn row_home(row: &KindConfig) -> Option<InitAllocationHome> {
     if let Some(file) = &row.file {
@@ -168,7 +168,7 @@ fn row_home(row: &KindConfig) -> Option<InitAllocationHome> {
         })
 }
 
-/// The `next:` block of a project that declares no kinds (§FS-init.2.2.2.2):
+/// The `next:` block of a project that declares no kinds (§FS-init.2.2.2):
 /// there is no FS home to scaffold or allocate in, so it teaches the first kind.
 fn render_first_kind_block(entrypoint: Option<&str>) -> String {
     let entrypoint = entrypoint.unwrap_or(CANONICAL_AGENT_ENTRYPOINT);
@@ -188,13 +188,13 @@ const CHECK_STEP: &str = "run `grund check` — on a fresh scaffold it warns \"n
      until the first declaration; this is expected (exit 0), no repair needed";
 
 /// The configured-kind form's check step without `--scaffold`, which neither laid
-/// nor offered a scaffold for "on a fresh scaffold" to refer to (§FS-init.2.2.2.3).
+/// nor offered a scaffold for "on a fresh scaffold" to refer to (§FS-init.2.2.2).
 const PLAIN_CHECK_STEP: &str = "run `grund check`";
 
 /// The trailing `next:` guidance block (§FS-init.2.2.2) for the selected kind and
 /// place: the FS form for FS with a home, the configured-kind form for every other
-/// selection (§FS-init.2.2.2.3). Suppressed by the caller on a refresh of a complete
-/// setup (§FS-init.2.2.2.1), or on a `--scaffold` run whose every reported path is
+/// selection (§FS-init.2.2.2). Suppressed by the caller on a refresh of a complete
+/// setup (§FS-init.2.2.2), or on a `--scaffold` run whose every reported path is
 /// `exists ` (§FS-init.2.2.2) — then there is no next step to teach.
 fn render_next_block(
     docs: bool,
@@ -245,7 +245,7 @@ fn render_next_block(
                 "re-run with --scaffold to scaffold the FS home ({}), docs/, and tests/ (or create them yourself){until_then}",
                 home.path()
             )),
-            // §FS-init.2.2.2.3: never `--scaffold`, and only while the home is missing.
+            // §FS-init.2.2.2: never `--scaffold`, and only while the home is missing.
             Some(home) if allocation.home_missing() => {
                 steps.push(format!("create the {kind} home ({}){until_then}", home.path()));
             }
@@ -270,7 +270,7 @@ fn render_next_block(
 }
 
 /// Resolve the home `--scaffold` lays the FS starter in (§FS-init.2.1): the FS
-/// row's one place, read the way the guidance reads a row's (§FS-init.2.2.2.3).
+/// row's one place, read the way the guidance reads a row's (§FS-init.2.2.2).
 pub(crate) fn init_fs_home(config: &Config) -> InitFsHome {
     let fs_row = config.kinds.iter().find(|kind| kind.kind == "FS");
     match fs_row.and_then(row_home) {
@@ -284,7 +284,7 @@ pub(crate) fn init_fs_home(config: &Config) -> InitFsHome {
             heading_marker,
         },
         Some(InitAllocationHome::Folder { path }) => InitFsHome::Folder { path },
-        // §FS-init.2.2.2.3: no FS home falls back to the built-in FS folder, which
+        // §FS-init.2.2.2: no FS home falls back to the built-in FS folder, which
         // stays the scaffold's, read from the one table that defines it
         // (§FS-config.3.4.4).
         None => InitFsHome::Folder {

@@ -18,7 +18,7 @@ pub(super) struct DeclarationHome<'a> {
 }
 
 impl DeclarationHome<'_> {
-    /// How a non-citable home is named in a finding (§FS-declarations.checks.misplaced-declaration.3,
+    /// How a non-citable home is named in a finding (§FS-declarations.checks.misplaced-declaration,
     /// §FS-check.3.6) — the same `<folder>/` label the citation-direction
     /// findings and the generated block use, so one home reads one way
     /// everywhere.
@@ -41,7 +41,7 @@ impl DeclarationHome<'_> {
 }
 
 /// A single-file kind: a citable row whose places are all files
-/// (§FS-declarations.checks.misplaced-declaration.1). v1 has one; a v2 row may
+/// (§FS-declarations.checks.misplaced-declaration). v1 has one; a v2 row may
 /// list several, and is single-file across them.
 pub(super) struct SingleFileHome<'a> {
     kind: &'a str,
@@ -107,7 +107,7 @@ impl<'a> KindHomeIndex<'a> {
     /// The place that owns `path`, other than the complement's, by the one
     /// ownership rule: v1's unique home, v2's listed file or deepest folder.
     /// Ownership is decided on the scanner-recorded path, not the symlink target
-    /// (§FS-config.3.4.11, §FS-declarations.checks.misplaced-declaration.2).
+    /// (§FS-config.3.4.11, §FS-declarations.checks.misplaced-declaration).
     pub(super) fn unique_decl_home_for_file(&self, path: &Path) -> Option<DeclarationHome<'a>> {
         let owner = self.owners.of(path)?;
         Some(DeclarationHome {

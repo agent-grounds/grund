@@ -31,28 +31,28 @@ use crate::model::{Code, Diagnostic};
 use crate::model::{format_path, relative_from_base};
 
 /// Where a finding of this rule states the block's `[workspace]` line
-/// (§FS-check.3.29.7, §DF-unlisted-workspace-error-shape.2.2). The two channels the
+/// (§FS-check.3.29, §DF-unlisted-workspace-error-shape.2.2). The two channels the
 /// rule is left with differ in this and in nothing else: one sentence, two
-/// placements (§FS-check.3.29.6).
+/// placements (§FS-check.3.29).
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Placement {
     /// The location is the finding's own `path` and `line` and the message does not
     /// repeat it — §FS-errors.2.2's shape for a finding a frontend places:
     /// `check`'s report error behind the §FS-check.2.1 prefix, and the editor's
-    /// diagnostic (§FS-check.3.29.13).
+    /// diagnostic (§FS-check.3.29).
     Located,
     /// No location fields, and the message opens with `<path>:<line>: `: the five
-    /// walking surfaces of §FS-check.3.29.9 print the sentence and place nothing, so
+    /// walking surfaces of §FS-check.3.29 print the sentence and place nothing, so
     /// the file and the line have to be in the text a reader greps
-    /// (§FS-check.3.29.15).
+    /// (§FS-check.3.29).
     InText,
 }
 
-/// §FS-check.3.29, §FS-check.3.29.13: one **located error** per outermost
+/// §FS-check.3.29: one **located error** per outermost
 /// `[workspace]` block this run's walk met that no enclosing block lists — `path`
 /// the block's own config and `line` its `[workspace]` line.
 ///
-/// An error since the ramp ended in `0.15.0` (§FS-check.3.29.14,
+/// An error since the ramp ended in `0.15.0` (§FS-check.3.29,
 /// §DF-unlisted-workspace-error-shape.2.1): being an error is what reaches the exit
 /// code (§FS-check.3), and being located is what puts it on stdout behind the
 /// mandatory prefix and the anchor into its JSON object.
@@ -76,7 +76,7 @@ pub(crate) fn unlisted_workspace_block_errors(
     block_diagnostics(config, render, alias, walked_dirs, Placement::Located)
 }
 
-/// §FS-check.3.29.15, §FS-check.3.29.9: the same findings for the five walking
+/// §FS-check.3.29: the same findings for the five walking
 /// surfaces that have no report to carry them — `list`, `refs`, `cover`, `fmt` and
 /// the ID read — one CLI-level `warning:` each, with the location **inside the
 /// text** because the CLI prints the sentence rather than placing it
@@ -106,7 +106,7 @@ fn block_diagnostics(
     // `enclosing_alias_prefix` shares one per climb — every candidate walks the same
     // ancestors, and without it each ancestor's config is re-read per candidate.
 
-    // §FS-check.3.29.2: this quiet climb emits no alias-path warning; an ancestor
+    // §FS-check.3.29: this quiet climb emits no alias-path warning; an ancestor
     // whose member text it cannot obtain leaves the block unreported.
     let mut projects = UnlistedProjects::new(config.run());
     let mut reported = BTreeSet::new();
@@ -114,24 +114,24 @@ fn block_diagnostics(
     for dir in walked_dirs {
         // The probe first: two `is_file` calls, and all a tree with no nested config
         // pays (§FS-config.1). It is what finds the `.agents/` form, which the walk
-        // never meets as a file entry — it prunes hidden directories (§FS-check.3.29.1).
+        // never meets as a file entry — it prunes hidden directories (§FS-check.3.29).
         let Some(config_path) = config_file_in(dir) else {
             continue;
         };
         let Some(line) = workspace_table_line(&config_path) else {
             continue;
         };
-        // §FS-check.3.29.3: a project root of this run is never a candidate — without it
+        // §FS-check.3.29: a project root of this run is never a candidate — without it
         // `--full`, which makes the config root a walk root (§FS-check.1.3), reports
         // every workspace repository against itself. Canonicalizing is the dear half.
         let canonical = canonical_workspace_path(dir);
-        // §FS-check.3.29.4 "one finding for one edit": one block the walk reached under
+        // §FS-check.3.29 "one finding for one edit": one block the walk reached under
         // two spellings answers the claim test identically, so the first spelling met
         // is the one reported and a symlinked second is not another finding.
         if !reported.insert(canonical) {
             continue;
         }
-        // §FS-check.3.29.2: no answer is not the answer that nothing claims it, so a
+        // §FS-check.3.29: no answer is not the answer that nothing claims it, so a
         // claim an ancestor cannot answer, or whose member text it cannot give, stays
         // unreported. Placement context asks this same predicate.
         if !projects.is_unlisted(dir) {
@@ -140,7 +140,7 @@ fn block_diagnostics(
         let located = placement == Placement::Located;
         diagnostics.push(Diagnostic {
             code: Code::UNLISTED_WORKSPACE_BLOCK,
-            // §FS-check.3.29.7: the located form carries the block's `[workspace]`
+            // §FS-check.3.29: the located form carries the block's `[workspace]`
             // line in these two fields, and the in-text form carries it in the
             // message instead — the one difference between the two channels.
             path: located.then(|| config_path.clone()),
@@ -155,7 +155,7 @@ fn block_diagnostics(
                 line,
                 placement,
             ),
-            // §FS-check.3.29.13: one block, one site, so `sites` stays null.
+            // §FS-check.3.29: one block, one site, so `sites` stays null.
             sites: Vec::new(),
             authority: Vec::new(),
         });
@@ -163,14 +163,14 @@ fn block_diagnostics(
     diagnostics
 }
 
-/// §FS-check.3.29.6: the sentence, built apart from the reporting so both channels
+/// §FS-check.3.29: the sentence, built apart from the reporting so both channels
 /// print one text — `check`'s report error and the direct stderr line the five
 /// other walking surfaces print (§DF-unlisted-workspace-block.2.4). `placement`
-/// decides only whether it opens with the location (§FS-check.3.29.7).
+/// decides only whether it opens with the location (§FS-check.3.29).
 ///
 /// Four facts and a spent deadline: the block's `[workspace]` line, what the
 /// absorption costs, the two config edits that clear it, and the release the
-/// finding became an error in (§FS-check.3.29.14). The second remedy is stated as an outcome rather
+/// finding became an error in (§FS-check.3.29). The second remedy is stated as an outcome rather
 /// than as a key on purpose — `[scan] exclude` prunes descendants and never the
 /// directory a walk starts at (§FS-check.1.3.2), so a block that is itself an
 /// `include` root takes `include` and one below it takes `exclude`.
@@ -191,7 +191,7 @@ fn unlisted_workspace_block_message(
         .config_file
         .clone()
         .unwrap_or_else(|| config.root.join("grund.toml"));
-    // §FS-check.3.29.7: only the in-text form opens with the anchor; the located
+    // §FS-check.3.29: only the in-text form opens with the anchor; the located
     // form leaves it to the two fields the frontend reads it from.
     let location = match placement {
         Placement::Located => String::new(),
@@ -228,7 +228,7 @@ fn absorbing_project_name(config: &Config, alias: Option<&str>) -> String {
 }
 
 /// The line a config's `[workspace]` table opens on, or `None` when it declares
-/// none (§FS-check.3.29.1).
+/// none (§FS-check.3.29).
 ///
 /// A text-only read, for the same reason `ancestor_member_entries` is one
 /// (§FS-workspace.6.1.7): the question is asked of a config this run does not
@@ -260,7 +260,7 @@ fn workspace_table_line(config_path: &Path) -> Option<usize> {
 /// `dir` as a `[workspace] members` entry written in the config at `config_root`: relative to
 /// that root because that is what an entry means, never to the report base, so it is not a
 /// reported path and does not go through the one spelling of one (§AR-config.1.7,
-/// §FS-check.3.29.7).
+/// §FS-check.3.29).
 pub(super) fn members_entry(config_root: &Path, dir: &Path) -> String {
     format_path(&relative_from_base(config_root, dir))
 }

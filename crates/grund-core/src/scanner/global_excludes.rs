@@ -1,5 +1,5 @@
 //! git's global `core.excludesFile`, anchored where git anchors it: at the top of
-//! the repository each path belongs to (§FS-scan.scope.ignore-files.global).
+//! the repository each path belongs to (§FS-scan.scope.ignore-files).
 //!
 //! The `ignore` crate roots a walker's global matcher at one directory, the process
 //! working directory unless told otherwise, and strips that root from each path
@@ -28,13 +28,13 @@ use crate::sources::{canonical_path, path_exists, path_is_file};
 
 /// What marks a directory as a repository top: the set the `ignore` crate counts,
 /// so the global file anchors at the top that bounds the `.gitignore` files
-/// (§FS-scan.scope.ignore-files.global).
+/// (§FS-scan.scope.ignore-files).
 const REPOSITORY_MARKERS: [&str; 2] = [".git", ".jj"];
 
 /// Whether a repository encloses the file at `path`: a directory above it holds one of the
 /// [`REPOSITORY_MARKERS`], on the path as the walk spelled it or on the directory's canonical
 /// path, which is where the walker finds a walk root's repository
-/// (§FS-scan.scope.ignore-files.unparsed).
+/// (§FS-scan.scope.ignore-files).
 pub(super) fn enclosed_by_repository(path: &Path) -> bool {
     let Some(dir) = path.parent() else {
         return false;
@@ -52,7 +52,7 @@ pub(super) fn enclosed_by_repository(path: &Path) -> bool {
 }
 
 /// The global excludes file's patterns, the repository top each path is matched
-/// against them from (§FS-scan.scope.ignore-files.global), and the ignore files
+/// against them from (§FS-scan.scope.ignore-files), and the ignore files
 /// a global match is weighed against, each read once.
 pub(super) struct GlobalExcludes {
     /// Rooted at `.`, so the matcher strips nothing: each path is handed to it
@@ -76,7 +76,7 @@ pub(super) struct GlobalExcludes {
 impl GlobalExcludes {
     /// The global excludes file git's configuration names, read once; no pattern at
     /// all where none is configured. The shared resolver preserves literal
-    /// tildes (§FS-scan.scope.ignore-files.pathname); `add` reads that pathname
+    /// tildes (§FS-scan.scope.ignore-files); `add` reads that pathname
     /// directly, without the dependency's global-path expansion.
     pub(super) fn load() -> Result<Self> {
         let mut builder = GitignoreBuilder::new(".");
@@ -135,7 +135,7 @@ impl GlobalExcludes {
     /// The global excludes a walker leaves to its filter, with the builder's own
     /// matcher, rooted at one directory, turned off even for an empty or absent
     /// file: otherwise its corrupt pathname expansion can consult a different
-    /// file (§FS-scan.scope.ignore-files.pathname). `None` where there are no
+    /// file (§FS-scan.scope.ignore-files). `None` where there are no
     /// patterns, so a machine without one pays nothing per entry (§GOAL-fast-feedback).
     pub(super) fn take_over(builder: &mut WalkBuilder) -> Result<Option<Self>> {
         builder.git_global(false);
@@ -148,7 +148,7 @@ impl GlobalExcludes {
 
     /// The global pattern that decides `path`, matched relative to the top of its
     /// repository, and `Match::None` for a path in no repository, as git matches
-    /// none there (§FS-scan.scope.ignore-files.global).
+    /// none there (§FS-scan.scope.ignore-files).
     pub(super) fn matched(&self, path: &Path, is_dir: bool) -> Match<&Glob> {
         if self.patterns.is_empty() {
             return Match::None;
@@ -165,7 +165,7 @@ impl GlobalExcludes {
     /// The top of the repository `path` belongs to: the innermost directory above it
     /// that holds one of the [`REPOSITORY_MARKERS`], `.git` or a Jujutsu `.jj`, so a
     /// nested repository's paths anchor at its own top
-    /// (§FS-scan.scope.ignore-files.global). It is one of `path`'s ancestors, so it
+    /// (§FS-scan.scope.ignore-files). It is one of `path`'s ancestors, so it
     /// is spelled as `path` is, `\\?\` included, and always prefixes it.
     pub(super) fn top(&self, path: &Path) -> Option<PathBuf> {
         // §FS-remote-projects.ignore: a mounted root bounds its `.gitignore` files,

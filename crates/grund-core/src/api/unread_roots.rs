@@ -1,6 +1,6 @@
 //! The warning a configured root earns when no file in it is read: the recorded file-name
-//! refusal or folder evidence (§FS-scan.checks.unread-scan-root.folder), explained by the
-//! configuration's one reading (§FS-scan.checks.unread-scan-root.message). `grund check`
+//! refusal or folder evidence (§FS-scan.checks.unread-scan-root), explained by the
+//! configuration's one reading (§FS-scan.checks.unread-scan-root). `grund check`
 //! and the LSP snapshot both build it here (§FS-lsp.4.1).
 
 use crate::model::remedies;
@@ -10,10 +10,10 @@ use crate::config::{Config, Form, builtin_text_for_suffix, can_hold_markdown, fi
 use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow, unread_reason};
 
 /// One located warning per unread root, at the line of the key that named it
-/// (§FS-scan.checks.unread-scan-root.location). A warning, so the exit code stays
-/// and `success` is withheld (§FS-scan.checks.unread-scan-root.channel); it is a
+/// (§FS-scan.checks.unread-scan-root). A warning, so the exit code stays
+/// and `success` is withheld (§FS-scan.checks.unread-scan-root); it is a
 /// finding about the configured scope, so the caller asks it before the empty-scan
-/// caution, which it stands in place of (§FS-scan.checks.unread-scan-root.empty-scan).
+/// caution, which it stands in place of (§FS-scan.checks.unread-scan-root).
 pub(super) fn unread_root_warnings(config: &Config, findings: &Catalog) -> Vec<Diagnostic> {
     let v2 = config.project().version == 2;
     let readers = Readers::of(config);
@@ -51,7 +51,7 @@ pub(super) fn unread_root_warnings(config: &Config, findings: &Catalog) -> Vec<D
 }
 
 /// `<row> is not read — <reason>, so nothing in it is checked. <fix>.`, in the exact
-/// bytes of §FS-scan.checks.unread-scan-root.message.
+/// bytes of §FS-scan.checks.unread-scan-root.
 #[cfg(test)]
 pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
     root_message(
@@ -67,7 +67,7 @@ pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
     )
 }
 
-/// Repairs ask the actual admitted readers (§FS-scan.checks.unread-scan-root.message). No
+/// Repairs ask the actual admitted readers (§FS-scan.checks.unread-scan-root). No
 /// repair drops an `md` entry: one that hides Markdown is refused at load
 /// (§FS-config-v2.checks.config-md-not-markdown), so a `.md` file is read as Markdown or not
 /// at all, never as data.
@@ -92,7 +92,7 @@ impl Readers {
     }
 }
 
-/// §FS-scan.checks.unread-scan-root.folder: a folder's reason names the file the walk refused.
+/// §FS-scan.checks.unread-scan-root: a folder's reason names the file the walk refused.
 fn refused_file(row: &RootRow) -> &Path {
     match &row.origin {
         RootOrigin::FolderHome { first_refused, .. } => first_refused,
@@ -101,7 +101,7 @@ fn refused_file(row: &RootRow) -> &Path {
 }
 
 /// The one message builder, with the reading and row facts supplied by the configuration
-/// (§FS-scan.checks.unread-scan-root.message, §FS-scan.checks.unread-scan-root.folder).
+/// (§FS-scan.checks.unread-scan-root).
 fn root_message(
     row: &RootRow,
     v2: bool,
@@ -149,7 +149,7 @@ fn root_message(
 }
 
 /// The reason, then the fixes, for a root only the extension list refuses: the
-/// first two tables of §FS-scan.checks.unread-scan-root.message.
+/// first two tables of §FS-scan.checks.unread-scan-root.
 fn extension_reason_and_fixes(
     row: &RootRow,
     ext: Option<&str>,
@@ -185,7 +185,7 @@ fn extension_reason_and_fixes(
 }
 
 /// The reason, then the fixes, for a root whose name begins with `.`: the hidden
-/// tables of §FS-scan.checks.unread-scan-root.message. The reason names the extension
+/// tables of §FS-scan.checks.unread-scan-root. The reason names the extension
 /// too where the list refuses it as well, and the one fix is a rename that satisfies
 /// both rules (§DF-unread-hidden-root.2.1).
 fn hidden_reason_and_fixes(
@@ -229,7 +229,7 @@ fn alternatives(fixes: &[String]) -> String {
 }
 
 /// The data-row repairs preserve authored forms and fetches, and admit a Markdown reader
-/// before suggesting a rename to one (§FS-scan.checks.unread-scan-root.message).
+/// before suggesting a rename to one (§FS-scan.checks.unread-scan-root).
 fn data_fixes(version: u32, value: bool, folder: bool, readers: Readers) -> Vec<String> {
     if !readers.document {
         let mut repair = markdown_repair(version, folder, false);
@@ -254,7 +254,7 @@ fn data_fixes(version: u32, value: bool, folder: bool, readers: Readers) -> Vec<
 }
 
 /// The first refused file's reason with the folder-specific repairs
-/// (§FS-scan.checks.unread-scan-root.folder).
+/// (§FS-scan.checks.unread-scan-root).
 fn folder_reason_and_fixes(
     row: &RootRow,
     ext: Option<&str>,
@@ -289,7 +289,7 @@ fn folder_reason_and_fixes(
 }
 
 /// File and folder repairs require the same reader class for the authored form
-/// (§FS-scan.checks.unread-scan-root.message, §FS-scan.checks.unread-scan-root.folder).
+/// (§FS-scan.checks.unread-scan-root).
 fn text_repair(version: u32, folder: bool, rule: bool, readers: Readers) -> String {
     if !(if rule { readers.document } else { readers.text }) {
         return markdown_repair(version, folder, false);
@@ -303,7 +303,7 @@ fn text_repair(version: u32, folder: bool, rule: bool, readers: Readers) -> Stri
 }
 
 /// Admit a usable document reader before the rename, preserving existing languages
-/// (§FS-scan.checks.unread-scan-root.message).
+/// (§FS-scan.checks.unread-scan-root).
 fn markdown_repair(version: u32, folder: bool, hidden: bool) -> String {
     let rename = if hidden {
         "rename the file to a name that is not hidden and an extension it reads"

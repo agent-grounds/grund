@@ -198,8 +198,8 @@ see AGENTS.md for the full workflow.
 ```
 
 The `next:` steps name the repository's own kind and place, `RFC` in
-`rfcs/text`, because it has no `FS` row ([§FS-init.2.2.2.3](../../docs/functional-spec/FS-init.md#2223-the-kind-the-guidance-names)). The managed block's declaration shapes
-([§FS-init.2.3.5.12.2](../../docs/functional-spec/FS-init.md#235122-declaration-shapes)) are the RFC template as the schema states it:
+`rfcs/text`, because it has no `FS` row ([§FS-init.2.2.2](../../docs/functional-spec/FS-init.md#222-the-next-block)). The managed block's declaration shapes
+([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)) are the RFC template as the schema states it:
 
 ```markdown
 - **RFC**
@@ -220,7 +220,7 @@ An agent learns the order and the handles before it writes. It learns each
 heading's title too, so it writes `## summary: Summary` before `check` runs.
 
 `[presentation] rules = "root"` keeps that guidance in the root `AGENTS.md`
-([§FS-init.2.3.5.11.5](../../docs/functional-spec/FS-init.md#235115-rules--root-and-every-version-1-config-render-at-the-root)). The default writes it into `rfcs/text/AGENTS.md`,
+([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)). The default writes it into `rfcs/text/AGENTS.md`,
 where a tool that reads every file in `text/` as an RFC would pick it up.
 
 ## Writing an RFC

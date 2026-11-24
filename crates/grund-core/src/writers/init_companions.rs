@@ -1,4 +1,4 @@
-//! Companion entrypoint writes and their partial failures (§FS-init.2.3.4.17.2,
+//! Companion entrypoint writes and their partial failures (§FS-init.2.3.6,
 //! §FS-distribution.3.2.2.1).
 use super::init::verb_wrote;
 use super::init_block::{AgentsUpdateResult, MembersSection, update_agents_block};
@@ -16,7 +16,7 @@ pub(super) struct CompanionWrite<'a, F> {
     pub claude_block: Option<&'a str>,
     pub add_chapter_rules: F,
     pub dry_run: bool,
-    /// §FS-init.2.3.4.15.8: an optional member is absent, so each existing block
+    /// §FS-init.2.3.4: an optional member is absent, so each existing block
     /// keeps its own member list.
     pub keep_members: bool,
     pub diagnostic: &'a mut Option<anyhow::Error>,
@@ -47,7 +47,7 @@ where
     for entrypoint in companions {
         let path_ref = entrypoint.path();
         // The Claude entrypoints teach the linked form; every other companion
-        // gets the plain-location block (§FS-init.2.3.4.17.2).
+        // gets the plain-location block (§FS-init.2.3.6).
         let entrypoint_block = match ConversationSurface::for_entrypoint(path_ref) {
             ConversationSurface::Linked => claude_block.as_deref().unwrap_or(&agents_block),
             ConversationSurface::Plain => &agents_block,
@@ -140,7 +140,7 @@ where
 
 /// The diagnostic and message for an entrypoint whose block could not be read or
 /// spliced — one wording whether the write pass meets it or the pre-write pass
-/// does first (§FS-init.1.2.6).
+/// does first (§FS-init.1.2).
 pub(super) fn update_failure(path: &Path, err: &anyhow::Error) -> (anyhow::Error, String) {
     // Forward slashes on every platform, like report paths (§FS-errors.2.2) —
     // Windows must not leak backslashes into the message.

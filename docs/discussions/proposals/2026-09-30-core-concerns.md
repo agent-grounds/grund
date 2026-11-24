@@ -70,7 +70,7 @@ A constraint can be written as a `[citations]` entry ([§FS-config.3.9](../../fu
 
 ### 2.4 One name, two trees
 
-Seven of this repository's sixteen `[[kinds]]` rows are `citable = false`, and with the implicit `code` that is eight rows declaring no ID namespace. [§FS-config.3.4.1](../../functional-spec/FS-config.md#341-citable--kinds-that-declare-no-ids) says what they are in prose: a non-citable kind is *a place and nothing more*. [§FS-init.2.3.4.4](../../functional-spec/FS-init.md#2344-project-map) renders them by place, never by name.
+Seven of this repository's sixteen `[[kinds]]` rows are `citable = false`, and with the implicit `code` that is eight rows declaring no ID namespace. [§FS-config.3.4.1](../../functional-spec/FS-config.md#341-citable--kinds-that-declare-no-ids) says what they are in prose: a non-citable kind is *a place and nothing more*. [§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections) renders them by place, never by name.
 
 The distinction is load-bearing and unstated. A `[citations.<name>]` obligation is checked **per declaration** when the name is citable ([§FS-config.3.9.1.1](../../functional-spec/FS-config.md#3911-obligations-and-prohibitions)) and **per file, or per heading unit,** when it is not ([§FS-config.3.9.2.4](../../functional-spec/FS-config.md#3924-obligations-apply-per-source-file)). One table spelling reaches two different subjects, and [§FS-rules.6](../../functional-spec/FS-rules.md#6-semantic-deduplication)'s config-to-rule deduplication is as narrow as it is because a rule about a declaration and a rule about a file only look alike.
 
@@ -548,7 +548,7 @@ Each such file carries a managed block with the same delimiters and version as t
 What it needs, and what it costs:
 
 - **`init`** writes one block per directory, appends to an `AGENTS.md` a directory already has, and removes a block whose directory no longer receives a rule — deleting a file only when the block was all of it.
-- **`check`** extends `agents-init` ([§FS-check.3.5](../../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)) to every such directory: a missing, stale or orphaned block is a finding. The render stays a function of the config, so the byte comparison of [§FS-init.2.3.5.8](../../functional-spec/FS-init.md#2358-the-drift-check) holds per file.
+- **`check`** extends `agents-init` ([§FS-check.3.5](../../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)) to every such directory: a missing, stale or orphaned block is a finding. The render stays a function of the config, so the byte comparison of [§FS-init.2.3.5](../../functional-spec/FS-init.md#235-citation-directions) holds per file.
 - **A generated entrypoint is not a unit of the place it sits in**, unless a row claims it by `files`. Today an `AGENTS.md` without a citation in a grounded non-citable home fails with `ungrounded file in kind home`; its citations are still resolved.
 - **Claude Code reads `CLAUDE.md`**, so where the root has that companion each directory gets the symlink arrangement of [§REQ-agents-md.1](../../requirements/REQ-agents-md.md#1-one-source-symlinked-companions). The sunk bytes do not vary by agent, so a symlink is always enough.
 - **Chapter rules sink by the same rule**, every subject belonging to a citable kind ([§FS-rules.2](../../functional-spec/FS-rules.md#2-subject-selectors)).

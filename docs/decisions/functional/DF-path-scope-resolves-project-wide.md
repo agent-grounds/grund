@@ -49,7 +49,7 @@ every diagnostic anchored at a file outside the report scope. Narrowing at the *
 than the **scan** stage is what makes both halves of the defect fall out of one change: the dangling rule
 sees the declarations, and the unused-declaration rule sees the citations.
 
-This is not a new argument. [§FS-check.3.14.3](../../functional-spec/FS-check.md#3143-resolution-sees-the-whole-scan) already separates what resolution sees from what is reported,
+This is not a new argument. [§FS-check.3.14](../../functional-spec/FS-check.md#314-out-of-scope-unresolvable-citation---full-only) already separates what resolution sees from what is reported,
 one scope over — *"This check reports citations that point at nothing, not citations that point outside the
 default scope."* This record is that sentence applied to the one scope that never had it.
 
@@ -57,7 +57,7 @@ default scope."* This record is that sentence applied to the one scope that neve
 
 The cheaper-looking reading — resolve from the configured `[[kinds]]` homes and nothing else — is wrong,
 not merely incomplete. A declaration may live inline in a source doc-comment and enroll through its
-canonical link in a kind index ([§FS-check.3.18.3](../../functional-spec/FS-check.md#3183-an-external-source-declaration-enrolls-by-its-canonical-link), [§AR-scanner.4](../../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)): [§AR-checker](../../../crates/grund-core/src/checker/report.rs) is declared in
+canonical link in a kind index ([§FS-check.3.18](../../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index), [§AR-scanner.4](../../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)): [§AR-checker](../../../crates/grund-core/src/checker/report.rs) is declared in
 `crates/grund-core/src/checker/report.rs` and has no file in `docs/architecture/` at all. A homes-only read
 misses that shape, and it is wrong in thirty-one places in this repository today. "The declaration side"
 therefore **is** every scanned file, and there is no cheaper subset to walk.
@@ -79,7 +79,7 @@ That is the general shape of the correction: the path-scoped run and the whole-t
 The dangling message and the `dangling` code are unchanged ([§FS-check.3.1](../../functional-spec/FS-check.md#31-dangling-citation)); so is the unused-declaration
 warning ([§FS-check.4.1](../../functional-spec/FS-check.md#41-unused-declaration)). Nothing is reported with a scope qualifier, because a run that resolves
 project-wide has nothing to qualify. So `--only` and `--ignore` gain no vocabulary ([§FS-check.1.4](../../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore)), and the
-`out-of-scope-dangling` code that [§FS-check.3.14.5](../../functional-spec/FS-check.md#3145-a-compound-code-per-rule) already assigns to a different scope is not reused for a
+`out-of-scope-dangling` code that [§FS-check.3.14](../../functional-spec/FS-check.md#314-out-of-scope-unresolvable-citation---full-only) already assigns to a different scope is not reused for a
 second meaning.
 
 ### 2.5 The unused-declaration warning is counted here, and `--full`'s is still not
@@ -140,7 +140,7 @@ A shipped verdict flips here, which only [§REQ-backwards-compatibility.5](../..
 
 | Option | Why rejected |
 |---|---|
-| Keep the narrow read and qualify the message — `declared outside the scanned path: <ID>` | A new finding tier needs a new code, and `out-of-scope-dangling` is taken by a different scope ([§FS-check.3.14.5](../../functional-spec/FS-check.md#3145-a-compound-code-per-rule)). It also leaves the user with a report they must read past rather than an answer: the question "is this file clean?" still has no command. |
+| Keep the narrow read and qualify the message — `declared outside the scanned path: <ID>` | A new finding tier needs a new code, and `out-of-scope-dangling` is taken by a different scope ([§FS-check.3.14](../../functional-spec/FS-check.md#314-out-of-scope-unresolvable-citation---full-only)). It also leaves the user with a report they must read past rather than an answer: the question "is this file clean?" still has no command. |
 | Resolve from the configured kind homes alone | Misses a declaration living inline in a source doc-comment and enrolled from its index — thirty-one places in this repository ([§DF-path-scope-resolves-project-wide.2.2](DF-path-scope-resolves-project-wide.md#22-the-declaration-set-is-the-one-grund-check--reads-not-the-kind-homes-alone)). |
 | Harvest only the declaration side outside the path | 11% of the cost for half the fix; the walk is the cost, and the unused-declaration half needs the citations, not the declarations ([§DF-path-scope-resolves-project-wide.3](DF-path-scope-resolves-project-wide.md#3-consequences)). |
 | Let `--full` widen the resolution scope further under a path | Would give a path scope an out-of-scope tier, which [§FS-check.1.3.6](../../functional-spec/FS-check.md#136-an-explicit-path-still-narrows) says it has not got, and a new tier means a new code ([§DF-path-scope-resolves-project-wide.2.4](DF-path-scope-resolves-project-wide.md#24-no-new-finding-message-and-no-new-code)). |

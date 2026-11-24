@@ -312,7 +312,7 @@ citation into it is recognized by [§FS-workspace.5](FS-workspace.md#5-command-s
 ([§FS-workspace.2.2.2.4](FS-workspace.md#2224-recognizing-a-citation-into-an-absent-member)).
 `grund init` does not render a member list it cannot render whole either: while
 the member is absent it keeps an existing block's `### Workspace members` section
-as it is ([§FS-init.2.3.4.15.8](FS-init.md#234158-while-an-optional-member-is-absent)).
+as it is ([§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections)).
 
 ##### 2.2.2.1 A `project_name` that disagrees with the segment
 
@@ -516,7 +516,7 @@ same residency rule as the alias: a member's description comes from the
 member's own config, the root row's from the root config, and a member without
 its own config has none ([§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)).
 Unlike the alias it is presentation metadata only — generated workspace member
-lists render it beside the alias ([§FS-init.2.3.4.15](FS-init.md#23415-workspace-members)), and it never
+lists render it beside the alias ([§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections)), and it never
 participates in alias derivation, citation resolution, or `check` semantics.
 
 ## 4. Resolution

@@ -35,7 +35,7 @@ The alternative was to leave `[[kinds]]` alone and add `[[areas]]`: `path` + `ti
 
 ### 2.3 A non-citable kind is rendered by place, never by name
 
-Its name exists to key `[citations.*]` on and to be unique. There is nothing to cite, so `- [skills/](skills): …` in the Project map and `- **skills/** must cite FS.` in the directions ([§FS-init.2.3.4.4](../../functional-spec/FS-init.md#2344-project-map), [§FS-init.2.3.5](../../functional-spec/FS-init.md#235-citation-directions)), and the same label in every finding about it ([§FS-check.3.11](../../functional-spec/FS-check.md#311-missing-required-citation), [§FS-check.3.12](../../functional-spec/FS-check.md#312-forbidden-citation)). Printing the name would teach an agent a token it must never write.
+Its name exists to key `[citations.*]` on and to be unique. There is nothing to cite, so `- [skills/](skills): …` in the Project map and `- **skills/** must cite FS.` in the directions ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections), [§FS-init.2.3.5](../../functional-spec/FS-init.md#235-citation-directions)), and the same label in every finding about it ([§FS-check.3.11](../../functional-spec/FS-check.md#311-missing-required-citation), [§FS-check.3.12](../../functional-spec/FS-check.md#312-forbidden-citation)). Printing the name would teach an agent a token it must never write.
 
 The **homeless kind** keeps its name, because it is the one non-citable kind with no place — the complement of every home there is, and there is nothing else to call it by.
 

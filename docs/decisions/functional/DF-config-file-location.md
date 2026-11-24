@@ -17,7 +17,7 @@ members means four `member/.agents/` directories, each containing exactly one fi
 Nothing else ever lands in them: the sibling agent-tooling files a repository root accumulates live
 at the root, not per member. And the layout was not merely conventional — a member root was partly
 *identified* by carrying `.agents/grund.toml`, so the nesting was load-bearing in
-`grund init`'s workspace-member rendering ([§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members)) as well as in discovery.
+`grund init`'s workspace-member rendering ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)) as well as in discovery.
 
 Two facts about the single-probe rule made it worth revisiting rather than living with. It is the
 first thing every adopter meets, and a config file at a path no other tool in the ecosystem uses is
@@ -145,7 +145,7 @@ Deprecated with **no removal**, which is not the usual shape and is therefore ar
   meaning and no existing file becomes invalid ([§FS-config.5](../../functional-spec/FS-config.md#5-schema-versioning)). A config written for the old rule is
   read identically by the new one.
 - **Member-root identity is a two-name test.** Everything that asked "does this directory have
-  `.agents/grund.toml`" — the workspace-member self-exception in `init` ([§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members)), the
+  `.agents/grund.toml`" — the workspace-member self-exception in `init` ([§FS-init.2.3.4](../../functional-spec/FS-init.md#234-managed-block-content-sections)), the
   nested-workspace boundary ([§FS-workspace.6](../../functional-spec/FS-workspace.md#6-nested-project-boundary)), the member-config residency rule for `project_name`
   and `project_description` ([§FS-workspace.2](../../functional-spec/FS-workspace.md#2-workspace-configuration), [§FS-workspace.3](../../functional-spec/FS-workspace.md#3-aliases)) — now asks whether the directory has
   *either* name. Where the answer feeds a diagnostic, the diagnostic names the file that was

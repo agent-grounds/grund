@@ -23,9 +23,9 @@ pub(crate) struct Site {
 /// §FS-distribution.4.2.3: the landed clause of the release guard's closed
 /// vocabulary, which every finding whose warning ramp closed in `0.16.0` ends
 /// with — `unreached-declaration` (§FS-rules.checks.unreached-declaration),
-/// `unmarked-heading` (§FS-declarations.checks.unmarked-heading.5),
-/// `declaration-near-miss` (§FS-declarations.checks.declaration-near-miss.5) and
-/// the absorbed scan (§FS-check.3.30.1). One literal, so the four end in the same
+/// `unmarked-heading` (§FS-declarations.checks.unmarked-heading),
+/// `declaration-near-miss` (§FS-declarations.checks.declaration-near-miss) and
+/// the absorbed scan (§FS-check.3.30). One literal, so the four end in the same
 /// bytes and the guard reads the floor out of one string.
 pub(crate) const LANDED_CLAUSE: &str = "; this became an error in grund 0.16.0";
 

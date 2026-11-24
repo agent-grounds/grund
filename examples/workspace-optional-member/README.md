@@ -74,7 +74,7 @@ the block is still refreshed, so a config change still makes `init --check`
 fail here. Run in `packages/billing`, it answers the same way. Without
 `--check`, `grund init` writes those same bytes, and the full checkout's root
 `check` accepts what it wrote
-([§FS-init.2.3.4.15.8](../../docs/functional-spec/FS-init.md#234158-while-an-optional-member-is-absent)).
+([§FS-init.2.3.4](../../docs/functional-spec/FS-init.md#234-managed-block-content-sections)).
 
 ## The trade-off
 

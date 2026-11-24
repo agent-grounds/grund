@@ -201,7 +201,7 @@ impl Schema {
     }
 
     /// Whether the folder place `folder` owns `relative` for its index
-    /// (§FS-check.3.18.2): v1 counts the folder's whole subtree, and v2 leaves a
+    /// (§FS-check.3.18): v1 counts the folder's whole subtree, and v2 leaves a
     /// file to the nested place that owns it (§FS-config-v2.schema.places.ownership).
     pub fn folder_owns(&self, folder: &str, relative: &Path) -> bool {
         if !relative.starts_with(configured_home_path_key(folder)) {

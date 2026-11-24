@@ -107,7 +107,7 @@ impl DirectionSink for CheckReport {
 /// `grund check` on a large tree.
 ///
 /// `non_units` are the generated scoped entrypoints, which never make a folder
-/// non-empty for the `applies to nothing` warning (§FS-init.2.3.5.15).
+/// non-empty for the `applies to nothing` warning (§FS-init.2.3.5).
 pub(super) fn check_citation_obligations(
     findings: &Catalog,
     rules: &Rules,
@@ -309,7 +309,7 @@ pub(super) fn can_apply_to_nothing<'a>(
 /// stay inside the same home boundary. The table and a rule ask it alike, so the
 /// two never disagree about whether a folder is empty (§FS-check.2.2.1).
 /// Neither the folder's entry file nor a generated scoped entrypoint, one of
-/// `non_units`, is content of it (§FS-check.2.2.1, §FS-init.2.3.5.15).
+/// `non_units`, is content of it (§FS-check.2.2.1, §FS-init.2.3.5).
 pub(super) fn empty_citation_obligation_warning(
     rules: &Rules,
     schema: &Schema,
@@ -470,7 +470,7 @@ pub(super) fn e2e_spec_ref_matches_target(spec_ref: &E2eSpecRef, target: &Citati
 }
 
 /// Render a disjunction as a human phrase for a finding message: kinds joined by
-/// " or " (§FS-init.2.3.5.4 uses the same phrasing in the agent entrypoint).
+/// " or " (§FS-init.2.3.5 uses the same phrasing in the agent entrypoint).
 fn render_target_phrase(entry: &CitationDisjunction) -> String {
     entry
         .targets

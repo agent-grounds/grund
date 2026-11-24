@@ -275,7 +275,7 @@ slice and section from that text as from a Markdown body. Its declaration line d
 ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares), [§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix)), and one doc-comment may declare
 several IDs, each with its own body ([§FS-languages.comment-block.early-end](FS-languages.md#comment-blockearly-end-terminate-early-on-another-declaration)). An index link
 that enrolls the declaration ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) creates no declaration, so it changes no
-query's answer ([§FS-check.3.18.3](FS-check.md#3183-an-external-source-declaration-enrolls-by-its-canonical-link)).
+query's answer ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)).
 
 Section depth counts from the declaration line, so under `/// AR-<event-bus>: …` a `## 1.`
 heading is a depth-1 section, while `/// # 1. Sub` is a same-level heading that no query

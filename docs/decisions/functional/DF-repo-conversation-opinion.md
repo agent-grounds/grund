@@ -11,7 +11,7 @@
 *global* agent instruction files, and the repository `.agents/grund.toml` schema deliberately
 carried no rendering keys. [§DF-integrations-command](DF-integrations-command.md#df-integrations-command-integrations-earns-a-cli-slot-as-one-time-setup-where-a-per-citation-link-command-did-not) recorded the rationale: whether a rendering
 layer is installed is a property of the user's machine, and repository instructions stay
-deterministic, carrying only the fixed repository-web rule ([§FS-init.2.3.4.17](../../functional-spec/FS-init.md#23417-clickable-citations)).
+deterministic, carrying only the fixed repository-web rule ([§FS-init.2.3.6](../../functional-spec/FS-init.md#236-clickable-citations)).
 
 Two frictions surfaced in practice, examined in [§DISC-conversation-rendering-layers](../../discussions/proposals/2026-07-21-conversation-rendering-layers.md#disc-conversation-rendering-layers-layered-ownership-of-local-conversation-citation-rendering): the global
 block leaks into repositories that do not use grund, and a contributor to a grund-using

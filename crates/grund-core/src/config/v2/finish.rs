@@ -57,7 +57,7 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<(Project, Option<anyh
     }
     let held = (late.into_iter().min_by_key(|(line, _)| *line))
         .and_then(|(line, message)| r.fail::<()>(line, message).err());
-    // §FS-scan.checks.unread-scan-root.message: offer only a valid, row-preserving form edit.
+    // §FS-scan.checks.unread-scan-root: offer only a valid, row-preserving form edit.
     r.project.schema.value_form_repairs.0 = r
         .rows
         .iter()

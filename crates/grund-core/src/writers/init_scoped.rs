@@ -1,8 +1,8 @@
-//! `init`'s scoped files (§FS-init.2.3.5.14): each destination's `AGENTS.md`
+//! `init`'s scoped files (§FS-init.2.3.5): each destination's `AGENTS.md`
 //! created, appended or updated through the entrypoint splice, the root's
 //! companion symlinks mirrored beside it, and every orphan the list on disk
 //! names removed. Planned and refused before the first write of the run
-//! (§FS-init.1.2.6), written after the root entrypoints.
+//! (§FS-init.1.2), written after the root entrypoints.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -20,7 +20,7 @@ use crate::grammar::{AgentsBlockLookup, find_agents_block};
 use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
 use crate::sources::{Sources, path_exists, path_is_entry, path_is_symlink};
 
-/// What one run does to scoped files, in report order (§FS-init.2.3.5.14.4).
+/// What one run does to scoped files, in report order (§FS-init.2.3.5).
 pub(super) struct ScopedPlan {
     files: Vec<ScopedFile>,
     /// Each orphan's directory, its files `AGENTS.md` first.
@@ -35,7 +35,7 @@ struct ScopedFile {
     companions: Vec<Companion>,
 }
 
-/// A companion `init` writes beside a scoped `AGENTS.md` (§FS-init.2.3.5.14.3):
+/// A companion `init` writes beside a scoped `AGENTS.md` (§FS-init.2.3.5):
 /// a symlink where the name is free, the block spliced into a standalone file.
 enum Companion {
     Link { path: PathBuf, rel: String },
@@ -43,7 +43,7 @@ enum Companion {
 }
 
 /// A file of an orphan's directory that `init` touches, and what it is
-/// (§FS-init.2.3.5.14.3).
+/// (§FS-init.2.3.5).
 struct OrphanEntry {
     path: PathBuf,
     rel: String,
@@ -52,8 +52,8 @@ struct OrphanEntry {
 
 /// Plan the scoped writes under `target`. `root` is the loaded config's root,
 /// which the chapter-rule links of a pending entrypoint are resolved under
-/// (§FS-init.2.3.5.10). The list on disk is read here, before the root block
-/// is rewritten (§FS-init.2.3.5.13.1).
+/// (§FS-init.2.3.5). The list on disk is read here, before the root block
+/// is rewritten (§FS-init.2.3.5).
 pub(super) fn plan_scoped(guidance: &Guidance<'_>, root: &Path, target: &Path) -> ScopedPlan {
     let record = ScopedRecord::read(target, Sources::on_disk());
     let live: Vec<&str> = guidance.layout.scoped_dirs().collect();
@@ -97,7 +97,7 @@ pub(super) fn plan_scoped(guidance: &Guidance<'_>, root: &Path, target: &Path) -
     ScopedPlan { files, orphans }
 }
 
-/// §FS-init.2.3.5.14.1: a newer or malformed block in any file the plan
+/// §FS-init.2.3.5: a newer or malformed block in any file the plan
 /// splices, or a scoped `AGENTS.md` that is a symlink, refuses the run before
 /// anything is written; so does an orphan whose delimiters cannot be cut.
 pub(super) fn refuse_scoped(plan: &ScopedPlan) -> Option<(PathBuf, anyhow::Error)> {
@@ -147,7 +147,7 @@ pub(super) fn refuse_scoped(plan: &ScopedPlan) -> Option<(PathBuf, anyhow::Error
 }
 
 /// Write the plan, pushing one report line per file touched in report order
-/// (§FS-init.2.3.5.14.4). Returns whether anything changed, or the path that
+/// (§FS-init.2.3.5). Returns whether anything changed, or the path that
 /// failed and why.
 pub(super) fn write_scoped(
     plan: &ScopedPlan,
@@ -161,8 +161,8 @@ pub(super) fn write_scoped(
     };
     for file in &plan.files {
         if !path_is_entry(&file.path) {
-            // §FS-init.2.3.5.12.3: a created scoped file is the block alone, and
-            // its directory is one `--scaffold` lays in this run (§FS-init.2.3.5.11.4).
+            // §FS-init.2.3.5: a created scoped file is the block alone, and
+            // its directory is one `--scaffold` lays in this run (§FS-init.2.3.5).
             if !dry_run {
                 if let Some(parent) = file.path.parent() {
                     fs::create_dir_all(parent).map_err(|err| (parent.to_path_buf(), err.into()))?;
@@ -192,7 +192,7 @@ pub(super) fn write_scoped(
         }
     }
     for orphan in &plan.orphans {
-        // §FS-init.2.3.5.14.3: each file loses its block on its own account,
+        // §FS-init.2.3.5: each file loses its block on its own account,
         // and a link goes only with the `AGENTS.md` this run deleted.
         let mut agents_removed = false;
         for OrphanEntry { path, rel, what } in orphan {
@@ -224,14 +224,14 @@ fn splice(
     rel: &str,
     dry_run: bool,
 ) -> Result<&'static str, (PathBuf, anyhow::Error)> {
-    // A scoped file carries no member list to keep (§FS-init.2.3.4.15.8).
+    // A scoped file carries no member list to keep (§FS-init.2.3.4).
     update_agents_block(path, block, rel, dry_run, false)
         .map(|(result, _)| result.verb(dry_run))
         .map_err(|err| (path.to_path_buf(), err))
 }
 
 /// The report verb for an orphan's file: removed when it was deleted, updated
-/// when its block was cut from it (§FS-init.2.3.5.14.4).
+/// when its block was cut from it (§FS-init.2.3.5).
 fn cut_verb(removed: bool, dry_run: bool) -> &'static str {
     match (removed, dry_run) {
         (true, true) => "would-remove",
@@ -240,7 +240,7 @@ fn cut_verb(removed: bool, dry_run: bool) -> &'static str {
     }
 }
 
-/// Remove the managed block from the file at `path` (§FS-init.2.3.5.14.2): the
+/// Remove the managed block from the file at `path` (§FS-init.2.3.5): the
 /// file is deleted when the block was the whole of it, byte for byte, and
 /// otherwise the block is cut through its end delimiter's line ending. `None`
 /// when the file is gone or carries no block, which is left alone unreported;

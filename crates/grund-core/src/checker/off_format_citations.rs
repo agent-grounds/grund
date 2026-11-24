@@ -3,7 +3,7 @@
 //! reported once at its marker. It cites nothing, so this is the only trace it
 //! leaves in a run. The rule belongs to the reference family because it is a
 //! verdict on a citing token reached from the token and a catalog, so `--full`
-//! reports it outside the configured scope too (§FS-check.3.14.2).
+//! reports it outside the configured scope too (§FS-check.3.14).
 
 use super::reference_scope::ScanScope;
 use crate::config::Schema;

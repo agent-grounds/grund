@@ -141,7 +141,7 @@ pub(super) fn ambiguous_id_refusal(
 /// (§FS-show.2.2.2, §FS-refs.4), before reading a body or filtering citations.
 /// `body_decl` is the record of the ID's one declaration, so a stub's sections are
 /// its inline home's; its own prose declares none
-/// (§FS-declarations.checks.duplicate-section.2, §FS-show.2.3). `path_config`
+/// (§FS-declarations.checks.duplicate-section, §FS-show.2.3). `path_config`
 /// owns report paths.
 pub(super) fn ambiguous_section_refusal(
     config: &Config,

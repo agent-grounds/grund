@@ -10,7 +10,7 @@ This milestone shipped in grund 0.16.0: `unmarked-heading` is an error, and its
 record is the compatibility notice that landed it,
 [§DF-unmarked-markdown-headings.release-note](decisions/functional/DF-unmarked-markdown-headings.md#release-note-release-note),
 together with
-[§FS-declarations.checks.unmarked-heading.5](functional-spec/FS-declarations.md#checksunmarked-heading5-an-error-in-grund-0160).
+[§FS-declarations.checks.unmarked-heading](functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading).
 The item's own plan is removed, as a shipped item's is; this address, heading
 text included, is kept while released changelogs still cite it.
 
@@ -20,7 +20,7 @@ This milestone shipped in grund 0.16.0: `declaration-near-miss` is an error,
 and its record is the compatibility notice that landed it,
 [§DF-off-grammar-declaration-compatibility.release-note](decisions/functional/DF-off-grammar-declaration-compatibility.md#release-note-release-note),
 together with
-[§FS-declarations.checks.declaration-near-miss.5](functional-spec/FS-declarations.md#checksdeclaration-near-miss5-a-warning-before-0160-an-error-in-it).
+[§FS-declarations.checks.declaration-near-miss](functional-spec/FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss).
 The item's own plan is removed, as a shipped item's is; this address, heading
 text included, is kept while released changelogs still cite it.
 

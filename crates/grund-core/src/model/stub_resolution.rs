@@ -174,7 +174,7 @@ pub(crate) fn paired_declarations(decls: &[Declaration]) -> PairedDeclarations<'
 
 /// Whether some declaration of `id` records a heading at section path `section`:
 /// the one lookup §FS-check.3.2 reports a missing section from, §FS-fmt.2.4.6
-/// declines a declaration-local rewrite on, §FS-check.3.17.4 admits a bare
+/// declines a declaration-local rewrite on, §FS-check.3.17 admits a bare
 /// index entry by, and a rule's `cites` fact and a lent citation resolve by
 /// (§FS-rules.5.1, §FS-declarations.stubs.target.5), so the finding and the refusals
 /// cannot disagree. An undeclared `id` has no sections, and an owner with no

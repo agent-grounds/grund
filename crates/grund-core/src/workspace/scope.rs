@@ -47,11 +47,11 @@ pub(crate) use crate::config::scope_is_config_root;
 ///
 /// It is also the one place a scanning run refuses a path that names nothing when the caller
 /// did not mark the path as given, so a library caller that sets only `path` cannot be
-/// answered for the working directory's project (§FS-scan.scope.homes.lookup.path.library). It
+/// answered for the working directory's project (§FS-scan.scope.homes.lookup). It
 /// asks once discovery has answered, so a config that refuses to load is still that refusal
 /// (§FS-config.1), and before anything is scanned. A marked path is left to the walk, which
 /// refuses it with the same function after the boundary below has said its warnings
-/// (§FS-scan.scope.homes.lookup.path). A `Discovery` or `Inspection` run scans nothing and is
+/// (§FS-scan.scope.homes.lookup). A `Discovery` or `Inspection` run scans nothing and is
 /// not asked, nor is [`resolve_workspace_config`], whose path only selects the project.
 pub(crate) fn open(invocation: &Invocation) -> Result<Config> {
     open_refusing(
@@ -65,7 +65,7 @@ pub(crate) fn open(invocation: &Invocation) -> Result<Config> {
 
 /// `open()`, refusing a missing path when `refuse_missing` says so: what a command opens with
 /// when the invocation it builds marks a path its own caller left unmarked, as `id` reads the
-/// whole project from the caller's path (§FS-scan.scope.homes.lookup.path.library).
+/// whole project from the caller's path (§FS-scan.scope.homes.lookup).
 ///
 /// A config refused for one of the six asked last is refused for an older
 /// question first where the run has one: its own pinned targets, or, for a
@@ -122,7 +122,7 @@ pub(crate) fn open_at(root: &Path, cli_base: &Path) -> Result<Config> {
 /// `open()` for a command whose path only selects the project, with no flag
 /// of its own (§FS-workspace.8.8). It scans nothing from the path, which may name an editor's
 /// unsaved buffer, so it does not refuse one that is missing; a walk that starts there still
-/// does (§FS-scan.scope.homes.lookup.path).
+/// does (§FS-scan.scope.homes.lookup).
 pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
     open_refusing(&Invocation::new(path, true, Selection::Project), false)
 }
@@ -131,7 +131,7 @@ pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
 /// roots. The boundary is the same list that `run_workspace_check`
 /// computes; setting it on the Config makes the scanner skip those subtrees.
 ///
-/// §FS-check.3.29.9, §FS-check.3.30.2, §FS-check.4.10.7: it is also where the block a
+/// §FS-check.3.29, §FS-check.3.30, §FS-check.4.10.7: it is also where the block a
 /// run is rooted at is asked what that boundary leaves it — anything to read, and
 /// anything it reads that nobody else will. Every command that walks resolves its
 /// config through here, so asking at this one point is what puts the absorbed scan's
@@ -238,7 +238,7 @@ pub(crate) fn config_location_error(
 /// The breadcrumb every diagnostic about a config key wears — `<config>:<line>:`
 /// ahead of the sentence (§FS-config.4.3) — built apart from the error above
 /// because a *warning* about such a key needs the same one and is not an error
-/// (§FS-check.3.29.7).
+/// (§FS-check.3.29).
 pub(crate) fn config_location_message(source: Option<&ConfigLocation>, message: String) -> String {
     match source {
         Some(source) => format!("{}:{}: {message}", format_path(&source.path), source.line),

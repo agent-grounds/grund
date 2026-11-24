@@ -134,9 +134,9 @@ pub struct Config {
     /// `[reference] conversation` (§FS-config.3.1.3, §DF-repo-conversation-opinion) —
     /// the repository's committed conversation-rendering opinion. `None` means no
     /// opinion; the only accepted value is `"link"` (closed enum, widenable later).
-    /// Read solely by the agent-entrypoint renderer (§FS-init.2.3.4.17).
+    /// Read solely by the agent-entrypoint renderer (§FS-init.2.3.6).
     pub conversation: Option<String>,
-    /// `[reference] lead_size_warning` (§FS-config.3.1.2, §FS-declarations.checks.oversized-lead.3).
+    /// `[reference] lead_size_warning` (§FS-config.3.1.2, §FS-declarations.checks.oversized-lead).
     /// `None` preserves the pre-feature checker byte-for-byte and avoids all
     /// point-body measurement work.
     pub lead_size_warning: Option<LeadSizeWarning>,
@@ -394,11 +394,11 @@ pub(crate) fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
         .collect()
 }
 
-/// The row init's guidance names (§FS-init.2.2.2.3): the `FS` row when it is
+/// The row init's guidance names (§FS-init.2.2.2): the `FS` row when it is
 /// citable and has a home, else the first citable row with a home, else the
 /// first citable row, in configuration order; `None` where no row is citable.
 /// The `next:` block allocates in it and the managed block's discovery rung
-/// leads its `--kind` example with it (§FS-init.2.3.4.3), so both read it here.
+/// leads its `--kind` example with it (§FS-init.2.3.4), so both read it here.
 pub(crate) fn guided_kind(kinds: &[KindConfig]) -> Option<&KindConfig> {
     let citable = || kinds.iter().filter(|row| row.citable);
     let has_home = |row: &&KindConfig| row.file.is_some() || row.folder.is_some();

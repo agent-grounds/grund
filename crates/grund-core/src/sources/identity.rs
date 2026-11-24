@@ -69,7 +69,7 @@ pub(crate) fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
 }
 
 /// Where `path` goes as far as the disk answers, for a path that cannot be looked up
-/// (§FS-scan.scope.homes.lookup.outward): each link on the way is read, and a component
+/// (§FS-scan.scope.homes.lookup): each link on the way is read, and a component
 /// behind a directory that refuses the question keeps its written name. Hops are bounded
 /// as the kernel bounds them, so a link cycle ends as written rather than never.
 pub(crate) fn resolved_as_far_as_answered(path: &Path) -> PathBuf {

@@ -31,7 +31,7 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     check_reading_names(catalog, schema, frame, &mut report);
     check_declaration_homes(catalog, schema, frame, &mut report);
     check_misplaced(catalog, schema, frame, &mut report);
-    // §FS-declarations.checks.misplaced-declaration.unlisted-project: all placement forms.
+    // §FS-declarations.checks.misplaced-declaration: all placement forms.
     explain_unlisted_project_placement(schema, frame, &mut report);
     // §FS-declarations.checks.section-heading-level / §FS-declarations.checks.duplicate-section:
     // the depth a declaration's own section headings write, and whether two claim one path. One
@@ -174,7 +174,7 @@ fn check_misplaced(
                 if home.kind == id.kind {
                     continue;
                 }
-                // §FS-declarations.checks.misplaced-declaration.3: a non-citable home has no kind
+                // §FS-declarations.checks.misplaced-declaration: a non-citable home has no kind
                 // an author could have declared instead, so the message names the place and says
                 // why, rather than pointing at a kind that does not exist.
                 let message = if home.citable {
@@ -207,7 +207,7 @@ fn check_misplaced(
     }
 }
 
-/// §FS-declarations.checks.misplaced-declaration.unlisted-project: enrich all
+/// §FS-declarations.checks.misplaced-declaration: enrich all
 /// placement forms at their common boundary. Every frontend receives the same
 /// message; diagnostic locations, codes, fields and verdicts remain untouched.
 fn explain_unlisted_project_placement(schema: &Schema, frame: Frame<'_>, report: &mut CheckReport) {

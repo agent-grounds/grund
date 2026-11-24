@@ -41,7 +41,7 @@ pub(super) struct Reader<'a> {
     /// The kind each `[presentation.kinds.<NAME>]` names, at its header.
     pub(super) presentation_kinds: Vec<(String, usize)>,
     /// Whether the array being read read through the 0.21.x trailing-comma window
-    /// (§FS-config-v2.reader.5.commas.refusal).
+    /// (§FS-config-v2.reader.5.commas).
     pub(super) through_window: bool,
     headers: BTreeMap<String, usize>,
     header: String,
@@ -248,7 +248,7 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
         // at the line of its key.
         let joined = joined_value(value, line_no, &mut lines);
         let Some(value) = joined.value else {
-            // §FS-config-v2.reader.5.strings.refusal: naming 0.22.0 where 0.21.x loaded it, its
+            // §FS-config-v2.reader.5.strings: naming 0.22.0 where 0.21.x loaded it, its
             // join closing the array and its elements reading as they read them.
             let open = joined.open.map(OpenLine::parenthetical).unwrap_or_default();
             let loaded = joined.as_before.is_some_and(|value| {

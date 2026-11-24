@@ -46,7 +46,7 @@ verdict, and then the record names that requirement.
 - **D8**, every other part (V-A10). Other reporting or fact-import changes, and any newly
   minted finding code, take the warning release, [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), as
   [§DF-glob-citation.2](DF-glob-citation.md#2-verdict-correction-and-compatibility) split its code. Target-content suppression under
-  [§FS-declarations.checks.oversized-lead.4](../../functional-spec/FS-declarations.md#checksoversized-lead4-which-sites-it-judges) stays.
+  [§FS-declarations.checks.oversized-lead](../../functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) stays.
 - **D13** (V-C04). A stub whose target is itself a stub is broken. A chain through a
   recognised stub is already reported broken on `main`, and every command agrees, so the
   ruling moves no verdict and has no route.

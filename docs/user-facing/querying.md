@@ -6,7 +6,7 @@ it with the queries below rather than by parsing heading lines or filtering the
 whole citation graph by hand: they resolve named and numbered sections exactly
 the way `grund check` does, and their JSON shapes are made to feed one another.
 What each command does is specified at the point every recipe cites; this page
-only puts the recipes side by side ([§FS-init.2.3.4.3.1](../functional-spec/FS-init.md#23431-structural-queries)).
+only puts the recipes side by side ([§FS-init.2.3.4](../functional-spec/FS-init.md#234-managed-block-content-sections)).
 
 Unless a workspace fixture is named, the examples below were run in the `grund`
 repository itself.

@@ -43,7 +43,7 @@ Operational failures earn `2` before either verdict. With neither failure,
 `--dry-run` keeps `0` even with pending paths. See
 [init exits and reports](init.md#exit-codes-and-reports)
 ([§FS-init.4.1](../functional-spec/FS-init.md#41-what-earns-the-1),
-[§FS-init.4.3](../functional-spec/FS-init.md#43-why---dry-run-keeps-0)).
+[§FS-init.4](../functional-spec/FS-init.md#4-exit-codes)).
 
 The generated project name comes from `--name` when supplied, then from the target's existing `project_name`, and otherwise from the target directory name. This keeps the canonical `AGENTS.md` heading stable when `grund init --force` regenerates it; pass `--name` only when that run should override the configured identity ([§FS-init.2.3.8](../functional-spec/FS-init.md#238-substituted-content)).
 

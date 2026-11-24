@@ -11,7 +11,7 @@ took the deprecation path of [§REQ-backwards-compatibility.2](../../requirement
 an array with an open line that a later line closes, `exclude = [` / `"a` / `b",` / `]` as
 `["a b"]`, and warned with code `config-not-toml`, or `config-multiline-string` where the string
 opened with `"""`, ending `this warning becomes an error in grund 0.22.0`
-([§FS-config-v2.reader.5.strings.window](../../functional-spec/FS-config-v2.md#reader5stringswindow-through-grund-021x-an-array-a-later-line-closes-is-read-as-before-and-warns)). That record's notice ships with 0.21.0, and a notice
+(<§>FS-config-v2.reader.5.strings.window). That record's notice ships with 0.21.0, and a notice
 already released is not published again ([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)), so the release that refuses
 these arrays needs a notice of its own, and this record carries it.
 
@@ -25,7 +25,7 @@ In 0.22.0 (agent-grounds/grund#1118):
 
 - no line after an open line is joined to the array: the open line is its last, and the array is
   refused at its key's line as `unclosed array` with the parenthetical naming the open line
-  ([§FS-config-v2.reader.5.strings.refusal](../../functional-spec/FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)), so `check` and `config show` exit `2` and
+  ([§FS-config-v2.reader.5.strings](../../functional-spec/FS-config-v2.md#reader5strings-a-string-closes-on-the-line-it-opens-on)), so `check` and `config show` exit `2` and
   `config validate` exits `1`;
 - where the readers before 0.22.0 would have loaded the array, so that its text read through the
   window, the refusal ends `; this became an error in grund 0.22.0`; an array they refused too,
@@ -36,10 +36,10 @@ In 0.22.0 (agent-grounds/grund#1118):
   no open line in it, takes the suffix;
 - a `"""` string open at the end of its line is refused with the parenthetical
   `(a multi-line string opens on line <n>, which version 2 does not read)` and the same suffix
-  rule ([§FS-config-v2.reader.5.strings.multi-line](../../functional-spec/FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read));
+  rule ([§FS-config-v2.reader.5.strings](../../functional-spec/FS-config-v2.md#reader5strings-a-string-closes-on-the-line-it-opens-on));
 - an array with an open line is refused for it before any element is read, so a string in it that
   closes early, or a comma with no element before it, earns no refusal of its own
-  ([§FS-config-v2.reader.6.refusal](../../functional-spec/FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string), [§FS-config-v2.reader.5.commas.refusal](../../functional-spec/FS-config-v2.md#reader5commasrefusal-from-grund-0220-a-comma-with-no-element-before-it-is-expected-string));
+  ([§FS-config-v2.reader.6](../../functional-spec/FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote), [§FS-config-v2.reader.5.commas](../../functional-spec/FS-config-v2.md#reader5commas-an-array-takes-one-trailing-comma-after-an-element));
 - three quotes in a row that open a string open a multi-line string, read as TOML reads one, so
   a line that ends `""""a` is open, and the refusal names it, where 0.21.x read the quotes one at
   a time and named a later line ([§FS-config-v2.reader.5.strings](../../functional-spec/FS-config-v2.md#reader5strings-a-string-closes-on-the-line-it-opens-on)). The verdict does not move, and
@@ -51,7 +51,7 @@ In 0.22.0 (agent-grounds/grund#1118):
 - the ancestor climb reads such a `[workspace] members` value as not a list, as it reads any
   value the full load refuses ([§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable));
 - version 1, which reads no array across lines, does not move;
-- the window's point, [§FS-config-v2.reader.5.strings.window](../../functional-spec/FS-config-v2.md#reader5stringswindow-through-grund-021x-an-array-a-later-line-closes-is-read-as-before-and-warns), stays as a past-tense account of
+- the window's point, <§>FS-config-v2.reader.5.strings.window, stays as a past-tense account of
   what 0.21.x did, because a section name that has shipped is kept
   ([§REQ-spec-section-names.permanence](../../requirements/REQ-spec-section-names.md#permanence-a-name-is-permanent)) and the accepted record above cites it.
 
@@ -69,7 +69,7 @@ In 0.22.0 (agent-grounds/grund#1118):
 
 ## release-note: Release note
 
-- [§DF-v2-open-line-closes-in-0-22](DF-v2-open-line-closes-in-0-22.md#df-v2-open-line-closes-in-0-22-the-version-2-open-line-window-closes-in-0220), [§FS-config-v2.reader.5.strings.refusal](../../functional-spec/FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array),
+- [§DF-v2-open-line-closes-in-0-22](DF-v2-open-line-closes-in-0-22.md#df-v2-open-line-closes-in-0-22-the-version-2-open-line-window-closes-in-0220), [§FS-config-v2.reader.5.strings](../../functional-spec/FS-config-v2.md#reader5strings-a-string-closes-on-the-line-it-opens-on),
   [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path):
   **a version-2 array whose string runs over a line break is now refused.** What grund 0.21.0
   announced lands. `exclude = [` / `"a` / `b",` / `]`, which 0.21.0 read as `["a b"]` and warned

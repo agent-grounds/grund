@@ -7,7 +7,7 @@
 
 use super::managed_block::AGENTS_BLOCK_END;
 
-/// The noun of the part above the first `###` heading (§FS-init.2.3.4.2).
+/// The noun of the part above the first `###` heading (§FS-init.2.3.4).
 pub(crate) const CITATION_SCHEME: &str = "citation scheme";
 
 /// The two sections only the outermost root of a full checkout compares
@@ -15,7 +15,7 @@ pub(crate) const CITATION_SCHEME: &str = "citation scheme";
 pub(crate) const WORKSPACE_SECTIONS: [&str; 2] = ["project namespaces", WORKSPACE_MEMBERS];
 
 /// The noun of the member list, the one section `grund init` keeps while an
-/// optional member is absent (§FS-init.2.3.4.15.8).
+/// optional member is absent (§FS-init.2.3.4).
 pub(crate) const WORKSPACE_MEMBERS: &str = "workspace members";
 
 /// One part of a managed block: the `###` heading line that opens it, empty for

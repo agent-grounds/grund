@@ -363,7 +363,7 @@ pub(crate) fn retain_findings_in_scope(
         .retain(|record| scope.contains(&record.file));
     // §FS-declarations.checks.declaration-near-miss asks a question about the configured scope, so
     // a `--full` walk's extra files are dropped with the rest: `--full` widens the *reference* tier
-    // (§FS-check.3.14.2) and nothing else.
+    // (§FS-check.3.14) and nothing else.
     findings
         .near_miss_headings
         .retain(|heading| scope.contains(&heading.file));
@@ -392,7 +392,7 @@ fn paired_files(findings: &Catalog) -> BTreeSet<PathBuf> {
     files
 }
 
-/// §FS-check.3.14.3: the out-of-scope tier — the reference-resolution family run
+/// §FS-check.3.14: the out-of-scope tier — the reference-resolution family run
 /// over the citation sites the wider `--full` walk found outside the configured
 /// scope, resolved against the *whole* walk so a citation whose declaration is
 /// also out there still resolves. Empty without `--full`.
@@ -415,7 +415,7 @@ pub(crate) fn out_of_scope_references(
         schema,
         frame,
         workspace,
-        // §FS-check.3.14.1: out of scope, a `should` never demotes a dangling error.
+        // §FS-check.3.14: out of scope, a `should` never demotes a dangling error.
         &|_, _| None,
         &locks,
         ReferenceTier::OutOfScope,
@@ -423,7 +423,7 @@ pub(crate) fn out_of_scope_references(
         unread,
         &mut tier,
     );
-    // §FS-check.3.14.2: the off-format verdict is the tier's too.
+    // §FS-check.3.14: the off-format verdict is the tier's too.
     check_off_format_citations(findings, schema, Some(scope), &mut tier);
     tier.errors
         .into_iter()
@@ -477,13 +477,13 @@ pub(crate) fn workspace_out_of_scope_references(
     diagnostics
 }
 
-/// §FS-check.3.14.6: retain the v1 entry point used by existing unit fixtures.
+/// §FS-check.3.14: retain the v1 entry point used by existing unit fixtures.
 #[cfg(test)]
 pub(crate) fn tag_out_of_scope(diagnostic: Diagnostic) -> Diagnostic {
     tag_out_of_scope_for_version(diagnostic, 1)
 }
 
-/// §FS-check.3.14.6: the tier's own code and loaded-vocabulary message shape.
+/// §FS-check.3.14: the tier's own code and loaded-vocabulary message shape.
 ///
 /// The code is the in-scope one under an `out-of-scope-` prefix, so a
 /// `--format=json` consumer filters the tier by prefix and the rule by exact

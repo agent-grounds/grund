@@ -126,14 +126,14 @@ pub struct Schema {
     pub lead_thresholds: Vec<Threshold>,
     pub rows: Vec<Row>,
     /// Rows for which adding value form preserves all authored prerequisites
-    /// (§FS-scan.checks.unread-scan-root.message).
+    /// (§FS-scan.checks.unread-scan-root).
     pub(crate) value_form_repairs: ValueFormRepairs,
     pub nesting: Nesting,
 }
 
 /// Repair metadata, like place locations: printing a default explicitly does not change
 /// the schema's meaning (§AR-config.2), but a repair preserves a key the author wrote
-/// (§FS-scan.checks.unread-scan-root.message).
+/// (§FS-scan.checks.unread-scan-root).
 #[derive(Clone, Debug, Default)]
 pub(crate) struct ValueFormRepairs(pub(crate) std::collections::BTreeSet<String>);
 
@@ -167,7 +167,7 @@ pub struct IdGrammar {
 pub struct Sources {
     pub include: Option<Vec<String>>,
     /// Where `[scan] include` was written, which a finding about one of its entries
-    /// anchors at (§FS-scan.checks.unread-scan-root.location).
+    /// anchors at (§FS-scan.checks.unread-scan-root).
     pub include_source: Option<ConfigLocation>,
     pub exclude: Vec<String>,
     pub extensions: Vec<String>,
@@ -343,7 +343,7 @@ pub struct Presentation {
     pub output: OutputPresentation,
     /// Whether every row's guidance renders in the root entrypoint: always for
     /// v1, and for v2 under `[presentation] rules = "root"`; otherwise each row's
-    /// guidance lands above its places (§FS-init.2.3.5.11, §FS-config-v2.presentation).
+    /// guidance lands above its places (§FS-init.2.3.5, §FS-config-v2.presentation).
     pub rules_at_root: bool,
 }
 

@@ -197,7 +197,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "Invalid rules withhold writes; rules unverifiable in member scope render as authored and still earn 1. At the workspace root, run grund check to judge alias-pinned rules."
             );
-            // §FS-init.4.3: pending paths alone do not fail a dry-run preview.
+            // §FS-init.4: pending paths alone do not fail a dry-run preview.
             println!(
                 "Without rule findings or operational errors, --dry-run keeps 0 even with pending paths."
             );

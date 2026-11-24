@@ -48,7 +48,7 @@ fn name_groups(
 }
 
 /// Publish what this walk met and judge it. A tree with no link has nothing in `resolved` and pays
-/// nothing here (§FS-scan.identity.reading.every-caller); a narrow run that meets a link to a file
+/// nothing here (§FS-scan.identity.reading); a narrow run that meets a link to a file
 /// whose own name claims nothing does one project walk first, to learn the file's other names.
 pub(super) fn settle_names(
     schema: &Schema,
@@ -67,7 +67,7 @@ pub(super) fn settle_names(
     {
         walk_scannable_files_with_sources(schema, frame, None, false, &mut |_, _| {})?;
     }
-    // §FS-scan.identity.reading.plain: a handed path can sit under a plain root and be ignored
+    // §FS-scan.identity.reading: a handed path can sit under a plain root and be ignored
     // there, so what a plain walk met is asked too: past the handed files, or that one walk's.
     let plain_walk: Option<HashSet<PathBuf>> = if !whole_project {
         Some(

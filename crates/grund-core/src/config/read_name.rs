@@ -4,7 +4,7 @@
 //! nothing outside this file can make one, so no caller gets a reading from a bare spelling.
 //!
 //! Only what the file is read as moves. The hidden and listed tests keep asking the spelling
-//! handed (§FS-scan.identity.reading.entry), which is what `FileReading` keeps as its path.
+//! handed (§FS-scan.identity.reading), which is what `FileReading` keeps as its path.
 
 use std::path::{Path, PathBuf};
 
@@ -24,7 +24,7 @@ pub(crate) struct ReadName<'a> {
 }
 
 impl<'a> ReadName<'a> {
-    /// The spelling handed, which the entry tests ask (§FS-scan.identity.reading.entry).
+    /// The spelling handed, which the entry tests ask (§FS-scan.identity.reading).
     pub(super) fn spelling(&self) -> &'a Path {
         self.spelling
     }
@@ -62,7 +62,7 @@ impl<'a> ReadName<'a> {
     }
 }
 
-/// What a name reads, where it claims a reading (§FS-scan.identity.reading.claims): an admitted
+/// What a name reads, where it claims a reading (§FS-scan.identity.reading): an admitted
 /// language under version 2, a listed extension under version 1. Only the name counts.
 fn claim<'a>(schema: &'a Schema, name: &Path) -> Option<(Option<&'a Language>, Option<&'a str>)> {
     let sources = &schema.sources;
@@ -81,7 +81,7 @@ fn claim<'a>(schema: &'a Schema, name: &Path) -> Option<(Option<&'a Language>, O
 
 /// The JSON or YAML name a value source goes by, which a value-named spelling takes from its
 /// target whatever the lists say: `values/a.json -> limits.yaml` is YAML
-/// (§FS-scan.identity.reading.every-caller).
+/// (§FS-scan.identity.reading).
 fn value_name(name: &Path) -> Option<&'static str> {
     match file_extension(name)? {
         "json" => Some("json"),
@@ -92,7 +92,7 @@ fn value_name(name: &Path) -> Option<&'static str> {
 }
 
 /// The extension a name reads by, as the configuration or the reader spells it, so the reading can
-/// outlive a name the table lent (§FS-scan.identity.reading.plain). One neither of them reads is no
+/// outlive a name the table lent (§FS-scan.identity.reading). One neither of them reads is no
 /// extension to a reader.
 fn read_extension<'a>(schema: &'a Schema, name: &Path) -> Option<&'a str> {
     let extension = file_extension(name)?;
@@ -132,7 +132,7 @@ impl<'f> Frame<'f> {
                 ..as_spelled
             };
         }
-        // §FS-scan.identity.reading.every-caller: JSON or YAML, from the file's own name.
+        // §FS-scan.identity.reading: JSON or YAML, from the file's own name.
         match (value_name(spelling), value_name(&physical)) {
             (Some(_), Some(extension)) => ReadName {
                 language: None,
@@ -144,7 +144,7 @@ impl<'f> Frame<'f> {
     }
 
     /// A name with no say keeps the reading of the name that has one
-    /// (§FS-scan.identity.reading.plain), which every other file skips in one empty lookup.
+    /// (§FS-scan.identity.reading), which every other file skips in one empty lookup.
     fn as_the_plain_run_reads<'b>(&self, schema: &'b Schema, name: ReadName<'b>) -> ReadName<'b> {
         let Some(plain) = self.run.spellings.plain_name_of(name.spelling) else {
             return name;
@@ -160,7 +160,7 @@ impl<'f> Frame<'f> {
     /// The names of `physical` that have a say in how it is read: the ones a plain run `reaches`,
     /// when it reaches any, and otherwise every name this run met. Each other name is published
     /// with the first of them, which is the name it is read by, so a refusal, a moved reading and
-    /// a file's reading all rest on this one answer (§FS-scan.identity.reading.plain).
+    /// a file's reading all rest on this one answer (§FS-scan.identity.reading).
     pub(crate) fn names_with_a_say(
         &self,
         physical: &Path,
@@ -179,7 +179,7 @@ impl<'f> Frame<'f> {
     }
 
     /// Where `spelling` physically is, where that is another name inside the config root: the
-    /// only name that can decide the reading (§FS-scan.identity.reading.outside).
+    /// only name that can decide the reading (§FS-scan.identity.reading).
     fn owning_name(&self, spelling: &Path) -> Option<PathBuf> {
         let spellings = &self.run.spellings;
         let physical = spellings.physical(spelling)?;
@@ -188,7 +188,7 @@ impl<'f> Frame<'f> {
     }
 
     /// How `path` is read under this project (§FS-config-v2.schema.sources,
-    /// §FS-scan.identity.reading.every-caller): the one answer every reader asks.
+    /// §FS-scan.identity.reading): the one answer every reader asks.
     pub(crate) fn reading<'b>(&self, schema: &'b Schema, path: &'b Path) -> FileReading<'b>
     where
         'f: 'b,
@@ -201,7 +201,7 @@ impl<'f> Frame<'f> {
     /// own name decides, and its one resolution comes after that, so a name no home takes pays for
     /// none. This is the entry answer, not the file's reading: the rule then picks the format, or
     /// says the file reads as no value source at all, which earns the name a located finding
-    /// rather than silence, and a failed status keeps this format (§FS-scan.identity.reading.entry,
+    /// rather than silence, and a failed status keeps this format (§FS-scan.identity.reading,
     /// §FS-scan.checks.reading-moved, §FS-values.5.3.1).
     pub(crate) fn enters_as_value(&self, schema: &Schema, path: &Path) -> Option<ValueFormat> {
         let as_spelled = ReadName::as_spelled(schema, path);
@@ -215,7 +215,7 @@ impl<'f> Frame<'f> {
     /// Whether the file `spelling` reached is read by its own name, which no second name can
     /// contradict (§FS-scan.checks.reading-conflict). A narrow run asks this before it pays for
     /// the project walk that collects a file's other names
-    /// (§FS-scan.identity.reading.every-caller).
+    /// (§FS-scan.identity.reading).
     pub(crate) fn own_name_decides(&self, schema: &Schema, physical: &Path) -> bool {
         physical.starts_with(self.run.spellings.physical_root(self.root()))
             && claim(schema, physical).is_some()

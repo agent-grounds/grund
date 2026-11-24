@@ -26,7 +26,7 @@ Each of the six is a version-2 load warning from grund 0.23.0, at the config lin
 
 `config-index-not-markdown` is for a named `index` only. A row that writes no `index` named nothing, so where the default `README.md` is not read as Markdown its folders are judged as under `index = false` with no warning, and 1.0.0 refuses nothing about it.
 
-`config-rule-folder-not-markdown` is a load warning rather than `unread-scan-root`, because the configuration alone decides it and `unread-scan-root` names no release ([§FS-scan.checks.unread-scan-root.channel](../../functional-spec/FS-scan.md#checksunread-scan-rootchannel-a-located-finding-on-stdout-and-the-exit-code-does-not-move)); a folder the walk reads nothing from could not otherwise be told before 1.0.0 refused it.
+`config-rule-folder-not-markdown` is a load warning rather than `unread-scan-root`, because the configuration alone decides it and `unread-scan-root` names no release ([§FS-errors.5.5](../../functional-spec/FS-errors.md#55-the-check-code-catalog)); a folder the walk reads nothing from could not otherwise be told before 1.0.0 refused it.
 
 ### 2.2 A file in a rule folder read as source stays a warning
 

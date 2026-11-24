@@ -78,7 +78,7 @@ impl SchemaNode {
     /// §FS-schema.4.1: the lines `grund schema` prints under this node — each
     /// slot's shape lines, a front-matter field's nested one level deeper
     /// (§FS-schema.4.1.3), then one for a `closed` that is not `may` — which the
-    /// managed block's declaration shape prints as bullets (§FS-init.2.3.5.12.2).
+    /// managed block's declaration shape prints as bullets (§FS-init.2.3.5).
     pub fn shape_lines(&self) -> Vec<ShapeLine> {
         let slots = self.slots.iter().flat_map(SchemaSlot::shape_lines);
         slots.chain(self.closed.map(kind_closed_line)).collect()

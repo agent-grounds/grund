@@ -40,7 +40,7 @@ pub(crate) static AGENTS_BLOCK_BEGIN: Lazy<Regex> =
 pub(crate) static AGENTS_BLOCK_END: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?m)^<!-- END GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap());
 /// The managed block's version heading between the delimiters, in either
-/// spelling (§FS-init.2.3.9.3): `(block vN)` as `init` writes it, or the unlabelled
+/// spelling (§FS-init.2.3.9): `(block vN)` as `init` writes it, or the unlabelled
 /// `(vN)` of blocks up to v30. Both carry the same version.
 static AGENTS_BLOCK_VERSION_HEADING: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
@@ -49,14 +49,14 @@ static AGENTS_BLOCK_VERSION_HEADING: Lazy<Regex> = Lazy::new(|| {
     .unwrap()
 });
 /// The legacy block's begin marker: the unlabelled H2 heading alone, which opens
-/// a block running until the next H1/H2 or EOF (§FS-init.2.3.1). A labelled
-/// heading outside the delimiters opens nothing (§FS-init.2.3.9.2).
+/// a block running until the next H1/H2 or EOF (§FS-init.2.3.10). A labelled
+/// heading outside the delimiters opens nothing (§FS-init.2.3.9).
 static AGENTS_BLOCK_H2: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"(?m)^##[ \t]+Grounding with grund[ \t]+\(v(?P<version>\d+)\)[ \t]*\r?$").unwrap()
 });
 
 /// The version heading every block `init` renders opens with — root, standalone
-/// companion and scoped alike (§FS-init.2.3.9.3): the number is labelled as the
+/// companion and scoped alike (§FS-init.2.3.9): the number is labelled as the
 /// block's revision, never a grund release (§FS-init.2.3.7).
 pub(crate) fn agents_block_heading(version: u32) -> String {
     format!("## Grounding with grund (block v{version})")
@@ -67,17 +67,17 @@ pub(crate) fn agents_block_heading(version: u32) -> String {
 pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?m)^#{1,2}[ \t]+\S").unwrap());
 
-/// v5 (§FS-init.2.3.6.2, §DF-integrations-command, §DF-repo-conversation-opinion):
+/// v5 (§FS-init.2.3.6, §DF-integrations-command, §DF-repo-conversation-opinion):
 /// the block gains the `### Clickable citations` section — the fixed
 /// repository-web convention, plus a config-derived local-conversation sentence
 /// when `[reference] conversation = "link"` is set. v4 (§FS-init.2.3.9,
 /// §DF-managed-block-delimiters): explicit `<!-- BEGIN/END GRUND MANAGED BLOCK -->`
 /// delimiters replace the implicit H2-to-next-heading region, and the worked
 /// citation example is `<§>`-escaped so generated output passes `grund check`
-/// unmodified. v3 (§FS-init.2.3.5.9, §DF-citation-directions) replaced the
+/// unmodified. v3 (§FS-init.2.3.5, §DF-citation-directions) replaced the
 /// hand-written climbing-rule bullet with a generated `### Citation directions`
 /// section derived from `[citations]`.
-/// v6 (§FS-init.2.3.6.2, §DF-conversation-link-target): the local-conversation
+/// v6 (§FS-init.2.3.6, §DF-conversation-link-target): the local-conversation
 /// sentence became the gated link form — a Markdown link over the `file` target
 /// on the Claude entrypoints, the plain location everywhere else.
 /// v7 (§FS-config.1.3, §DF-config-file-location.2.3): the namespace rule tells an
@@ -86,71 +86,71 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// following a v6 block creates a config in the form `init` no longer
 /// generates — so it carries a version bump rather than a silent rewrite
 /// (§FS-init.2.3.7).
-/// v8 (§FS-init.2.3.5.9, §DF-directions-render): the generated
+/// v8 (§FS-init.2.3.5, §DF-directions-render): the generated
 /// `### Citation directions` section is re-rendered exactly — a unit per bullet,
 /// a grouped conjunction of alternatives, `*/K` said in words, a closed per-kind
 /// default folded into its permission, a legend for what gates, and the
 /// grounding sentence `[reference] require_grounding` was never rendering. The
 /// rules an agent reads changed, so it carries a bump rather than a silent
 /// rewrite (§FS-init.2.3.7).
-/// v9 (§FS-init.2.3.4.3): the cheap-read ladder gains the point-size sweep so
+/// v9 (§FS-init.2.3.4): the cheap-read ladder gains the point-size sweep so
 /// oversized leads are discoverable before an agent pays to read them.
-/// v10 (§FS-init.2.3.4.5.1): Markdown declaration bodies teach that ATX headings
+/// v10 (§FS-init.2.3.4): Markdown declaration bodies teach that ATX headings
 /// need section coordinates, with the body/fence/source exemptions and bold
-/// label alternative of §FS-declarations.checks.unmarked-heading.1.
+/// label alternative of §FS-declarations.checks.unmarked-heading.
 /// v11 (§FS-init.2.3.5, §FS-rules.9): projects with a rule kind gain the exact
 /// accepted sentences under `### Chapter rules`; projects without one continue
 /// to render v10 byte for byte.
-/// v12 (§FS-check.1.1.9, §FS-init.2.3.7.1): the base block stops writing a bare
+/// v12 (§FS-check.1.1.9, §FS-init.2.3.7): the base block stops writing a bare
 /// ID-shaped illustration into its own prose — the escaped example teaches the
 /// shape once and the two declaration lines use the `<ID>` placeholder — so a
 /// repository on `[reference] strict = false` gets a block its own `grund check`
 /// accepts rather than four dangling references. v13 is that same base with
 /// v11's `### Chapter rules` section, keeping rule-enabled at base plus one.
-/// v14 (§FS-init.2.3.4.3.1, §DF-block-teaches-structural-queries): the
+/// v14 (§FS-init.2.3.4, §DF-block-teaches-structural-queries): the
 /// cheap-read ladder gains the structural query — `list --selector` rows fed to
 /// `show --batch --toc --format json` — and links the Querying grund guide. v15
 /// is that base with v13's `### Chapter rules` section.
-/// v16 (§FS-init.2.3.4.5, §DF-relative-section-headings): the declaration forms
+/// v16 (§FS-init.2.3.4, §DF-relative-section-headings): the declaration forms
 /// teach the relative section heading, `.<component>` under its parent, and the
 /// `grund fmt --write` that records a cited one in the section lock.
-/// v17 (§FS-init.2.3.4.5, §DF-number-name-sections): with named sections on, the
+/// v17 (§FS-init.2.3.4, §DF-number-name-sections): with named sections on, the
 /// declaration forms teach that a name may follow a number in a Markdown
 /// declaration body and that a cited address with one is locked. v18 is that base
 /// with v16's rule-enabled `### Chapter rules` section, so a rule-enabled v17 block
 /// is one version behind.
-/// v19 (§FS-init.2.3.4.16, §FS-init.2.3.7.1): Project namespaces appears only
+/// v19 (§FS-init.2.3.4, §FS-init.2.3.7): Project namespaces appears only
 /// for discovered workspace targets. v20 is that base with Chapter rules.
-/// v21 and v22 (§FS-init.2.3.5.11, §FS-init.2.3.7.1): v19 and v20 when a row's
+/// v21 and v22 (§FS-init.2.3.5, §FS-init.2.3.7): v19 and v20 when a row's
 /// guidance lands in a scoped `AGENTS.md` or a declaration shape renders; every
 /// other config keeps rendering v19 or v20 byte for byte.
-/// v23 to v26 (§FS-init.2.3.4.5, §FS-init.2.3.7.1): each pair four higher, the
+/// v23 to v26 (§FS-init.2.3.4, §FS-init.2.3.7): each pair four higher, the
 /// declaration forms teaching the relative and `number.name` forms for a source
 /// doc-comment declaration body as well as a Markdown one.
-/// v27 to v30 (§FS-init.2.3.4.3.1, §FS-init.2.3.7.1): each pair four higher again, the
+/// v27 to v30 (§FS-init.2.3.4, §FS-init.2.3.7): each pair four higher again, the
 /// cheap-read ladder teaching coordinate globs in place of the `jq` pipe.
-/// v31 to v34 (§FS-init.2.3.9.3, §FS-init.2.3.7.1): each pair four higher again, the
+/// v31 to v34 (§FS-init.2.3.9, §FS-init.2.3.7): each pair four higher again, the
 /// version heading labelled `(block vN)`.
-/// v35 to v38 (§FS-init.2.3.4.9, §FS-init.2.3.7.1): each pair four higher again,
+/// v35 to v38 (§FS-init.2.3.4, §FS-init.2.3.7): each pair four higher again,
 /// teaching root-scoped formatter maintenance after authored renames and moves.
-/// v39 to v42 (§FS-init.2.3.5.2.2, §FS-init.2.3.7.1): each pair four higher again,
+/// v39 to v42 (§FS-init.2.3.5, §FS-init.2.3.7): each pair four higher again,
 /// a non-citable home whose row grounds nothing narrowing its bullet, and the
 /// grounding sentence reading each row's effective grounding.
-/// v43 to v46 (§FS-init.2.3.4.3, §FS-init.2.3.5.4, §FS-init.2.3.7.1): each pair four higher
+/// v43 to v46 (§FS-init.2.3.4, §FS-init.2.3.5, §FS-init.2.3.7): each pair four higher
 /// again, the first rung saying a section read opens with its heading line (§FS-show.2.2),
 /// and a prohibition's targets joined as one "or" list.
-/// v47 to v50 (§FS-init.2.3.8.4, §FS-init.2.3.7.1): each pair four higher again, the
+/// v47 to v50 (§FS-init.2.3.8, §FS-init.2.3.7): each pair four higher again, the
 /// trigger sentence naming the ID that follows the trigger.
 pub(crate) const AGENTS_BLOCK_VERSION: u32 = AGENTS_BLOCK_BASE_VERSION + 3;
 
-/// The revision the base config selects (§FS-init.2.3.7.1): a rule kind adds one,
+/// The revision the base config selects (§FS-init.2.3.7): a rule kind adds one,
 /// and a scoped file or a declaration shape adds two, up to [`AGENTS_BLOCK_VERSION`].
 pub(crate) const AGENTS_BLOCK_BASE_VERSION: u32 = 47;
 
-/// Which member of the current pairs a managed-block revision is (§FS-init.2.3.7.1):
+/// Which member of the current pairs a managed-block revision is (§FS-init.2.3.7):
 /// the scoped pair sits two above the unscoped one, and a pair's rule-kind member
 /// one above its base. The one place the selection's arithmetic is written, read by
-/// the writers' selection and by `check`'s stale noun (§FS-init.2.3.7.3.2).
+/// the writers' selection and by `check`'s stale noun (§FS-init.2.3.7).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) struct AgentsBlockMember {
     pub(crate) scoped: bool,
@@ -240,7 +240,7 @@ pub(crate) fn find_agents_block(text: &str) -> AgentsBlockLookup {
         };
     }
     let region = &text[begin.start()..end.end()];
-    // §FS-init.2.3.9.3: either spelling of the version heading, the same version.
+    // §FS-init.2.3.9: either spelling of the version heading, the same version.
     let Some(version) = AGENTS_BLOCK_VERSION_HEADING
         .captures(region)
         .and_then(|caps| caps.name("version")?.as_str().parse::<u32>().ok())
@@ -252,7 +252,7 @@ pub(crate) fn find_agents_block(text: &str) -> AgentsBlockLookup {
     };
     // The span owns the END delimiter's line ending, so splicing a freshly
     // rendered block (which ends `… -->\n`) over an on-disk block reproduces
-    // the file byte-for-byte and re-runs stay `exists ` (§FS-init.2.3.1).
+    // the file byte-for-byte and re-runs stay `exists ` (§FS-init.2.3.10).
     let mut span_end = end.end();
     if text.as_bytes().get(span_end) == Some(&b'\n') {
         span_end += 1;
@@ -265,7 +265,7 @@ pub(crate) fn find_agents_block(text: &str) -> AgentsBlockLookup {
 }
 
 /// The pre-v4 lookup: the H2 marker line opens the block and the next H1/H2 (or
-/// EOF) closes it (§FS-init.2.3.9.2).
+/// EOF) closes it (§FS-init.2.3.9).
 fn find_legacy_agents_block(text: &str) -> AgentsBlockLookup {
     let Some(caps) = AGENTS_BLOCK_H2.captures(text) else {
         return AgentsBlockLookup::Absent;
@@ -284,7 +284,7 @@ fn find_legacy_agents_block(text: &str) -> AgentsBlockLookup {
         .unwrap_or(text.len());
     // Trailing blank lines before the next section are inter-section spacing,
     // not part of the managed body. Trim them back so a re-render of the same
-    // content is a no-op (`exists `, §FS-init.2.3.1).
+    // content is a no-op (`exists `, §FS-init.2.3.10).
     let mut end = section_end;
     while end > after && text[..end].ends_with("\n\n") {
         end -= 1;

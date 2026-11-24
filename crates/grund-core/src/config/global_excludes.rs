@@ -1,5 +1,5 @@
 //! The global excludes pathname shared by scanning and watch-input discovery
-//! (§FS-scan.scope.ignore-files.pathname).
+//! (§FS-scan.scope.ignore-files).
 
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
@@ -12,10 +12,10 @@ use crate::sources::{observe_input, read_bytes};
 /// Preserve `ignore`'s discovery order: HOME's `.gitconfig`, XDG's `git/config`,
 /// then XDG's optional `git/ignore`. Parse Git's grammar and interpolate only a
 /// leading home abbreviation, once, rather than `ignore`'s replacement of every
-/// tilde (§FS-scan.scope.ignore-files.pathname). No subprocess or canonicalization
+/// tilde (§FS-scan.scope.ignore-files). No subprocess or canonicalization
 /// participates. Optional config failures permit further discovery when no
 /// setting is recoverable; an unresolved selected pathname means no global file,
-/// without selecting a different file (§FS-scan.scope.ignore-files.pathname).
+/// without selecting a different file (§FS-scan.scope.ignore-files).
 pub(crate) fn global_excludes_path() -> Result<Option<PathBuf>> {
     // HOME is Git's home override on Windows too; std supplies the platform
     // fallback when it is absent, as it does for the previous loader.
@@ -52,7 +52,7 @@ pub(crate) fn global_excludes_path() -> Result<Option<PathBuf>> {
 
 /// Keep first-setting selection and empty-value fallthrough. Only when Git's
 /// parser rejects the whole file, recover the simple assignment the old loader
-/// accepted despite unrelated syntax errors (§FS-scan.scope.ignore-files.pathname).
+/// accepted despite unrelated syntax errors (§FS-scan.scope.ignore-files).
 /// The recovery grammar is deliberately the old loader's, without its tilde
 /// replacement; valid configs still get Git's quoting and normalization.
 fn configured_path(bytes: &[u8]) -> Option<gix_config::Path> {
@@ -78,7 +78,7 @@ fn configured_path(bytes: &[u8]) -> Option<gix_config::Path> {
 }
 
 /// Interpolate the home abbreviation alone, then concatenate its suffix as Git
-/// does (§FS-scan.scope.ignore-files.pathname). PathBuf::push would replace the
+/// does (§FS-scan.scope.ignore-files). PathBuf::push would replace the
 /// home for a suffix beginning with another slash, in both ~/ and ~user/ forms.
 fn interpolate_path(mut path: gix_config::Path, home: Option<&Path>) -> Result<PathBuf> {
     let context = gix_config::path::interpolate::Context {

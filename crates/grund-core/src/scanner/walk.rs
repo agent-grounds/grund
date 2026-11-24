@@ -20,7 +20,7 @@ use crate::model::{configured_home_path_key, scanned_decl_relative_path};
 
 /// The walker one scan root is traversed with (§AR-scanner.1): the hidden-name and
 /// ignore-file rules the builder carries, the global excludes anchored at each
-/// entry's repository top (§FS-scan.scope.ignore-files.global), and the workspace
+/// entry's repository top (§FS-scan.scope.ignore-files), and the workspace
 /// boundary, `[scan] exclude`, canonical project-root boundary, unwalked-home and
 /// E2E-case prunes [`WalkDirFilter`] carries.
 ///
@@ -132,7 +132,7 @@ pub(super) fn scannable_walk_builder(
     // its own root, git checkout or not, and none above it or the machine's; those
     // above a scan root below it are the filter's to ask, as the global file is.
     let mounted_root = frame.run.workspace.mounted_root.as_deref();
-    // §FS-scan.scope.ignore-files.global: no one root the builder could be handed anchors
+    // §FS-scan.scope.ignore-files: no one root the builder could be handed anchors
     // every entry, so its global matcher is off and the global file is asked here, first,
     // where the walker would have asked it: before the filter sees the entry.
     let global = match mounted_root.filter(|_| schema.sources.respect_gitignore) {
@@ -206,7 +206,7 @@ pub(super) struct WalkDirFilter {
     project_roots: Vec<PathBuf>,
     /// The roots of the trees this run imports, which tell a link out of the project
     /// that lands in one from one that lands nowhere the run reads
-    /// (§FS-scan.scope.links.owed.fence).
+    /// (§FS-scan.scope.links.owed).
     mounted_roots: Vec<PathBuf>,
     id_format: String,
     grammar: Grammar,
@@ -359,7 +359,7 @@ impl WalkDirFilter {
     /// `path`, so that the file governs nothing it reads: what the file's directory holds, or what
     /// this walk's root holds where the root lies below the file. Excluding the file itself, or a
     /// directory above this walk, leaves the file's rules in force on what the walk reads
-    /// (§FS-scan.scope.ignore-files.unparsed).
+    /// (§FS-scan.scope.ignore-files).
     pub(super) fn governs_nothing_read(&self, path: &Path) -> bool {
         let governed = path
             .parent()
@@ -410,7 +410,7 @@ impl WalkDirFilter {
         }
         let resolved = self.resolved_link_dir(path, is_link);
         let resolved = resolved.as_deref();
-        // §FS-scan.scope.links.unresolvable.unopenable: the link's own name first, so a
+        // §FS-scan.scope.links.unresolvable: the link's own name first, so a
         // link kept out by it answers as kept out wherever it points.
         if let Some(reason) = directory_refusal(path, &self.excluded) {
             return Some(reason);
@@ -451,7 +451,7 @@ impl WalkDirFilter {
             link_roots.push(path.to_path_buf());
         }
         drop(link_roots);
-        // §FS-scan.scope.links.owed.refused: a target the lookup is refused on the way to is
+        // §FS-scan.scope.links.owed: a target the lookup is refused on the way to is
         // placed as far as the disk answers, so the fence still judges where it goes.
         (is_link || covered)
             .then(|| {
@@ -471,7 +471,7 @@ impl WalkDirFilter {
     /// judged on the canonical target, which `realpath` works out without opening it,
     /// so walk-error reporting asks the same of a link whose target cannot be opened,
     /// and reads from the answer whether anything in the run reads that tree
-    /// (§FS-scan.scope.links.owed.fence).
+    /// (§FS-scan.scope.links.owed).
     fn scan_boundary_crossed(&self, path: &Path, resolved: Option<&Path>) -> Option<Unread> {
         if let Ok(relative) = path.strip_prefix(&self.scan_root)
             && self

@@ -124,7 +124,7 @@ pub(super) fn check_grounding(
         let none: &[usize] = &[];
         let cited_lines = cited.get(read).map_or(none, Vec::as_slice);
         // §FS-check.3.6.2.3: no inline-declaration escape in a non-citable home — a declaration
-        // there is already misplaced (§FS-declarations.checks.misplaced-declaration.3), so the only
+        // there is already misplaced (§FS-declarations.checks.misplaced-declaration), so the only
         // way to ground a unit is to cite one.
         let declared_lines = match place {
             Some(_) => none,

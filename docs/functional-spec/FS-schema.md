@@ -548,7 +548,7 @@ exit `1`: the command makes no query that can fail ([§FS-cli.5](FS-cli.md#5-exi
   citations or their counts ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)); there is no instance overlay, no
   `--toc`, and no browser hosting.
 - **No change to `grund config show`** ([§FS-fields.record](FS-fields.md#record-the-record)). The managed block prints
-  the view's shape lines ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)), so a change to their wording, such as
+  the view's shape lines ([§FS-init.2.3.5](FS-init.md#235-citation-directions)), so a change to their wording, such as
   showing a field's heading ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)), is a block-version change
   ([§FS-init.2.3.7](FS-init.md#237-the-block-version)).
 

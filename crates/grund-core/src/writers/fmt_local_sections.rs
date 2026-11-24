@@ -88,7 +88,7 @@ pub(super) fn expand_local_section_citations(
 
 /// Whether the write expands this owned local site: a text the writer rules
 /// permit, and a cited section its owner records a heading for (§FS-fmt.2.4.6),
-/// asked of the lookup `check` withholds the command on (§FS-check.3.24.1), which
+/// asked of the lookup `check` withholds the command on (§FS-check.3.24), which
 /// reads a stub's sections from its target (§FS-check.3.2.1).
 fn expandable(cite: &Citation, findings: &Catalog) -> bool {
     cite.shorthand_rewritable

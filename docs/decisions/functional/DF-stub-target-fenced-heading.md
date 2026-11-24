@@ -36,7 +36,7 @@ The fix is in the stub's test, through the fence reader the scan and the body re
 
 **Fix `show` alone.** `show` could refuse a stub whose target has no record without asking the test. Rejected: `check` would still pass a citation with no body behind it, which is the defect, and the two commands would disagree about one stub.
 
-**Report the fenced heading itself.** A finding at the example, saying it looks like the declaration. Rejected: a heading inside a fence is an example by design, and the near-miss rule never reads one ([§FS-declarations.checks.declaration-near-miss.3](../../functional-spec/FS-declarations.md#checksdeclaration-near-miss3-never-in-inline-code-prose-or-a-fenced-block)). What is wrong is the stub, whose target lacks the declaration, so the finding stays at the stub.
+**Report the fenced heading itself.** A finding at the example, saying it looks like the declaration. Rejected: a heading inside a fence is an example by design, and the near-miss rule never reads one ([§FS-declarations.checks.declaration-near-miss](../../functional-spec/FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). What is wrong is the stub, whose target lacks the declaration, so the finding stays at the stub.
 
 ## 4. What this costs, and why it may be taken
 

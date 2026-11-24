@@ -104,7 +104,7 @@ The correction-route meter selects a decision by the literal live citation
 used does not opt the decision out, and moving that sentence into a numbered
 section only moves the refusal from placement to missing proofs. Its refusal
 explains that trigger and the available mention forms under
-[§FS-distribution.4.6.4.2](../functional-spec/FS-distribution.md#4642-a-correction-audit-refusal-explains-its-citation-trigger).
+[§FS-distribution.4.6.4](../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions).
 
 To discuss or reject the route without claiming it, write
 `<§>REQ-backwards-compatibility.5`, or cite `§REQ-backwards-compatibility` and
