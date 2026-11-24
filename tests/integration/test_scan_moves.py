@@ -114,7 +114,7 @@ KEPT = (
     ("FS-workspace.md", "5.1", "`unknown project alias <path>` error at the citation site"),
     ("FS-check.md", "1.3.6", "Three verdicts move"),
     ("FS-check.md", "1.3.6", "Two classes of diagnostic are not about a scanned file"),
-    ("FS-list.md", "1", "`--kind` selects configured citable kinds"),
+    ("FS-list.md", "1.1", "lists only declarations of the named kinds, each a configured"),
     ("FS-show.md", "1.4", "is an accepted alias for scripts"),
     ("FS-refs.md", "1", "widen the section filter"),
     ("FS-id.md", "1", "minimum digit width of the number"),
