@@ -173,7 +173,11 @@ its own default and names no `.` default.
 failure stays visible at exit `2` and exit `0` or `success` speaks only for the selected
 report ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report), [§FS-check.2.1.3](FS-check.md#213-the-success-line)); and the complete supported-code catalog in sorted
 order, so a caller who knows a message finds its code, with a line pointing at
-`grund config explain CODE` ([§FS-config-explain.4](FS-config-explain.md#4-a-codes-answer)). It documents `--watch [<path>]` with an example of its loop and the
+`grund config explain CODE` ([§FS-config-explain.4](FS-config-explain.md#4-a-codes-answer)). Beside PATH it names what a PATH run still reports from
+outside it, the root agent-entrypoint finding `agents-init` and a multi-site finding with a
+site in PATH, such as a duplicate anchored at its twin ([§FS-check.1.3.6](FS-check.md#136-an-explicit-path-still-narrows)), and teaches
+`grund check <PATH> --ignore agents-init`, there and in a PATH-bearing example, as the way to
+leave `agents-init` out; it never promises that every reported location then lies in PATH. It documents `--watch [<path>]` with an example of its loop and the
 statuses it exits with ([§FS-check.6.3](FS-check.md#63-lifecycle)), and links the public watch guide for that mode's limits
 ([§FS-check.6.1](FS-check.md#61-change-detection), [§FS-check.6.2](FS-check.md#62-each-run-is-a-plain-grund-check)).
 
