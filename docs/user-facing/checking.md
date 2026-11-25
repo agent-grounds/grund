@@ -367,7 +367,19 @@ Selection happens only after the complete scan, and operational failures remain
 visible; selected `success` describes only that view, not an all-findings
 repository verdict ([§FS-check.2](../functional-spec/FS-check.md#2-outputs)).
 
-`grund check <path>` narrows the report to the path instead. A failure the walk
+`grund check <path>` narrows the report to the path while citations still resolve
+against the whole project. Two exceptions remain: the root agent-entrypoint
+maintenance finding (`agents-init`, [§FS-check.1.3.6.1](../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)),
+and whole multi-site findings with a site in the path, such as a duplicate
+anchored at its twin outside the path
+([§FS-check.1.3.6.2](../functional-spec/FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)).
+To omit that maintenance finding from a scoped report:
+
+```sh
+grund check docs/architecture/ci.md --ignore agents-init
+```
+
+Applicable multi-site findings and run-level diagnostics remain. A failure the walk
 reports, such as a directory it could not list or a file it could not read, can
 be reached under several names. It is inside the path when any of those names
 is, so it stays an error and the exit stays `2`, and it prints under its name

@@ -15,9 +15,14 @@ fn print_check_help() {
     println!(
         "With no config, grund scans `docs/`, `e2e/`, and `src/`; configure source scope to widen it."
     );
+    // §FS-cli.3.3: teach the retained PATH exceptions and scoped maintenance suppression.
     println!(
-        "Pointing grund at an explicit PATH reports exactly that file or directory; citations still resolve against the whole project."
+        "An explicit PATH narrows the report to that file or directory; citations still resolve against the whole project."
     );
+    println!("Two exceptions remain: the root agent-entrypoint maintenance finding (`agents-init`), and whole multi-site");
+    println!("findings with a site in PATH, such as a duplicate anchored at its twin outside PATH.");
+    println!("`grund check <PATH> --ignore agents-init` omits that maintenance finding; applicable multi-site findings");
+    println!("and run-level diagnostics remain.");
     println!("Path validation is explicit; `grund PATH` is parsed as an ID query.");
     println!();
     println!("Options:");
@@ -107,7 +112,7 @@ fn print_check_help() {
         "  grund check --rule \"Each FS should have exactly one requirements chapter.\" --suggestions"
     );
     println!(
-        "  grund check --ignore agents-init # ask whether the selected content report has errors"
+        "  grund check docs/ --ignore agents-init # omit root maintenance; other diagnostics remain"
     );
     println!(
         "  grund check --rule \"Each FS must have exactly one security chapter.\" --only-rule # what does this sentence find?"

@@ -125,7 +125,6 @@ fn check_maintenance_controls(version: u8) {
 /// §FS-cli.3.3: neither the code catalog nor a PATH-less example explains why
 /// an explicit-PATH run reports the correctly retained root maintenance error.
 #[test]
-#[ignore = "red until #1492 check help teaches PATH exceptions and scoped ignore; implement removes this"]
 fn check_help_explains_path_scope_exceptions_and_recovery() {
     for version in [1, 2] {
         check_maintenance_controls(version);
