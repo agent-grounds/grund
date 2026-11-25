@@ -263,11 +263,11 @@ pub(super) fn check_citation_resolution(
             // §FS-config-v2.schema.sources: Markdown is the citing file's language's.
             let markdown = frame.reading(schema, &cite.file).markdown;
             let in_inline_code = citation_in_markdown_inline_code(findings, frame, cite, markdown);
-            // §FS-check.3.14.1: the out-of-scope tier always reports an error.
+            // §FS-check.3.14: the out-of-scope tier always reports an error.
             let should_warn = snapshot_row.is_some()
                 && tier == ReferenceTier::Configured
                 && snapshot_warns(resolve, cite.namespace.as_deref(), &cite.id.kind);
-            // §FS-check.3.1.5: select one remedy; warnings retain local hints only.
+            // §FS-check.3.1: select one remedy; warnings retain local hints only.
             let (spelling, hints) = reference_hints(
                 schema,
                 frame,

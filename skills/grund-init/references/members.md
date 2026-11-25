@@ -30,7 +30,7 @@ actual declarations in other loaded projects, ahead of local typo guesses;
 several matches require choosing the intended project. The citation remains an
 error until repaired. A member-local run cannot suggest unseen siblings, and
 check does not recognize kinds unknown to the citing project's grammar
-([member-ID hints](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)).
+([member-ID hints](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#31-dangling-citation)).
 
 For stale workspace sections, `expected …; found …` shows the first unequal
 entries; `<missing>` marks an absent side. Run `grund init` in the finding's

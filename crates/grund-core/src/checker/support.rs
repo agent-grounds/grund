@@ -12,14 +12,14 @@ use crate::scanner::fetch_refused_home;
 use crate::sources::path_exists;
 use std::collections::BTreeMap;
 
-/// §FS-check.3.1.5: select the suggestion before rendering either dangling
+/// §FS-check.3.1: select the suggestion before rendering either dangling
 /// message, then compose it once with the citing project's inline escape.
 pub(super) struct ReferenceHints {
     pub near: Option<String>,
     pub escape: Option<String>,
 }
 
-/// §FS-check.3.1.5: actual member declarations precede local typos. `workspace`
+/// §FS-check.3.1: actual member declarations precede local typos. `workspace`
 /// is withheld for warnings, which retain their local and escape hints. Pass the
 /// full written coordinate; each candidate project's grammar owns its section split.
 /// Return the citing grammar's diagnostic spelling alongside the selected hints.
@@ -110,7 +110,7 @@ pub(crate) fn dangling_message(
 
 /// The source citation supplies the spelling of an unresolved number
 /// (§FS-config.3.2.8); identity still selects same-kind suggestions.
-/// §FS-check.3.1.5: hints are already selected, before missing-place fallback.
+/// §FS-check.3.1: hints are already selected, before missing-place fallback.
 pub(super) fn dangling_message_spelled(
     schema: &Schema,
     frame: Frame<'_>,
@@ -194,7 +194,7 @@ const UNREAD_HOME_TAIL: &str = "give the file a name the scan reads as Markdown"
 /// the target's, spelling paths as the report does, so a home `fetch` refuses
 /// (§FS-check.3.1) is asked of it and the tail names where the fetch runs
 /// (§FS-imports.writes.answer).
-/// §FS-check.3.1.5: the selected hints replace the action, keeping this base.
+/// §FS-check.3.1: the selected hints replace the action, keeping this base.
 pub(super) fn missing_snapshot_message(
     schema: &Schema,
     frame: Frame<'_>,
@@ -323,7 +323,7 @@ pub(super) fn citation_in_markdown_inline_code(
     pos <= line.len() && is_inside_inline_code(&line, pos)
 }
 
-/// §FS-check.3.1.1: the local fallback when no declaration-backed member matches.
+/// §FS-check.3.1: the local fallback when no declaration-backed member matches.
 pub(super) fn nearest_declared_id(
     frame: Frame<'_>,
     namespace: Option<&str>,

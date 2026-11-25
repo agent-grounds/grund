@@ -1,4 +1,4 @@
-//! Fixture and CLI assertions for §FS-check.3.1.5.
+//! Fixture and CLI assertions for §FS-check.3.1.
 use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;

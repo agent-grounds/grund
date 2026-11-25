@@ -56,7 +56,7 @@ Choose the intended project and write that alias in the citation, for example
 matches are listed rather than chosen. The hint uses only projects already
 loaded by this run: a member-local check cannot suggest unseen siblings, and a
 kind unknown to the citing project's grammar stays unrecognized
-([§FS-check.3.1.5](../functional-spec/FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)).
+([§FS-check.3.1](../functional-spec/FS-check.md#31-dangling-citation)).
 Try the [missing-alias walkthrough](../../examples/workspace/README.md#repairing-a-missing-alias).
 
 A check from a member directory, or `grund check <member>`, checks that member

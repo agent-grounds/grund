@@ -150,7 +150,7 @@ fn issue_1487_shorthand_in_prose_is_actionable() {
     );
 }
 
-/// §FS-check.3.17.4: a bare index entry after code uses the prose reading.
+/// §FS-check.3.17: a bare index entry after code uses the prose reading.
 #[test]
 fn issue_1487_index_entry_after_code_requires_a_link() {
     let config = format!("{CONFIG}\nindex = \"README.md\"\n");
@@ -213,7 +213,7 @@ fn issue_1487_formatter_trigger_and_marker_follow_code() {
     );
 }
 
-/// §FS-check.3.18.3: a canonical wrap after code enrolls an external source
+/// §FS-check.3.18: a canonical wrap after code enrolls an external source
 /// declaration. Its unused finding must explain that an index is not a use.
 #[test]
 fn issue_1487_external_index_enrollment_after_code() {
