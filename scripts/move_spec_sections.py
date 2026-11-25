@@ -223,7 +223,7 @@ def stranded_refusal(stranded: list[Path], root: Path) -> int:
     # refusal precedes the write loop to keep `this && grund fmt --write` whole.
     print(f"{len(stranded)} untracked file(s) hold a moved coordinate; nothing was rewritten:")
     for path in stranded:
-        relative = path.relative_to(root)
+        relative = path.relative_to(root).as_posix()
         print(f"  {relative} — `git add -N {relative}`, then run this pass again")
     return 1
 
@@ -233,7 +233,7 @@ def write_all(rewrites: dict[Path, tuple[str, str]], root: Path, dry_run: bool) 
     for path, (before, after) in sorted(rewrites.items()):
         moved = changed_lines(before, after)
         sites_moved += moved
-        print(f"{path.relative_to(root)}: {moved} line(s)")
+        print(f"{path.relative_to(root).as_posix()}: {moved} line(s)")
         if not dry_run:
             path.write_text(after, encoding="utf-8")
     verb = "would change" if dry_run else "changed"
