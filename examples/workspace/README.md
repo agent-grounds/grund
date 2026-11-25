@@ -108,7 +108,7 @@ The suggestion uses only loaded projects and takes precedence over local typo
 guesses; it does not make the unqualified citation resolve. A member-local run
 cannot suggest unseen siblings. Unlike show's member-only-kind query above,
 check recognizes only the citing project's configured grammar
-([§FS-check.3.1.5](../../docs/functional-spec/FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)).
+([§FS-check.3.1](../../docs/functional-spec/FS-check.md#31-dangling-citation)).
 
 ## Repairing an unlisted project
 

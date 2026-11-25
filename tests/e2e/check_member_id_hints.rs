@@ -1,4 +1,4 @@
-//! §FS-check.3.1.5: #1489's root/member reproducer and diagnostic boundaries.
+//! §FS-check.3.1: #1489's root/member reproducer and diagnostic boundaries.
 #[path = "check_member_id_hints/support.rs"]
 mod support;
 use support::*;

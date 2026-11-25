@@ -157,7 +157,7 @@ fn query_member_id_candidates(context: &WorkspaceContext, raw_id: &str) -> Vec<S
     )
 }
 
-/// §FS-workspace.8.1.1 / §FS-check.3.1.5: one declaration-backed selection for
+/// §FS-workspace.8.1.1 / §FS-check.3.1: one declaration-backed selection for
 /// queries and dangling remedies. The caller supplies only loaded projects and
 /// identifies the current project (the citing project for check).
 pub(crate) fn member_id_candidates<'a>(

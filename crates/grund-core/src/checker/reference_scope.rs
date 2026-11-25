@@ -467,7 +467,7 @@ pub(crate) fn workspace_out_of_scope_references(
         diagnostics.extend(out_of_scope_references(
             &project.findings,
             project.config.schema(),
-            // §FS-check.3.1.5: candidate selection is relative to this citer too.
+            // §FS-check.3.1: candidate selection is relative to this citer too.
             project.config.frame().checked_as(Some(&project.alias)),
             &workspace,
             scope.as_ref(),

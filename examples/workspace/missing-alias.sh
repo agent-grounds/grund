@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Demonstrate §FS-check.3.1.5: a member hint repairs an unqualified citation.
+# Demonstrate §FS-check.3.1: a member hint repairs an unqualified citation.
 set -eu
 
 fixture_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/repo"
