@@ -128,7 +128,7 @@ class FoldPass:
         stranded = []
         for path in untracked:
             text = read_text(path)
-            if text is not None and self.rewrite(str(path.relative_to(self.root)), text, Log()) != text:
+            if text is not None and self.rewrite(path.relative_to(self.root).as_posix(), text, Log()) != text:
                 stranded.append(path)
         if stranded:
             return stranded, {}
@@ -136,7 +136,8 @@ class FoldPass:
         files = sorted(tracked, key=lambda path: (path.name != "spec.refs", path == self.root / COVERAGE_POLICY))
         rewrites = {}
         for path in files:
-            relative = str(path.relative_to(self.root))
+            # Every rule below matches `/`-separated repository paths, on Windows too.
+            relative = path.relative_to(self.root).as_posix()
             before = read_text(path)
             if before is None:
                 continue
