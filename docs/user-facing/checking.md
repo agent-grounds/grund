@@ -369,10 +369,10 @@ repository verdict ([§FS-check.2](../functional-spec/FS-check.md#2-outputs)).
 
 `grund check <path>` narrows the report to the path while citations still resolve
 against the whole project. Two exceptions remain: the root agent-entrypoint
-maintenance finding (`agents-init`, [§FS-check.1.3.6.1](../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)),
+maintenance finding (`agents-init`, [§FS-check.1.3.6](../functional-spec/FS-check.md#136-an-explicit-path-still-narrows)),
 and whole multi-site findings with a site in the path, such as a duplicate
 anchored at its twin outside the path
-([§FS-check.1.3.6.2](../functional-spec/FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)).
+([§FS-check.1.3.6](../functional-spec/FS-check.md#136-an-explicit-path-still-narrows)).
 To omit that maintenance finding from a scoped report:
 
 ```sh

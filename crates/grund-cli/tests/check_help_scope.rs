@@ -1,5 +1,5 @@
 //! Black-box regression for #1492: correct scoped maintenance checks need help
-//! that teaches their exceptions and recovery (§FS-cli.3.3).
+//! that teaches their exceptions and recovery (§FS-cli.2.3).
 
 #[path = "support/fixture_cleanup.rs"]
 mod fixture_cleanup;
@@ -86,7 +86,7 @@ impl Drop for Fixture {
     }
 }
 
-/// §FS-check.1.3.6.1: port the issue's fresh/stale/ignored controls for both
+/// §FS-check.1.3.6: port the issue's fresh/stale/ignored controls for both
 /// config versions, before judging the guidance rather than changing the verdict.
 fn check_maintenance_controls(version: u8) {
     eprintln!("== V{version}: clean selected file, genuinely stale root block");
@@ -122,7 +122,7 @@ fn check_maintenance_controls(version: u8) {
     );
 }
 
-/// §FS-cli.3.3: neither the code catalog nor a PATH-less example explains why
+/// §FS-cli.2.3: neither the code catalog nor a PATH-less example explains why
 /// an explicit-PATH run reports the correctly retained root maintenance error.
 #[test]
 fn check_help_explains_path_scope_exceptions_and_recovery() {
@@ -147,7 +147,7 @@ fn check_help_explains_path_scope_exceptions_and_recovery() {
     {
         missing.push("root agent-entrypoint maintenance exception (agents-init)");
     }
-    // §FS-check.1.3.6.2: teach a whole multi-site finding anchored outside PATH.
+    // §FS-check.1.3.6: teach a whole multi-site finding anchored outside PATH.
     if !((scope.contains("multi-site") || scope.contains("several sites"))
         && scope.contains("duplicate")
         && scope.contains("outside")

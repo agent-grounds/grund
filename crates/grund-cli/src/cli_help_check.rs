@@ -15,7 +15,7 @@ fn print_check_help() {
     println!(
         "With no config, grund scans `docs/`, `e2e/`, and `src/`; configure source scope to widen it."
     );
-    // §FS-cli.3.3: teach the retained PATH exceptions and scoped maintenance suppression.
+    // §FS-cli.2.3: teach the retained PATH exceptions and scoped maintenance suppression.
     println!(
         "An explicit PATH narrows the report to that file or directory; citations still resolve against the whole project."
     );
