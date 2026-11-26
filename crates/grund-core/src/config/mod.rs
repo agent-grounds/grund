@@ -213,6 +213,8 @@ pub(crate) use fmt_block::validate_fmt_exclude;
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
+mod tests_closed_row;
+#[cfg(test)]
 mod tests_discovery;
 #[cfg(test)]
 mod tests_empty_kinds;

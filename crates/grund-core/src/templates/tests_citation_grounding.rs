@@ -2,7 +2,9 @@
 //! `grund check` enforces (§FS-init.2.3.5). A non-citable
 //! home whose row grounds nothing narrows its bullet and names the setting that
 //! closes the hole; a home whose own row grounds keeps the unnarrowed bullet and
-//! is named in the grounding sentence. The configs are agent-grounds/grund#908's.
+//! is named in the grounding sentence. The configs are agent-grounds/grund#908's;
+//! a row closed to every citation, agent-grounds/grund#1456's, is neither
+//! narrowed nor hinted (§FS-config.3.9.4.1).
 
 use super::citation_directions::CITATION_LEVEL_LEGEND;
 use super::*;
@@ -189,4 +191,372 @@ fn a_soft_grounding_rung_keeps_the_bullet_unnarrowed() {
         "{section}"
     );
     assert!(!section.contains("is not checked"), "{section}");
+}
+
+/// Each non-citable place shape: its name, version, schema rows, row name and
+/// the subject its bullet opens with. A several-file or several-place home is a
+/// version-2 row, so no version-1 config renders one.
+///
+/// The cases below pin agent-grounds/grund#1456: a row closed to every citation
+/// (§FS-config.3.9.4.1) is never narrowed, never carries the grounding sentence,
+/// and renders the one clause `must not cite anything` (§FS-init.2.3.5),
+/// in every place shape and both versions.
+const SHAPES: &[Shape] = &[
+    (
+        "v1_folder",
+        1,
+        "[[kinds]]\nkind = \"ce\"\nfolder = \"ce\"\ncitable = false\n",
+        "ce",
+        "Each file in **ce/**",
+    ),
+    (
+        "v1_file",
+        1,
+        "[[kinds]]\nkind = \"runbook\"\nfile = \"docs/runbook.md\"\ncitable = false\n",
+        "runbook",
+        "The file **docs/runbook.md**",
+    ),
+    (
+        "v2_folder",
+        2,
+        "[schema.kinds.ce]\nfolders = [\"ce\"]\ncitable = false\n",
+        "ce",
+        "Each file in **ce/**",
+    ),
+    (
+        "v2_file",
+        2,
+        "[schema.kinds.runbook]\nfiles = [\"docs/runbook.md\"]\ncitable = false\n",
+        "runbook",
+        "The file **docs/runbook.md**",
+    ),
+    (
+        "v2_files",
+        2,
+        "[schema.kinds.guide]\nfiles = [\"docs/a.md\", \"docs/b.md\"]\ncitable = false\n",
+        "guide",
+        "Each of the files **docs/a.md, docs/b.md**",
+    ),
+    (
+        "v2_places",
+        2,
+        "[schema.kinds.ce]\nfolders = [\"ce\", \"cf\"]\nfiles = [\"docs/a.md\"]\ncitable = false\n",
+        "ce",
+        "Each file in **docs/a.md, ce/, cf/**",
+    ),
+];
+
+/// The homeless kind, with and without a `title`, as [`SHAPES`] lays a shape out.
+const HOMELESS: &[Shape] = &[
+    (
+        "v1_code",
+        1,
+        "[[kinds]]\nkind = \"code\"\ncitable = false\n",
+        "code",
+        "Each source file outside the Project map (**code**)",
+    ),
+    (
+        "v1_code_title",
+        1,
+        "[[kinds]]\nkind = \"code\"\ncitable = false\ntitle = \"Gradle build and workflows\"\n",
+        "code",
+        "Each source file outside the Project map (**code**: Gradle build and workflows)",
+    ),
+    (
+        "v2_code",
+        2,
+        "[schema.kinds.code]\ncitable = false\n",
+        "code",
+        "Each source file outside the Project map (**code**)",
+    ),
+    (
+        "v2_code_title",
+        2,
+        "[schema.kinds.code]\ncitable = false\n[presentation.kinds.code]\ntitle = \"Gradle build and workflows\"\n",
+        "code",
+        "Each source file outside the Project map (**code**: Gradle build and workflows)",
+    ),
+];
+
+/// A config of `version` declaring `FS`, then `rows`, the row `row` ruled by
+/// `rule`, the global default `global` where one is given, and the row's
+/// grounding on where `grounded`: version 1's row key, version 2's ladder.
+fn ruled(
+    version: u32,
+    rows: &str,
+    row: &str,
+    rule: &str,
+    global: Option<&str>,
+    grounded: bool,
+) -> String {
+    if version == 1 {
+        let grounding = if grounded {
+            "require_grounding = true\n"
+        } else {
+            ""
+        };
+        let global = global.map_or_else(String::new, |level| format!("default = \"{level}\"\n"));
+        format!(
+            "[[kinds]]\nkind = \"FS\"\nfile = \"requirements.md\"\n{rows}{grounding}\
+             [citations]\n{global}[citations.{row}]\n{rule}"
+        )
+    } else {
+        let global = global.map_or_else(String::new, |level| {
+            format!("[rules.citations]\ndefault = \"{level}\"\n")
+        });
+        let ladder = if grounded {
+            format!("[rules.citations.{row}.grounding]\nmust = \"file\"\n")
+        } else {
+            String::new()
+        };
+        format!(
+            "grund_config_version = 2\nproject_name = \"demo\"\n\n[schema.kinds.FS]\n\
+             files = [\"requirements.md\"]\n{rows}{global}[rules.citations.{row}]\n{rule}{ladder}"
+        )
+    }
+}
+
+/// The bullet `config` renders for `subject`, or `None` where it renders none.
+fn bullet(name: &str, config: &str, subject: &str) -> Option<String> {
+    let section = render(name, config);
+    let opening = format!("- {subject}");
+    section
+        .lines()
+        .find(|line| line.starts_with(&opening))
+        .map(str::to_string)
+}
+
+/// One place shape: its name, version, schema rows, row name and subject.
+type Shape<'a> = (&'a str, u32, &'a str, &'a str, &'a str);
+
+/// Every shape, under `rule` and `global` with each grounding in `grounding`,
+/// whose bullet is not `- <subject> <clauses>.`, with the bullet it renders.
+fn wrong_bullets(
+    shapes: &[Shape],
+    rule: &str,
+    global: Option<&str>,
+    grounding: &[bool],
+    clauses: &str,
+) -> Vec<String> {
+    let mut wrong = Vec::new();
+    for &grounded in grounding {
+        for (name, version, rows, row, subject) in shapes {
+            let config = ruled(*version, rows, row, rule, global, grounded);
+            let observed = bullet(&format!("closed_{name}"), &config, subject);
+            if observed != Some(format!("- {subject} {clauses}.")) {
+                wrong.push(format!("{name} (grounding {grounded}): {observed:?}"));
+            }
+        }
+    }
+    wrong
+}
+
+/// Asserts [`wrong_bullets`] finds none, naming every shape it does find.
+fn assert_bullets(
+    shapes: &[Shape],
+    rule: &str,
+    global: Option<&str>,
+    grounding: &[bool],
+    clauses: &str,
+) {
+    let wrong = wrong_bullets(shapes, rule, global, grounding, clauses);
+    assert!(
+        wrong.is_empty(),
+        "expected `... {clauses}.`, rendered:\n{}",
+        wrong.join("\n")
+    );
+}
+
+/// The closed rule agent-grounds/grund#1456 writes.
+const CLOSED: &str = "default = \"must-not\"\n";
+
+/// §FS-init.2.3.5, §FS-config.3.9.4.1: a closed home that grounds nothing
+/// takes no narrowed subject and no sentence naming a grounding setting, in
+/// every place shape and both versions. Today each reads `… that cites anything
+/// must not cite anything. A file there that cites nothing is not checked; …`.
+#[test]
+#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
+fn a_closed_home_that_grounds_nothing_renders_one_unnarrowed_sentence() {
+    assert_bullets(SHAPES, CLOSED, None, &[false], "must not cite anything");
+}
+
+/// §FS-init.2.3.5: with its grounding on, a closed home whose only rule is
+/// its `must-not` default keeps the bullet it has, the same sentence.
+#[test]
+fn a_closed_home_that_grounds_keeps_its_bullet() {
+    assert_bullets(SHAPES, CLOSED, None, &[true], "must not cite anything");
+}
+
+/// §FS-init.2.3.5: the homeless kind closed to every citation is not
+/// narrowed, with or without a `title`, grounding off or on. Today it reads
+/// `Each source file outside the Project map (**code**) that cites anything …`.
+#[test]
+#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
+fn the_closed_homeless_kind_is_never_narrowed() {
+    let clause = "must not cite anything";
+    let subject = "Each source file outside the Project map (**code**)";
+    let undeclared = [
+        ("v1_undeclared", 1, "", "code", subject),
+        ("v2_undeclared", 2, "", "code", subject),
+    ];
+    let mut wrong = wrong_bullets(HOMELESS, CLOSED, None, &[false, true], clause);
+    wrong.extend(wrong_bullets(&undeclared, CLOSED, None, &[false], clause));
+    assert!(
+        wrong.is_empty(),
+        "expected `... {clause}.`, rendered:\n{}",
+        wrong.join("\n")
+    );
+}
+
+/// §FS-init.2.3.5: a closed row's own `must-not` list folds into its default's
+/// clause, grounding off or on. Today it reads `must not cite FS; never cite
+/// anything else`, narrowed where the row grounds nothing.
+#[test]
+#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
+fn a_closed_row_folds_its_own_must_not_list() {
+    let rule = "default = \"must-not\"\nmust-not = [\"FS\"]\n";
+    assert_bullets(SHAPES, rule, None, &[false, true], "must not cite anything");
+}
+
+/// §FS-config.3.9.4.1, §FS-init.2.3.5: a row whose own rules are `must-not`
+/// lists alone is closed by a `must-not` global default it inherits, and folds.
+/// Today it reads `must not cite FS`, narrowed where the row grounds nothing.
+#[test]
+#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
+fn a_row_closed_by_an_inherited_default_folds_its_list() {
+    let rule = "must-not = [\"FS\"]\n";
+    assert_bullets(
+        SHAPES,
+        rule,
+        Some("must-not"),
+        &[false, true],
+        "must not cite anything",
+    );
+}
+
+/// The citable kind `AR`, in each version, as [`SHAPES`] lays a shape out.
+const CITABLE: &[Shape] = &[
+    (
+        "v1_citable",
+        1,
+        "[[kinds]]\nkind = \"AR\"\nfolder = \"docs/ar\"\n",
+        "AR",
+        "Each **AR** declaration",
+    ),
+    (
+        "v2_citable",
+        2,
+        "[schema.kinds.AR]\nfolders = [\"docs/ar\"]\n",
+        "AR",
+        "Each **AR** declaration",
+    ),
+];
+
+/// §FS-init.2.3.5: the fold is the row's, not its place's, so a citable row
+/// closed with a `must-not` list of its own folds too. Today it reads `Each **AR**
+/// declaration must not cite FS; never cite anything else.`
+#[test]
+#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
+fn a_closed_citable_row_folds_its_list() {
+    let rule = "default = \"must-not\"\nmust-not = [\"FS\"]\n";
+    assert_bullets(CITABLE, rule, None, &[false], "must not cite anything");
+}
+
+/// §FS-init.2.3.5: a citable row closed by its default alone keeps its bullet.
+#[test]
+fn a_closed_citable_row_with_its_default_alone_keeps_its_bullet() {
+    assert_bullets(CITABLE, CLOSED, None, &[false], "must not cite anything");
+}
+
+/// §FS-init.2.3.5: the fold gives no row a bullet. A row with no
+/// rule of its own, closed by the global default alone, renders none, and the
+/// closing line states the default.
+#[test]
+fn a_row_closed_by_the_global_default_alone_has_no_bullet() {
+    for version in [1, 2] {
+        let rows = SHAPES
+            .iter()
+            .find(|shape| shape.1 == version)
+            .map(|shape| shape.2)
+            .expect("a folder shape");
+        let config = ruled(
+            version,
+            rows,
+            "FS",
+            "may = [\"FS\"]\n",
+            Some("must-not"),
+            false,
+        );
+        let section = render(&format!("closed_by_global_v{version}"), &config);
+        assert!(!section.contains("- Each file in **ce/**"), "{section}");
+        assert!(
+            section.ends_with("Any citation not listed above is forbidden."),
+            "{section}"
+        );
+    }
+}
+
+/// §FS-init.2.3.5: rows that are not closed keep their
+/// bullets byte for byte — a discouraged default, a closed default with a `may`,
+/// `should-not` or `warn-not` exception, a `warn-not` default, an open `should`
+/// and agent-grounds/grund#908's obligation — narrowed, with the sentence that
+/// names the grounding setting, where they ground nothing.
+#[test]
+fn rows_that_are_not_closed_keep_their_bullets() {
+    let cases: &[(u32, &str, &str)] = &[
+        (1, "default = \"should-not\"\n", "should not cite anything"),
+        (
+            1,
+            "default = \"must-not\"\nmay = [\"FS\"]\n",
+            "may cite only FS",
+        ),
+        (
+            1,
+            "default = \"must-not\"\nshould-not = [\"FS\"]\n",
+            "should not cite FS; never cite anything else",
+        ),
+        (1, "should = [\"FS\"]\n", "should cite FS"),
+        (1, "must = [\"FS\"]\n", "must cite FS"),
+        (2, "default = \"should-not\"\n", "should not cite anything"),
+        (
+            2,
+            "default = \"must-not\"\nmay = [\"FS\"]\n",
+            "may cite only FS",
+        ),
+        (
+            2,
+            "default = \"must-not\"\nwarn-not = [\"FS\"]\n",
+            "must not cite FS (a warning); never cite anything else",
+        ),
+        (
+            2,
+            "default = \"warn-not\"\n",
+            "must not cite anything (a warning)",
+        ),
+        (2, "must = [\"FS\"]\n", "must cite FS"),
+    ];
+    let setting = |version: u32| {
+        if version == 1 {
+            "`require_grounding = true` on its `[[kinds]]` row".to_string()
+        } else {
+            "`[rules.citations.ce.grounding] must = \"file\"`".to_string()
+        }
+    };
+    for (index, (version, rule, clauses)) in cases.iter().enumerate() {
+        let rows = SHAPES
+            .iter()
+            .find(|shape| shape.1 == *version)
+            .map(|shape| shape.2)
+            .expect("a folder shape");
+        let config = ruled(*version, rows, "ce", rule, None, false);
+        assert_eq!(
+            bullet(&format!("open_{index}"), &config, "Each file in **ce/**"),
+            Some(format!(
+                "- Each file in **ce/** that cites anything {clauses}. A file there that cites \
+                 nothing is not checked; {} makes it a finding.",
+                setting(*version)
+            )),
+            "{config}"
+        );
+    }
 }

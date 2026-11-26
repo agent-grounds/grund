@@ -107,6 +107,19 @@ pub(crate) fn row_grounds_at_any_strength(rules: &Rules, run: &Run, kind: &str) 
     row_grounding(rules, run, kind).0 || !soft_grounding_rungs(rules, kind).is_empty()
 }
 
+/// Whether the row named `kind` is closed to every citation (§FS-config.3.9.4.1):
+/// its effective fallback, its own `default` else the global one, is `must-not`,
+/// and every list it has is `must-not`. Read from the lowered rules, so a v1 and
+/// a v2 spelling of one row give one answer.
+///
+/// A scaffold until agent-grounds/grund#1456 is implemented: it answers `false`,
+/// and its tests in `tests_closed_row.rs` stay ignored until it answers.
+#[cfg_attr(not(test), allow(dead_code))]
+pub(crate) fn row_closed_to_every_citation(rules: &Rules, kind: &str) -> bool {
+    let _ = (rules, kind);
+    false
+}
+
 /// The one setting that makes a file of the row named `kind` that cites nothing a
 /// finding, spelled in config `version` (§FS-init.2.3.5): version 2's
 /// grounding ladder, version 1's row key. `code` wraps each config fragment, so
