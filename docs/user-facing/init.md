@@ -91,8 +91,8 @@ The managed block opens with a labelled heading such as
 `## Grounding with grund`. The revision in that heading describes the block's
 text, not a grund release: `grund -V` prints the release you are running
 ([§FS-init.2.3.9](../functional-spec/FS-init.md#239-delimiters)). A
-config selects one of four current revisions: v47, v48 once a kind declares rules,
-and v49 or v50 when its guidance lands in a scoped `AGENTS.md` or a declaration
+config selects one of four current revisions: v51, v52 once a kind declares rules,
+and v53 or v54 when its guidance lands in a scoped `AGENTS.md` or a declaration
 shape renders ([§FS-init.2.3.7](../functional-spec/FS-init.md#237-the-block-version)).
 `grund check` reports an older block as outdated, and one `grund init` re-renders
 it. A current block whose text no longer matches what `init` would write — after a
@@ -263,6 +263,7 @@ grounding clause lands has no citation-directions section at all
 wrote AGENTS.md
 wrote docs/spec/AGENTS.md
 wrote tests/AGENTS.md
+wrote tests/fixtures/AGENTS.md
 exists grund.toml
 ```
 

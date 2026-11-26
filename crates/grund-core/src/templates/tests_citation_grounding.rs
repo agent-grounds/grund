@@ -372,10 +372,9 @@ const CLOSED: &str = "default = \"must-not\"\n";
 
 /// §FS-init.2.3.5, §FS-config.3.9.4.1: a closed home that grounds nothing
 /// takes no narrowed subject and no sentence naming a grounding setting, in
-/// every place shape and both versions. Today each reads `… that cites anything
+/// every place shape and both versions. Each used to read `… that cites anything
 /// must not cite anything. A file there that cites nothing is not checked; …`.
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn a_closed_home_that_grounds_nothing_renders_one_unnarrowed_sentence() {
     assert_bullets(SHAPES, CLOSED, None, &[false], "must not cite anything");
 }
@@ -388,10 +387,9 @@ fn a_closed_home_that_grounds_keeps_its_bullet() {
 }
 
 /// §FS-init.2.3.5: the homeless kind closed to every citation is not
-/// narrowed, with or without a `title`, grounding off or on. Today it reads
+/// narrowed, with or without a `title`, grounding off or on. It used to read
 /// `Each source file outside the Project map (**code**) that cites anything …`.
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn the_closed_homeless_kind_is_never_narrowed() {
     let clause = "must not cite anything";
     let subject = "Each source file outside the Project map (**code**)";
@@ -409,10 +407,9 @@ fn the_closed_homeless_kind_is_never_narrowed() {
 }
 
 /// §FS-init.2.3.5: a closed row's own `must-not` list folds into its default's
-/// clause, grounding off or on. Today it reads `must not cite FS; never cite
+/// clause, grounding off or on. It used to read `must not cite FS; never cite
 /// anything else`, narrowed where the row grounds nothing.
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn a_closed_row_folds_its_own_must_not_list() {
     let rule = "default = \"must-not\"\nmust-not = [\"FS\"]\n";
     assert_bullets(SHAPES, rule, None, &[false, true], "must not cite anything");
@@ -420,9 +417,8 @@ fn a_closed_row_folds_its_own_must_not_list() {
 
 /// §FS-config.3.9.4.1, §FS-init.2.3.5: a row whose own rules are `must-not`
 /// lists alone is closed by a `must-not` global default it inherits, and folds.
-/// Today it reads `must not cite FS`, narrowed where the row grounds nothing.
+/// It used to read `must not cite FS`, narrowed where the row grounds nothing.
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn a_row_closed_by_an_inherited_default_folds_its_list() {
     let rule = "must-not = [\"FS\"]\n";
     assert_bullets(
@@ -453,10 +449,9 @@ const CITABLE: &[Shape] = &[
 ];
 
 /// §FS-init.2.3.5: the fold is the row's, not its place's, so a citable row
-/// closed with a `must-not` list of its own folds too. Today it reads `Each **AR**
+/// closed with a `must-not` list of its own folds too. It used to read `Each **AR**
 /// declaration must not cite FS; never cite anything else.`
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn a_closed_citable_row_folds_its_list() {
     let rule = "default = \"must-not\"\nmust-not = [\"FS\"]\n";
     assert_bullets(CITABLE, rule, None, &[false], "must not cite anything");

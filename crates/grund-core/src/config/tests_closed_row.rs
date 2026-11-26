@@ -83,7 +83,6 @@ const OPEN: &[(u32, Option<&str>, Option<&str>)] = &[
 /// §FS-config.3.9.4.1: a `must-not` fallback, own or inherited, with no list
 /// but `must-not` closes the row, and v1 and v2 spellings of it agree.
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn a_must_not_fallback_with_only_must_not_lists_closes_the_row() {
     let mut open = Vec::new();
     for version in [1, 2] {
@@ -103,7 +102,6 @@ fn a_must_not_fallback_with_only_must_not_lists_closes_the_row() {
 /// §FS-config.3.9.4.1: the predicate is the row's, not its place's, so a citable
 /// row closed the same way is closed too.
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn a_citable_row_is_closed_the_same_way() {
     let rule = Some("default = \"must-not\"\n");
     let open: Vec<u32> = [1, 2]
