@@ -25,7 +25,6 @@ fn candidate(row: &str, rung: &str) -> String {
 }
 
 #[test]
-#[ignore = "red until #1460 compares closed warning facts without dropping them; implement removes this"]
 fn closed_citation_grounding_report_gate_compares_facts_and_preserves_differences() {
     let root = test_root("grund-1460-report-facts");
     write(&root.join("grund.toml"), V1);
@@ -122,7 +121,6 @@ fn closed_citation_grounding_report_gate_compares_facts_and_preserves_difference
 }
 
 #[test]
-#[ignore = "red until #1460 preserves config paths in the report comparison; implement removes this"]
 fn closed_citation_grounding_report_gate_keeps_config_paths_distinct() {
     let root = test_root("grund-1460-report-paths");
     let text = V1.replace(

@@ -3,7 +3,6 @@ use super::support::{CODE, Tree, config, row, streams, warnings};
 
 /// Quiet controls run alongside a positive control, so the test cannot pass without the fix.
 #[test]
-#[ignore = "red until #1460 warns only for closed grounded homes; implement removes this"]
 fn closed_citation_grounding_quiet_controls() {
     let mut cases = Vec::new();
     for version in [1, 2] {
@@ -200,7 +199,6 @@ fn closed_citation_grounding_quiet_controls() {
 }
 
 #[test]
-#[ignore = "red until #1460 is selectable and queries remain quiet; implement removes this"]
 fn closed_citation_grounding_selection_and_silent_commands() {
     let tree = Tree::new("selection", &row(2));
     for args in [
@@ -282,7 +280,6 @@ fn closed_citation_grounding_selection_and_silent_commands() {
 }
 
 #[test]
-#[ignore = "red until #1460 adds the catalog explain answer; implement removes this"]
 fn closed_citation_grounding_explain_both_versions() {
     let mut missing = Vec::new();
     for version in [1, 2] {

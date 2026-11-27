@@ -57,6 +57,7 @@ Supported check finding codes:
   broken-stub
   chapter-cardinality
   citation-cardinality
+  closed-citation-grounding
   config-fetch-names-nothing
   config-index-not-markdown
   config-md-not-markdown

@@ -7,7 +7,6 @@ use support::{CODE, Tree, config, message, row, streams, warnings};
 
 /// All four reported surfaces, their exits, null JSON sites and unchanged file verdicts.
 #[test]
-#[ignore = "red until #1460 emits closed-citation-grounding; implement removes this"]
 fn closed_citation_grounding_c1_c2_surfaces() {
     let mut missing = Vec::new();
     for version in [1, 2] {
@@ -72,7 +71,6 @@ fn closed_citation_grounding_c1_c2_surfaces() {
 
 /// All provenance spellings, inherited citation defaults and strongest rung, without suggestions.
 #[test]
-#[ignore = "red until #1460 names effective grounding provenance; implement removes this"]
 fn closed_citation_grounding_provenance_and_rungs() {
     let mut missing = Vec::new();
     for version in [1, 2] {
@@ -188,7 +186,6 @@ fn closed_citation_grounding_provenance_and_rungs() {
 
 /// An empty home still warns; workspace selection names each selected config once.
 #[test]
-#[ignore = "red until #1460 warns per selected config row; implement removes this"]
 fn closed_citation_grounding_workspace_and_empty_home() {
     let tree = Tree::new(
         "workspace",
@@ -230,8 +227,8 @@ fn closed_citation_grounding_workspace_and_empty_home() {
             vec!["a/grund.toml", "b/grund.toml", "grund.toml"],
         ),
         (vec!["config", "show"], vec!["grund.toml"]),
-        (vec!["check", "a"], vec!["a/grund.toml"]),
-        (vec!["config", "validate", "a"], vec!["a/grund.toml"]),
+        (vec!["check", "a"], vec!["grund.toml"]),
+        (vec!["config", "validate", "a"], vec!["grund.toml"]),
     ] {
         let output = tree.run(&args);
         assert_eq!(

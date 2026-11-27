@@ -4,7 +4,6 @@ use crate::config::load_config;
 use crate::testing::{test_root, write};
 
 #[test]
-#[ignore = "red until #1460 adds the shared config warning; implement removes this"]
 fn closed_citation_grounding_two_rows_are_two_unsited_diagnostics() {
     let root = test_root("grund-1460-two-rows");
     write(

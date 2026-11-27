@@ -53,6 +53,7 @@ mod discovery;
 mod exclude_globs;
 mod fetch_key;
 // §AR-config.9: `grund config explain`'s answer, assembled from the gates.
+mod closed_citation_grounding;
 pub(crate) mod explain;
 mod facade;
 #[cfg(test)]
@@ -105,6 +106,9 @@ pub use citations::{
     NamespaceMatch,
 };
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
+pub(crate) use closed_citation_grounding::{
+    ClosedCitationGrounding, GroundingSource, closed_citation_grounding,
+};
 pub use command_paths::path_word;
 pub(crate) use command_paths::{command_directory, command_path};
 pub use compiled::Compiled;
@@ -169,8 +173,9 @@ pub(crate) use discovery::{load_config, load_config_at};
 pub(crate) use file_reading::{FileReading, Readings, written_language};
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::{
-    any_place_grounded, grounding_level_for_kind, grounding_setting, homeless_row_grounding,
-    row_closed_to_every_citation, row_grounding, row_grounds_at_any_strength, soft_grounding_rungs,
+    any_place_grounded, grounding_level_for_kind, grounding_setting, grounding_unit,
+    homeless_row_grounding, row_closed_to_every_citation, row_grounding,
+    row_grounds_at_any_strength, soft_grounding_rungs,
 };
 pub(crate) use home_requirement::can_hold_markdown;
 pub(crate) use kind::escape_toml_basic;

@@ -2,7 +2,6 @@
 use super::case_runner::{CaseKind, assert_every_case_passed, run_case};
 
 #[test]
-#[ignore = "red until #1460 emits the closed grounding warning; implement removes this"]
 fn closed_citation_grounding_goldens() {
     let root = super::repo_root();
     let mut cases: Vec<_> = std::fs::read_dir(root.join("tests/e2e/cases"))

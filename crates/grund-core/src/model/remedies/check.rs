@@ -55,6 +55,18 @@ pub(crate) fn citation_cardinality() -> String {
     fill(Code::CITATION_CARDINALITY, 2, None, slots)
 }
 
+/// `closed-citation-grounding`'s *Fix*, case `own` (§FS-check.checks.closed-citation-grounding).
+pub(crate) fn closed_citation_grounding_own(version: u32, kind: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("kind", &kind)];
+    fill(Code::CLOSED_CITATION_GROUNDING, version, Some("own"), slots)
+}
+
+/// `closed-citation-grounding`'s *Fix*, case `inherited` (§FS-check.checks.closed-citation-grounding).
+pub(crate) fn closed_citation_grounding_inherited(version: u32, kind: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("kind", &kind)];
+    fill(Code::CLOSED_CITATION_GROUNDING, version, Some("inherited"), slots)
+}
+
 /// `config-version-1`'s *Fix* (§FS-check.checks.config-version-1).
 pub(crate) fn config_version_1(files: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("files", &files)];

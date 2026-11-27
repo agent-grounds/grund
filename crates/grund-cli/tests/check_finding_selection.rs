@@ -282,6 +282,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "broken-stub",
         "chapter-cardinality",
         "citation-cardinality",
+        "closed-citation-grounding",
         "config-fetch-names-nothing",
         "config-index-not-markdown",
         "config-md-not-markdown",

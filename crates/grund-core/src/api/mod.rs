@@ -34,6 +34,7 @@
 //! the data-returning embedding surface remains available.
 
 mod check;
+mod closed_citation_grounding;
 mod complete_ids;
 mod config;
 mod config_findings;

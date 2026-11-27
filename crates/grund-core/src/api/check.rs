@@ -120,18 +120,38 @@ pub fn check_with_run_warnings(
 
 /// [`check_with_opts`] with the root of each project the run checked,
 /// which `config migrate`'s report gate compares (§FS-config-migrate.5.2).
+#[cfg(test)]
 pub(super) fn check_with_projects(
     opts: CheckOpts,
 ) -> (Vec<Finding>, Result<(CheckOutput, Vec<PathBuf>)>) {
+    let (warnings, output) = check_for_migration(opts);
+    (
+        warnings,
+        output.map(|(output, scope)| (output, scope.projects)),
+    )
+}
+
+/// The report gate's check scope and warning facts, kept out of the public API
+/// (§FS-config-migrate.5.2).
+pub(super) struct CheckedScope {
+    pub(super) projects: Vec<PathBuf>,
+    pub(super) closed_grounding: Vec<(String, String)>,
+}
+
+/// Preserve semantic warning identities from the same run that made the report
+/// (§FS-config-migrate.5.2).
+pub(super) fn check_for_migration(
+    opts: CheckOpts,
+) -> (Vec<Finding>, Result<(CheckOutput, CheckedScope)>) {
     let mut warnings = Vec::new();
-    let output = check_run(opts, &mut warnings).map(|(output, _, projects)| (output, projects));
+    let output = check_run(opts, &mut warnings).map(|(output, _, scope)| (output, scope));
     (warnings, output)
 }
 
 fn check_run(
     opts: CheckOpts,
     warnings: &mut Vec<Finding>,
-) -> Result<(CheckOutput, ArmedChecks, Vec<PathBuf>)> {
+) -> Result<(CheckOutput, ArmedChecks, CheckedScope)> {
     let mut run = run_check_with_run_warnings(
         &opts.path,
         opts.path_provided,
@@ -152,5 +172,12 @@ fn check_run(
         report: public_report(&run.config, run.report, opts.include_suggestions),
         had_scan_errors: run.had_scan_errors,
     };
-    Ok((output, armed, run.projects))
+    Ok((
+        output,
+        armed,
+        CheckedScope {
+            projects: run.projects,
+            closed_grounding: run.closed_grounding,
+        },
+    ))
 }

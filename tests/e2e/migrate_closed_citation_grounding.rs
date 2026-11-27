@@ -5,7 +5,6 @@ mod support;
 use support::{Tree, config, message, row, streams, warnings};
 
 #[test]
-#[ignore = "red until #1460 compares closed grounding facts across versions; implement removes this"]
 fn closed_citation_grounding_migrates_c1_and_inherited_h2() {
     let mut missing = Vec::new();
     for (name, text, source, unit) in [
