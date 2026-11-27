@@ -287,6 +287,8 @@ The candidate is loaded through the v2 reader, the path a file on disk goes thro
 
 ### 5.2 The report gate
 
+For `closed-citation-grounding` ([§FS-check.checks.closed-citation-grounding](FS-check.md#checksclosed-citation-grounding-grounding-asks-for-citations-a-closed-row-permits-nowhere)), compare facts in one grammar: config path, row, strongest effective rung's strength and unit. Version-specific wording and setting provenance are not differences: a v1 row with `grounding_level = 2` inheriting `[reference] require_grounding = true` can become a v2 row's `must = "h2"`. Never drop the warning. A warning on only one side, or a different config path, row, strength or unit, remains a report difference with each side's own message on its `- ` or `+ ` line, refusing the write. This leaves [§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)'s guidance normalization unchanged.
+
 `grund check --suggestions` runs twice in one process, on the same root, members and invocation: with the file as read and with the candidate. It compares each finding's code, channel, path, line, column and message, the run warnings, the projects checked and the exit status, each line as many times as `check` would print it, so a run warning printed once is compared once. It ignores only:
 
 - the config's own lines: a finding located in the config, and every `<config>:<line>` its message names, is mapped through the key map first;

@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "p"
+[schema.kinds.FS]
+folders = ["specification"]
+index = false
+[schema.kinds.ce]
+folders = ["ce"]
+citable = false
+[rules.citations.ce]
+default = "must-not"
+[rules.citations.ce.grounding]
+must = "file"

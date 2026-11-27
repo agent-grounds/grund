@@ -138,6 +138,8 @@ mod tests_check_path_scope;
 #[cfg(test)]
 mod tests_check_run_warnings;
 #[cfg(test)]
+mod tests_closed_citation_grounding;
+#[cfg(test)]
 mod tests_config_migrate_from;
 #[cfg(test)]
 mod tests_config_migrate_gates;
@@ -181,6 +183,8 @@ mod tests_init_guidance;
 mod tests_lsp_block_closer_spans;
 #[cfg(all(test, unix))]
 mod tests_lsp_failure_names;
+#[cfg(test)]
+mod tests_migrate_closed_citation_grounding;
 #[cfg(test)]
 mod tests_multi_line_string;
 #[cfg(test)]

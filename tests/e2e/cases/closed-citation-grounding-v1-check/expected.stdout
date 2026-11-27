@@ -1,0 +1,2 @@
+ce/A.java:1: error: ungrounded file in kind home ce/: no § citation to a declared ID; cite a declared ID within it
+specification/FS-login.md:1: warning: declared but never cited: FS-login; cite it

@@ -10,6 +10,9 @@ mod init_rule_exit;
 #[path = "../../../tests/integration/ordered_pool.rs"]
 mod ordered_pool;
 
+#[path = "support/closed_citation_grounding_goldens.rs"]
+mod closed_citation_grounding_goldens;
+
 // §FS-init.2.3.5: the generated chapter rules survive a whole init/fmt cycle.
 #[path = "support/chapter_rule_workflow.rs"]
 mod chapter_rule_workflow;

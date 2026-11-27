@@ -94,7 +94,9 @@ include!("case_args_tests.rs");
 
 pub fn discover_e2e_cases(manifest_dir: &Path) -> Vec<PathBuf> {
     let cases_dir = manifest_dir.join("tests/e2e/cases");
-    let cases = discover_case_dirs(&cases_dir, |_| true);
+    // §FS-check.checks.closed-citation-grounding: new red cases run in the ignored
+    // contract test until #1460. Implement removes this filter and their marker files.
+    let cases = discover_case_dirs(&cases_dir, |path| !path.join("red-until-1460").exists());
     assert!(
         !cases.is_empty(),
         "expected at least one e2e case under {}",

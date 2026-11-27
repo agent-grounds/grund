@@ -257,6 +257,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-trigger-sentence-names-the-id](DF-trigger-sentence-names-the-id.md#df-trigger-sentence-names-the-id-the-blocks-trigger-sentence-names-the-id-that-follows-the-trigger) — the block's trigger sentence names the ID that follows the trigger
 - [§DF-shape-line-shows-the-heading](DF-shape-line-shows-the-heading.md#df-shape-line-shows-the-heading-a-fields-line-shows-the-heading-to-write-with-its-placement-and-content-in-checks-words) — a field's line shows the heading to write, with its placement and content in check's words
 - [§DF-closed-row-must-not-cite-anything](DF-closed-row-must-not-cite-anything.md#df-closed-row-must-not-cite-anything-a-row-closed-to-every-citation-renders-one-unnarrowed-must-not-cite-anything) — a row closed to every citation renders one unnarrowed "must not cite anything"
+- [§DF-closed-citation-grounding-warns](DF-closed-citation-grounding-warns.md#df-closed-citation-grounding-warns-warn-when-grounding-asks-for-citations-a-closed-home-permits-nowhere) — warn when grounding asks for citations a closed home permits nowhere
 
 ## The one-answer rulings
 
