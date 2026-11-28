@@ -150,8 +150,14 @@ EMACS_BLOB = "https://github.com/emacs-mirror/emacs/blob/master/doc/misc/eglot.t
 EMACS_CONTENTS = "repos/emacs-mirror/emacs/contents/doc/misc/eglot.texi?ref=master"
 GRUND_PULL = "https://github.com/agent-grounds/grund/pull/387"
 GRUND_ISSUE = "https://github.com/agent-grounds/grund/issues/552"
+GRUND_COMMIT = (
+    "https://github.com/agent-grounds/grund/commit/af47739b3057550e682ec5cd23c9ac8c2e9700b0"
+)
+NO_ENDPOINT = "not queried, no API endpoint for this URL shape"
 REPORT_LINE = re.compile(
-    r"(\d+) GitHub 5xx re-checked through the API: (\d+) confirmed, (\d+) broken, (\d+) unsettled"
+    r"(\d+) GitHub 5xx (?:re-checked through the API: |"
+    r"candidates?: \d+ API re-checks attempted, \d+ not queried \(no API endpoint\); )"
+    r"(\d+) confirmed, (\d+) broken, (\d+) unsettled"
 )
 
 
@@ -273,6 +279,63 @@ class StubbedGate:
             with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
                 code = check_links.check_links(["docs"], Path(tmp), runner=self.runner)
         return code, out.getvalue()
+
+
+@unittest.skipUnless(os.environ.get("GRUND_1497_RED") == "1",
+                     "red until #1497 truthful API attempt diagnostics; implement removes this")
+class GitHub5xxDiagnosticTests(unittest.TestCase):
+    """§AR-ci.3.1.2: attempt counts are separate from settlement verdicts;
+    §FS-non-goals.1 requires truthful maintenance diagnostics."""
+
+    def unmapped(self):
+        gate = StubbedGate({"docs/releases/1.0-freeze.md": [failure(GRUND_COMMIT, 503)]})
+        code, output = gate.run()
+        self.assertEqual(2, code, output)
+        self.assertEqual([], gate.endpoints)
+        return output
+
+    def test_unmapped_commit_explains_why_no_api_check_was_attempted(self):
+        output = self.unmapped()
+        self.assertIn(
+            f"[503] {GRUND_COMMIT} (docs/releases/1.0-freeze.md): "
+            f"{NO_ENDPOINT} | Rejected status code: 503\n", output,
+        )
+        self.assertNotIn("unsettled through the API", output)
+
+    def test_unmapped_commit_summary_counts_zero_attempts_and_one_unsettled_candidate(self):
+        output = self.unmapped()
+        self.assertIn(
+            "1 GitHub 5xx candidate: 0 API re-checks attempted, "
+            "1 not queried (no API endpoint); 0 confirmed, 0 broken, 1 unsettled\n", output,
+        )
+
+    def test_mixed_candidates_count_mapped_attempts_including_missing_gh(self):
+        missing_gh = "https://github.com/agent-grounds/grund/pull/388"
+        gate = StubbedGate({"docs/a.md": [
+            failure(EMACS_BLOB, 503), failure(GRUND_PULL, 503),
+            failure(GRUND_ISSUE, 503), failure(missing_gh, 503),
+            failure(GRUND_COMMIT, 503),
+        ]}, api={
+            EMACS_CONTENTS: 200, "repos/agent-grounds/grund/pulls/387": 404,
+            "repos/agent-grounds/grund/issues/552": 502,
+            "repos/agent-grounds/grund/pulls/388": None,
+        })
+        code, output = gate.run()
+        self.assertEqual(2, code, output)
+        self.assertEqual([
+            EMACS_CONTENTS, "repos/agent-grounds/grund/pulls/387",
+            "repos/agent-grounds/grund/issues/552", "repos/agent-grounds/grund/pulls/388",
+        ], gate.endpoints)
+        self.assertIn(
+            "5 GitHub 5xx candidates: 4 API re-checks attempted, "
+            "1 not queried (no API endpoint); 1 confirmed, 1 broken, 3 unsettled\n", output,
+        )
+        self.assertIn(f"{GRUND_COMMIT} (docs/a.md): {NO_ENDPOINT}", output)
+        self.assertIn(f"{GRUND_PULL} (docs/a.md): broken", output)
+        for url in (GRUND_ISSUE, missing_gh):
+            self.assertIn(f"{url} (docs/a.md): unsettled", output)
+            self.assertNotIn(f"{url} (docs/a.md): {NO_ENDPOINT}", output)
+        self.assertNotIn(f"[503] {EMACS_BLOB}", output)
 
 
 class GitHub5xxRecheckTests(unittest.TestCase):

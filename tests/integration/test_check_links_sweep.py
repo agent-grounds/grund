@@ -7,12 +7,16 @@ The wrapper cases run real lychee against a loopback host that counts requests.
 
 import os
 import re
+import json
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from link_gate_fixture import LYCHEE, ROOT, LinkFixture  # noqa: E402
+from test_check_links import GRUND_COMMIT, NO_ENDPOINT, failure, lychee_report  # noqa: E402
 
 
 WORKFLOW = ROOT / ".github" / "workflows" / "links-nightly.yml"
@@ -142,6 +146,63 @@ class SweepTests(unittest.TestCase):
         files = {"docs/a.md": "# A\fstill line one\n\nSee [the old dead page](<{host}/dead-old>).\n"}
         gate, lines, _ = self.report_lines(files)
         self.assert_reported(gate, lines, "docs/a.md:3")
+
+
+@unittest.skipIf(os.name == "nt", "the stub lychee and gh are POSIX scripts")
+@unittest.skipUnless(os.environ.get("GRUND_1497_RED") == "1",
+                     "red until #1497 truthful API attempt diagnostics; implement removes this")
+class UnmappedSweepDiagnosticTests(unittest.TestCase):
+    """§AR-ci.3.1.5 and §AR-ci.3.1.2: the real --all --report command explains
+    an unmapped GitHub 5xx identically in its console and nightly report."""
+
+    def test_unmapped_commit_report_and_console_share_the_no_endpoint_reason(self):
+        scratch = Path.home() / "ag" / "tmp"
+        scratch.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="grund-1497-sweep-", dir=scratch) as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            (root / "docs/a.md").write_text(f"# A\n\n[commit]({GRUND_COMMIT})\n")
+            report_data = lychee_report({"docs/a.md": [failure(GRUND_COMMIT, 503)]})
+            lychee = root / "lychee"
+            lychee.write_text(
+                f"#!{sys.executable}\n"
+                "import json, pathlib, sys\n"
+                "args = sys.argv[1:]\n"
+                "if '--dump-inputs' in args:\n    print('docs/a.md'); sys.exit(0)\n"
+                f"if '--dump' in args:\n    print({GRUND_COMMIT!r}); sys.exit(0)\n"
+                "if '--offline' in args:\n    sys.exit(0)\n"
+                "path = pathlib.Path(args[args.index('--output') + 1])\n"
+                f"path.write_text({json.dumps(report_data)!r})\n"
+                "sys.exit(2)\n",
+            )
+            gh = root / "gh"
+            gh.write_text(
+                f"#!{sys.executable}\n"
+                "from pathlib import Path\n"
+                "Path('gh-called').touch()\n"
+                "raise SystemExit(99)\n",
+            )
+            lychee.chmod(0o755)
+            gh.chmod(0o755)
+            proc = subprocess.run(
+                [sys.executable, str(ROOT / "scripts/check_links.py"), "--all",
+                 "--report", "report.md", "--lychee", str(lychee), "docs"],
+                cwd=root, env=dict(os.environ, PATH=f"{root}{os.pathsep}{os.environ['PATH']}"),
+                capture_output=True, text=True, timeout=60,
+            )
+            output = proc.stdout + proc.stderr
+            self.assertEqual(2, proc.returncode, output)
+            self.assertFalse((root / "gh-called").exists(), output)
+            detail = f"503: {NO_ENDPOINT} | Rejected status code: 503"
+            self.assertEqual(
+                f"- {GRUND_COMMIT} - docs/a.md:3 - {detail}\n",
+                (root / "report.md").read_text(),
+            )
+            self.assertIn(
+                f"[503] {GRUND_COMMIT} (docs/a.md): {NO_ENDPOINT} | Rejected status code: 503\n",
+                output,
+            )
+            self.assertIn("0 API re-checks attempted, 1 not queried (no API endpoint)", output)
 
 
 class SweepWorkflowTests(unittest.TestCase):
