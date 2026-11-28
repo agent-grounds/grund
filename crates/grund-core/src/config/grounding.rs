@@ -12,6 +12,7 @@
 //! grounding on). Keeping the pair in one file is what stops that rule from
 //! being written twice.
 
+use super::citations::CitationLevel;
 use super::kind::KindConfig;
 use super::project::{Grounding, Rules, Rung, Schema, Strength};
 use super::record::Config;
@@ -105,6 +106,24 @@ pub(crate) fn homeless_row_grounding(schema: &Schema, rules: &Rules, run: &Run) 
 /// judged (§FS-check.3.11).
 pub(crate) fn row_grounds_at_any_strength(rules: &Rules, run: &Run, kind: &str) -> bool {
     row_grounding(rules, run, kind).0 || !soft_grounding_rungs(rules, kind).is_empty()
+}
+
+/// Whether the row named `kind` is closed to every citation (§FS-config.3.9.4.1):
+/// its effective fallback, its own `default` else the global one, is `must-not`,
+/// and every list it has is `must-not`. Read from the lowered rules, so a v1 and
+/// a v2 spelling of one row give one answer, and a row with no table of its own
+/// is closed by a `must-not` global default alone. The Citation directions bullet
+/// reads it (§FS-init.2.3.5); no verdict does.
+pub(crate) fn row_closed_to_every_citation(rules: &Rules, kind: &str) -> bool {
+    let citations = &rules.citations;
+    let row = citations.per_kind.get(kind);
+    let fallback = row.and_then(|row| row.default).or(citations.global_default);
+    fallback == Some(CitationLevel::MustNot)
+        && row.is_none_or(|row| {
+            row.lists()
+                .iter()
+                .all(|(level, list)| list.is_empty() || *level == CitationLevel::MustNot)
+        })
 }
 
 /// The one setting that makes a file of the row named `kind` that cites nothing a
