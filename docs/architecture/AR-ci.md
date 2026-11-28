@@ -161,7 +161,7 @@ dropped, whether the changed-line pass or the sweep met it:
 | `/{owner}/{repo}/blob/{ref}/{path}` | `repos/{owner}/{repo}/contents/{path}?ref={ref}` |
 
 `{ref}` is the one segment after `blob`. The wrapper runs `gh api <endpoint>`
-through the same runner it runs lychee with, once per candidate and without a
+through the same runner it runs lychee with, once per mapped candidate and without a
 retry, and `gh` authenticates as it always does (`GH_TOKEN`, `GITHUB_TOKEN`, or
 `gh auth login`). Each candidate ends in one of three outcomes:
 
@@ -174,10 +174,23 @@ retry, and `gh` authenticates as it always does (`GH_TOKEN`, `GITHUB_TOKEN`, or
 The hook passes only when the network pass failed, its report was read, and every
 failure in it is a confirmed candidate or passed the re-check of [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more).
 A missing or unreadable report keeps
-lychee's exit code. Whenever there is a candidate, one line reports the re-check,
-`N GitHub 5xx re-checked through the API: x confirmed, y broken, z unsettled`,
-and each broken or unsettled candidate is named with its URL, source file and
-status.
+lychee's exit code. Mapping and attempt information is separate from those three
+verdicts, so an unmapped candidate remains unsettled without being counted as an
+attempted API check. To satisfy the diagnostic distinction of
+[§FS-non-goals.1](../functional-spec/FS-non-goals.md#1-markdown-link-validation), whenever there is a candidate, one line accounts for all of them:
+`N GitHub 5xx candidates: A API re-checks attempted, U not queried (no API endpoint); x confirmed, y broken, z unsettled`
+(singular `candidate` when N is 1). N = A + U = x + y + z. A counts mapped
+candidates whose runner invocation was attempted, including missing `gh` or
+authentication failure; it does not claim a response was received or count
+literal network requests. U counts unmapped candidates, all of which contribute
+to z. The line includes zero counts, including A = 0 when no endpoint exists.
+
+Each broken or unsettled candidate is named with its URL, source file, status
+and lychee's reason. An unmapped candidate's detail says
+`not queried, no API endpoint for this URL shape`, rather than attributing its
+unsettled verdict to the API. The console and the nightly kept-failure report
+use the same detail. Endpoint mappings, retries, verdicts and exit codes are
+unchanged: an unmapped candidate still keeps lychee's failure exit code.
 
 Nothing passes for lack of evidence, so the local hook and CI can now differ in
 one direction only: a machine without `gh` or its authentication fails a 5xx

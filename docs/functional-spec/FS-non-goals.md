@@ -16,6 +16,10 @@ This repository checks its own links with lychee, as a maintenance gate rather t
 
 Wherever an external URL is checked, it passes only on a successful response. Its first attempt, a retry within a bounded timeout and retry policy, or a second check of a transient-shaped failure after the gate's own pass can obtain one; when a page on `github.com` answers a server error, a successful answer about the same resource from GitHub's API is that successful response.
 
+Maintenance diagnostics must distinguish attempted API checks from URL shapes
+that have no API endpoint. An unsupported shape remains a failure without a
+successful response; its diagnostic must explain why no API check was attempted.
+
 ## 2. Spelling, grammar, prose quality
 
 `grund` does not lint English. It reads spec text as opaque content between IDs, except for the explicit value binding [§FS-values.3](FS-values.md#3-explicit-value-bindings) defines, and never infers a value from surrounding prose. Use a general-purpose linter, such as `vale` or `ltex-ls`, alongside `grund`. Decided in [§DA-explicit-value-bindings](../decisions/architectural/DA-explicit-value-bindings.md#da-explicit-value-bindings-compare-only-authored-delimited-value-bindings) and [§DA-root-aimed-value-bindings](../decisions/architectural/DA-root-aimed-value-bindings.md#da-root-aimed-value-bindings-a-value-binding-may-aim-at-the-whole-root-its-components-joined-by-one-ascii-space).
