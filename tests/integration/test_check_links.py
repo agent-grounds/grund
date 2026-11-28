@@ -281,8 +281,6 @@ class StubbedGate:
         return code, out.getvalue()
 
 
-@unittest.skipUnless(os.environ.get("GRUND_1497_RED") == "1",
-                     "red until #1497 truthful API attempt diagnostics; implement removes this")
 class GitHub5xxDiagnosticTests(unittest.TestCase):
     """§AR-ci.3.1.2: attempt counts are separate from settlement verdicts;
     §FS-non-goals.1 requires truthful maintenance diagnostics."""
