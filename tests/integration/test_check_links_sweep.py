@@ -149,8 +149,6 @@ class SweepTests(unittest.TestCase):
 
 
 @unittest.skipIf(os.name == "nt", "the stub lychee and gh are POSIX scripts")
-@unittest.skipUnless(os.environ.get("GRUND_1497_RED") == "1",
-                     "red until #1497 truthful API attempt diagnostics; implement removes this")
 class UnmappedSweepDiagnosticTests(unittest.TestCase):
     """§AR-ci.3.1.5 and §AR-ci.3.1.2: the real --all --report command explains
     an unmapped GitHub 5xx identically in its console and nightly report."""

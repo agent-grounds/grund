@@ -111,10 +111,10 @@ def github_endpoint(url: str) -> str | None:
 
 
 def _recheck(
-    url: str, repo_root: Path, runner: Callable[..., subprocess.CompletedProcess[str]]
+    endpoint: str | None, repo_root: Path, runner: Callable[..., subprocess.CompletedProcess[str]]
 ) -> str:
-    """confirmed, broken or unsettled: one `gh api` call, no retry (§AR-ci.3.1.2)."""
-    endpoint = github_endpoint(url)
+    """confirmed, broken or unsettled: attempt one `gh api` call for a mapped endpoint,
+    no retry; an unmapped candidate stays unsettled without a call (§AR-ci.3.1.2)."""
     if endpoint is None:
         return "unsettled"
     try:
@@ -151,18 +151,20 @@ def _status_reason(status: dict) -> str:
     return text
 
 
-def _failure_detail(status: dict, outcome: str | None = None) -> str:
-    """What follows a kept failure's label: the API outcome if re-checked, and lychee's
-    reason (§AR-ci.3.1.2); the console line and the sweep's report both write it."""
+def _failure_detail(url: str, status: dict, outcome: str | None = None) -> str:
+    """What follows a kept failure's label: the attempted API outcome or the missing
+    endpoint, and lychee's reason (§AR-ci.3.1.2), shared by console and sweep report."""
     detail = f": {outcome} through the API" if outcome is not None else ""
+    if outcome is not None and github_endpoint(url) is None:
+        detail = ": not queried, no API endpoint for this URL shape"
     reason = _status_reason(status)
     return f"{detail} | {reason}" if reason else detail
 
 
 def _failure_line(source: str, url: str, status: dict, outcome: str | None = None) -> str:
-    """One kept failure: label, URL, source, the API outcome if re-checked, and
+    """One kept failure: label, URL, source, the API outcome or missing endpoint, and
     lychee's reason (§AR-ci.3.1.2)."""
-    return f"[{_status_label(status)}] {url} ({source}){_failure_detail(status, outcome)}"
+    return f"[{_status_label(status)}] {url} ({source}){_failure_detail(url, status, outcome)}"
 
 
 def settle(
@@ -178,11 +180,15 @@ def settle(
     a transient failure the lychee re-check answered (§AR-ci.3.1.3). Each failure kept
     is printed, and added to `report` when given."""
     outcomes = {"confirmed": 0, "broken": 0, "unsettled": 0}
+    not_queried = 0
     kept: list[tuple[str, str, dict, str | None]] = []
     transient = []
     for source, url, status in failures:
         if _is_candidate(url, status):
-            outcome = _recheck(url, repo_root, runner)
+            endpoint = github_endpoint(url)
+            # Mapping, not verdict, determines whether a call is attempted (§AR-ci.3.1.2).
+            not_queried += endpoint is None
+            outcome = _recheck(endpoint, repo_root, runner)
             outcomes[outcome] += 1
             if outcome != "confirmed":
                 kept.append((source, url, status, outcome))
@@ -200,10 +206,12 @@ def settle(
         print(_failure_line(*failure))
     if report is not None:
         report.extend(kept)
-    checked = sum(outcomes.values())
-    if checked:
+    candidates = sum(outcomes.values())
+    if candidates:
+        noun = "candidate" if candidates == 1 else "candidates"
         print(
-            f"{checked} GitHub 5xx re-checked through the API: {outcomes['confirmed']} confirmed, "
+            f"{candidates} GitHub 5xx {noun}: {candidates - not_queried} API re-checks attempted, "
+            f"{not_queried} not queried (no API endpoint); {outcomes['confirmed']} confirmed, "
             f"{outcomes['broken']} broken, {outcomes['unsettled']} unsettled"
         )
     if urls:
@@ -225,7 +233,8 @@ def write_report(
     lychee: str = "lychee",
 ) -> None:
     """The sweep's report: `- <url> - <file>:<line> - <status>` for every line of every input
-    file that carries a kept failure's URL (§AR-ci.3.1.5)."""
+    file that carries a kept failure's URL (§AR-ci.3.1.5), sharing the console's
+    settlement detail (§AR-ci.3.1.2)."""
     listed = subprocess.run(
         [lychee, "--dump-inputs", *inputs],
         cwd=repo_root, capture_output=True, check=False,
@@ -246,6 +255,6 @@ def write_report(
             for number, line in enumerate(numbered, 1)
             if carries(line, url)
         ]
-        status_text = f"{_status_label(status)}{_failure_detail(status, outcome)}"
+        status_text = f"{_status_label(status)}{_failure_detail(url, status, outcome)}"
         lines.extend(f"- {url} - {where} - {status_text}" for where in found or [source])
     path.write_text("".join(f"{line}\n" for line in lines), encoding="utf-8")
