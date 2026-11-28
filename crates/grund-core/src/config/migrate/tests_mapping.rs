@@ -86,6 +86,7 @@ macro_rules! fs_with {
 }
 
 // The cases, one file per half of the table; they spell their files with the macros above.
+mod tests_builtins;
 mod tests_rows;
 mod tests_settings;
 

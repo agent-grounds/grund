@@ -10,14 +10,13 @@ section_separator = "."
 heading_depth = "must"
 
 [schema.sources]
-languages = ["v1_markdown", "v1_c_family", "v1_go", "v1_python", "v1_ruby", "v1_lisp", "v1_sql", "v1_haddock", "v1_ldoc", "v1_plain", "v1_roxygen", "v1_shell"]
+languages = ["markdown", "v1_c_family", "v1_go", "v1_python", "v1_ruby", "v1_lisp", "v1_sql", "v1_haddock", "v1_ldoc", "v1_plain", "v1_roxygen", "v1_shell"]
 declarations = "any-comment"
 exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"]
 respect_gitignore = true
 fenced = []
 
 [schema.sources.extensions]
-md = "v1_markdown"
 rs = "v1_c_family"
 go = "v1_go"
 java = "v1_c_family"
@@ -67,12 +66,6 @@ ss = "v1_lisp"
 rkt = "v1_lisp"
 cljs = "v1_lisp"
 cljc = "v1_lisp"
-
-[schema.sources.definitions.v1_markdown]
-class = "document"
-comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
-doc_comments = "none"
-docstrings = "off"
 
 [schema.sources.definitions.v1_c_family]
 class = "source"

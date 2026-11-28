@@ -36,8 +36,10 @@
 mod check;
 mod complete_ids;
 mod config;
+mod config_adopt;
 mod config_findings;
 mod config_migrate;
+mod config_migrate_extensions;
 mod config_migrate_guidance;
 mod cover;
 mod cover_lines;
@@ -85,6 +87,9 @@ pub use config::{
     effective_config, effective_project, explain_vocabulary, reference_style, schema_view,
     validate_config,
 };
+#[cfg(test)]
+pub(crate) use config_adopt::BETWEEN_CHECKS;
+pub use config_adopt::{AdoptOpts, config_adopt};
 pub use config_migrate::{MigrateOpts, config_migrate};
 pub use cover::{
     CoverCitation, CoverEntry, CoverOpts, CoverOutput, CoverTextCitation, CoverTextEntry,
@@ -137,6 +142,8 @@ mod tests_check_full_scope;
 mod tests_check_path_scope;
 #[cfg(test)]
 mod tests_check_run_warnings;
+#[cfg(test)]
+mod tests_config_migrate_extensions;
 #[cfg(test)]
 mod tests_config_migrate_from;
 #[cfg(test)]

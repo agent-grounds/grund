@@ -135,6 +135,8 @@ pub use init_plan::InitAgentEntrypointSelection;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
+#[cfg(test)]
+pub(crate) use atomic_install::{FAULT, Stage};
 pub(crate) use atomic_install::{Holds, Install, InstallFailure, atomic_install};
 pub(crate) use expected::{WorkspaceBlocks, expected};
 pub(crate) use fmt_tree::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};

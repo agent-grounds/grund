@@ -2,7 +2,7 @@
 
 This runnable walkthrough moves a version-1 `grund.toml` to version 2 with `grund config migrate --to 2` ([§FS-config-migrate](../../docs/functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does)). It is for a repository `grund init` set up before version 2 existed. Its config is the one `grund init` writes, trimmed to two kinds and two languages, with four comments: a header block, one above the `FS` row, one above `[scan] include`, and one trailing `[scan] exclude`.
 
-The example pins five runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). The first two preview; the third writes with compact output and the fourth with complete output, each changing only the config in a disposable copy. The fifth migrates a different tree, a workspace block with `include_root = false`.
+The example pins seven runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). The first two preview; the third writes with compact output and the fourth with complete output, each changing only the config in a disposable copy. The fifth migrates a different tree, a workspace block with `include_root = false`. The last two take a migrated file one step further, onto version 2's built-in languages: the sixth previews that and the seventh writes it.
 
 ## Step 1: the preview refuses, and names the repairs
 
@@ -181,7 +181,92 @@ include_root = false
 
 Both gates still ran. Put a `README.md` or an `AGENTS.md` beside the block's config and the same command exits `1` at the report gate, because version 2 would read that file and warn that nobody scans the block; the block stays on version 1 until the file moves into a member ([§FS-config-migrate.8.1](../../docs/functional-spec/FS-config-migrate.md#81-a-block-with-include_root--false)). The report names the file `grund.toml`, from the block's own directory, as every migration report does by default; pass `--path-base=invocation` to see `group/grund.toml`. The undo and the re-preview it closes with already name the block from the workspace root, because they are commands to run there: `git restore group/grund.toml` and `grund config migrate --to 2 group` ([§FS-config-migrate.6.5.1](../../docs/functional-spec/FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)).
 
+## Step 6: preview the built-in languages for what migration kept
+
+Migration writes a built-in language only where it reads a suffix exactly as version 1 did, as `markdown` does `.md` under version 1's default comment prefixes ([§FS-config-v2.schema.sources.migration](../../docs/functional-spec/FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)). Every other suffix keeps a `v1_*` definition, so nothing `grund check` reports moves. `grund config adopt-builtins` is the step after that: it reads each of those suffixes through the built-in language that claims it, and says every reading that changes ([§FS-config-adopt-builtins](../../docs/functional-spec/FS-config-adopt-builtins.md#fs-config-adopt-builtins-grund-config-adopt-builtins-reads-a-version-2-files-suffixes-through-the-built-in-languages-that-claim-them-says-every-reading-that-changes-and-writes-only-what-it-planned-only-when-asked)).
+
+`migrate-6-adopt/repo/grund.toml` is what `grund config migrate --to 2 --write` writes for a version-1 project that read `md`, `java`, `gradle` and `sh` through `comment_prefixes = ["//", "#", "*", "/*"]`. No built-in reads a suffix through exactly those hosts, so every suffix kept its definition:
+
+```toml
+[schema.sources]
+languages = ["v1_markdown", "v1_c_family", "v1_plain", "v1_shell"]
+…
+[schema.sources.extensions]
+md = "v1_markdown"
+java = "v1_c_family"
+gradle = "v1_plain"
+sh = "v1_shell"
+```
+
+Preview the adoption:
+
+```bash
+grund config adopt-builtins examples/migrate/migrate-6-adopt/repo
+echo $?    # 0
+```
+
+Stdout is the candidate, exactly the bytes `--write` would write ([§FS-config-adopt-builtins.5.1](../../docs/functional-spec/FS-config-adopt-builtins.md#51-stdout-is-the-candidate)). Stderr is the plan, suffix by suffix, and what `grund check --suggestions` reports with the file and with the candidate ([§FS-config-adopt-builtins.5.2](../../docs/functional-spec/FS-config-adopt-builtins.md#52-stderr-is-the-report)):
+
+```text
+grund.toml: adopting version 2's built-in languages, preview, nothing written
+adopts: md: definition v1_markdown → built-in markdown
+  reads differently: comments behind `;` and `--` are now read
+adopts: java: definition v1_c_family → built-in java
+  reads differently: `#` is no longer a comment host
+adopts: sh: definition v1_shell → built-in shell, opt-in, listed in languages
+  reads differently: `//`, `/*` and `*` are no longer comment hosts
+added: bash, zsh: admitted with shell
+kept: gradle: definition v1_plain and gradle = "v1_plain"; version 2 has no built-in language for `.gradle`
+compared: the candidate reads as planned; grund check --suggestions: exit 1 → 1, no finding changes
+```
+
+Each `reads differently:` line is a change you are agreeing to: after the write, a `#` in a Java file no longer starts a comment, and `.sh` reads only `#` ([§FS-config-adopt-builtins.5.3](../../docs/functional-spec/FS-config-adopt-builtins.md#53-reading-differences)). `shell` reads `.bash` and `.zsh` as well, so `src/extra.bash`, which nothing read before, is now scanned. `.gradle` has no built-in language and keeps `v1_plain`. A kept suffix never refuses. The `compared:` line shows that none of this moves a finding on this tree: the one error before and after is the reference to `FS-typo` in `src/build.gradle`, which `v1_plain` still reads.
+
+Adoption plans before it writes the candidate, and refuses any candidate that reads a suffix otherwise than planned, so a mistake in the edit cannot change a reading the report did not name ([§FS-config-adopt-builtins.6.2](../../docs/functional-spec/FS-config-adopt-builtins.md#62-the-readings-are-the-plan)).
+
+## Step 7: write, and check what it read
+
+`migrate-7-adopt-write/repo/` starts from the same migrated file. Write the adoption:
+
+```bash
+grund config adopt-builtins --write examples/migrate/migrate-7-adopt-write/repo
+echo $?    # 0
+```
+
+Stdout is empty. Stderr repeats step 6's report and ends with the write ([§FS-config-adopt-builtins.8.2](../../docs/functional-spec/FS-config-adopt-builtins.md#82-what-it-says-after-the-write)):
+
+```text
+wrote grund.toml: adopted built-in markdown, java and shell; kept v1_plain for gradle
+to get the previous file back: it is in version control, e.g. git restore grund.toml
+to see this candidate again: restore it and run grund config adopt-builtins
+```
+
+`migrate-7-adopt-write/expected.repo/grund.toml` is the written file. `languages` names the built-ins in place of the definitions they replace, and only the `.gradle` entry and its definition remain:
+
+```toml
+[schema.sources]
+languages = ["markdown", "java", "v1_plain", "shell"]
+…
+[schema.sources.extensions]
+gradle = "v1_plain"
+
+[schema.sources.definitions.v1_plain]
+class = "source"
+comment_prefixes = ["//", "#", "*", "/*"]
+doc_comments = "none"
+docstrings = "off"
+```
+
+The write replaces only the config, atomically, and only after the whole gate passed in the same run ([§FS-config-adopt-builtins.8.1](../../docs/functional-spec/FS-config-adopt-builtins.md#81-bounds)). Run `grund check` in the written tree. It reports what step 6's comparison showed on both sides, the typo in the file `v1_plain` still reads:
+
+```text
+src/build.gradle:2: error: unknown reference FS-typo
+```
+
+A second `grund config adopt-builtins` says there is nothing to adopt, and names `.gradle` as kept again ([§FS-config-adopt-builtins.9](../../docs/functional-spec/FS-config-adopt-builtins.md#9-a-second-run-is-a-no-op)).
+
 ## Trade-offs
 
 - Most configs `grund init` wrote are refused on the first preview, for `named_sections` and for default `include` entries that never existed. Each repair is one line, and `grund check` shows its effect before anything is migrated.
-- The trimmed extension list keeps the candidate short. A config with `grund init`'s full list migrates the same way, with one definition per way version 1 read those files.
+- The trimmed extension list keeps the candidate short. A config with `grund init`'s full list migrates the same way: a built-in language for each suffix version 2 reads exactly as version 1 did, and one definition per other way version 1 read those files. Step 6 moves the rest onto the built-ins where you accept the readings it names; a suffix no built-in claims, such as `.gradle`, stays on its definition.
+- Adoption changes readings on purpose, so it is a separate, reviewed step rather than part of migration: migration never changes what `grund check` reports, and adoption names every reading it changes before it writes.

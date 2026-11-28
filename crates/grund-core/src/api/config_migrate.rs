@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 use super::check::{CheckOpts, CheckOutput, check_with_projects};
 use super::config_findings::{CONFIG_VERSION_1, version_1_caution};
+use super::config_migrate_extensions::extensions_in_byte_order;
 use super::config_migrate_guidance::{DIRECTIONS, guidance_gate};
 use crate::checker::stale_section_noun;
 use crate::config::migrate::{
@@ -293,6 +294,11 @@ fn lines(
                 v1_line(map, at)
             })),
             None => config_lines(&f.message, config, shown, Some),
+        };
+        // §FS-config-migrate.5.2: an `empty-scan` list compares in byte order.
+        let message = match f.code == Code::EMPTY_SCAN.as_str() {
+            true => extensions_in_byte_order(&message),
+            false => message,
         };
         format!(
             "{channel} {} {} {place}:{} {message}",

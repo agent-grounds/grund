@@ -282,6 +282,20 @@ pub(crate) fn builtin(name: &str) -> Option<Language> {
     })
 }
 
+/// §FS-config-adopt-builtins.terms: the built-in row that claims `suffix`, the one whose epoch
+/// suffixes list it, or `None` where no row does (`gradle`, `h`). Migration's choice of a
+/// built-in (§FS-config-v2.schema.sources.migration) and adoption's plan both ask it.
+pub(crate) fn claiming(suffix: &str) -> Option<Language> {
+    let row = EPOCH.iter().find(|row| row.suffixes.contains(&suffix))?;
+    builtin(row.name)
+}
+
+/// §FS-config-adopt-builtins.5.2: whether the built-in row `name` is opt-in, admitted only when
+/// `languages` lists it.
+pub(crate) fn opt_in_row(name: &str) -> bool {
+    EPOCH.iter().any(|row| row.name == name && !row.default)
+}
+
 /// The epoch reader of the required class that would claim `suffix` if admitted
 /// (§FS-scan.checks.unread-scan-root): rule homes need a document reader.
 pub(crate) fn builtin_text_for_suffix(suffix: &str, document: bool) -> Option<&'static str> {

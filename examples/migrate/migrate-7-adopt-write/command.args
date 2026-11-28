@@ -1,0 +1,1 @@
+config adopt-builtins --write {repo_copy}
