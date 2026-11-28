@@ -136,6 +136,7 @@ const JUDGED: &[Code] = &[
 /// fires now and named no second spelling when it did.
 const RUN: &[Code] = &[
     Code::AGENTS_INIT,
+    Code::CLOSED_CITATION_GROUNDING, // §FS-check.checks.closed-citation-grounding
     Code::CONFIG_FETCH_NAMES_NOTHING,
     Code::CONFIG_INDEX_NOT_MARKDOWN,
     Code::CONFIG_MD_NOT_MARKDOWN,

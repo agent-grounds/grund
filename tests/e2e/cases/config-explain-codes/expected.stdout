@@ -4,6 +4,7 @@ agents-init: An agent entrypoint such as AGENTS.md lacks the grund init block it
 broken-stub: A stub's link does not lead to a declaration of its ID.
 chapter-cardinality: A declaration has more or fewer chapters of a name than a rule's have sentence allows.
 citation-cardinality: A declaration cites a target more or fewer times than a rule allows.
+closed-citation-grounding: Grounding asks for citations in a scanned non-citable home whose citation rule permits no target.
 config-fetch-names-nothing: A fetch key in a version-2 config named no executable, and was read for one more release as a kind whose fetch could not run; such a key is now refused when the config loads.
 config-index-not-markdown: A version-2 row's index named a file the configuration did not read as Markdown, and its folders were judged as under index = false for one more release; such an index is now refused when the config loads.
 config-md-not-markdown: In version 2, an md entry of [schema.sources.extensions] mapped .md to a language that did not read Markdown, and was read that way for one more release; such an entry is now refused when the config loads.

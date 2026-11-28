@@ -242,6 +242,48 @@
   }
  },
  {
+  "code": "closed-citation-grounding",
+  "meaning": "Grounding asks for citations in a scanned non-citable home whose citation rule permits no target.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "own",
+      "text": "empty [rules.citations.{kind}.grounding] to disable grounding for this row, or permit a target in [rules.citations.{kind}]"
+     },
+     {
+      "label": "inherited",
+      "text": "write an empty [rules.citations.{kind}.grounding] to disable grounding for this row, or permit a target in [rules.citations.{kind}]"
+     }
+    ]
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   },
+   "fix": {
+    "kind": "template",
+    "text": "set require_grounding = false on its [[kinds]] row to disable grounding for this row, or permit a target in [citations.{kind}]"
+   },
+   "note": null
+  }
+ },
+ {
   "code": "config-fetch-names-nothing",
   "meaning": "A fetch key in a version-2 config named no executable, and was read for one more release as a kind whose fetch could not run; such a key is now refused when the config loads.",
   "ramp": null,

@@ -35,6 +35,40 @@ fn documented_citation_directions_example_matches_production_render() {
     assert_eq!(rendered, expected);
 }
 
+/// §FS-init.2.3.5: the page's closed-row example, its
+/// `[citations.fixture]` table, renders exactly the one bullet the page shows
+/// beside it, so the page cannot teach a closed place a sentence no `grund init`
+/// writes (§FS-config.3.9.4.1).
+#[test]
+fn documented_closed_row_example_matches_production_render() {
+    let page_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/user-facing/citation-directions.md");
+    let page = std::fs::read_to_string(&page_path).expect("read canonical page");
+    let table = fenced_examples(&page, "toml")
+        .into_iter()
+        .find(|example| example.starts_with("[citations.fixture]"))
+        .expect("a closed-row example");
+    let documented = fenced_examples(&page, "markdown")
+        .into_iter()
+        .find(|example| example.contains("**tests/fixtures/**"))
+        .expect("the closed row's bullet");
+    let root = test_root("documented_closed_row_example_matches_production_render");
+    write(
+        &root.join("grund.toml"),
+        &format!(
+            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs/functional-spec\"\n\n[[kinds]]\n\
+             kind = \"fixture\"\nfolder = \"tests/fixtures\"\ncitable = false\n\n{table}"
+        ),
+    );
+    let config = load_config(&root).expect("load the closed-row example");
+    let rendered = citation_directions_section(config.project(), config.run())
+        .expect("the example declares a rule");
+    let bullet = documented
+        .strip_suffix('\n')
+        .expect("bullet example ends with a newline");
+    assert!(rendered.lines().any(|line| line == bullet), "{rendered}");
+}
+
 /// §FS-init.2.3.5: the climbing convention the block no longer states is the
 /// page's recommended starting ruleset, its `toml` example that opens with the
 /// GOAL table; later sections carry toml examples of their own. Over the kinds

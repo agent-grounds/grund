@@ -1,0 +1,14 @@
+grund_config_version = 1
+[id]
+format = "{kind}-{slug}"
+[[kinds]]
+kind = "FS"
+folder = "specification"
+index = false
+[[kinds]]
+kind = "ce"
+folder = "ce"
+citable = false
+require_grounding = true
+[citations.ce]
+default = "must-not"

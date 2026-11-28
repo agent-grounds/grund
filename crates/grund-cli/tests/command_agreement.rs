@@ -303,6 +303,7 @@ const WIDENING: &[(&str, &str)] = &[
     ("block", "S4"),
     ("check", "S4"),
     ("cli", "S4"),
+    ("closed", "S4"),
     ("complete", "S4"),
     ("config", "S4"),
     ("configured", "S4"),

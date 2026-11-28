@@ -12,10 +12,15 @@ folders = ["docs/spec/core", "docs/spec/plugins"]
 [schema.kinds.test]
 citable = false
 folders = ["tests/e2e", "tests/integration"]
+[schema.kinds.fixture]
+citable = false
+folders = ["tests/fixtures"]
 [rules.citations.FS]
 must = ["GOAL"]
 [rules.citations.test]
 must = ["FS"]
+[rules.citations.fixture]
+default = "must-not"
 ```
 
 ## Run it
@@ -28,11 +33,12 @@ grund init ~/scoped
 echo $?    # 0
 ```
 
-The run writes three files, which `expected.repo/` records byte for byte, and its report names each of them ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)):
+The run writes four files, which `expected.repo/` records byte for byte, and its report names each of them ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)):
 
 - `docs/spec/AGENTS.md`, the deepest directory holding both of FS's folders ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)). Its managed block says that each FS declaration must cite GOAL, and nothing else ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)).
 - `tests/AGENTS.md`, the directory above `tests/e2e/` and `tests/integration/`, with the test row's rule.
-- `AGENTS.md` at the root: the project-wide guidance, with neither bullet, and a `### Scoped guidance` list naming the two files ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)).
+- `tests/fixtures/AGENTS.md`, with the fixture row's rule. That row is closed to every citation: its default is `must-not` and it lists no target ([§FS-config.3.9.4.1](../../docs/functional-spec/FS-config.md#3941-a-row-closed-to-every-citation)). So its bullet is the one sentence `Each file in **tests/fixtures/** must not cite anything.`, with no `that cites anything` and no grounding setting. The test row's bullet keeps both, because a test that cites nothing slips past `must = ["FS"]` until grounding is on, while a fixture that cites nothing already keeps its rule ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)).
+- `AGENTS.md` at the root: the project-wide guidance, with none of the three bullets, and a `### Scoped guidance` list naming the three files ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)).
 
 GOAL has no rule, so `docs/AGENTS.md` is not written ([§FS-init.2.3.5](../../docs/functional-spec/FS-init.md#235-citation-directions)). Stdout is empty.
 

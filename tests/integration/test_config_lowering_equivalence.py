@@ -41,6 +41,13 @@ so the show digest of the seven v2 records at capture lines 2, 3, 567, 579, 1015
 1016 and 1017 moves by the one line `fenced = []`. Their show exit and stderr and
 every validate field remain.
 
+Issue #1460 adds the warning mandated by §FS-check.checks.closed-citation-grounding
+to show[2] and validate[2] for the existing closed, grounded non-citable home in
+tests/e2e/cases/init-citation-directions-closed-default/expected.repo and its
+repo counterpart (capture lines 551-552). Only these four stderr fields change;
+all other captured values remain the reference, including their statuses and
+stdout digests.
+
 The captures are not regenerated to make this test pass. `--capture` exists to
 take them, once, from a binary whose behaviour is the reference.
 """

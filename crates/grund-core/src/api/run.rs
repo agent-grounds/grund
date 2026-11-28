@@ -10,7 +10,7 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::config_findings::{config_diagnostics, workspace_config_diagnostics};
+use super::config_findings::{config_findings, workspace_config_findings};
 use super::path_report::PathReport;
 use super::report::{complete_report, public_run_warnings};
 use super::reporting::{reporting, workspace_block_projects};
@@ -42,6 +42,8 @@ pub(crate) struct CheckRun {
     /// The root of each project the run checked, in check order; the report
     /// gate of `config migrate` compares them (§FS-config-migrate.5.2).
     pub(crate) projects: Vec<PathBuf>,
+    /// Semantic identities beside the original warning messages (§FS-config-migrate.5.2).
+    pub(crate) closed_grounding: Vec<(String, String)>,
 }
 
 /// One `grund check` run over `path`: resolve the config, scan, check, and fold in
@@ -228,6 +230,7 @@ pub(super) fn run_check_with_run_warnings(
         full,
         scope: report_scope.as_ref(),
     };
+    let config_findings = config_findings(&config, config.display());
     narrowing.narrow(
         &mut report,
         &config,
@@ -247,7 +250,7 @@ pub(super) fn run_check_with_run_warnings(
         },
         // §FS-check.4.3, §FS-check.4.11, §FS-config.4.1: outside `report_is_silent`, so
         // a repository mid-migration keeps the scope caution beside its config pair.
-        config_diagnostics(&config, config.display()),
+        config_findings.diagnostics,
     );
     // §FS-check.3.29: the blocks this walk met that no enclosing one lists — one of
     // the report's *errors* since the ramp ended (§FS-check.3.29), and located, so it
@@ -274,6 +277,7 @@ pub(super) fn run_check_with_run_warnings(
         config,
         report,
         had_scan_errors,
+        closed_grounding: config_findings.closed_grounding,
     };
     *run_warnings = public_run_warnings(&run.config, settled_run_warnings(run.config.run()));
     Ok(run)
@@ -498,7 +502,7 @@ fn run_workspace_check(
     report.errors.extend(out_of_scope);
     // §FS-check.4.3, §FS-check.4.11: the root's config, each expanded project's and
     // each opted-out block's, named where each was loaded; `config validate` names it too.
-    let config_warnings = workspace_config_diagnostics(
+    let config_warnings = workspace_config_findings(
         &root_config,
         reporting(&projects).map(|project| &*project.config),
     );
@@ -519,7 +523,7 @@ fn run_workspace_check(
                 report_scope,
             )
         },
-        config_warnings,
+        config_warnings.diagnostics,
     );
     // §FS-errors.4.1: complete every channel after narrowing and caution insertion.
     complete_report(&mut report);
@@ -528,6 +532,7 @@ fn run_workspace_check(
         config: root_config.into_facade(),
         report,
         had_scan_errors,
+        closed_grounding: config_warnings.closed_grounding,
         projects: reporting(&projects)
             .map(|project| project.config.root.clone())
             .collect(),

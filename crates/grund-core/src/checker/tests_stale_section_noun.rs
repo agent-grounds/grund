@@ -67,9 +67,9 @@ fn every_stale_noun_round_trips_through_the_section_differs_templates() {
 fn the_other_agents_init_templates_yield_no_noun() {
     for message in [
         "repo maintenance: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` (does not affect citation validity)",
-        "repo maintenance: outdated grund init block v3 — run `grund init` to update to v47 (does not affect citation validity)",
-        "repo maintenance: unsupported grund init block v999 — this grund supports v47 (does not affect citation validity)",
-        "repo maintenance: missing grund init block v47 — run `grund init` to install it (does not affect citation validity); run it in packages/billing",
+        "repo maintenance: outdated grund init block v3 — run `grund init` to update to v51 (does not affect citation validity)",
+        "repo maintenance: unsupported grund init block v999 — this grund supports v51 (does not affect citation validity)",
+        "repo maintenance: missing grund init block v51 — run `grund init` to install it (does not affect citation validity); run it in packages/billing",
     ] {
         assert_eq!(stale_section_noun(message), None, "{message}");
     }

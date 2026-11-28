@@ -1,6 +1,6 @@
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, KindCitationRules, NamespaceMatch, Project,
-    Row, Run, grounding_setting, row_grounds_at_any_strength,
+    Row, Run, grounding_setting, row_closed_to_every_citation, row_grounds_at_any_strength,
 };
 
 use super::citation_grounding::citation_grounding_sentence;
@@ -150,7 +150,7 @@ pub(crate) fn row_has_bullet(project: &Project, row: &str) -> bool {
             .citations
             .per_kind
             .get(row)
-            .and_then(|rules| citation_direction_clauses(project, rules))
+            .and_then(|rules| citation_direction_clauses(project, row, rules))
             .is_some()
 }
 
@@ -171,7 +171,7 @@ fn citation_bullets(
         .filter(|kind| here(kind))
         .filter_map(|kind| {
             let rules = project.rules.citations.per_kind.get(kind)?;
-            let clauses = citation_direction_clauses(project, rules)?;
+            let clauses = citation_direction_clauses(project, kind, rules)?;
             let (subject, uncited) =
                 citation_direction_subject(project, run, kind, homeless, grammar);
             Some(match uncited {
@@ -208,6 +208,12 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
 /// nothing, a file there that cites nothing is no unit either (§FS-check.3.11), so
 /// the subject is narrowed as the homeless kind's is and the second sentence says
 /// so and names the setting that makes it a finding (§FS-init.2.3.5).
+///
+/// Both narrowings belong to a rule on what a file that cites something cites. A
+/// row closed to every citation (§FS-config.3.9.4.1) has none: a file that cites
+/// nothing already keeps it, so its subject is never narrowed, the homeless
+/// kind's included, and it never carries the second sentence, whose setting
+/// would fail every file there (§FS-init.2.3.5).
 fn citation_direction_subject(
     project: &Project,
     run: &Run,
@@ -216,16 +222,16 @@ fn citation_direction_subject(
     grammar: u32,
 ) -> (String, Option<String>) {
     let kinds = project.kind_configs();
+    let closed = row_closed_to_every_citation(&project.rules, kind);
     if kind == homeless {
         let scope = kinds
             .iter()
             .find(|configured| configured.kind == kind)
             .and_then(|configured| configured.title.as_deref())
             .map_or_else(String::new, |title| format!(": {title}"));
+        let narrowed = if closed { "" } else { " that cites anything" };
         return (
-            format!(
-                "Each source file outside the Project map (**{kind}**{scope}) that cites anything"
-            ),
+            format!("Each source file outside the Project map (**{kind}**{scope}){narrowed}"),
             None,
         );
     }
@@ -261,7 +267,7 @@ fn citation_direction_subject(
             "If it cites nothing, it is not checked",
         )
     };
-    if grounds {
+    if grounds || closed {
         return (subject, None);
     }
     // §FS-init.2.3.5: the one setting that closes the hole, in `grammar`: the
@@ -281,7 +287,23 @@ fn citation_direction_subject(
 /// §FS-check.3.12 already uses in its findings) and follows with the short form
 /// (`never cite`) the legend names: the subject is a noun phrase, so a bullet
 /// opening on a bare `never cite` is not a sentence.
-fn citation_direction_clauses(project: &Project, rules: &KindCitationRules) -> Option<String> {
+///
+/// A row closed to every citation (§FS-config.3.9.4.1) renders the one clause
+/// `must not cite anything`, its `must-not` lists folded in, because every target
+/// they name is one that clause already forbids (§FS-init.2.3.5). The fold is
+/// the row's, citable or not, and gives no row a bullet: one with no rule of its
+/// own, closed by the global default alone, still renders none.
+fn citation_direction_clauses(
+    project: &Project,
+    kind: &str,
+    rules: &KindCitationRules,
+) -> Option<String> {
+    if row_closed_to_every_citation(&project.rules, kind) {
+        // Closed, every list but `must-not` is empty: its own default or a
+        // `must-not` list is the rule a bullet states.
+        let ruled = rules.default.is_some() || !rules.must_not.is_empty();
+        return ruled.then(|| "must not cite anything".to_string());
+    }
     let folded = citation_permission_is_closed(rules);
     let mut clauses = Vec::new();
     if !rules.must.is_empty() {

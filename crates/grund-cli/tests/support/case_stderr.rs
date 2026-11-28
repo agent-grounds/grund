@@ -290,7 +290,9 @@ fn assert_json_diagnostic_is_concise(name: &str, line: &str) {
             panic!("{name}: stderr JSON `message` must be a non-empty string: {line}")
         });
     assert!(
-        message.len() <= 180,
+        // §FS-check.checks.closed-citation-grounding fixes a full settings-and-remedies
+        // sentence; as in text above, that config warning exceeds the ordinary cap.
+        message.len() <= 180 || object.get("code").and_then(|v| v.as_str()) == Some("closed-citation-grounding"),
         "{name}: stderr JSON `message` is too long for a concise diagnostic ({} bytes): {line}",
         message.len()
     );

@@ -9,6 +9,7 @@
 //! `warning:` line a process frontend puts them on belongs to `grund-cli`
 //! (§AR-system.2.9.1, §AR-bindings.2).
 
+use super::closed_citation_grounding;
 use crate::checker::sort_diagnostics;
 use crate::config::{Config, Display, config_file_under, home_form_of};
 /// §FS-check.4.3: the warning for a config root holding both discovery names —
@@ -17,6 +18,22 @@ use crate::config::{Config, Display, config_file_under, home_form_of};
 /// on stderr: it says which file the run read, not what is wrong at a site.
 use crate::model::remedies;
 use crate::model::{Code, Diagnostic, format_path};
+
+/// Config diagnostics and their semantic comparison identities, derived together
+/// (§FS-check.checks.closed-citation-grounding, §FS-config-migrate.5.2).
+#[derive(Default)]
+pub(super) struct ConfigFindings {
+    pub(super) diagnostics: Vec<Diagnostic>,
+    pub(super) closed_grounding: Vec<(String, String)>,
+}
+
+impl ConfigFindings {
+    /// Preserve each warning's facts beside its original message (§FS-config-migrate.5.2).
+    fn extend(&mut self, other: Self) {
+        self.diagnostics.extend(other.diagnostics);
+        self.closed_grounding.extend(other.closed_grounding);
+    }
+}
 
 fn redundant_config_warning(config: &Config) -> Option<Diagnostic> {
     let ignored = config.redundant_config_file.as_ref()?;
@@ -161,11 +178,27 @@ pub(super) fn config_diagnostics<'a>(
     config: &'a Config,
     display: Display<'_>,
 ) -> impl Iterator<Item = Diagnostic> + 'a {
-    redundant_config_warning(config)
+    config_findings(config, display).diagnostics.into_iter()
+}
+
+/// Derive config diagnostics and migration identities in one pass
+/// (§FS-check.checks.closed-citation-grounding, §FS-config-migrate.5.2).
+pub(super) fn config_findings(config: &Config, display: Display<'_>) -> ConfigFindings {
+    let mut diagnostics: Vec<_> = redundant_config_warning(config)
         .into_iter()
         .chain(deprecated_config_location_warning(config))
         .chain(config_version_1_warning(config, display))
         .chain(load_warnings(config, display))
+        .collect();
+    let mut closed_grounding = Vec::new();
+    for warning in closed_citation_grounding::warnings(config, display) {
+        closed_grounding.push((warning.key, warning.diagnostic.message.clone()));
+        diagnostics.push(warning.diagnostic);
+    }
+    ConfigFindings {
+        diagnostics,
+        closed_grounding,
+    }
 }
 
 /// The config findings a workspace names (§FS-check.4.11): the root's config,
@@ -181,17 +214,26 @@ pub(super) fn workspace_config_diagnostics<'a>(
     root_config: &Config,
     projects: impl IntoIterator<Item = &'a Config>,
 ) -> Vec<Diagnostic> {
+    workspace_config_findings(root_config, projects).diagnostics
+}
+
+/// The selected workspace's diagnostics and warning identities, with each loaded
+/// config visited once (§FS-check.checks.closed-citation-grounding).
+pub(super) fn workspace_config_findings<'a>(
+    root_config: &Config,
+    projects: impl IntoIterator<Item = &'a Config>,
+) -> ConfigFindings {
     let display = root_config.display();
-    let mut findings = config_diagnostics(root_config, display).collect::<Vec<_>>();
+    let mut findings = config_findings(root_config, display);
     for project in projects {
         if project.root != root_config.root {
-            findings.extend(config_diagnostics(project, display));
+            findings.extend(config_findings(project, display));
         }
     }
     for block in root_config.workspace_opted_out_blocks() {
-        findings.extend(config_diagnostics(block, display));
+        findings.extend(config_findings(block, display));
     }
-    sort_diagnostics(&mut findings);
+    sort_diagnostics(&mut findings.diagnostics);
     findings
 }
 

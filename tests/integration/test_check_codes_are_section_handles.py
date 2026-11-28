@@ -44,7 +44,7 @@ CODE_CELL = re.compile(r"^`?([a-z][a-z0-9-]*)`?$")
 # `FS-config-v2.checks.<code>`, and the two import codes, at `FS-imports.checks.<code>`.
 MIGRATED = {
     "FS-imports": ("import-live", "import-missing"),
-    "FS-check": ("config-version-1", "glob-citation", "off-format-citation"),
+    "FS-check": ("closed-citation-grounding", "config-version-1", "glob-citation", "off-format-citation"),
     "FS-citations": ("image-index-entry",),
     "FS-config-v2": (
         "config-fetch-names-nothing",

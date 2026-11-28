@@ -524,8 +524,7 @@ The home is the complete boundary of its value sources ([§FS-values.2.2](FS-val
 
 #### 3.4.10 `format`, `resolve`, and `fetch` — external snapshot kinds
 
-A citable kind may override the repository grammar and describe how a missing
-committed snapshot is materialized:
+A citable kind may override the repository grammar and describe how a missing committed snapshot is materialized:
 
 ```toml
 [[kinds]]
@@ -769,7 +768,15 @@ The match is textual on the qualifier and kind; which kinds a qualifier's projec
 
 `default` (top-level, or per-kind inside a `[citations.<KIND>]` table) sets the level for unlisted target kinds; the global default is `may`, so adoption is incremental. Precedence is **explicit target list > per-kind `default` > global `default`**. Obligations come only from explicit `must` / `should` entries — a `default` of `must` or `should` never invents an obligation toward every unlisted kind; `default` governs only how a citation to an otherwise-unlisted target is leveled for the prohibition pass.
 
+##### 3.9.4.1 A row closed to every citation
+
+The `closed-citation-grounding` warning ([§FS-check.checks.closed-citation-grounding](FS-check.md#checksclosed-citation-grounding-grounding-asks-for-citations-a-closed-row-permits-nowhere)) reads this same predicate; it does not define another meaning of closed.
+
+A citing row is **closed to every citation** when it permits no target: its effective fallback is `must-not`, its own `default` or else the global `default`, and every non-empty list it has is `must-not`. Under the precedence above each citation its units make is then leveled `must-not`, listed or not, so each one is a forbidden citation ([§FS-check.3.12](FS-check.md#312-forbidden-citation)) and a unit that cites nothing already satisfies the row. The test matches no targets, because two targets that could match one citation at different levels are refused ([§FS-config.3.9.5](FS-config.md#395-validation)), and it reads the lowered rules, so a version-1 `[citations.<kind>]` table and a version-2 `[rules.citations.<row>]` table give one answer ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)). A row with any `must`, `warn`, `should`, `may`, `should-not` or `warn-not` entry is not closed, and neither is one whose effective fallback is any other level, `warn-not` and `should-not` included. The predicate moves no verdict, since `grund check` levels each site as before; the Citation directions bullet reads it ([§FS-init.2.3.5](FS-init.md#235-citation-directions)).
+
 #### 3.9.5 Validation
+
+A scanned non-citable home that is closed by [§FS-config.3.9.4.1](FS-config.md#3941-a-row-closed-to-every-citation) while a grounding rung reaches it still loads, with the `closed-citation-grounding` warning ([§FS-check.checks.closed-citation-grounding](FS-check.md#checksclosed-citation-grounding-grounding-asks-for-citations-a-closed-row-permits-nowhere)). This is a config diagnostic, not a load refusal.
 
 Config validation rejects:
 
@@ -818,11 +825,15 @@ Beside the readers, the repository publishes `schemas/grund.schema.json`, a JSON
 
 ### 4.1 `grund config validate [path]`
 
+The config findings also include `closed-citation-grounding` ([§FS-check.checks.closed-citation-grounding](FS-check.md#checksclosed-citation-grounding-grounding-asks-for-citations-a-closed-row-permits-nowhere)), once per qualifying row of each selected project config, including an empty home. Workspace validation uses the config set described below; an `include_root = false` block earns no warning for its own rows.
+
 Loads the config discovered by walking up from `path` (or `.` when omitted), checks its keys, and reports problems without scanning the tree: exit `0` on success, `1` on a validation error, in the `error: <path>:<line>: <message>` shape of [§FS-config.4.3](FS-config.md#43-invalid-config-behavior). The config findings — the redundant pair ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)), the deprecated location ([§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)) and the version 1 caution ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)) — are reported in the bytes `check` prints for them, one line on stderr per finding, with stdout empty and the exit code unchanged.
 
 When the discovered config declares `[workspace]` ([§FS-config.3.8](FS-config.md#38-workspace--sub-project-members), [§FS-workspace.2](FS-workspace.md#2-workspace-configuration)), `config validate` also expands `members` and loads every member config the run would load, nested workspaces included ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)): the launch-time pass `grund check` runs before it scans anything. The first problem, a member config that does not load or a `members` entry that cannot be resolved, is reported once, in the line `grund check` prints for it, with paths rendered from the workspace root when `[output] relative_paths = true` ([§FS-workspace.5](FS-workspace.md#5-command-scope)), and exit `1`, with no warning line. A run that loads names the config findings of every config in the set `grund check` names at the same root ([§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)), each at the path its config was loaded under, spelled from the root's report base, in `check`'s report order ([§FS-errors.4](FS-errors.md#4-determinism)). A path inside a member validates that member alone and names its findings alone, as `grund check <member>` does ([§FS-workspace.5](FS-workspace.md#5-command-scope)).
 
 ### 4.2 `grund config show [path]`
+
+The printed config's `closed-citation-grounding` warnings ([§FS-check.checks.closed-citation-grounding](FS-check.md#checksclosed-citation-grounding-grounding-asks-for-citations-a-closed-row-permits-nowhere)) appear before the TOML, using the same bytes as `check` and `validate`; no other workspace config's rows are named.
 
 Prints the **effective** configuration, the defaults merged with the config discovered by walking up from `path` (or `.` when omitted) and with CLI flags, as TOML that loads back to the same effective values; every rule below about which keys are printed keeps that so. A config finding of the printed config, such as a redundant pair at the config root ([§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both), [§FS-check.4.3](FS-check.md#43-redundant-config-pair)), is a `warning:` on stderr before the TOML.
 

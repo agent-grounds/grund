@@ -7,7 +7,12 @@ folders = ["docs/spec/core", "docs/spec/plugins"]
 [schema.kinds.test]
 citable = false
 folders = ["tests/e2e", "tests/integration"]
+[schema.kinds.fixture]
+citable = false
+folders = ["tests/fixtures"]
 [rules.citations.FS]
 must = ["GOAL"]
 [rules.citations.test]
 must = ["FS"]
+[rules.citations.fixture]
+default = "must-not"

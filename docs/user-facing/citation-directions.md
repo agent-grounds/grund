@@ -135,6 +135,97 @@ must = "file"
 Anything not listed above is allowed.
 ```
 
+The `skills/` bullet carries a second sentence because its rule is about what a
+file that cites something cites. A skill that cites nothing slips past
+`must = ["FS"]`, and turning the row's grounding on is what closes that hole. A
+place closed to every citation has no such hole. In a version-1 config, close a
+non-citable `tests/fixtures/` home with a `must-not` default and no list but
+`must-not`, and its one rule is that its files cite nothing, which a file that
+cites nothing already keeps:
+
+```toml
+[citations.fixture]         # citable = false, at tests/fixtures/
+default = "must-not"
+```
+
+```markdown
+- Each file in **tests/fixtures/** must not cite anything.
+```
+
+That bullet is one sentence under either config version, whether the row's
+grounding is on or off. It has no `that cites anything` and names no grounding
+setting, because grounding there would fail every file: an uncited one as
+ungrounded, and a cited one as a forbidden citation. A `must-not` list beside
+the default folds into the same clause, since every target it names is one the
+clause already forbids, and the homeless `code` kind closed the same way reads
+`Each source file outside the Project map (**code**) must not cite anything.`
+A closed default with a `may`, `should-not` or `warn-not` exception beside it
+is not closed, because that target is permitted, discouraged or only warned
+about, so it keeps the bullet the levels above give it ([a row closed to every citation](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config.md#3941-a-row-closed-to-every-citation)).
+
+**When grounding and a closed row conflict.** A scanned non-citable home
+cannot satisfy grounding if it permits no citation target. For example, in
+version 2:
+
+```toml
+[schema.kinds.ce]
+folders = ["ce"]
+citable = false
+
+[rules.citations.ce]
+default = "must-not"
+
+[rules.citations.ce.grounding]
+must = "file"
+```
+
+`grund config validate`, `grund config show` and `grund check` warn, even if
+`ce/` is empty:
+
+```text
+warning: grund.toml: row `ce`: [rules.citations.ce.grounding] must = "file" asks for citations, but [rules.citations.ce] default = "must-not" permits no target; empty [rules.citations.ce.grounding] to disable grounding for this row, or permit a target in [rules.citations.ce]
+```
+
+In version 2, to keep the home citation-free, remove its grounding rung and keep
+the empty `[rules.citations.ce.grounding]` table. An empty row ladder replaces
+inherited grounding and disables it even under `--require-grounding`. In version 2,
+to keep grounding, permit a target instead, for example `may = ["FS"]` in
+`[rules.citations.ce]`.
+That target must be a declared kind in the project.
+
+The version-1 equivalent is:
+
+```toml
+[[kinds]]
+kind = "ce"
+folder = "ce"
+citable = false
+require_grounding = true
+
+[citations.ce]
+default = "must-not"
+```
+
+```text
+warning: grund.toml: row `ce`: require_grounding = true on its [[kinds]] row asks for citations, but [citations.ce] default = "must-not" permits no target; set require_grounding = false on its [[kinds]] row to disable grounding for this row, or permit a target in [citations.ce]
+```
+
+In version 1, set `require_grounding = false` on that `[[kinds]]` row to keep its
+files citation-free, or add `may = ["FS"]` in `[citations.ce]` to permit a target
+while keeping grounding.
+
+The warning names inherited project settings when those govern the row, and
+names `--require-grounding` only when the flag alone grounds it. Version 2's
+`warn` and `should` rungs also earn it without `--suggestions`; they retain
+their own severities. The warning changes no file verdict or exit code, but
+replaces `success` when it is the only finding. `grund config explain
+closed-citation-grounding` describes it ([the warning's contract](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#checksclosed-citation-grounding-grounding-asks-for-citations-a-closed-row-permits-nowhere)).
+
+Citable homes and the `code` complement get no warning: their source files
+can satisfy grounding with inline declarations. Inside a non-citable home,
+an inline declaration does not ground the file. Unscanned places and rows
+that permit a target or disable grounding get no warning either.
+
 grund's own convention climbs: goals cite why the project exists, specs cite
 goals, architecture and decisions cite specs, and code and executable tests cite
 the specs they realize. Citation obligations judge only declarations that
@@ -238,6 +329,14 @@ out falls to the closed default, so its local citations fail too. With the
 ```text
 ce/substratevm/docs/notes.md:1: error: code must not cite FS (citation direction) — re-point the citation or downgrade it to a plain Markdown link
 ```
+
+In version 2, if an omitted non-citable home also inherits grounding, it earns
+`closed-citation-grounding`: the warning names the member's config, its
+inherited `[rules.citations] default = "must-not"` and the grounding setting.
+Open that home's local targets under `may`, or give it an empty row grounding
+table. In version 1, open targets under `[citations.<KIND>]` or set
+`require_grounding = false` on the row. Closing a member to other projects
+does not make its grounded homes able to cite local targets automatically.
 
 Allowing one sibling but not another takes a pinned target, such as
 `may = ["FS", "compiler/FS"]`. The workspace root accepts it. A member's own run

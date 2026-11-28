@@ -7,7 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
-use super::check::{CheckOpts, CheckOutput, check_with_projects};
+use super::check::{CheckOpts, CheckOutput, CheckedScope, check_for_migration};
 use super::config_findings::{CONFIG_VERSION_1, version_1_caution};
 use super::config_migrate_guidance::{DIRECTIONS, guidance_gate};
 use crate::checker::stale_section_noun;
@@ -224,7 +224,7 @@ pub(super) fn report_gate(
     one_grammar: bool,
 ) -> Vec<String> {
     let run = || {
-        check_with_projects(CheckOpts {
+        check_for_migration(CheckOpts {
             path: located.root.clone(),
             path_provided: true,
             include_suggestions: true,
@@ -240,24 +240,57 @@ pub(super) fn report_gate(
     });
     let after = lines(after, Some(line_map), located, one_grammar);
     // Compared as multisets: a line twice in one run and once in the other differs.
-    let mut out = surplus(&before, &after, "- ");
-    out.extend(surplus(&after, &before, "+ "));
+    let mut out = compared_surplus(&before, &after, "- ");
+    out.extend(compared_surplus(&after, &before, "+ "));
     out
 }
 
 /// Each line of `ours` that `theirs` holds fewer times, once per extra copy,
 /// prefixed with `mark`.
+#[cfg(test)]
 pub(super) fn surplus(ours: &[String], theirs: &[String], mark: &str) -> Vec<String> {
-    let mut left: Vec<&String> = theirs.iter().collect();
+    let wrap = |lines: &[String]| {
+        lines
+            .iter()
+            .cloned()
+            .map(ComparedLine::text)
+            .collect::<Vec<_>>()
+    };
+    compared_surplus(&wrap(ours), &wrap(theirs), mark)
+}
+
+/// A comparison key and the original report line. Only the closed-grounding
+/// warning has a key independent of its rendered wording (§FS-config-migrate.5.2).
+struct ComparedLine {
+    key: String,
+    text: String,
+}
+
+impl ComparedLine {
+    /// Ordinary findings compare their complete normalized text (§FS-config-migrate.5.2).
+    fn text(text: String) -> Self {
+        Self {
+            key: text.clone(),
+            text,
+        }
+    }
+}
+
+/// Compare multisets by identity and retain each surplus's own wording
+/// (§FS-config-migrate.5.2).
+fn compared_surplus(ours: &[ComparedLine], theirs: &[ComparedLine], mark: &str) -> Vec<String> {
+    let mut left: Vec<&str> = theirs.iter().map(|line| line.key.as_str()).collect();
     ours.iter()
-        .filter(|line| match left.iter().position(|other| other == line) {
-            Some(at) => {
-                left.swap_remove(at);
-                false
-            }
-            None => true,
-        })
-        .map(|line| format!("{mark}{line}"))
+        .filter(
+            |line| match left.iter().position(|other| *other == line.key) {
+                Some(at) => {
+                    left.swap_remove(at);
+                    false
+                }
+                None => true,
+            },
+        )
+        .map(|line| format!("{mark}{}", line.text))
         .collect()
 }
 
@@ -267,16 +300,22 @@ pub(super) fn surplus(ours: &[String], theirs: &[String], mark: &str) -> Vec<Str
 /// config is recognised by its root spelling, as check printed it, and every
 /// path is printed from the report's base (§FS-config-migrate.2.2).
 fn lines(
-    (warnings, output): (Vec<Finding>, anyhow::Result<(CheckOutput, Vec<PathBuf>)>),
+    (warnings, output): (Vec<Finding>, anyhow::Result<(CheckOutput, CheckedScope)>),
     line_map: Option<&[(usize, usize)]>,
     located: &Located,
     one_grammar: bool,
-) -> Vec<String> {
+) -> Vec<ComparedLine> {
     let config = located.config_from_root();
     let config = config.as_str();
     let shown = located.config.as_str();
     let v1_line =
         |map: &[(usize, usize)], at: usize| map.iter().find(|(v2, _)| *v2 == at).map(|(_, v1)| *v1);
+    // §FS-config-migrate.5.2: facts were captured with the diagnostics, never parsed
+    // from their messages or recovered by loading a second set of configurations.
+    let closed = output
+        .as_ref()
+        .ok()
+        .map(|(_, scope)| &scope.closed_grounding);
     let finding = |channel: &str, f: &Finding| {
         let path = f
             .path
@@ -288,18 +327,35 @@ fn lines(
             }
             _ => format!("{path}:{}", f.line.map_or("-".into(), |l| l.to_string())),
         };
-        let message = match line_map {
-            Some(map) => v1_spelling(&config_lines(&f.message, config, shown, |at| {
-                v1_line(map, at)
-            })),
-            None => config_lines(&f.message, config, shown, Some),
+        let message = if f.code == Code::CLOSED_CITATION_GROUNDING.as_str() {
+            f.message.clone()
+        } else {
+            match line_map {
+                Some(map) => v1_spelling(&config_lines(&f.message, config, shown, |at| {
+                    v1_line(map, at)
+                })),
+                None => config_lines(&f.message, config, shown, Some),
+            }
         };
-        format!(
+        let text = format!(
             "{channel} {} {} {place}:{} {message}",
             f.severity,
             f.code,
             f.column.map_or("-".into(), |c| c.to_string()),
-        )
+        );
+        if f.code == Code::CLOSED_CITATION_GROUNDING.as_str() {
+            let (key, _) = closed
+                .into_iter()
+                .flatten()
+                .find(|(_, message)| message == &f.message)
+                .expect("closed-grounding diagnostics carry their comparison facts");
+            ComparedLine {
+                key: format!("{channel} {} {} {key}", f.severity, f.code),
+                text,
+            }
+        } else {
+            ComparedLine::text(text)
+        }
     };
     // §FS-config-migrate.5.2: neither run carries the v1 caution, a stale block outside the
     // generated sections (.5.3), or root citation directions passed in one grammar (.5.3.1).
@@ -309,17 +365,18 @@ fn lines(
             && !(one_grammar && root_directions(f))
     };
     // §FS-config-migrate.5.2: one line per run warning; `output.warnings` repeats these.
-    let mut out: Vec<String> = warnings
+    let mut out: Vec<ComparedLine> = warnings
         .iter()
         .filter(compared)
         .map(|w| finding("run-warning", w))
         .collect();
-    match output {
-        Ok((output, projects)) => {
+    match &output {
+        Ok((output, scope)) => {
             out.extend(
-                projects
+                scope
+                    .projects
                     .iter()
-                    .map(|root| format!("project {}", located.shown(root))),
+                    .map(|root| ComparedLine::text(format!("project {}", located.shown(root)))),
             );
             let report = &output.report;
             out.extend(
@@ -344,9 +401,9 @@ fn lines(
                     .map(|f| finding("suggestion", f)),
             );
             let failed = report.errors.iter().any(|f| compared(&f)) || output.had_scan_errors;
-            out.push(format!("exit {}", u8::from(failed)));
+            out.push(ComparedLine::text(format!("exit {}", u8::from(failed))));
         }
-        Err(error) => out.push(format!("error {error:#}")),
+        Err(error) => out.push(ComparedLine::text(format!("error {error:#}"))),
     }
     out
 }

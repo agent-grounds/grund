@@ -1,0 +1,2 @@
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
+warning: grund.toml: row `ce`: require_grounding = true on its [[kinds]] row asks for citations, but [citations.ce] default = "must-not" permits no target; set require_grounding = false on its [[kinds]] row to disable grounding for this row, or permit a target in [citations.ce]

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 /// §FS-errors.3.6: the outdated-block template, filled for this fixture.
-const OUTDATED: &str = "repo maintenance: outdated grund init block v3 — run `grund init` to update to v47 (does not affect citation validity)";
+const OUTDATED: &str = "repo maintenance: outdated grund init block v3 — run `grund init` to update to v51 (does not affect citation validity)";
 
 fn fixture_root(name: &str) -> PathBuf {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -282,6 +282,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "broken-stub",
         "chapter-cardinality",
         "citation-cardinality",
+        "closed-citation-grounding",
         "config-fetch-names-nothing",
         "config-index-not-markdown",
         "config-md-not-markdown",
